@@ -1,0 +1,5 @@
+{
+  "name": "Morning Pulse News Bot",
+  "description": "A WhatsApp-style interactive news and Q&A bot featuring real-time polling, expanding news stories, and Gemini-powered answers with search grounding.",
+  "requestFramePermissions": []
+}
