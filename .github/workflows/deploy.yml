@@ -1,0 +1,47 @@
+name: Deploy Static Website to GitHub Pages
+
+on:
+  # Triggers the workflow on push events to the 'main' branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions needed for the workflow
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allows concurrent deployments to avoid issues
+concurrency:
+  cancel-in-progress: true
+  group: "pages"
+
+jobs:
+  # The deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1. Prepare Artifact (your website files)
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # 2. Upload the artifact to GitHub Pages
+      # The deploy.yml assumes your website files are in the root of the repo ('.')
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'  # This should be the directory containing your index.html and assets
+
+      # 3. Deploy the artifact
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
