@@ -1,49 +1,59 @@
 name: Deploy WhatsApp Bot to Google Cloud Functions
 
+# This workflow replaces the need for the deploy.sh script and manages all secrets via GitHub.
 on:
   push:
     branches:
       - main
-      # Set to 'main' branch or use a specific tag/release flow for production safety
+  workflow_dispatch: # Allows manual triggering from the Actions tab
 
+# Permissions required for OIDC (id-token) authentication
+permissions:
+  contents: read
+  id-token: write
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
-    # Define environment variables to be injected into the Cloud Function
+    # Define environment variables to be used in the deployment command
     env:
       FUNCTION_NAME: webhook
       RUNTIME: nodejs20
-      REGION: us-central1 # Change to your preferred region (e.g., europe-west1)
+      REGION: us-central1 # RECOMMENDED: Change to your preferred region (e.g., europe-west1)
       ENTRY_POINT: webhook
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 1. Authenticate Google Cloud using the Service Account JSON secret
       - name: Authenticate Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }} # Uses the Service Account JSON secret
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      # 2. Setup gcloud SDK
       - name: Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           
-      - name: Configure Environment Variables for Cloud Function
-        # This step formats all secrets into a single string for gcloud
+      # 3. Configure Environment Variables for Cloud Function
+      # This step formats all secrets into a single, comma-separated string required by gcloud
+      - name: Configure Environment Variables
         id: env_vars
         run: |
+          # Injecting all critical tokens/keys and the Service Account JSON (FIREBASE_ADMIN_CONFIG)
           ENV_VARS="WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}"
           ENV_VARS+=",WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}"
           ENV_VARS+=",GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}"
           ENV_VARS+=",VERIFY_TOKEN=${{ secrets.VERIFY_TOKEN }}"
-          # The Service Account key is complex and must be wrapped to be read by the Node.js app
           ENV_VARS+=",FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}"
 
           echo "ENV_VARS=$ENV_VARS" >> $GITHUB_OUTPUT
 
+      # 4. Deploy the Cloud Function
       - name: Deploy Cloud Function
         id: deploy
         run: |
@@ -55,8 +65,8 @@ jobs:
             --allow-unauthenticated \
             --set-env-vars ${{ steps.env_vars.outputs.ENV_VARS }}
 
+      # 5. Output the Trigger URL for the final WebHook setup
       - name: Output Trigger URL
-        # The URL is needed for the final Meta WebHook setup
         run: |
           FUNCTION_URL=$(gcloud functions describe ${{ env.FUNCTION_NAME }} --region ${{ env.REGION }} --format='value(serviceConfig.uri)')
           echo "::notice file=deployment_info.txt::Deployment successful! The Trigger URL is: $FUNCTION_URL"
