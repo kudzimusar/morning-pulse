@@ -4,6 +4,7 @@
  */
 
 import admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import serviceAccount from './serviceAccountKey.json' assert { type: 'json' };
 
 // Initialize Firebase Admin
@@ -11,15 +12,16 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-const db = admin.firestore();
+const db = getFirestore();
 
 const INITIAL_POLL_DATA = {
   id: 'current_pulse_poll',
-  question: "Quick Community Poll: Do you feel the proposed speed limiters for buses will improve road safety?",
+  question: "What is your preferred news category for this week?",
   options: {
-    "Yes, enforcement will follow.": 0,
-    "No, poor enforcement will negate the effect.": 0,
-    "I am unsure.": 0
+    "Local (Zim)": 0,
+    "Business (Zim)": 0,
+    "African Focus": 0,
+    "Global": 0
   },
   voters: {},
   totalVotes: 0,
