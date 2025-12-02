@@ -73,6 +73,7 @@ jobs:
           name: ${{ env.FUNCTION_NAME }}
           runtime: nodejs20
           entry_point: ${{ env.ENTRY_POINT }}
+          source_file: app.js
           project_id: ${{ env.PROJECT_ID }}
           region: ${{ env.REGION }}
           source_dir: .
