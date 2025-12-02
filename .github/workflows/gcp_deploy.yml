@@ -1,86 +1,77 @@
 name: Deploy WhatsApp Bot to Google Cloud Functions
 
-# This workflow replaces the need for the deploy.sh script and manages all secrets via GitHub.
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allows manual triggering from the Actions tab
+  workflow_dispatch: # Allows manual trigger
 
-# Permissions required for OIDC (id-token) authentication
+# Define necessary permissions for the workflow to interact with OIDC and GCP
 permissions:
-  contents: read
-  id-token: write
-  
+  contents: 'read'
+  id-token: 'write'
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }} # Your Google Cloud Project ID
+  FUNCTION_NAME: webhook
+  REGION: us-central1
+  ENTRY_POINT: webhook
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
-    # Define environment variables to be used in the deployment command
-    env:
-      FUNCTION_NAME: webhook
-      RUNTIME: nodejs20
-      REGION: us-central1 # RECOMMENDED: Change to your preferred region (e.g., europe-west1)
-      ENTRY_POINT: webhook
+    # Ensure the required secrets are available before proceeding
+    if: success() && env.PROJECT_ID != '' && secrets.GCP_SA_KEY != ''
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 1. Authenticate Google Cloud using the Service Account JSON secret
-      - name: Authenticate Google Cloud
-        uses: google-github-actions/auth@v2
+      # Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          node-version: '20'
 
-      # 2. Setup gcloud SDK
-      - name: Setup gcloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      # Install dependencies (required for deployment)
+      - name: Install Dependencies
+        run: npm install
+
+      # Authenticate to Google Cloud using the Service Account Key
+      - name: Authenticate Google Cloud with Service Account Key
+        uses: 'google-github-actions/auth@v2'
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          
-      # 3. Configure Environment Variables for Cloud Function
-      # This step formats all secrets into a single, comma-separated string required by gcloud
-      - name: Configure Environment Variables
-        id: env_vars
-        run: |
-          # Injecting all critical tokens/keys and the Service Account JSON (FIREBASE_ADMIN_CONFIG)
-          ENV_VARS="WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}"
-          ENV_VARS+=",WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}"
-          ENV_VARS+=",GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}"
-          ENV_VARS+=",VERIFY_TOKEN=${{ secrets.VERIFY_TOKEN }}"
-          ENV_VARS+=",FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}"
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-          echo "ENV_VARS=$ENV_VARS" >> $GITHUB_OUTPUT
-
-      # 4. Deploy the Cloud Function
+      # Deploy the Cloud Function
       - name: Deploy Cloud Function
+        uses: google-github-actions/deploy-cloud-functions@v2
         id: deploy
-        run: |
-          gcloud functions deploy ${{ env.FUNCTION_NAME }} \
-            --runtime ${{ env.RUNTIME }} \
-            --region ${{ env.REGION }} \
-            --entry-point ${{ env.ENTRY_POINT }} \
-            --trigger-http \
-            --allow-unauthenticated \
-            --set-env-vars ${{ steps.env_vars.outputs.ENV_VARS }}
+        with:
+          name: ${{ env.FUNCTION_NAME }}
+          runtime: nodejs20
+          entry_point: ${{ env.ENTRY_POINT }}
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: .
+          memory_mb: 256
+          timeout: 540s
+          # This handles environment variables cleanly using the action's 'env_vars' input
+          env_vars: |
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+            WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}
+            WHATSAPP_VERIFY_TOKEN=morning_pulse_verify_token_2025
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            APP_ID=morning-pulse-app # Hardcoded ID matching Firestore path
 
-      # 5. Output the Trigger URL for the final WebHook setup
-      - name: Output Trigger URL
-        run: |
-          FUNCTION_URL=$(gcloud functions describe ${{ env.FUNCTION_NAME }} --region ${{ env.REGION }} --format='value(serviceConfig.uri)')
-          echo "::notice file=deployment_info.txt::Deployment successful! The Trigger URL is: $FUNCTION_URL"
-          echo "DEPLOYMENT_URL=$FUNCTION_URL" >> $GITHUB_ENV
-          
+      # IMPORTANT: Output the final deployed URL for the user to configure the webhook
       - name: Print Final WebHook Configuration Instructions
+        if: success()
         run: |
-          echo "--------------------------------------------------------"
-          echo "  ✅ DEPLOYMENT SUCCESSFUL VIA GITHUB ACTIONS"
-          echo "  --------------------------------------------------------"
-          echo "  1. Copy this URL (the Callback URL):"
-          echo "  ${{ env.DEPLOYMENT_URL }}"
-          echo "  2. Go to Meta Developer Portal (WhatsApp Webhook Setup)"
-          echo "  3. Paste the URL into the Callback URL field."
-          echo "  4. Enter the Verify token: ${{ secrets.VERIFY_TOKEN }}"
-          echo "  5. Click 'Verify and save'."
-          echo "--------------------------------------------------------"
+          echo "=========================================================================="
+          echo "✅ DEPLOYMENT SUCCESSFUL! - WebHook URL:"
+          echo "Copy the URL below and paste it into the Meta Developer Portal's Webhook Configuration."
+          echo "URL: ${{ steps.deploy.outputs.url }}"
+          echo "Verification Token: morning_pulse_verify_token_2025"
+          echo "=========================================================================="
