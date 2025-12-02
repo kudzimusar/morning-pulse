@@ -1,0 +1,76 @@
+name: Deploy WhatsApp Bot to Google Cloud Functions
+
+on:
+  push:
+    branches:
+      - main
+      # Set to 'main' branch or use a specific tag/release flow for production safety
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # Define environment variables to be injected into the Cloud Function
+    env:
+      FUNCTION_NAME: webhook
+      RUNTIME: nodejs20
+      REGION: us-central1 # Change to your preferred region (e.g., europe-west1)
+      ENTRY_POINT: webhook
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }} # Uses the Service Account JSON secret
+
+      - name: Setup gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          
+      - name: Configure Environment Variables for Cloud Function
+        # This step formats all secrets into a single string for gcloud
+        id: env_vars
+        run: |
+          ENV_VARS="WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}"
+          ENV_VARS+=",WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}"
+          ENV_VARS+=",GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}"
+          ENV_VARS+=",VERIFY_TOKEN=${{ secrets.VERIFY_TOKEN }}"
+          # The Service Account key is complex and must be wrapped to be read by the Node.js app
+          ENV_VARS+=",FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}"
+
+          echo "ENV_VARS=$ENV_VARS" >> $GITHUB_OUTPUT
+
+      - name: Deploy Cloud Function
+        id: deploy
+        run: |
+          gcloud functions deploy ${{ env.FUNCTION_NAME }} \
+            --runtime ${{ env.RUNTIME }} \
+            --region ${{ env.REGION }} \
+            --entry-point ${{ env.ENTRY_POINT }} \
+            --trigger-http \
+            --allow-unauthenticated \
+            --set-env-vars ${{ steps.env_vars.outputs.ENV_VARS }}
+
+      - name: Output Trigger URL
+        # The URL is needed for the final Meta WebHook setup
+        run: |
+          FUNCTION_URL=$(gcloud functions describe ${{ env.FUNCTION_NAME }} --region ${{ env.REGION }} --format='value(serviceConfig.uri)')
+          echo "::notice file=deployment_info.txt::Deployment successful! The Trigger URL is: $FUNCTION_URL"
+          echo "DEPLOYMENT_URL=$FUNCTION_URL" >> $GITHUB_ENV
+          
+      - name: Print Final WebHook Configuration Instructions
+        run: |
+          echo "--------------------------------------------------------"
+          echo "  ✅ DEPLOYMENT SUCCESSFUL VIA GITHUB ACTIONS"
+          echo "  --------------------------------------------------------"
+          echo "  1. Copy this URL (the Callback URL):"
+          echo "  ${{ env.DEPLOYMENT_URL }}"
+          echo "  2. Go to Meta Developer Portal (WhatsApp Webhook Setup)"
+          echo "  3. Paste the URL into the Callback URL field."
+          echo "  4. Enter the Verify token: ${{ secrets.VERIFY_TOKEN }}"
+          echo "  5. Click 'Verify and save'."
+          echo "--------------------------------------------------------"
