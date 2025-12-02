@@ -3,8 +3,8 @@
  * Run this script to initialize the database with default poll data
  */
 
-const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+import admin from 'firebase-admin';
+import serviceAccount from './serviceAccountKey.json' assert { type: 'json' };
 
 // Initialize Firebase Admin
 admin.initializeApp({
