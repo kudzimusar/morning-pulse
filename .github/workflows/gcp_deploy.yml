@@ -65,14 +65,37 @@ jobs:
           gcloud services enable cloudbuild.googleapis.com --project=${{ env.PROJECT_ID }}
           gcloud services enable artifactregistry.googleapis.com --project=${{ env.PROJECT_ID }}
 
-      # Ensure app.js is the main entry point by creating a symlink or renaming
+      # Final cleanup and preparation before deployment
       - name: Prepare entry file for Cloud Functions
         run: |
+          # Remove index.html one more time to be absolutely sure
+          rm -f index.html
+          echo "Removed index.html (final check)"
+          
           # Cloud Functions looks for index.js by default, so we'll create it from app.js
-          if [ -f app.js ] && [ ! -f index.js ]; then
+          if [ -f app.js ]; then
             cp app.js index.js
             echo "Created index.js from app.js for Cloud Functions entry point"
+          else
+            echo "ERROR: app.js not found!"
+            exit 1
           fi
+          
+          # Verify files
+          echo "Files before deployment:"
+          ls -la *.js *.html 2>/dev/null || echo "No matching files"
+          
+          if [ -f index.html ]; then
+            echo "ERROR: index.html still exists!"
+            exit 1
+          fi
+          
+          if [ ! -f index.js ]; then
+            echo "ERROR: index.js not found!"
+            exit 1
+          fi
+          
+          echo "✓ Deployment files verified"
 
       # Deploy the Cloud Function
       - name: Deploy Cloud Function
