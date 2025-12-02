@@ -65,6 +65,15 @@ jobs:
           gcloud services enable cloudbuild.googleapis.com --project=${{ env.PROJECT_ID }}
           gcloud services enable artifactregistry.googleapis.com --project=${{ env.PROJECT_ID }}
 
+      # Ensure app.js is the main entry point by creating a symlink or renaming
+      - name: Prepare entry file for Cloud Functions
+        run: |
+          # Cloud Functions looks for index.js by default, so we'll create it from app.js
+          if [ -f app.js ] && [ ! -f index.js ]; then
+            cp app.js index.js
+            echo "Created index.js from app.js for Cloud Functions entry point"
+          fi
+
       # Deploy the Cloud Function
       - name: Deploy Cloud Function
         uses: google-github-actions/deploy-cloud-functions@v2
@@ -73,7 +82,6 @@ jobs:
           name: ${{ env.FUNCTION_NAME }}
           runtime: nodejs20
           entry_point: ${{ env.ENTRY_POINT }}
-          source_file: app.js
           project_id: ${{ env.PROJECT_ID }}
           region: ${{ env.REGION }}
           source_dir: .
