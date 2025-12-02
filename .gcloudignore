@@ -1,0 +1,47 @@
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore
+
+.gcloudignore
+.git
+.gitignore
+.github
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Frontend build files (not needed for Cloud Function)
+dist/
+dist-ssr/
+*.html
+*.tsx
+*.ts
+!index.js
+!init_db.js
+components/
+services/
+App.tsx
+index.tsx
+vite.config.ts
+tsconfig.json
+metadata.json
+constants.ts
+types.ts
+
+# Documentation
+README.md
+*.md
+
+# Test files
+**/__tests__/
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
+

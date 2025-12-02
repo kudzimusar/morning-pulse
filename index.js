@@ -7,18 +7,42 @@ import { GoogleGenAI } from '@google/genai';
 import admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin (lazy initialization to avoid module load errors)
 let db;
-try {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG || '{}');
-  if (Object.keys(serviceAccount).length > 0) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-    db = getFirestore();
+let firebaseInitialized = false;
+
+function initializeFirebase() {
+  if (firebaseInitialized) return db;
+  
+  try {
+    const serviceAccountStr = process.env.FIREBASE_ADMIN_CONFIG;
+    if (!serviceAccountStr) {
+      console.warn('FIREBASE_ADMIN_CONFIG not set, Firebase features will be disabled');
+      firebaseInitialized = true;
+      return null;
+    }
+    
+    const serviceAccount = JSON.parse(serviceAccountStr);
+    if (Object.keys(serviceAccount).length > 0) {
+      // Check if already initialized
+      if (admin.apps.length === 0) {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+      }
+      db = getFirestore();
+      firebaseInitialized = true;
+      console.log('Firebase Admin initialized successfully');
+      return db;
+    }
+  } catch (error) {
+    console.error('Firebase Admin initialization error:', error);
+    firebaseInitialized = true;
+    return null;
   }
-} catch (error) {
-  console.error('Firebase Admin initialization error:', error);
+  
+  firebaseInitialized = true;
+  return null;
 }
 
 // Initialize Gemini AI
@@ -97,6 +121,10 @@ async function sendWhatsAppMessage(phoneNumberId, to, message) {
  */
 async function generateAIResponse(userMessage, userId) {
   try {
+    if (!ai) {
+      return "AI service is not configured. Please check GEMINI_API_KEY environment variable.";
+    }
+    
     // Aggregate news headlines for context
     const headlines = Object.values(NEWS_DATA).flat().map(s => s.headline).join('\n');
     
@@ -204,10 +232,11 @@ export const webhook = async (req, res) => {
 
           // Handle special commands
           if (messageText.toLowerCase() === '*upgrade*') {
-            if (db) {
+            const firestoreDb = initializeFirebase();
+            if (firestoreDb) {
               const appId = process.env.APP_ID || 'default-app-id';
               const prefPath = `artifacts/${appId}/users/${from}/preferences/settings`;
-              await db.doc(prefPath).update({ isPremium: true });
+              await firestoreDb.doc(prefPath).update({ isPremium: true });
             }
             await sendWhatsAppMessage(
               process.env.WHATSAPP_PHONE_ID,
