@@ -3,8 +3,9 @@
  * Entry point: webhook
  */
 
-const { GoogleGenAI } = require('@google/genai');
-const admin = require('firebase-admin');
+import { GoogleGenAI } from '@google/genai';
+import admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin
 let db;
@@ -14,7 +15,7 @@ try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-    db = admin.firestore();
+    db = getFirestore();
   }
 } catch (error) {
   console.error('Firebase Admin initialization error:', error);
@@ -134,14 +135,17 @@ async function generateAIResponse(userMessage, userId) {
 /**
  * Main webhook handler
  */
-exports.webhook = async (req, res) => {
+export const webhook = async (req, res) => {
   // Handle GET request (webhook verification)
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+    // Check both VERIFY_TOKEN and WHATSAPP_VERIFY_TOKEN for compatibility
+    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || process.env.VERIFY_TOKEN;
+    
+    if (mode === 'subscribe' && token === verifyToken) {
       console.log('Webhook verified');
       res.status(200).send(challenge);
     } else {
@@ -206,4 +210,3 @@ exports.webhook = async (req, res) => {
 
   res.status(405).send('Method Not Allowed');
 };
-
