@@ -34,13 +34,17 @@ jobs:
         with:
           node-version: '20'
 
-      # Remove index.html BEFORE installing dependencies to prevent build confusion
+      # Remove ALL frontend files BEFORE installing dependencies to prevent build confusion
       - name: Remove frontend files that confuse Cloud Functions build
         run: |
-          if [ -f index.html ]; then
-            rm -f index.html
-            echo "Removed index.html to prevent build conflicts"
-          fi
+          echo "Removing frontend files..."
+          rm -f index.html
+          rm -f *.html
+          rm -rf components/
+          rm -rf services/
+          rm -f App.tsx index.tsx vite.config.ts tsconfig.json metadata.json constants.ts types.ts
+          echo "Frontend files removed. Remaining files:"
+          ls -la
 
       # Install dependencies (required for deployment)
       - name: Install Dependencies
@@ -64,6 +68,21 @@ jobs:
           gcloud services enable cloudfunctions.googleapis.com --project=${{ env.PROJECT_ID }}
           gcloud services enable cloudbuild.googleapis.com --project=${{ env.PROJECT_ID }}
           gcloud services enable artifactregistry.googleapis.com --project=${{ env.PROJECT_ID }}
+
+      # Verify index.html is gone before deployment
+      - name: Verify deployment files
+        run: |
+          echo "Files in deployment directory:"
+          ls -la
+          if [ -f index.html ]; then
+            echo "ERROR: index.html still exists!"
+            exit 1
+          fi
+          if [ ! -f index.js ]; then
+            echo "ERROR: index.js not found!"
+            exit 1
+          fi
+          echo "✓ Deployment files verified"
 
       # Deploy the Cloud Function
       - name: Deploy Cloud Function
