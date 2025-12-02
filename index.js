@@ -138,24 +138,48 @@ async function generateAIResponse(userMessage, userId) {
 export const webhook = async (req, res) => {
   // Handle GET request (webhook verification)
   if (req.method === 'GET') {
-    // Extract query parameters - handle both URLSearchParams and direct query access
-    const query = req.query || new URLSearchParams(req.url?.split('?')[1] || '');
-    const mode = query['hub.mode'] || query.get?.('hub.mode');
-    const token = query['hub.verify_token'] || query.get?.('hub.verify_token');
-    const challenge = query['hub.challenge'] || query.get?.('hub.challenge');
+    // Extract query parameters - Cloud Functions uses req.query directly
+    // Also handle URL parsing as fallback
+    let mode, token, challenge;
+    
+    if (req.query) {
+      // Standard Cloud Functions query parameter access
+      mode = req.query['hub.mode'];
+      token = req.query['hub.verify_token'];
+      challenge = req.query['hub.challenge'];
+    } else if (req.url) {
+      // Fallback: parse from URL
+      const url = new URL(req.url, `https://${req.headers.host || 'localhost'}`);
+      mode = url.searchParams.get('hub.mode');
+      token = url.searchParams.get('hub.verify_token');
+      challenge = url.searchParams.get('hub.challenge');
+    }
 
     // Check both VERIFY_TOKEN and WHATSAPP_VERIFY_TOKEN for compatibility
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || process.env.VERIFY_TOKEN;
     
-    console.log('Webhook verification attempt:', { mode, token, verifyToken, challenge: challenge ? 'present' : 'missing' });
+    console.log('Webhook verification attempt:', { 
+      mode, 
+      token: token ? 'present' : 'missing', 
+      verifyToken: verifyToken ? 'present' : 'missing',
+      challenge: challenge ? 'present' : 'missing',
+      tokenMatch: token === verifyToken
+    });
     
-    if (mode === 'subscribe' && token === verifyToken) {
+    // Meta requires: hub.mode === 'subscribe' AND hub.verify_token matches
+    if (mode === 'subscribe' && token === verifyToken && challenge) {
       console.log('Webhook verified successfully');
-      // Cloud Functions expects just the challenge string
+      // Meta requires: Return challenge as plain text (not JSON, not HTML)
+      res.set('Content-Type', 'text/plain');
       res.status(200).send(challenge);
       return;
     } else {
-      console.log('Webhook verification failed:', { mode, tokenMatch: token === verifyToken });
+      console.log('Webhook verification failed:', { 
+        mode, 
+        modeMatch: mode === 'subscribe',
+        tokenMatch: token === verifyToken,
+        hasChallenge: !!challenge
+      });
       res.status(403).send('Forbidden');
       return;
     }
