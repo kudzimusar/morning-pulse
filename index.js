@@ -138,20 +138,27 @@ async function generateAIResponse(userMessage, userId) {
 export const webhook = async (req, res) => {
   // Handle GET request (webhook verification)
   if (req.method === 'GET') {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
+    // Extract query parameters - handle both URLSearchParams and direct query access
+    const query = req.query || new URLSearchParams(req.url?.split('?')[1] || '');
+    const mode = query['hub.mode'] || query.get?.('hub.mode');
+    const token = query['hub.verify_token'] || query.get?.('hub.verify_token');
+    const challenge = query['hub.challenge'] || query.get?.('hub.challenge');
 
     // Check both VERIFY_TOKEN and WHATSAPP_VERIFY_TOKEN for compatibility
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || process.env.VERIFY_TOKEN;
     
+    console.log('Webhook verification attempt:', { mode, token, verifyToken, challenge: challenge ? 'present' : 'missing' });
+    
     if (mode === 'subscribe' && token === verifyToken) {
-      console.log('Webhook verified');
+      console.log('Webhook verified successfully');
+      // Cloud Functions expects just the challenge string
       res.status(200).send(challenge);
+      return;
     } else {
+      console.log('Webhook verification failed:', { mode, tokenMatch: token === verifyToken });
       res.status(403).send('Forbidden');
+      return;
     }
-    return;
   }
 
   // Handle POST request (incoming messages)
