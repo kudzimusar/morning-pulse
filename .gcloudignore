@@ -20,6 +20,7 @@ node_modules/
 dist/
 dist-ssr/
 *.html
+index.html
 *.tsx
 *.ts
 !index.js
