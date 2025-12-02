@@ -44,6 +44,19 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
+      # Setup gcloud SDK
+      - name: Setup gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      # Enable required APIs
+      - name: Enable Cloud Functions API
+        run: |
+          gcloud services enable cloudfunctions.googleapis.com --project=${{ env.PROJECT_ID }}
+          gcloud services enable cloudbuild.googleapis.com --project=${{ env.PROJECT_ID }}
+          gcloud services enable artifactregistry.googleapis.com --project=${{ env.PROJECT_ID }}
+
       # Deploy the Cloud Function
       - name: Deploy Cloud Function
         uses: google-github-actions/deploy-cloud-functions@v2
