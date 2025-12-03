@@ -150,12 +150,35 @@ exports.webhook = async (req, res) => {
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
+    // Support both VERIFY_TOKEN and WHATSAPP_VERIFY_TOKEN for compatibility
+    const verifyToken = WHATSAPP_VERIFY_TOKEN || process.env.VERIFY_TOKEN;
+
+    // 🔍 DEBUG LOGGING - Remove after fixing
+    console.log('=== WEBHOOK VERIFICATION DEBUG ===');
+    console.log('Received mode:', mode);
+    console.log('Received token:', token);
+    console.log('Expected token (WHATSAPP_VERIFY_TOKEN):', WHATSAPP_VERIFY_TOKEN || 'NOT SET');
+    console.log('Expected token (VERIFY_TOKEN fallback):', process.env.VERIFY_TOKEN || 'NOT SET');
+    console.log('Using token:', verifyToken || 'NOT SET');
+    console.log('Tokens match:', token === verifyToken);
+    console.log('Mode is subscribe:', mode === 'subscribe');
+    if (token && verifyToken) {
+      console.log('Token length received:', token.length);
+      console.log('Token length expected:', verifyToken.length);
+      console.log('Token comparison (strict):', token === verifyToken);
+      console.log('Token comparison (trimmed):', token.trim() === verifyToken.trim());
+    }
+    console.log('Challenge present:', !!challenge);
+    console.log('===================================');
+
     // This is the CRITICAL CHECK for Meta validation
-    if (mode === 'subscribe' && token === WHATSAPP_VERIFY_TOKEN) {
-      console.log('Webhook verified successfully by Meta.');
+    if (mode === 'subscribe' && token === verifyToken) {
+      console.log('✅ Webhook verified successfully by Meta.');
       res.status(200).send(challenge);
     } else {
-      console.error('Webhook verification failed. Token or mode mismatch.');
+      console.error('❌ Webhook verification failed.');
+      console.error('  - Mode match:', mode === 'subscribe', '(expected: subscribe, got:', mode, ')');
+      console.error('  - Token match:', token === verifyToken);
       // Important: Must return a non-200 status on failure
       res.status(403).send('Forbidden: Token or mode mismatch.');
     }
