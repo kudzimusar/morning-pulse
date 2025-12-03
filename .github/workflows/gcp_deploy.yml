@@ -20,9 +20,6 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
-    # *** FIX: Removed problematic 'if' condition that failed parsing. ***
-    # The job will now run, and secrets are checked in the authentication step.
 
     steps:
       - name: Checkout Repository
@@ -34,17 +31,11 @@ jobs:
         with:
           node-version: '20'
 
-      # Remove index.html BEFORE installing dependencies to prevent build confusion
-      - name: Remove frontend files that confuse Cloud Functions build
+      # Install dependencies in functions directory
+      - name: Install Function Dependencies
         run: |
-          if [ -f index.html ]; then
-            rm -f index.html
-            echo "Removed index.html to prevent build conflicts"
-          fi
-
-      # Install dependencies (required for deployment)
-      - name: Install Dependencies
-        run: npm install
+          cd functions
+          npm install
 
       # Authenticate to Google Cloud using the Service Account Key
       - name: Authenticate Google Cloud with Service Account Key
@@ -65,38 +56,6 @@ jobs:
           gcloud services enable cloudbuild.googleapis.com --project=${{ env.PROJECT_ID }}
           gcloud services enable artifactregistry.googleapis.com --project=${{ env.PROJECT_ID }}
 
-      # Final cleanup and preparation before deployment
-      - name: Prepare entry file for Cloud Functions
-        run: |
-          # Remove index.html one more time to be absolutely sure
-          rm -f index.html
-          echo "Removed index.html (final check)"
-          
-          # Cloud Functions looks for index.js by default, so we'll create it from app.js
-          if [ -f app.js ]; then
-            cp app.js index.js
-            echo "Created index.js from app.js for Cloud Functions entry point"
-          else
-            echo "ERROR: app.js not found!"
-            exit 1
-          fi
-          
-          # Verify files
-          echo "Files before deployment:"
-          ls -la *.js *.html 2>/dev/null || echo "No matching files"
-          
-          if [ -f index.html ]; then
-            echo "ERROR: index.html still exists!"
-            exit 1
-          fi
-          
-          if [ ! -f index.js ]; then
-            echo "ERROR: index.js not found!"
-            exit 1
-          fi
-          
-          echo "✓ Deployment files verified"
-
       # Deploy the Cloud Function
       - name: Deploy Cloud Function
         uses: google-github-actions/deploy-cloud-functions@v2
@@ -107,7 +66,7 @@ jobs:
           entry_point: ${{ env.ENTRY_POINT }}
           project_id: ${{ env.PROJECT_ID }}
           region: ${{ env.REGION }}
-          source_dir: .
+          source_dir: functions
           memory_mb: 256
           timeout: 540s
           # This handles environment variables cleanly using the action's 'env_vars' input

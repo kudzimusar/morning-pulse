@@ -1,0 +1,15 @@
+{
+  "name": "morning-pulse-webhook",
+  "version": "1.0.0",
+  "description": "WhatsApp webhook handler for Morning Pulse news bot",
+  "main": "index.js",
+  "dependencies": {
+    "@google/genai": "^1.30.0",
+    "firebase-admin": "^12.6.0",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": "20"
+  }
+}
+
