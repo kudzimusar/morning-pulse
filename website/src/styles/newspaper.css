@@ -1,0 +1,337 @@
+/* Modern Newspaper Design - Morning Pulse */
+
+/* CSS Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-color: #000000;
+  --secondary-color: #333333;
+  --accent-color: #1a1a1a;
+  --text-color: #1a1a1a;
+  --light-text: #666666;
+  --border-color: #e0e0e0;
+  --bg-color: #ffffff;
+  --section-bg: #f9f9f9;
+  
+  /* Category Colors */
+  --local-color: #2c5aa0;
+  --business-color: #1e7e34;
+  --african-color: #d4af37;
+  --global-color: #dc3545;
+  --sports-color: #007bff;
+  --tech-color: #6f42c1;
+  --general-color: #17a2b8;
+  
+  /* Typography */
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+  
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: var(--line-height-normal);
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Header Styles */
+.newspaper-header {
+  border-bottom: 3px solid var(--primary-color);
+  padding: var(--spacing-lg) var(--spacing-md);
+  background-color: var(--bg-color);
+  margin-bottom: var(--spacing-lg);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.masthead {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.header-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-sm);
+}
+
+.date {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: var(--secondary-color);
+  font-weight: 400;
+}
+
+.tagline {
+  font-size: 0.875rem;
+  color: var(--light-text);
+  font-style: italic;
+  text-transform: lowercase;
+}
+
+/* Main Container */
+.app {
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* News Grid Layout */
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-xl);
+  padding: var(--spacing-lg) 0;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* News Section */
+.news-section {
+  background-color: var(--section-bg);
+  padding: var(--spacing-lg);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 4px;
+}
+
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 2px solid var(--border-color);
+  
+  /* Category-specific colors */
+  &[data-category="Local (Zim)"] {
+    border-left-color: var(--local-color);
+    color: var(--local-color);
+  }
+  &[data-category="Business (Zim)"] {
+    border-left-color: var(--business-color);
+    color: var(--business-color);
+  }
+  &[data-category="African Focus"] {
+    border-left-color: var(--african-color);
+    color: var(--african-color);
+  }
+  &[data-category="Global"] {
+    border-left-color: var(--global-color);
+    color: var(--global-color);
+  }
+  &[data-category="Sports"] {
+    border-left-color: var(--sports-color);
+    color: var(--sports-color);
+  }
+  &[data-category="Tech"] {
+    border-left-color: var(--tech-color);
+    color: var(--tech-color);
+  }
+  &[data-category="General News"] {
+    border-left-color: var(--general-color);
+    color: var(--general-color);
+  }
+}
+
+.articles-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Article Card */
+.article-card {
+  background-color: var(--bg-color);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.article-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.article-card.clickable {
+  cursor: pointer;
+}
+
+.article-headline {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.article-detail {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: var(--line-height-relaxed);
+  color: var(--text-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.article-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color);
+  font-size: 0.875rem;
+}
+
+.article-source {
+  font-weight: 600;
+  color: var(--secondary-color);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  font-size: 0.75rem;
+}
+
+.article-link {
+  color: var(--primary-color);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.article-card.clickable:hover .article-link {
+  text-decoration: underline;
+}
+
+/* Loading and Error States */
+.loading-container,
+.error-container,
+.no-news-container {
+  text-align: center;
+  padding: var(--spacing-xl);
+  font-size: 1.125rem;
+  color: var(--light-text);
+}
+
+.error-container {
+  color: var(--global-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .news-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) 0;
+  }
+  
+  .news-section {
+    padding: var(--spacing-md);
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .article-headline {
+    font-size: 1.25rem;
+  }
+  
+  .masthead {
+    font-size: 2rem;
+  }
+  
+  .header-meta {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+}
+
+@media (min-width: 1200px) {
+  .news-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1600px) {
+  .news-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .newspaper-header {
+    border-bottom: 2px solid var(--primary-color);
+    page-break-after: avoid;
+  }
+  
+  .news-section {
+    page-break-inside: avoid;
+    border-left: 2px solid var(--primary-color);
+  }
+  
+  .article-card {
+    page-break-inside: avoid;
+    border: 1px solid var(--border-color);
+  }
+  
+  .article-link {
+    display: none;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+.article-card.clickable:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+

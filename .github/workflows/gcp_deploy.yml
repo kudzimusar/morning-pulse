@@ -107,6 +107,24 @@ jobs:
             FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
             APP_ID=morning-pulse-app
 
+      # Deploy the News Aggregator Function
+      - name: Deploy News Aggregator Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-news
+        with:
+          name: newsAggregator
+          runtime: nodejs20
+          entry_point: newsAggregator
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 512
+          timeout: 540s
+          env_vars: |
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            APP_ID=morning-pulse-app
+
       # IMPORTANT: Output the final deployed URL for the user to configure the webhook
       - name: Print Final WebHook Configuration Instructions
         if: success()
@@ -116,4 +134,9 @@ jobs:
           echo "Copy the URL below and paste it into the Meta Developer Portal's Webhook Configuration."
           echo "URL: ${{ steps.deploy.outputs.url }}"
           echo "Verification Token: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}"
+          echo "=========================================================================="
+          echo ""
+          echo "✅ News Aggregator Function Deployed:"
+          echo "URL: ${{ steps.deploy-news.outputs.url }}"
+          echo "To set up daily scheduling, run the setup_scheduler.sh script"
           echo "=========================================================================="

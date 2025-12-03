@@ -13,6 +13,9 @@ export interface NewsStory {
   detail: string;
   source: string;
   category: string;
+  url?: string;
+  date?: string;
+  timestamp?: number;
 }
 
 export interface PollData {
