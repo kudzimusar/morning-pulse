@@ -74,6 +74,7 @@ jobs:
             WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
             WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}
             WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+            VERIFY_TOKEN=${{ secrets.VERIFY_TOKEN }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
             APP_ID=morning-pulse-app
