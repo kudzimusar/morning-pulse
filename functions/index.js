@@ -102,41 +102,28 @@ async function generateAIResponse(userMessage, userId) {
     // Aggregate news headlines for context
     const headlines = Object.values(NEWS_DATA).flat().map(s => s.headline).join('\n');
     
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
-      systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`,
-      tools: [{ googleSearch: {} }]
+    // Create the model with system instruction (removed Google Search tools to fix 404 error)
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`
     });
-    
+
+    // Generate content (simplified call without tools)
     const result = await model.generateContent(userMessage);
-    const response = await result.response;
+    const response = result.response;
+    const text = response.text();
+
+    return text || "I'm sorry, I couldn't generate a response.";
     
-    let text = response.text() || "I'm sorry, I couldn't generate a response.";
-    let sources = [];
-
-    // Extract grounding metadata if available
-    const candidate = response.candidates?.[0];
-    if (candidate && candidate.groundingMetadata) {
-      const groundingMetadata = candidate.groundingMetadata;
-      if (groundingMetadata.groundingAttributions) {
-        sources = groundingMetadata.groundingAttributions
-          .map(attribution => ({
-            uri: attribution.web?.uri,
-            title: attribution.web?.title,
-          }))
-          .filter(source => source.uri && source.title); // Ensure sources are valid
-      }
-    }
-
-    if (sources.length > 0) {
-      // Basic markdown formatting for sources
-      text += `\n\n*Sources*:\n${sources.map(s => `- ${s.title}`).join('\n')}`;
-    }
-
-    return text;
   } catch (error) {
-    console.error("Gemini API Error:", error.message);
-    console.error("Gemini API Error Details:", error);
+    console.error("Gemini API Error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText,
+      errorDetails: error.errorDetails,
+      stack: error.stack
+    });
     return "I'm having trouble connecting to the AI right now. Please try again later.";
   }
 }
@@ -242,4 +229,8 @@ exports.webhook = async (req, res) => {
 
   res.status(405).send('Method Not Allowed');
 };
+
+// Export newsAggregator function (if file exists)
+// Note: Uncomment when newsAggregator.js is created
+// exports.newsAggregator = require('./newsAggregator').newsAggregator;
 
