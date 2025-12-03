@@ -48,20 +48,26 @@ const NEWS_DATA = {
 // Initialize Firebase Admin
 let db;
 try {
-  // Use a fallback to ensure parsing doesn't crash the startup
-  const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG || '{}');
-  if (Object.keys(serviceAccount).length > 0) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-    db = admin.firestore();
-    console.log('Firebase Admin initialized.');
+  const configString = process.env.FIREBASE_ADMIN_CONFIG;
+  
+  if (!configString || configString.trim() === '') {
+    console.warn('FIREBASE_ADMIN_CONFIG is empty. Firestore functions will be unavailable.');
   } else {
-    console.warn('Firebase Admin config missing or empty. Firestore functions will be unavailable.');
+    const serviceAccount = JSON.parse(configString);
+    
+    if (!serviceAccount.project_id || !serviceAccount.private_key) {
+      console.warn('Firebase config is incomplete. Firestore functions will be unavailable.');
+    } else {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      db = admin.firestore();
+      console.log('Firebase Admin initialized successfully.');
+    }
   }
 } catch (error) {
-  console.error('Firebase Admin initialization error (FATAL TO FUNCTION):', error.message);
-  // Do not crash the process, but log the error
+  console.error('Firebase Admin initialization error:', error.message);
+  console.warn('Continuing without Firebase. Premium features will be unavailable.');
 }
 
 // Initialize Gemini AI
@@ -96,19 +102,30 @@ async function sendWhatsAppMessage(to, message) {
 
 /**
  * Generate AI response using Gemini
+ * 
+ * NOTE: Google Search tools are currently disabled to fix 404 errors.
+ * 
+ * How to get latest news:
+ * 1. The newsAggregator Cloud Function (separate function) uses Gemini + Google Search
+ *    to fetch latest news and store it in Firestore/NEWS_DATA
+ * 2. This function uses NEWS_DATA for context (updated by newsAggregator)
+ * 3. To re-enable Google Search here, uncomment the tools line below once basic functionality works
  */
 async function generateAIResponse(userMessage, userId) {
   try {
     // Aggregate news headlines for context
     const headlines = Object.values(NEWS_DATA).flat().map(s => s.headline).join('\n');
     
-    // Create the model with system instruction (removed Google Search tools to fix 404 error)
+    // Create the model with system instruction
+    // TODO: Re-enable Google Search tools once basic functionality is verified:
+    // tools: [{ googleSearchRetrieval: {} }]
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`
+      // tools: [{ googleSearchRetrieval: {} }] // Uncomment to enable Google Search
     });
 
-    // Generate content (simplified call without tools)
+    // Generate content
     const result = await model.generateContent(userMessage);
     const response = result.response;
     const text = response.text();
@@ -230,6 +247,15 @@ exports.webhook = async (req, res) => {
   res.status(405).send('Method Not Allowed');
 };
 
-// Export newsAggregator function
-exports.newsAggregator = require('./newsAggregator').newsAggregator;
+// Export newsAggregator function (with error handling)
+try {
+  const newsAggregatorModule = require('./newsAggregator');
+  if (newsAggregatorModule && newsAggregatorModule.newsAggregator) {
+    exports.newsAggregator = newsAggregatorModule.newsAggregator;
+    console.log('newsAggregator function exported successfully.');
+  }
+} catch (error) {
+  console.warn('newsAggregator module not available:', error.message);
+  console.warn('News aggregation features will be unavailable.');
+}
 
