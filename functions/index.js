@@ -230,7 +230,6 @@ exports.webhook = async (req, res) => {
   res.status(405).send('Method Not Allowed');
 };
 
-// Export newsAggregator function (if file exists)
-// Note: Uncomment when newsAggregator.js is created
-// exports.newsAggregator = require('./newsAggregator').newsAggregator;
+// Export newsAggregator function
+exports.newsAggregator = require('./newsAggregator').newsAggregator;
 
