@@ -4,7 +4,7 @@
  */
 
 // CommonJS Imports
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 const axios = require('axios'); // Used for robust HTTP requests
 
@@ -65,7 +65,7 @@ try {
 }
 
 // Initialize Gemini AI
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // --- UTILITY FUNCTIONS ---
 
@@ -102,18 +102,19 @@ async function generateAIResponse(userMessage, userId) {
     // Aggregate news headlines for context
     const headlines = Object.values(NEWS_DATA).flat().map(s => s.headline).join('\n');
     
-    const contents = [{ role: 'user', parts: [{ text: userMessage }] }];
-    
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview-09-2025',
-      contents: contents,
-      config: {
-        systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`,
-        tools: [{ google_search: {} }],
-      },
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`
     });
-
-    let text = response.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't generate a response.";
+    
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+      tools: [{ googleSearch: {} }]
+    });
+    
+    const response = await result.response;
+    
+    let text = response.text() || "I'm sorry, I couldn't generate a response.";
     let sources = [];
 
     // Extract grounding metadata if available
@@ -135,6 +136,7 @@ async function generateAIResponse(userMessage, userId) {
     return text;
   } catch (error) {
     console.error("Gemini API Error:", error.message);
+    console.error("Gemini API Error Details:", error);
     return "I'm having trouble connecting to the AI right now. Please try again later.";
   }
 }
