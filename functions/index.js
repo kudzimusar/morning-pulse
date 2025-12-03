@@ -104,28 +104,28 @@ async function generateAIResponse(userMessage, userId) {
     
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-1.5-flash',
-      systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`
-    });
-    
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+      systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`,
       tools: [{ googleSearch: {} }]
     });
     
+    const result = await model.generateContent(userMessage);
     const response = await result.response;
     
     let text = response.text() || "I'm sorry, I couldn't generate a response.";
     let sources = [];
 
     // Extract grounding metadata if available
-    const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+    const candidate = response.candidates?.[0];
+    if (candidate && candidate.groundingMetadata) {
+      const groundingMetadata = candidate.groundingMetadata;
+      if (groundingMetadata.groundingAttributions) {
         sources = groundingMetadata.groundingAttributions
-            .map(attribution => ({
-                uri: attribution.web?.uri,
-                title: attribution.web?.title,
-            }))
-            .filter(source => source.uri && source.title); // Ensure sources are valid
+          .map(attribution => ({
+            uri: attribution.web?.uri,
+            title: attribution.web?.title,
+          }))
+          .filter(source => source.uri && source.title); // Ensure sources are valid
+      }
     }
 
     if (sources.length > 0) {
