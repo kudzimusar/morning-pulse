@@ -56,6 +56,34 @@ jobs:
           gcloud services enable cloudbuild.googleapis.com --project=${{ env.PROJECT_ID }}
           gcloud services enable artifactregistry.googleapis.com --project=${{ env.PROJECT_ID }}
 
+      # Wait for any in-progress deployments to complete
+      - name: Wait for previous deployment to complete
+        run: |
+          echo "Checking for in-progress deployments..."
+          max_wait=300  # 5 minutes max wait
+          wait_time=0
+          while [ $wait_time -lt $max_wait ]; do
+            # Check if there's an operation in progress
+            operations=$(gcloud functions operations list \
+              --region=${{ env.REGION }} \
+              --project=${{ env.PROJECT_ID }} \
+              --filter="metadata.target.name:${{ env.FUNCTION_NAME }} AND done:false" \
+              --format="value(name)" 2>/dev/null || echo "")
+            
+            if [ -z "$operations" ]; then
+              echo "✅ No operations in progress. Safe to deploy."
+              break
+            else
+              echo "⏳ Deployment operation in progress. Waiting 10 seconds... ($wait_time/$max_wait seconds)"
+              sleep 10
+              wait_time=$((wait_time + 10))
+            fi
+          done
+          
+          if [ $wait_time -ge $max_wait ]; then
+            echo "⚠️  Timeout waiting for previous deployment. Proceeding anyway..."
+          fi
+
       # Deploy the Cloud Function
       - name: Deploy Cloud Function
         uses: google-github-actions/deploy-cloud-functions@v2
