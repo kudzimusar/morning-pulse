@@ -100,46 +100,32 @@ async function sendWhatsAppMessage(to, message) {
   }
 }
 
-/**
- * Generate AI response using Gemini
- * 
- * NOTE: Google Search tools are currently disabled to fix 404 errors.
- * 
- * How to get latest news:
- * 1. The newsAggregator Cloud Function (separate function) uses Gemini + Google Search
- *    to fetch latest news and store it in Firestore/NEWS_DATA
- * 2. This function uses NEWS_DATA for context (updated by newsAggregator)
- * 3. To re-enable Google Search here, uncomment the tools line below once basic functionality works
- */
 async function generateAIResponse(userMessage, userId) {
   try {
     // Aggregate news headlines for context
     const headlines = Object.values(NEWS_DATA).flat().map(s => s.headline).join('\n');
     
-    // Create the model with system instruction
-    // TODO: Re-enable Google Search tools once basic functionality is verified:
-    // tools: [{ googleSearchRetrieval: {} }]
+    // Use gemini-2.5-flash which is available with this API key
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}`
-      // tools: [{ googleSearchRetrieval: {} }] // Uncomment to enable Google Search
+      model: "gemini-2.5-flash"
     });
-
+    // Combine system prompt, context, and user message
+    const prompt = `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}\n\nUser Question: ${userMessage}\n\nAssistant:`;
+    
     // Generate content
-    const result = await model.generateContent(userMessage);
+    const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
 
+    console.log('✅ Gemini AI response generated');
     return text || "I'm sorry, I couldn't generate a response.";
     
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("❌ Gemini API Error:", error.message);
     console.error("Error details:", {
       message: error.message,
       status: error.status,
-      statusText: error.statusText,
-      errorDetails: error.errorDetails,
-      stack: error.stack
+      statusText: error.statusText
     });
     return "I'm having trouble connecting to the AI right now. Please try again later.";
   }
