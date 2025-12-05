@@ -69,9 +69,10 @@ jobs:
 
       # Inject Firebase Config for real-time mode
       - name: Inject Firebase Config
-        if: secrets.FIREBASE_CONFIG != ''
         run: |
-          echo "VITE_FIREBASE_CONFIG='${{ secrets.FIREBASE_CONFIG }}'" >> $GITHUB_ENV
+          if [ -n "${{ secrets.FIREBASE_CONFIG }}" ]; then
+            echo "VITE_FIREBASE_CONFIG='${{ secrets.FIREBASE_CONFIG }}'" >> $GITHUB_ENV
+          fi
         continue-on-error: true
 
       # Build website
