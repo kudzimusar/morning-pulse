@@ -67,8 +67,17 @@ jobs:
           node scripts/generateStaticSite.js
         continue-on-error: true # Continue even if static generation fails
 
+      # Inject Firebase Config for real-time mode
+      - name: Inject Firebase Config
+        if: secrets.FIREBASE_CONFIG != ''
+        run: |
+          echo "VITE_FIREBASE_CONFIG='${{ secrets.FIREBASE_CONFIG }}'" >> $GITHUB_ENV
+        continue-on-error: true
+
       # Build website
       - name: Build Website
+        env:
+          VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
           cd website
           npm run build
@@ -87,4 +96,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
