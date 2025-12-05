@@ -100,10 +100,50 @@ async function sendWhatsAppMessage(to, message) {
   }
 }
 
+/**
+ * Get today's news from Firestore, or fallback to hardcoded data
+ */
+async function getTodaysNews() {
+  try {
+    if (!db) {
+      console.warn('⚠️ Firestore not initialized, using hardcoded news');
+      return NEWS_DATA;
+    }
+    
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const newsPath = `artifacts/${APP_ID}/public/data/news/${today}`;
+    
+    const newsDoc = await db.doc(newsPath).get();
+    
+    if (newsDoc.exists) {
+      const data = newsDoc.data();
+      const categories = data.categories || {};
+      
+      // Convert Firestore format to NEWS_DATA format
+      if (Object.keys(categories).length > 0) {
+        console.log('✅ Using fresh news from Firestore:', today);
+        return categories;
+      } else {
+        console.log('ℹ️ News document exists but empty, using hardcoded data');
+        return NEWS_DATA;
+      }
+    } else {
+      console.log('ℹ️ No news for today, using hardcoded data');
+      return NEWS_DATA;
+    }
+  } catch (error) {
+    console.error('❌ Error fetching news from Firestore:', error.message);
+    return NEWS_DATA; // Fallback to hardcoded
+  }
+}
+
 async function generateAIResponse(userMessage, userId) {
   try {
+    // Get today's news from Firestore (or fallback to hardcoded)
+    const newsData = await getTodaysNews();
+    
     // Aggregate news headlines for context
-    const headlines = Object.values(NEWS_DATA).flat().map(s => s.headline).join('\n');
+    const headlines = Object.values(newsData).flat().map(s => s.headline).join('\n');
     
     // Use gemini-2.5-flash which is available with this API key
     const model = genAI.getGenerativeModel({
