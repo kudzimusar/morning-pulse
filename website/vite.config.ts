@@ -13,6 +13,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     }
+  },
+  define: {
+    // Inject Firebase config at build time if available
+    'import.meta.env.VITE_FIREBASE_CONFIG': JSON.stringify(process.env.VITE_FIREBASE_CONFIG || '')
   }
 });
 
