@@ -15,7 +15,7 @@ const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN; // Matches environment variable name in YAML
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const APP_ID = process.env.APP_ID || 'default-app-id';
+const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
 const SYSTEM_PROMPT = `You are the "Morning Pulse" AI, a helpful and concise news assistant for Zimbabwean readers. 
 When answering questions:

@@ -30,7 +30,7 @@ const INITIAL_POLL_DATA = {
 
 async function initializeDatabase() {
   try {
-    const appId = process.env.APP_ID || 'default-app-id';
+    const appId = process.env.APP_ID || 'morning-pulse-app';
     const pollPath = `artifacts/${appId}/public/data/polls/current_pulse_poll`;
     
     const pollRef = db.doc(pollPath);

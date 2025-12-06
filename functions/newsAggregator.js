@@ -11,7 +11,7 @@ const admin = require('firebase-admin');
 
 // --- CONFIGURATION ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const APP_ID = process.env.APP_ID || 'default-app-id';
+const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
 // News categories to fetch
 const NEWS_CATEGORIES = [

@@ -9,7 +9,7 @@ const path = require('path');
 
 // Initialize Firebase Admin
 const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG || '{}');
-const APP_ID = process.env.APP_ID || 'default-app-id';
+const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
 if (Object.keys(serviceAccount).length === 0) {
   console.error('FIREBASE_ADMIN_CONFIG environment variable is required');
