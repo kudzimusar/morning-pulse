@@ -27,18 +27,30 @@ const NEWS_CATEGORIES = [
 // Initialize Firebase Admin
 let db;
 try {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG || '{}');
-  if (Object.keys(serviceAccount).length > 0) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-    db = admin.firestore();
-    console.log('Firebase Admin initialized.');
+  if (!admin.apps.length) {
+    const configString = process.env.FIREBASE_ADMIN_CONFIG;
+    
+    if (!configString || configString.trim() === '') {
+      console.warn('FIREBASE_ADMIN_CONFIG is empty. Firestore will be unavailable.');
+    } else {
+      const serviceAccount = JSON.parse(configString);
+      
+      if (serviceAccount.project_id && serviceAccount.private_key) {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+        db = admin.firestore();
+        console.log('✅ Firebase Admin initialized successfully in newsAggregator');
+      } else {
+        console.warn('Firebase config incomplete');
+      }
+    }
   } else {
-    console.warn('Firebase Admin config missing or empty. Firestore functions will be unavailable.');
+    db = admin.firestore();
+    console.log('✅ Using existing Firebase Admin instance');
   }
 } catch (error) {
-  console.error('Firebase Admin initialization error:', error.message);
+  console.error('❌ Firebase initialization error:', error.message);
 }
 
 // Initialize Gemini AI
@@ -88,7 +100,7 @@ Format your response as a JSON array with this structure:
 Only return valid JSON, no additional text.`;
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       tools: [{ googleSearch: {} }]
     });
 
