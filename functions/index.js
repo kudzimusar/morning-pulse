@@ -545,12 +545,14 @@ exports.webhook = async (req, res) => {
             }
             
             console.log(`✅ Generated response (${aiResponse.length} chars), sending to ${from}...`);
+            
+            // Send response via WhatsApp
             const sendResult = await sendWhatsAppMessage(from, aiResponse);
             
             if (sendResult) {
-              console.log(`✅ Message sent successfully to ${from}`);
+              console.log('✅ WhatsApp message sent successfully');
             } else {
-              console.error(`❌ Failed to send message to ${from}`);
+              console.error(`❌ Failed to send WhatsApp message to ${from}`);
             }
           }
         }
