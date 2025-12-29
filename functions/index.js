@@ -225,15 +225,23 @@ async function getTodaysNews() {
 
 /**
  * Fetch news using Google Search fallback for missing categories
- * Uses Gemini with googleSearch tool to find news for the 7 categories
+ * Uses Gemini with googleSearch tool to find news
+ * For fallback scenarios, only fetches 3 key categories to avoid timeouts
  */
-async function fetchNewsWithSearch(missingCategories = NEWS_CATEGORIES) {
+async function fetchNewsWithSearch(missingCategories = null) {
   try {
-    console.log(`🔍 Fetching news via Google Search for ${missingCategories.length} categories`);
+    // For fallback scenarios, only fetch 3 key categories to avoid timeouts
+    const fallbackCategories = ['Local (Zim)', 'Business (Zim)', 'Global'];
+    const categoriesToFetch = missingCategories || fallbackCategories;
+    
+    console.log(`🔍 Fetching news via Google Search for ${categoriesToFetch.length} categories (fallback mode)`);
     
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
-      tools: [{ googleSearch: {} }]
+      tools: [{ googleSearch: {} }],
+      generationConfig: {
+        maxOutputTokens: 1024
+      }
     });
 
     // Build search query for all missing categories
@@ -247,7 +255,7 @@ async function fetchNewsWithSearch(missingCategories = NEWS_CATEGORIES) {
       'General News': 'breaking news today'
     };
 
-    const searchPromises = missingCategories.map(async (category) => {
+    const searchPromises = categoriesToFetch.map(async (category) => {
       const searchQuery = categoryQueries[category] || 'news today';
       const prompt = `Find the top 3-5 most important and recent news stories for: ${category}.
 Search for: ${searchQuery}
@@ -271,7 +279,13 @@ Format as JSON array:
 Only return valid JSON, no additional text.`;
 
       try {
-        const result = await model.generateContent(prompt);
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout after 15 seconds')), 15000)
+        );
+        
+        const generatePromise = model.generateContent(prompt);
+        const result = await Promise.race([generatePromise, timeoutPromise]);
         const response = await result.response;
         let text = response.text().trim();
         
@@ -373,9 +387,12 @@ async function handleNewsQuery(userMessage, userId) {
     // Step 3: Format news for prompt
     const formattedNews = formatNewsForPrompt(newsData);
     
-    // Step 4: Use gemini-2.5-flash for response generation
+    // Step 4: Use gemini-2.5-flash for response generation with timeout
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash"
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        maxOutputTokens: 1024
+      }
     });
     
     // Step 5: Build comprehensive prompt
@@ -398,8 +415,13 @@ Generate a complete Morning Pulse news bulletin in the exact Kukurigo style form
 
 If the user asks a specific question, answer it using the news context provided. If they ask for "news" or "update", provide the full formatted bulletin.`;
 
-    // Generate content
-    const result = await model.generateContent(prompt);
+    // Generate content with timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+    );
+    
+    const generatePromise = model.generateContent(prompt);
+    const result = await Promise.race([generatePromise, timeoutPromise]);
     const response = result.response;
     const text = response.text();
 
