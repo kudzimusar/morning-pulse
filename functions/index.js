@@ -43,7 +43,9 @@ Your output must mirror the professional "Kukurigo" style.
    - SEPARATOR: Use a single empty line between different news stories.
    - FOOTER: _Morning Pulse Updates©️_
 
-3. TONE: Factual, journalistic, and strictly objective. Do not add personal AI commentary.`;
+3. TONE: Factual, journalistic, and strictly objective. Do not add personal AI commentary.
+
+4. LENGTH: Keep responses concise and under 3000 characters. Prioritize key headlines and summaries.`;
 
 // Mock Data for fallback (kept for backward compatibility)
 const NEWS_DATA = {
@@ -389,10 +391,7 @@ async function handleNewsQuery(userMessage, userId) {
     
     // Step 4: Use gemini-2.5-flash for response generation with timeout
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: {
-        maxOutputTokens: 1024
-      }
+      model: "gemini-2.5-flash"
     });
     
     // Step 5: Build comprehensive prompt
@@ -415,23 +414,39 @@ Generate a complete Morning Pulse news bulletin in the exact Kukurigo style form
 
 If the user asks a specific question, answer it using the news context provided. If they ask for "news" or "update", provide the full formatted bulletin.`;
 
-    // Generate content with timeout
+    // Generate content with timeout and token limits
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
     );
     
-    const generatePromise = model.generateContent(prompt);
+    const generatePromise = model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 800,  // This limits response length
+        temperature: 0.7
+      }
+    });
+    
     const result = await Promise.race([generatePromise, timeoutPromise]);
     const response = result.response;
-    const text = response.text();
+    let responseText = response.text();
 
-    if (!text || text.trim() === '') {
+    if (!responseText || responseText.trim() === '') {
       console.error('❌ Empty response from Gemini API');
       return "I'm sorry, I couldn't generate a response. Please try again.";
     }
 
-    console.log(`✅ Gemini AI response generated with Kukurigo formatting (${text.length} characters)`);
-    return text;
+    // WhatsApp limit is 4096 chars, leave buffer for formatting
+    const MAX_LENGTH = 3900;
+    const originalLength = responseText.length;
+
+    if (responseText.length > MAX_LENGTH) {
+      responseText = responseText.substring(0, MAX_LENGTH) + '\n\n... (Message truncated due to length. Ask for specific category for full details)';
+      console.log(`⚠️ Response truncated from ${originalLength} to ${responseText.length} chars`);
+    }
+
+    console.log(`✅ Gemini AI response generated with Kukurigo formatting (${responseText.length} characters)`);
+    return responseText;
     
   } catch (error) {
     console.error("❌ Error in handleNewsQuery:", error.message);
