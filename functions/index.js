@@ -64,10 +64,27 @@ try {
     }
   }
   
-  // Fallback to regular config
+  // Fallback to regular config - but check if it's Base64-encoded
   if (!serviceAccount && process.env.FIREBASE_ADMIN_CONFIG) {
     try {
-      serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG);
+      const configString = process.env.FIREBASE_ADMIN_CONFIG.trim();
+      
+      // Detect if config is Base64-encoded (starts with base64-like pattern)
+      // Base64 JSON typically starts with "ewog" (which is {" in base64)
+      let parsedConfig = configString;
+      
+      // Try to detect Base64: if it doesn't start with '{' and contains base64 chars, try decoding
+      if (!configString.startsWith('{') && /^[A-Za-z0-9+/=]+$/.test(configString)) {
+        try {
+          parsedConfig = Buffer.from(configString, 'base64').toString('utf8');
+          console.log('✅ Detected and decoded Base64-encoded FIREBASE_ADMIN_CONFIG');
+        } catch (decodeError) {
+          // If decoding fails, try parsing as-is
+          console.log('ℹ️ Tried Base64 decode, failed, attempting direct JSON parse');
+        }
+      }
+      
+      serviceAccount = JSON.parse(parsedConfig);
       console.log('✅ Parsed Firebase config from FIREBASE_ADMIN_CONFIG');
     } catch (error) {
       console.error('❌ Failed to parse FIREBASE_ADMIN_CONFIG:', error.message);
@@ -173,9 +190,9 @@ async function generateAIResponse(userMessage, userId) {
     // Aggregate news headlines for context
     const headlines = Object.values(newsData).flat().map(s => s.headline).join('\n');
     
-    // Use gemini-1.5-flash for stable, fast performance
+    // Use gemini-2.5-flash which is available with this API key
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash"
+      model: "gemini-2.5-flash"
     });
     // Combine system prompt, context, and user message
     const prompt = `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}\n\nUser Question: ${userMessage}\n\nAssistant:`;
