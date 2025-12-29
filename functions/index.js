@@ -141,9 +141,20 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
  * Send WhatsApp message via Meta API using Axios
  */
 async function sendWhatsAppMessage(to, message) {
+  if (!to) {
+    console.error('❌ sendWhatsAppMessage: No recipient phone number provided');
+    return null;
+  }
+  
+  if (!message || message.trim() === '') {
+    console.error('❌ sendWhatsAppMessage: Empty message body');
+    return null;
+  }
+  
   const url = `https://graph.facebook.com/v18.0/${WHATSAPP_PHONE_ID}/messages`;
   
   try {
+    console.log(`📤 Sending WhatsApp message to ${to} (${message.length} chars)`);
     const response = await axios.post(url, {
       messaging_product: 'whatsapp',
       to: to,
@@ -155,9 +166,14 @@ async function sendWhatsAppMessage(to, message) {
         'Content-Type': 'application/json',
       }
     });
+    console.log(`✅ WhatsApp message sent successfully to ${to}`);
     return response.data;
   } catch (error) {
-    console.error('WhatsApp API Error:', error.response ? JSON.stringify(error.response.data) : error.message);
+    console.error('❌ WhatsApp API Error:', error.response ? JSON.stringify(error.response.data) : error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', JSON.stringify(error.response.data));
+    }
     return null;
   }
 }
