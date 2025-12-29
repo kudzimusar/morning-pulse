@@ -330,9 +330,10 @@ function formatNewsForPrompt(newsData) {
 }
 
 /**
- * Generate AI response with Kukurigo-style formatting
+ * Handle news query - processes news request and returns formatted response
+ * This function is called asynchronously after webhook acknowledges Meta
  */
-async function generateAIResponse(userMessage, userId) {
+async function handleNewsQuery(userMessage, userId) {
   try {
     // Get current date for header
     const today = new Date();
@@ -390,7 +391,7 @@ If the user asks a specific question, answer it using the news context provided.
     return text || "I'm sorry, I couldn't generate a response.";
     
   } catch (error) {
-    console.error("❌ Gemini API Error:", error.message);
+    console.error("❌ Error in handleNewsQuery:", error.message);
     console.error("Error details:", {
       message: error.message,
       status: error.status,
@@ -402,6 +403,7 @@ If the user asks a specific question, answer it using the news context provided.
 
 /**
  * Main webhook handler - CommonJS export
+ * Responds immediately to Meta, then processes in background
  */
 exports.webhook = async (req, res) => {
   
@@ -448,75 +450,85 @@ exports.webhook = async (req, res) => {
 
   // Handle POST request (incoming messages)
   if (req.method === 'POST') {
-    try {
-      const body = req.body;
-      
-      if (body.object === 'whatsapp_business_account') {
-        const entry = body.entry?.[0];
-        const changes = entry?.changes?.[0];
-        const value = changes?.value;
+    // CRITICAL: Acknowledge Meta immediately to prevent timeout
+    res.status(200).send('EVENT_RECEIVED');
+    
+    // Process message in background (don't await - let it run asynchronously)
+    (async () => {
+      try {
+        const body = req.body;
         
-        if (value?.messages) {
-          const message = value.messages[0];
-          const from = message.from;
-          const messageText = message.text?.body || '';
+        if (body.object === 'whatsapp_business_account') {
+          const entry = body.entry?.[0];
+          const changes = entry?.changes?.[0];
+          const value = changes?.value;
           
-          if (message.type !== 'text') {
-             await sendWhatsAppMessage(from, "I currently only process text messages. Please type your query!");
-             res.status(200).send('OK');
-             return;
-          }
-
-          console.log(`Received message from ${from}: ${messageText}`);
-
-          // Handle subscribe/upgrade command using Firestore collection structure
-          const text = messageText.toLowerCase();
-          if (text.includes('subscribe') || text.includes('upgrade')) {
-            if (db) {
-              try {
-                // Use collection-based path: artifacts/{APP_ID}/public/data/subscribers/{from}
-                const subRef = db.collection('artifacts')
-                  .doc(APP_ID)
-                  .collection('public')
-                  .doc('data')
-                  .collection('subscribers')
-                  .doc(from);
-                
-                await subRef.set({
-                  phoneNumber: from,
-                  status: 'active',
-                  subscribedAt: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                
-                await sendWhatsAppMessage(from, "✅ *Morning Pulse: Subscribed!*\n\nYou'll receive updates every 5 hours.");
-                console.log(`✅ Subscribed user ${from} to Morning Pulse`);
-              } catch (err) {
-                console.error('❌ Subscription error:', err.message);
-                await sendWhatsAppMessage(from, "⚠️ Database error. Try later.");
-              }
-            } else {
-              await sendWhatsAppMessage(from, "⚠️ Database not initialized.");
+          if (value?.messages) {
+            const message = value.messages[0];
+            const from = message.from;
+            const messageText = message.text?.body || '';
+            
+            if (message.type !== 'text') {
+              await sendWhatsAppMessage(from, "I currently only process text messages. Please type your query!");
+              return;
             }
-            res.status(200).send('OK');
-            return;
+
+            console.log(`Received message from ${from}: ${messageText}`);
+
+            // Handle subscribe/upgrade command using Firestore collection structure
+            const text = messageText.toLowerCase();
+            if (text.includes('subscribe') || text.includes('upgrade')) {
+              if (db) {
+                try {
+                  // Use collection-based path: artifacts/{APP_ID}/public/data/subscribers/{from}
+                  const subRef = db.collection('artifacts')
+                    .doc(APP_ID)
+                    .collection('public')
+                    .doc('data')
+                    .collection('subscribers')
+                    .doc(from);
+                  
+                  await subRef.set({
+                    phoneNumber: from,
+                    status: 'active',
+                    subscribedAt: admin.firestore.FieldValue.serverTimestamp()
+                  }, { merge: true });
+                  
+                  await sendWhatsAppMessage(from, "✅ *Morning Pulse: Subscribed!*\n\nYou'll receive updates every 5 hours.");
+                  console.log(`✅ Subscribed user ${from} to Morning Pulse`);
+                } catch (err) {
+                  console.error('❌ Subscription error:', err.message);
+                  await sendWhatsAppMessage(from, "⚠️ Database error. Try later.");
+                }
+              } else {
+                await sendWhatsAppMessage(from, "⚠️ Database not initialized.");
+              }
+              return;
+            }
+            
+            // Handle news queries - this may take 20-30 seconds
+            // Process in background and send response when ready
+            const aiResponse = await handleNewsQuery(messageText, from);
+            await sendWhatsAppMessage(from, aiResponse);
           }
-          
-          // Generate AI response
-          const aiResponse = await generateAIResponse(messageText, from);
-          
-          // Send response
-          await sendWhatsAppMessage(from, aiResponse);
         }
-        
-        // IMPORTANT: Always respond 200 OK to the Meta platform quickly
-        res.status(200).send('OK');
-      } else {
-        res.status(404).send('Not Found: Object not whatsapp_business_account');
+      } catch (error) {
+        console.error('❌ Background processing error:', error.message);
+        console.error('Stack trace:', error.stack);
+        // Try to send error message to user if we have their number
+        try {
+          const body = req.body;
+          if (body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.from) {
+            const from = body.entry[0].changes[0].value.messages[0].from;
+            await sendWhatsAppMessage(from, "⚠️ I encountered an error processing your request. Please try again in a moment.");
+          }
+        } catch (sendError) {
+          console.error('❌ Failed to send error message:', sendError.message);
+        }
       }
-    } catch (error) {
-      console.error('Webhook processing error:', error.message);
-      res.status(500).send('Internal Server Error');
-    }
+    })(); // Immediately invoked async function - runs in background
+    
+    // Function returns immediately after starting background task
     return;
   }
 
