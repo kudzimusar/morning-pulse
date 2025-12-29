@@ -17,12 +17,15 @@ const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN; // Matches envi
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
-const SYSTEM_PROMPT = `You are the "Morning Pulse" AI, a helpful and concise news assistant for Zimbabwean readers. 
-When answering questions:
-1. Be concise (WhatsApp style).
-2. If the user asks about current headlines, refer to the provided context.
-3. If using Google Search, cite sources clearly at the bottom.
-4. Keep the tone professional but conversational.
+const SYSTEM_PROMPT = `
+You are "Morning Pulse", a premium Zimbabwean news assistant. 
+Follow this strict formatting for every response:
+1. Start with a relevant emoji and a bold title (e.g., 🇿🇼 *MORNING PULSE UPDATE*).
+2. Use "—————" as a separator between different news items.
+3. Use bold text (*Text*) for emphasis on key names, prices, or locations.
+4. Use bullet points (•) for secondary details.
+5. End with a short "Morning Pulse" signature.
+Tone: Professional, concise, and focused on Zimbabwe.
 `;
 
 // Mock Data for contextual awareness
@@ -45,29 +48,54 @@ const NEWS_DATA = {
 
 // --- INITIALIZATION ---
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin with Base64 support
 let db;
 try {
-  const configString = process.env.FIREBASE_ADMIN_CONFIG;
+  let serviceAccount = null;
   
-  if (!configString || configString.trim() === '') {
-    console.warn('FIREBASE_ADMIN_CONFIG is empty. Firestore functions will be unavailable.');
-  } else {
-    const serviceAccount = JSON.parse(configString);
-    
-    if (!serviceAccount.project_id || !serviceAccount.private_key) {
-      console.warn('Firebase config is incomplete. Firestore functions will be unavailable.');
-    } else {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-      db = admin.firestore();
-      console.log('Firebase Admin initialized successfully.');
+  // Try Base64 encoded config first
+  if (process.env.FIREBASE_ADMIN_CONFIG_BASE64) {
+    try {
+      const decodedString = Buffer.from(process.env.FIREBASE_ADMIN_CONFIG_BASE64, 'base64').toString('utf8');
+      serviceAccount = JSON.parse(decodedString);
+      console.log('✅ Decoded Firebase config from Base64');
+    } catch (error) {
+      console.error('❌ Failed to decode Base64 config:', error.message);
     }
   }
+  
+  // Fallback to regular config
+  if (!serviceAccount && process.env.FIREBASE_ADMIN_CONFIG) {
+    try {
+      serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG);
+      console.log('✅ Parsed Firebase config from FIREBASE_ADMIN_CONFIG');
+    } catch (error) {
+      console.error('❌ Failed to parse FIREBASE_ADMIN_CONFIG:', error.message);
+    }
+  }
+
+  if (serviceAccount) {
+    // Check if Firebase is already initialized
+    if (!admin.apps.length) {
+      if (serviceAccount.project_id && serviceAccount.private_key) {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+        db = admin.firestore();
+        console.log('✅ Firebase Admin initialized successfully.');
+      } else {
+        console.warn('⚠️ Firebase config is incomplete. Firestore functions will be unavailable.');
+      }
+    } else {
+      db = admin.firestore();
+      console.log('✅ Using existing Firebase Admin instance');
+    }
+  } else {
+    console.warn('⚠️ FIREBASE_ADMIN_CONFIG is empty. Firestore functions will be unavailable.');
+  }
 } catch (error) {
-  console.error('Firebase Admin initialization error:', error.message);
-  console.warn('Continuing without Firebase. Premium features will be unavailable.');
+  console.error('❌ Firebase initialization error:', error.message);
+  console.warn('⚠️ Continuing without Firebase. Premium features will be unavailable.');
 }
 
 // Initialize Gemini AI
@@ -145,9 +173,9 @@ async function generateAIResponse(userMessage, userId) {
     // Aggregate news headlines for context
     const headlines = Object.values(newsData).flat().map(s => s.headline).join('\n');
     
-    // Use gemini-2.5-flash which is available with this API key
+    // Use gemini-1.5-flash for stable, fast performance
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash"
+      model: "gemini-1.5-flash"
     });
     // Combine system prompt, context, and user message
     const prompt = `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}\n\nUser Question: ${userMessage}\n\nAssistant:`;
@@ -240,15 +268,36 @@ exports.webhook = async (req, res) => {
 
           console.log(`Received message from ${from}: ${messageText}`);
 
-          // Handle *UPGRADE* command using Firestore
-          if (messageText.toLowerCase().includes('upgrade')) {
-             if (db) {
-               const prefPath = `artifacts/${APP_ID}/users/${from}/preferences/settings`;
-               await db.doc(prefPath).set({ isPremium: true }, { merge: true });
-               await sendWhatsAppMessage(from, "✅ You've been upgraded to Premium! You now have access to keyword alerts and premium features.");
-               res.status(200).send('OK');
-               return;
-             }
+          // Handle subscribe/upgrade command using Firestore collection structure
+          const text = messageText.toLowerCase();
+          if (text.includes('subscribe') || text.includes('upgrade')) {
+            if (db) {
+              try {
+                // Use collection-based path: artifacts/{APP_ID}/public/data/subscribers/{from}
+                const subRef = db.collection('artifacts')
+                  .doc(APP_ID)
+                  .collection('public')
+                  .doc('data')
+                  .collection('subscribers')
+                  .doc(from);
+                
+                await subRef.set({
+                  phoneNumber: from,
+                  status: 'active',
+                  subscribedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                
+                await sendWhatsAppMessage(from, "✅ *Morning Pulse: Subscribed!*\n\nYou'll receive updates every 5 hours.");
+                console.log(`✅ Subscribed user ${from} to Morning Pulse`);
+              } catch (err) {
+                console.error('❌ Subscription error:', err.message);
+                await sendWhatsAppMessage(from, "⚠️ Database error. Try later.");
+              }
+            } else {
+              await sendWhatsAppMessage(from, "⚠️ Database not initialized.");
+            }
+            res.status(200).send('OK');
+            return;
           }
           
           // Generate AI response
