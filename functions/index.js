@@ -1,34 +1,51 @@
 /**
  * WhatsApp Webhook Handler for Google Cloud Functions
  * Entry point: webhook
+ * 
+ * Multi-dimensional news system front-end that fetches and formats news
+ * from 7-category scraping architecture in Kukurigo style.
  */
 
 // CommonJS Imports
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
-const axios = require('axios'); // Used for robust HTTP requests
+const axios = require('axios');
 
 // --- CONFIGURATION ---
 
 // Constants and Environment Variables
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN; // Matches environment variable name in YAML
+const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
-const SYSTEM_PROMPT = `
-You are "Morning Pulse", a premium Zimbabwean news assistant. 
-Follow this strict formatting for every response:
-1. Start with a relevant emoji and a bold title (e.g., 🇿🇼 *MORNING PULSE UPDATE*).
-2. Use "—————" as a separator between different news items.
-3. Use bold text (*Text*) for emphasis on key names, prices, or locations.
-4. Use bullet points (•) for secondary details.
-5. End with a short "Morning Pulse" signature.
-Tone: Professional, concise, and focused on Zimbabwe.
-`;
+// Expected news categories from newsAggregator
+const NEWS_CATEGORIES = [
+  'Local (Zim)',
+  'Business (Zim)',
+  'African Focus',
+  'Global',
+  'Sports',
+  'Tech',
+  'General News'
+];
 
-// Mock Data for contextual awareness
+const SYSTEM_PROMPT = `You are "Morning Pulse", a high-density news aggregator for Zimbabwe. 
+Your output must mirror the professional "Kukurigo" style.
+
+1. CATEGORY COVERAGE: You must summarize news from all 7 categories: Local, Business, Africa, Global, Sports, Tech, and General.
+
+2. FORMATTING RULES:
+   - HEADER: _In the Press [Current Date]: [One sentence summary of the 2 most important global or local headlines]_
+   - BODY: For each news item, provide a 2-3 sentence paragraph. 
+   - CITATION: Every paragraph MUST end with an italicized bold source (e.g., _*— NewsDay*_ or _*— Bloomberg*_).
+   - SEPARATOR: Use a single empty line between different news stories.
+   - FOOTER: _Morning Pulse Updates©️_
+
+3. TONE: Factual, journalistic, and strictly objective. Do not add personal AI commentary.`;
+
+// Mock Data for fallback (kept for backward compatibility)
 const NEWS_DATA = {
   'Local (Zim)': [
     { id: 'L01', category: 'Local (Zim)', headline: "Speed Limiters Proposed for Buses", detail: "The Zimbabwean Parliament is currently considering a bill that would mandate the installation of tamper-proof speed limiters on all commercial passenger buses. This move comes after a recent spate of fatal road accidents attributed to reckless driving and speeding.", source: "NewsDay" },
@@ -146,13 +163,14 @@ async function sendWhatsAppMessage(to, message) {
 }
 
 /**
- * Get today's news from Firestore, or fallback to hardcoded data
+ * Get today's news from Firestore with all 7 categories
+ * Returns structured news data organized by category
  */
 async function getTodaysNews() {
   try {
     if (!db) {
-      console.warn('⚠️ Firestore not initialized, using hardcoded news');
-      return NEWS_DATA;
+      console.warn('⚠️ Firestore not initialized, will use search fallback');
+      return null;
     }
     
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -164,45 +182,211 @@ async function getTodaysNews() {
       const data = newsDoc.data();
       const categories = data.categories || {};
       
-      // Convert Firestore format to NEWS_DATA format
+      // Verify we have data for at least some categories
       if (Object.keys(categories).length > 0) {
-        console.log('✅ Using fresh news from Firestore:', today);
-        return categories;
+        console.log(`✅ Using fresh news from Firestore: ${today} (${Object.keys(categories).length} categories)`);
+        
+        // Ensure all 7 categories are represented (even if empty)
+        const structuredNews = {};
+        NEWS_CATEGORIES.forEach(category => {
+          structuredNews[category] = categories[category] || [];
+        });
+        
+        return structuredNews;
       } else {
-        console.log('ℹ️ News document exists but empty, using hardcoded data');
-        return NEWS_DATA;
+        console.log('ℹ️ News document exists but empty, will use search fallback');
+        return null;
       }
     } else {
-      console.log('ℹ️ No news for today, using hardcoded data');
-      return NEWS_DATA;
+      console.log(`ℹ️ No news document found for ${today}, will use search fallback`);
+      return null;
     }
   } catch (error) {
     console.error('❌ Error fetching news from Firestore:', error.message);
-    return NEWS_DATA; // Fallback to hardcoded
+    return null; // Return null to trigger search fallback
   }
 }
 
+/**
+ * Fetch news using Google Search fallback for missing categories
+ * Uses Gemini with googleSearch tool to find news for the 7 categories
+ */
+async function fetchNewsWithSearch(missingCategories = NEWS_CATEGORIES) {
+  try {
+    console.log(`🔍 Fetching news via Google Search for ${missingCategories.length} categories`);
+    
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      tools: [{ googleSearch: {} }]
+    });
+
+    // Build search query for all missing categories
+    const categoryQueries = {
+      'Local (Zim)': 'latest Zimbabwe news today',
+      'Business (Zim)': 'Zimbabwe business economy news today',
+      'African Focus': 'latest Africa news today',
+      'Global': 'world news headlines today',
+      'Sports': 'sports news today',
+      'Tech': 'technology news today',
+      'General News': 'breaking news today'
+    };
+
+    const searchPromises = missingCategories.map(async (category) => {
+      const searchQuery = categoryQueries[category] || 'news today';
+      const prompt = `Find the top 3-5 most important and recent news stories for: ${category}.
+Search for: ${searchQuery}
+
+For each story, provide:
+1. A clear headline (max 100 characters)
+2. A detailed 2-3 sentence summary
+3. The source/publication name
+4. The URL if available
+
+Format as JSON array:
+[
+  {
+    "headline": "Headline text",
+    "detail": "Detailed summary",
+    "source": "Source name",
+    "url": "https://url.com"
+  }
+]
+
+Only return valid JSON, no additional text.`;
+
+      try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().trim();
+        
+        // Extract JSON from markdown code blocks if present
+        if (text.startsWith('```json')) {
+          text = text.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        } else if (text.startsWith('```')) {
+          text = text.replace(/^```\n?/, '').replace(/\n?```$/, '');
+        }
+        
+        const articles = JSON.parse(text);
+        
+        // Add metadata
+        return {
+          category: category,
+          articles: articles.map((article, index) => ({
+            id: `${category.substring(0, 1).toUpperCase()}${String(index + 1).padStart(2, '0')}`,
+            category: category,
+            headline: article.headline,
+            detail: article.detail,
+            source: article.source || 'Various',
+            url: article.url || ''
+          }))
+        };
+      } catch (error) {
+        console.error(`❌ Error fetching ${category}:`, error.message);
+        return { category: category, articles: [] };
+      }
+    });
+
+    const results = await Promise.all(searchPromises);
+    
+    // Organize by category
+    const newsByCategory = {};
+    results.forEach(result => {
+      if (result.articles.length > 0) {
+        newsByCategory[result.category] = result.articles;
+      }
+    });
+
+    console.log(`✅ Fetched ${Object.keys(newsByCategory).length} categories via search`);
+    return newsByCategory;
+  } catch (error) {
+    console.error('❌ Error in search fallback:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Format news data for Gemini prompt
+ * Converts structured news into readable text format
+ */
+function formatNewsForPrompt(newsData) {
+  if (!newsData || Object.keys(newsData).length === 0) {
+    return 'No news data available.';
+  }
+
+  let formatted = '';
+  NEWS_CATEGORIES.forEach(category => {
+    const articles = newsData[category] || [];
+    if (articles.length > 0) {
+      formatted += `\n\n**${category}:**\n`;
+      articles.forEach(article => {
+        formatted += `- Headline: ${article.headline}\n`;
+        formatted += `  Detail: ${article.detail}\n`;
+        formatted += `  Source: ${article.source}\n`;
+      });
+    }
+  });
+
+  return formatted || 'No news articles found.';
+}
+
+/**
+ * Generate AI response with Kukurigo-style formatting
+ */
 async function generateAIResponse(userMessage, userId) {
   try {
-    // Get today's news from Firestore (or fallback to hardcoded)
-    const newsData = await getTodaysNews();
+    // Get current date for header
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     
-    // Aggregate news headlines for context
-    const headlines = Object.values(newsData).flat().map(s => s.headline).join('\n');
+    // Step 1: Try to get news from Firestore
+    let newsData = await getTodaysNews();
     
-    // Use gemini-2.5-flash which is available with this API key
+    // Step 2: If Firestore is empty or missing, use Google Search fallback
+    if (!newsData || Object.keys(newsData).length === 0) {
+      console.log('📡 Firestore news unavailable, using Google Search fallback');
+      newsData = await fetchNewsWithSearch();
+      
+      // If search also fails, use hardcoded fallback
+      if (!newsData || Object.keys(newsData).length === 0) {
+        console.log('⚠️ Search fallback failed, using hardcoded news');
+        newsData = NEWS_DATA;
+      }
+    }
+    
+    // Step 3: Format news for prompt
+    const formattedNews = formatNewsForPrompt(newsData);
+    
+    // Step 4: Use gemini-2.5-flash for response generation
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash"
     });
-    // Combine system prompt, context, and user message
-    const prompt = `${SYSTEM_PROMPT}\n\nContextual Headlines:\n${headlines}\n\nUser Question: ${userMessage}\n\nAssistant:`;
     
+    // Step 5: Build comprehensive prompt
+    const prompt = `${SYSTEM_PROMPT}
+
+Today's Date: ${dateStr}
+
+Available News Data (all 7 categories):
+${formattedNews}
+
+User Request: ${userMessage}
+
+Generate a complete Morning Pulse news bulletin in the exact Kukurigo style format specified above. 
+- Include news from all available categories
+- Use the header format with date
+- Write 2-3 sentence paragraphs for each story
+- End each paragraph with source citation: _*— Source Name*_
+- Use empty lines between stories
+- End with footer: _Morning Pulse Updates©️_
+
+If the user asks a specific question, answer it using the news context provided. If they ask for "news" or "update", provide the full formatted bulletin.`;
+
     // Generate content
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
 
-    console.log('✅ Gemini AI response generated');
+    console.log('✅ Gemini AI response generated with Kukurigo formatting');
     return text || "I'm sorry, I couldn't generate a response.";
     
   } catch (error) {
@@ -350,4 +534,3 @@ try {
   console.warn('newsAggregator module not available:', error.message);
   console.warn('News aggregation features will be unavailable.');
 }
-
