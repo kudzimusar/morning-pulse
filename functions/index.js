@@ -387,8 +387,13 @@ If the user asks a specific question, answer it using the news context provided.
     const response = result.response;
     const text = response.text();
 
-    console.log('✅ Gemini AI response generated with Kukurigo formatting');
-    return text || "I'm sorry, I couldn't generate a response.";
+    if (!text || text.trim() === '') {
+      console.error('❌ Empty response from Gemini API');
+      return "I'm sorry, I couldn't generate a response. Please try again.";
+    }
+
+    console.log(`✅ Gemini AI response generated with Kukurigo formatting (${text.length} characters)`);
+    return text;
     
   } catch (error) {
     console.error("❌ Error in handleNewsQuery:", error.message);
@@ -450,14 +455,15 @@ exports.webhook = async (req, res) => {
 
   // Handle POST request (incoming messages)
   if (req.method === 'POST') {
+    const body = req.body;
+    
     // CRITICAL: Acknowledge Meta immediately to prevent timeout
     res.status(200).send('EVENT_RECEIVED');
     
     // Process message in background (don't await - let it run asynchronously)
-    (async () => {
+    // Store the promise to keep function alive
+    const backgroundTask = (async () => {
       try {
-        const body = req.body;
-        
         if (body.object === 'whatsapp_business_account') {
           const entry = body.entry?.[0];
           const changes = entry?.changes?.[0];
@@ -468,12 +474,17 @@ exports.webhook = async (req, res) => {
             const from = message.from;
             const messageText = message.text?.body || '';
             
+            if (!from) {
+              console.error('❌ No sender phone number found');
+              return;
+            }
+            
             if (message.type !== 'text') {
               await sendWhatsAppMessage(from, "I currently only process text messages. Please type your query!");
               return;
             }
 
-            console.log(`Received message from ${from}: ${messageText}`);
+            console.log(`📨 Processing message from ${from}: ${messageText}`);
 
             // Handle subscribe/upgrade command using Firestore collection structure
             const text = messageText.toLowerCase();
@@ -508,8 +519,23 @@ exports.webhook = async (req, res) => {
             
             // Handle news queries - this may take 20-30 seconds
             // Process in background and send response when ready
+            console.log(`🔄 Starting news query processing for ${from}...`);
             const aiResponse = await handleNewsQuery(messageText, from);
-            await sendWhatsAppMessage(from, aiResponse);
+            
+            if (!aiResponse || aiResponse.trim() === '') {
+              console.error('❌ Empty response from handleNewsQuery');
+              await sendWhatsAppMessage(from, "⚠️ I couldn't generate a response. Please try again.");
+              return;
+            }
+            
+            console.log(`✅ Generated response (${aiResponse.length} chars), sending to ${from}...`);
+            const sendResult = await sendWhatsAppMessage(from, aiResponse);
+            
+            if (sendResult) {
+              console.log(`✅ Message sent successfully to ${from}`);
+            } else {
+              console.error(`❌ Failed to send message to ${from}`);
+            }
           }
         }
       } catch (error) {
@@ -517,7 +543,6 @@ exports.webhook = async (req, res) => {
         console.error('Stack trace:', error.stack);
         // Try to send error message to user if we have their number
         try {
-          const body = req.body;
           if (body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.from) {
             const from = body.entry[0].changes[0].value.messages[0].from;
             await sendWhatsAppMessage(from, "⚠️ I encountered an error processing your request. Please try again in a moment.");
@@ -527,6 +552,12 @@ exports.webhook = async (req, res) => {
         }
       }
     })(); // Immediately invoked async function - runs in background
+    
+    // Keep the promise reference to prevent early termination
+    // In Cloud Functions, the function will stay alive until the promise resolves
+    backgroundTask.catch(err => {
+      console.error('❌ Unhandled error in background task:', err);
+    });
     
     // Function returns immediately after starting background task
     return;
