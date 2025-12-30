@@ -34,18 +34,25 @@ const NEWS_CATEGORIES = [
 const SYSTEM_PROMPT = `You are "Morning Pulse", a high-density news aggregator for Zimbabwe. 
 Your output must mirror the professional "Kukurigo" style.
 
-1. CATEGORY COVERAGE: You must summarize news from all 7 categories: Local, Business, Africa, Global, Sports, Tech, and General.
+CRITICAL REQUIREMENTS:
+1. CATEGORY COVERAGE: You MUST provide a comprehensive report covering ALL 7 categories: Local (Zim), Business (Zim), African Focus, Global, Sports, Tech, and General News.
 
-2. FORMATTING RULES:
-   - HEADER: _In the Press [Current Date]: [One sentence summary of the 2 most important global or local headlines]_
-   - BODY: For each news item, provide a 2-3 sentence paragraph. 
-   - CITATION: Every paragraph MUST end with an italicized bold source (e.g., _*— NewsDay*_ or _*— Bloomberg*_).
-   - SEPARATOR: Use a single empty line between different news stories.
+2. CONTENT DEPTH:
+   - DO NOT summarize the whole news in one sentence.
+   - Write 1 full paragraph for EACH of the 7 categories.
+   - Each paragraph must be 3-4 sentences long with detailed information.
+   - Total response length should be approximately 600-1000 words.
+
+3. FORMATTING RULES:
+   - HEADER: _In the Press [Current Date]: [Top 2-3 most important headlines across categories]_
+   - BODY: Write 7 distinct paragraphs (one per category), each 3-4 sentences.
+   - CITATION: Every paragraph MUST end with italicized bold source: _*— Source Name*_ (e.g., _*— NewsDay*_ or _*— Bloomberg*_).
+   - SEPARATOR: Use a single empty line between different news categories.
    - FOOTER: _Morning Pulse Updates©️_
 
-3. TONE: Factual, journalistic, and strictly objective. Do not add personal AI commentary.
+4. TONE: Factual, journalistic, and strictly objective. Do not add personal AI commentary.
 
-4. LENGTH: Keep responses concise and under 3000 characters. Prioritize key headlines and summaries.`;
+5. STYLE: Maintain Kukurigo professional newspaper style with proper formatting.`;
 
 // Mock Data for fallback (kept for backward compatibility)
 const NEWS_DATA = {
@@ -258,13 +265,17 @@ async function fetchNewsWithSearch(missingCategories = null) {
     };
 
     const searchPromises = categoriesToFetch.map(async (category) => {
-      const searchQuery = categoryQueries[category] || 'news today';
+      // Optimized search query for speed and specificity
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      const optimizedQuery = `Latest news for ${category === 'Local (Zim)' ? 'Zimbabwe' : category === 'Business (Zim)' ? 'Zimbabwe Business' : category === 'African Focus' ? 'Africa' : category === 'Global' ? 'World' : category} for ${dateStr}. Provide detailed paragraphs and sources.`;
+      
       const prompt = `Find the top 3-5 most important and recent news stories for: ${category}.
-Search for: ${searchQuery}
+Search for: ${optimizedQuery}
 
 For each story, provide:
 1. A clear headline (max 100 characters)
-2. A detailed 2-3 sentence summary
+2. A detailed 3-4 sentence summary with context
 3. The source/publication name
 4. The URL if available
 
@@ -272,7 +283,7 @@ Format as JSON array:
 [
   {
     "headline": "Headline text",
-    "detail": "Detailed summary",
+    "detail": "Detailed 3-4 sentence summary with context",
     "source": "Source name",
     "url": "https://url.com"
   }
@@ -404,15 +415,16 @@ ${formattedNews}
 
 User Request: ${userMessage}
 
-Generate a complete Morning Pulse news bulletin in the exact Kukurigo style format specified above. 
-- Include news from all available categories
-- Use the header format with date
-- Write 2-3 sentence paragraphs for each story
+CRITICAL: Generate a COMPLETE Morning Pulse news bulletin covering ALL 7 categories.
+- Write ONE full paragraph (3-4 sentences) for EACH category: Local (Zim), Business (Zim), African Focus, Global, Sports, Tech, General News
+- Use the header format: _In the Press [Date]: [Top Headlines]_
+- Each paragraph must be detailed (3-4 sentences) with proper context
 - End each paragraph with source citation: _*— Source Name*_
-- Use empty lines between stories
+- Use empty lines between categories
 - End with footer: _Morning Pulse Updates©️_
+- Total length: 600-1000 words (comprehensive coverage)
 
-If the user asks a specific question, answer it using the news context provided. If they ask for "news" or "update", provide the full formatted bulletin.`;
+If the user asks a specific question, answer it using the news context provided. If they ask for "news" or "update", provide the full formatted bulletin with all 7 categories.`;
 
     // Generate content with timeout and token limits
     const timeoutPromise = new Promise((_, reject) => 
@@ -422,7 +434,7 @@ If the user asks a specific question, answer it using the news context provided.
     const generatePromise = model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 800,  // This limits response length
+        maxOutputTokens: 2048,  // Enough tokens for comprehensive 7-category report
         temperature: 0.7
       }
     });
