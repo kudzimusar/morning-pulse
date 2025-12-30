@@ -144,6 +144,11 @@ try {
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
+// --- MESSAGE DEDUPLICATION ---
+
+// In-memory cache to prevent processing duplicate messages
+const processedMessages = new Set();
+
 // --- UTILITY FUNCTIONS ---
 
 /**
@@ -536,6 +541,22 @@ exports.webhook = async (req, res) => {
           
           if (value?.messages) {
             const message = value.messages[0];
+            const messageId = message.id;
+            
+            // Skip if already processed (prevents duplicates from WhatsApp retries)
+            if (processedMessages.has(messageId)) {
+              console.log(`⏭️ Skipping duplicate message: ${messageId}`);
+              return;
+            }
+            
+            // Add to processed set
+            processedMessages.add(messageId);
+            
+            // Clean up old messages after 10 minutes
+            setTimeout(() => {
+              processedMessages.delete(messageId);
+            }, 600000);
+            
             const from = message.from;
             const messageText = message.text?.body || '';
             
