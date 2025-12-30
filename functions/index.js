@@ -38,14 +38,15 @@ CRITICAL REQUIREMENTS:
 1. CATEGORY COVERAGE: You MUST provide a comprehensive report covering ALL 7 categories: Local (Zim), Business (Zim), African Focus, Global, Sports, Tech, and General News.
 
 2. CONTENT DEPTH:
-   - DO NOT summarize the whole news in one sentence.
+   - Be concise and focused. Provide 2-3 key headlines per category with brief summaries.
    - Write 1 full paragraph for EACH of the 7 categories.
-   - Each paragraph must be 3-4 sentences long with detailed information.
-   - Total response length should be approximately 600-1000 words.
+   - Each paragraph must be 2-3 sentences long with essential information.
+   - Aim for clarity and brevity while covering essential news.
+   - Total response length should be approximately 400-600 words.
 
 3. FORMATTING RULES:
    - HEADER: _In the Press [Current Date]: [Top 2-3 most important headlines across categories]_
-   - BODY: Write 7 distinct paragraphs (one per category), each 3-4 sentences.
+   - BODY: Write 7 distinct paragraphs (one per category), each 2-3 sentences.
    - CITATION: Every paragraph MUST end with italicized bold source: _*— Source Name*_ (e.g., _*— NewsDay*_ or _*— Bloomberg*_).
    - SEPARATOR: Use a single empty line between different news categories.
    - FOOTER: _Morning Pulse Updates©️_
@@ -405,9 +406,11 @@ async function handleNewsQuery(userMessage, userId) {
     // Step 3: Format news for prompt
     const formattedNews = formatNewsForPrompt(newsData);
     
-    // Step 4: Use gemini-2.5-flash for response generation with timeout
+    // Step 4: Use gemini-2.5-flash for response generation with extended timeout
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash"
+      model: "gemini-2.5-flash",
+      // Critical fix for the 30s SDK timeout - extend to 240 seconds
+      requestOptions: { timeout: 240000 }
     });
     
     // Step 5: Build comprehensive prompt
@@ -421,25 +424,25 @@ ${formattedNews}
 User Request: ${userMessage}
 
 CRITICAL: Generate a COMPLETE Morning Pulse news bulletin covering ALL 7 categories.
-- Write ONE full paragraph (3-4 sentences) for EACH category: Local (Zim), Business (Zim), African Focus, Global, Sports, Tech, General News
+- Write ONE paragraph (2-3 sentences) for EACH category: Local (Zim), Business (Zim), African Focus, Global, Sports, Tech, General News
 - Use the header format: _In the Press [Date]: [Top Headlines]_
-- Each paragraph must be detailed (3-4 sentences) with proper context
+- Each paragraph must be concise (2-3 sentences) with essential context
 - End each paragraph with source citation: _*— Source Name*_
 - Use empty lines between categories
 - End with footer: _Morning Pulse Updates©️_
-- Total length: 600-1000 words (comprehensive coverage)
+- Total length: 400-600 words (concise but comprehensive)
 
 If the user asks a specific question, answer it using the news context provided. If they ask for "news" or "update", provide the full formatted bulletin with all 7 categories.`;
 
     // Generate content with timeout and token limits
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+      setTimeout(() => reject(new Error('Request timeout after 25 seconds')), 25000)
     );
     
     const generatePromise = model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 2048,  // Enough tokens for comprehensive 7-category report
+        maxOutputTokens: 1024,  // Balanced for speed and detail
         temperature: 0.7
       }
     });
@@ -454,7 +457,7 @@ If the user asks a specific question, answer it using the news context provided.
     }
 
     // WhatsApp limit is 4096 chars, leave buffer for formatting
-    const MAX_LENGTH = 3900;
+    const MAX_LENGTH = 4000;
     const originalLength = responseText.length;
 
     if (responseText.length > MAX_LENGTH) {
