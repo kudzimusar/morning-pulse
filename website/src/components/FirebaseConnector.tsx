@@ -11,12 +11,13 @@ interface FirebaseConnectorProps {
 // Hardcoded Firebase config for local development fallback
 // This matches the project: gen-lang-client-0999441419
 const HARDCODED_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCAh6j7mhTtiQGN5855Tt-hCRVrNXbNx0",
+  apiKey: "AIzaSyCAh6j7mhTtiQGN5855Tt-hCRVrNXbNxYE",
   authDomain: "gen-lang-client-0999441419.firebaseapp.com",
   projectId: "gen-lang-client-0999441419",
-  storageBucket: "gen-lang-client-0999441419.appspot.com",
-  messagingSenderId: "103398165291678415794",
-  appId: "1:103398165291678415794:web:default"
+  storageBucket: "gen-lang-client-0999441419.firebasestorage.app",
+  messagingSenderId: "328455476104",
+  appId: "1:328455476104:web:396deccbc5613e353f603d",
+  measurementId: "G-60S2YK429K"
 };
 
 // Firebase config will be injected at build time or runtime

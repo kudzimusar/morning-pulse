@@ -3,24 +3,26 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-  // Get environment variables
+  // Get environment variables - Vite automatically loads .env files
   const firebaseConfig = process.env.VITE_FIREBASE_CONFIG || '';
   
-  // For Vite define, we need to pass the raw JSON string
+  // For Vite define, we need to pass the JSON string properly
   // The firebase-config.js file will be the primary source for runtime
-  // This env var is just a fallback
+  // This env var is a fallback
   let configValue = 'null';
   if (firebaseConfig && firebaseConfig.trim()) {
     try {
-      // Validate it's JSON by parsing
+      // Validate it's JSON by parsing first
       const parsed = JSON.parse(firebaseConfig);
-      // Store as JSON string for the client to parse
+      // Store as JSON string for the client to parse (double-stringify for Vite define)
       configValue = JSON.stringify(firebaseConfig);
     } catch (e) {
       // If it's not valid JSON, set to null and let firebase-config.js handle it
-      console.warn('⚠️ VITE_FIREBASE_CONFIG is not valid JSON');
+      console.warn('⚠️ VITE_FIREBASE_CONFIG is not valid JSON, will use hardcoded fallback');
       configValue = 'null';
     }
+  } else {
+    console.log('ℹ️ VITE_FIREBASE_CONFIG not set, will use hardcoded fallback config');
   }
   
   return {
