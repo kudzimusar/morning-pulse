@@ -964,7 +964,22 @@ body {
   .header-top-content {
     flex-direction: column;
     gap: 0.5rem;
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .weather-bar {
+    order: 2;
+    justify-content: flex-start;
+    padding: 0.25rem 0;
+  }
+
+  .live-indicator {
+    order: 1;
+  }
+
+  .header-actions {
+    order: 3;
+    align-self: flex-end;
   }
 
   .header-main-content {
