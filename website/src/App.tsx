@@ -91,19 +91,20 @@ const App: React.FC = () => {
       
       {loading && (
         <div className="loading-container">
+          <div className="loading-spinner"></div>
           <p>Loading today's news...</p>
         </div>
       )}
 
       {error && (
         <div className="error-container">
-          <p>Error: {error}</p>
+          <p>{error}</p>
         </div>
       )}
 
       {!loading && !error && Object.keys(newsData).length === 0 && (
         <div className="no-news-container">
-          <p>No news available for today. Please check back later.</p>
+          <p>Morning Pulse is currently gathering today's news. Please check back shortly.</p>
         </div>
       )}
 
