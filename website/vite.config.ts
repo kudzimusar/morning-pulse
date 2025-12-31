@@ -6,20 +6,20 @@ export default defineConfig(({ mode }) => {
   // Get environment variables
   const firebaseConfig = process.env.VITE_FIREBASE_CONFIG || '';
   
-  // Parse and re-stringify to ensure it's valid JSON
-  // This handles cases where the env var is already a JSON string
+  // For Vite define, we need to pass the raw JSON string
+  // The firebase-config.js file will be the primary source for runtime
+  // This env var is just a fallback
   let configValue = 'null';
   if (firebaseConfig && firebaseConfig.trim()) {
     try {
-      // Try to parse it first to validate it's JSON
+      // Validate it's JSON by parsing
       const parsed = JSON.parse(firebaseConfig);
-      // Then stringify it properly for injection
-      configValue = JSON.stringify(JSON.stringify(parsed));
-    } catch (e) {
-      // If parsing fails, it might be malformed - just pass it through as-is
-      // The app will handle the error
-      console.warn('⚠️ VITE_FIREBASE_CONFIG is not valid JSON, passing through as-is');
+      // Store as JSON string for the client to parse
       configValue = JSON.stringify(firebaseConfig);
+    } catch (e) {
+      // If it's not valid JSON, set to null and let firebase-config.js handle it
+      console.warn('⚠️ VITE_FIREBASE_CONFIG is not valid JSON');
+      configValue = 'null';
     }
   }
   

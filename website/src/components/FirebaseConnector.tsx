@@ -11,35 +11,34 @@ interface FirebaseConnectorProps {
 // Firebase config will be injected at build time or runtime
 const getFirebaseConfig = (): any => {
   // Try to get from window (injected at runtime via firebase-config.js)
+  // This is the primary source - it's loaded from the generated firebase-config.js file
   if (typeof window !== 'undefined' && (window as any).__firebase_config) {
-    try {
-      const config = (window as any).__firebase_config;
-      // If it's already an object, return it; otherwise parse as JSON
-      if (typeof config === 'object' && config !== null) {
-        return config;
-      } else if (typeof config === 'string' && config.trim()) {
-        return JSON.parse(config);
-      }
-    } catch (e) {
-      console.error('Failed to parse Firebase config from window:', e);
+    const config = (window as any).__firebase_config;
+    // Should already be an object from firebase-config.js
+    if (typeof config === 'object' && config !== null && config.apiKey) {
+      console.log('✅ Using Firebase config from window.__firebase_config');
+      return config;
     }
   }
   
-  // Try to get from environment variable (build time)
+  // Fallback: Try to get from environment variable (build time)
+  // This is a fallback if firebase-config.js wasn't generated
   const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
   if (configStr && typeof configStr === 'string' && configStr.trim() && configStr !== 'null') {
     try {
-      // The config might be double-stringified, so try parsing twice if needed
-      let parsed = JSON.parse(configStr);
-      // If the result is still a string, parse again
+      // Parse the JSON string
+      const parsed = JSON.parse(configStr);
+      // If it's still a string (double-stringified), parse again
       if (typeof parsed === 'string') {
-        parsed = JSON.parse(parsed);
+        const doubleParsed = JSON.parse(parsed);
+        console.log('✅ Using Firebase config from env (double-parsed)');
+        return doubleParsed;
       }
+      console.log('✅ Using Firebase config from env');
       return parsed;
     } catch (e) {
       console.error('Failed to parse Firebase config from env:', e);
       console.error('Config string preview:', configStr?.substring(0, 100) + '...');
-      console.error('Config string type:', typeof configStr);
     }
   }
   
