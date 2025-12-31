@@ -1,12 +1,11 @@
 import React from 'react';
 import { NewsStory } from '../../../types';
 
-interface ArticleCardProps {
+interface HeroCardProps {
   article: NewsStory;
-  variant?: 'grid' | 'compact';
 }
 
-const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid' }) => {
+const HeroCard: React.FC<HeroCardProps> = ({ article }) => {
   const handleClick = () => {
     if (article.url) {
       window.open(article.url, '_blank', 'noopener,noreferrer');
@@ -41,49 +40,40 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid' }) 
     return icons[category] || icons['General News'];
   };
 
-  // Generate tags
-  const getTags = () => {
-    const tags = [`#${article.category.replace(/\s+/g, '')}`];
-    if (article.category === 'Local (Zim)') tags.push('#ZimNews');
-    if (article.category === 'Business (Zim)') tags.push('#Business');
-    if (article.category === 'African Focus') tags.push('#Africa');
-    return tags;
-  };
-
   return (
     <article 
-      className={`premium-article-card ${variant} ${article.url ? 'clickable' : ''}`}
+      className={`hero-card ${article.url ? 'clickable' : ''}`}
       onClick={handleClick}
     >
       <div 
-        className="article-image"
+        className="hero-image"
         style={{ 
           background: getCategoryGradient(article.category)
         }}
       >
-        <div className="article-image-placeholder">
+        <div className="hero-image-placeholder">
           <span className="category-icon">{getCategoryIcon(article.category)}</span>
         </div>
+        <div className="hero-overlay">
+          <div className="hero-category-badge">{article.category}</div>
+        </div>
       </div>
-      <div className="article-content">
-        <h3 className="article-headline">{article.headline}</h3>
-        <p className="article-detail">{article.detail}</p>
-        <div className="article-footer">
-          <div className="article-meta">
-            <span className="article-source">{article.source}</span>
-            {article.url && (
-              <span className="article-link">Read more →</span>
-            )}
+      <div className="hero-content">
+        <h2 className="hero-headline">{article.headline}</h2>
+        <p className="hero-summary">{article.detail}</p>
+        <div className="hero-footer">
+          <span className="hero-source">{article.source}</span>
+          <div className="hero-tags">
+            <span className="hero-tag">#{article.category.replace(/\s+/g, '')}</span>
+            {article.category === 'Local (Zim)' && <span className="hero-tag">#ZimNews</span>}
           </div>
-          <div className="article-tags">
-            {getTags().map((tag, index) => (
-              <span key={index} className="article-tag">{tag}</span>
-            ))}
-          </div>
+          {article.url && (
+            <span className="hero-link">Read Full Story →</span>
+          )}
         </div>
       </div>
     </article>
   );
 };
 
-export default ArticleCard;
+export default HeroCard;

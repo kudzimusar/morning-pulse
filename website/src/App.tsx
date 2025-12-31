@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Header from './components/Header';
 import NewsGrid from './components/NewsGrid';
+import Footer from './components/Footer';
 import FirebaseConnector from './components/FirebaseConnector';
 import { NewsStory } from '../../types';
 
@@ -13,6 +14,19 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useFirestore, setUseFirestore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Get top headlines for ticker
+  const topHeadlines = useMemo(() => {
+    const articles: NewsStory[] = [];
+    Object.values(newsData).forEach(categoryArticles => {
+      articles.push(...categoryArticles);
+    });
+    return articles
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, 5)
+      .map(article => article.headline);
+  }, [newsData]);
 
   // Try to load static data first (Mode B), fallback to Firestore (Mode A), then mock data
   useEffect(() => {
@@ -81,7 +95,10 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      <Header />
+      <Header 
+        topHeadlines={topHeadlines}
+        onCategorySelect={setSelectedCategory}
+      />
       {useFirestore && (
         <FirebaseConnector
           onNewsUpdate={handleNewsUpdate}
@@ -109,8 +126,13 @@ const App: React.FC = () => {
       )}
 
       {!loading && !error && Object.keys(newsData).length > 0 && (
-        <NewsGrid newsData={newsData} />
+        <NewsGrid 
+          newsData={newsData} 
+          selectedCategory={selectedCategory}
+        />
       )}
+      
+      <Footer />
     </div>
   );
 };
