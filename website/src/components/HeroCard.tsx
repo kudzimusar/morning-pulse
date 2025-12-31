@@ -40,6 +40,23 @@ const HeroCard: React.FC<HeroCardProps> = ({ article }) => {
     return icons[category] || icons['General News'];
   };
 
+  // Get image URL - use urlToImage if available, otherwise Unsplash fallback
+  const getImageUrl = () => {
+    if (article.urlToImage) {
+      return article.urlToImage;
+    }
+    // Unsplash fallback based on category
+    const categoryQuery = article.category.toLowerCase().replace(/\s+/g, ',').replace(/\(zim\)/g, 'zimbabwe');
+    return `https://source.unsplash.com/featured/?${categoryQuery},news`;
+  };
+
+  // Generate tags for glassmorphism overlay
+  const getTags = () => {
+    const tags = [`#${article.category.replace(/\s+/g, '')}`];
+    if (article.category === 'Local (Zim)') tags.push('#ZimNews');
+    return tags;
+  };
+
   return (
     <article 
       className={`hero-card ${article.url ? 'clickable' : ''}`}
@@ -48,11 +65,19 @@ const HeroCard: React.FC<HeroCardProps> = ({ article }) => {
       <div 
         className="hero-image"
         style={{ 
-          background: getCategoryGradient(article.category)
+          backgroundImage: `url(${getImageUrl()})`,
+          background: article.urlToImage 
+            ? `url(${article.urlToImage})` 
+            : `url(${getImageUrl()}), ${getCategoryGradient(article.category)}`
         }}
       >
-        <div className="hero-image-placeholder">
-          <span className="category-icon">{getCategoryIcon(article.category)}</span>
+        {/* Glassmorphism overlay with tags */}
+        <div className="hero-image-overlay glassmorphism">
+          <div className="hero-tags-overlay">
+            {getTags().map((tag, index) => (
+              <span key={index} className="hero-tag-overlay">{tag}</span>
+            ))}
+          </div>
         </div>
         <div className="hero-overlay">
           <div className="hero-category-badge">{article.category}</div>

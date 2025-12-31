@@ -30,32 +30,31 @@ const Footer: React.FC = () => {
           <h3 className="footer-title">Contact</h3>
           <ul className="footer-contact">
             <li>
-              <strong>WhatsApp:</strong>
-              <a href="https://wa.me/263XXXXXXXXX" target="_blank" rel="noopener noreferrer">
-                +263 XXX XXX XXX
+              <strong>WhatsApp Channel:</strong>
+              <a href="https://whatsapp.com/channel/0029VbCUPQvH5JLtAzsAFR2p" target="_blank" rel="noopener noreferrer">
+                Join Morning Pulse
               </a>
             </li>
             <li>
               <strong>Email:</strong>
-              <a href="mailto:info@morningpulse.co.zw">info@morningpulse.co.zw</a>
+              <a href="mailto:info@morningpulse.net">info@morningpulse.net</a>
             </li>
             <li>
               <strong>Location:</strong>
-              <span>Harare, Zimbabwe</span>
+              <span>Global</span>
             </li>
           </ul>
         </div>
 
-        {/* Advertising Column */}
+        {/* Organization Column */}
         <div className="footer-column">
-          <h3 className="footer-title">Partner With Us</h3>
-          <p className="footer-text">
-            Reach engaged readers across Zimbabwe and beyond. Our premium news portal 
-            offers targeted advertising opportunities.
-          </p>
-          <a href="#advertising" className="footer-cta-button">
-            Advertise
-          </a>
+          <h3 className="footer-title">Our Organization</h3>
+          <ul className="footer-links">
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#editorial">Editorial Guidelines</a></li>
+            <li><a href="#privacy">Privacy Policy</a></li>
+            <li><a href="#advertising">Advertise With Us</a></li>
+          </ul>
         </div>
       </div>
 

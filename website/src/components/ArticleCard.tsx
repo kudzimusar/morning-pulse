@@ -50,6 +50,16 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid' }) 
     return tags;
   };
 
+  // Get image URL - use urlToImage if available, otherwise Unsplash fallback
+  const getImageUrl = () => {
+    if (article.urlToImage) {
+      return article.urlToImage;
+    }
+    // Unsplash fallback based on category
+    const categoryQuery = article.category.toLowerCase().replace(/\s+/g, ',').replace(/\(zim\)/g, 'zimbabwe');
+    return `https://source.unsplash.com/featured/?${categoryQuery},news`;
+  };
+
   return (
     <article 
       className={`premium-article-card ${variant} ${article.url ? 'clickable' : ''}`}
@@ -58,11 +68,19 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid' }) 
       <div 
         className="article-image"
         style={{ 
-          background: getCategoryGradient(article.category)
+          backgroundImage: `url(${getImageUrl()})`,
+          background: article.urlToImage 
+            ? `url(${article.urlToImage})` 
+            : `url(${getImageUrl()}), ${getCategoryGradient(article.category)}`
         }}
       >
-        <div className="article-image-placeholder">
-          <span className="category-icon">{getCategoryIcon(article.category)}</span>
+        {/* Glassmorphism overlay with tags */}
+        <div className="article-image-overlay glassmorphism">
+          <div className="article-tags-overlay">
+            {getTags().map((tag, index) => (
+              <span key={index} className="article-tag-overlay">{tag}</span>
+            ))}
+          </div>
         </div>
       </div>
       <div className="article-content">

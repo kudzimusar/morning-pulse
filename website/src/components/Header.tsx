@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import WeatherBar from './WeatherBar';
 
 const CATEGORIES = [
   'Local (Zim)',
@@ -46,14 +47,9 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect }) 
     }
   };
 
-  // Create ticker text from headlines
-  const tickerText = topHeadlines.length > 0 
-    ? topHeadlines.join(' • ')
-    : 'Loading latest headlines...';
-
   return (
     <header className="premium-header">
-      {/* Top Bar with Live indicator and time */}
+      {/* Top Bar with Live indicator, time, and weather */}
       <div className="header-top-bar">
         <div className="header-top-content">
           <div className="live-indicator">
@@ -61,6 +57,7 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect }) 
             <span>LIVE</span>
             <span className="time-indicator">{harareTime}</span>
           </div>
+          <WeatherBar />
           <div className="header-actions">
             <button 
               className="categories-btn"
@@ -119,15 +116,30 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect }) 
       )}
 
       {/* Scrolling Ticker */}
-      <div className="header-ticker">
-        <div className="ticker-content">
-          <span className="ticker-label">BREAKING:</span>
-          <div className="ticker-scroll">
-            <span className="ticker-text">{tickerText}</span>
-            <span className="ticker-text">{tickerText}</span>
+      {topHeadlines.length > 0 && (
+        <div className="header-ticker">
+          <div className="ticker-content">
+            <span className="ticker-label">BREAKING:</span>
+            <div className="ticker-wrapper">
+              <div className="ticker-scroll">
+                {topHeadlines.map((headline, index) => (
+                  <span key={index} className="ticker-item">
+                    {headline}
+                    {index < topHeadlines.length - 1 && <span className="ticker-separator"> • </span>}
+                  </span>
+                ))}
+                {/* Duplicate for seamless loop */}
+                {topHeadlines.map((headline, index) => (
+                  <span key={`dup-${index}`} className="ticker-item">
+                    {headline}
+                    {index < topHeadlines.length - 1 && <span className="ticker-separator"> • </span>}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

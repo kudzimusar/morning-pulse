@@ -14,6 +14,7 @@ export interface NewsStory {
   source: string;
   category: string;
   url?: string;
+  urlToImage?: string;
   date?: string;
   timestamp?: number;
 }
