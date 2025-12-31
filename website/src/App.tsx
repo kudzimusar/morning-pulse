@@ -39,11 +39,16 @@ const App: React.FC = () => {
       }
       
       // Check if Firebase config is available
-      const firebaseConfig = typeof window !== 'undefined' && (window as any).__firebase_config 
-        ? (window as any).__firebase_config 
-        : import.meta.env.VITE_FIREBASE_CONFIG;
+      // Check window first (from firebase-config.js)
+      const windowConfig = typeof window !== 'undefined' ? (window as any).__firebase_config : null;
+      // Check env var (from build-time)
+      const envConfig = import.meta.env.VITE_FIREBASE_CONFIG;
       
-      if (firebaseConfig && firebaseConfig.trim() !== '') {
+      // Determine if we have a valid config
+      const hasConfig = windowConfig && typeof windowConfig === 'object' && windowConfig.apiKey
+        || (envConfig && typeof envConfig === 'string' && envConfig.trim() !== '');
+      
+      if (hasConfig) {
         // Try Firestore
         console.log('🔄 Trying Firestore mode');
         setUseFirestore(true);
@@ -51,6 +56,8 @@ const App: React.FC = () => {
       } else {
         // No Firebase config, show message
         console.log('ℹ️ No Firebase config available');
+        console.log('   Window config:', windowConfig ? 'exists' : 'missing');
+        console.log('   Env config:', envConfig ? 'exists' : 'missing');
         setLoading(false);
         setUseFirestore(false);
         setError('Firebase configuration not available. Please configure Firebase to view news.');

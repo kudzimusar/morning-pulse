@@ -24,15 +24,44 @@ try {
   
   // Ensure dist directory exists
   if (!fs.existsSync(distDir)) {
-    fs.mkdirSync(distDir, { recursive: true });
+    console.log('⚠️  dist/ directory does not exist. Build may have failed.');
+    process.exit(0);
   }
   
-  // Parse the config
+  // Parse the config with better error handling
   let configObj;
-  if (typeof firebaseConfig === 'string') {
-    configObj = JSON.parse(firebaseConfig);
-  } else {
-    configObj = firebaseConfig;
+  try {
+    if (typeof firebaseConfig === 'string') {
+      // Trim whitespace and remove any quotes that might be wrapping it
+      const trimmed = firebaseConfig.trim();
+      // Remove surrounding quotes if present
+      const cleaned = trimmed.startsWith('"') && trimmed.endsWith('"') 
+        ? trimmed.slice(1, -1) 
+        : trimmed;
+      configObj = JSON.parse(cleaned);
+    } else {
+      configObj = firebaseConfig;
+    }
+  } catch (parseError) {
+    console.error('❌ Failed to parse FIREBASE_CONFIG as JSON:');
+    console.error('   Error:', parseError.message);
+    console.error('   Config preview (first 100 chars):', firebaseConfig.substring(0, 100));
+    console.error('   Please check that FIREBASE_CONFIG is valid JSON.');
+    console.log('   Skipping firebase-config.js generation.');
+    process.exit(0); // Don't fail the build, just skip this step
+  }
+  
+  // Validate config has required fields
+  if (!configObj || typeof configObj !== 'object') {
+    console.error('❌ FIREBASE_CONFIG is not a valid object');
+    process.exit(0);
+  }
+  
+  const requiredFields = ['apiKey', 'authDomain', 'projectId'];
+  const missingFields = requiredFields.filter(field => !configObj[field]);
+  if (missingFields.length > 0) {
+    console.error('❌ FIREBASE_CONFIG missing required fields:', missingFields.join(', '));
+    process.exit(0);
   }
   
   // Generate the firebase-config.js file
@@ -55,5 +84,8 @@ window.__firebase_config = ${JSON.stringify(configObj, null, 2)};
   
 } catch (error) {
   console.error('❌ Error generating firebase-config.js:', error.message);
-  process.exit(1);
+  console.error('   Stack:', error.stack);
+  // Don't fail the build - just skip this step
+  console.log('   Continuing without firebase-config.js...');
+  process.exit(0);
 }

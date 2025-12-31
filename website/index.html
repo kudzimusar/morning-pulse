@@ -17,7 +17,18 @@
     </script>
     <!-- Firebase config for GitHub Pages (loaded at runtime if file exists) -->
     <!-- This will be generated during build if FIREBASE_CONFIG is set -->
-    <script src="/morning-pulse/firebase-config.js" defer></script>
+    <script>
+      // Load firebase-config.js if it exists (generated during build)
+      (function() {
+        const script = document.createElement('script');
+        script.src = '/morning-pulse/firebase-config.js';
+        script.onerror = function() {
+          // File doesn't exist - that's okay, will use env var or show error
+          console.log('firebase-config.js not found - will use env var or static mode');
+        };
+        document.head.appendChild(script);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
