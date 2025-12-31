@@ -1,12 +1,10 @@
 name: Deploy Static Website to GitHub Pages
 
+# DISABLED - Use deploy_website.yml instead
+# This workflow is kept for reference but won't run
 on:
-  # Triggers the workflow on push events to the 'main' branch
-  push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  # Disabled - no triggers
+  workflow_dispatch: # Only manual trigger for emergency use
 
 # Sets permissions needed for the workflow
 permissions:

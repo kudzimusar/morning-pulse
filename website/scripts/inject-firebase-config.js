@@ -74,6 +74,16 @@ window.__firebase_config = ${JSON.stringify(configObj, null, 2)};
   const distConfigPath = path.join(distDir, 'firebase-config.js');
   fs.writeFileSync(distConfigPath, configContent);
   console.log('✅ Generated firebase-config.js in dist/');
+  console.log('   Path:', distConfigPath);
+  console.log('   File exists:', fs.existsSync(distConfigPath));
+  
+  // Verify the file was written correctly
+  const writtenContent = fs.readFileSync(distConfigPath, 'utf8');
+  if (writtenContent.includes('window.__firebase_config')) {
+    console.log('✅ Verified firebase-config.js content is correct');
+  } else {
+    console.error('❌ firebase-config.js content verification failed');
+  }
   
   // Also write to public (for local dev if needed)
   if (fs.existsSync(publicDir)) {
