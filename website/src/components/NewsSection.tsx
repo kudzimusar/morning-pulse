@@ -13,8 +13,8 @@ const NewsSection: React.FC<NewsSectionProps> = ({ category, articles }) => {
   }
 
   return (
-    <section className="news-section">
-      <h2 className="section-title" data-category={category}>{category}</h2>
+    <section className="news-section" data-category={category}>
+      <h2 className="section-title">{category}</h2>
       <div className="articles-container">
         {articles.map((article) => (
           <ArticleCard key={article.id} article={article} />

@@ -7,11 +7,17 @@
     <meta name="description" content="Morning Pulse - Your daily news source covering Local, Business, African Focus, Global, Sports, Tech, and General News" />
     <title>Morning Pulse - Daily News</title>
     <script>
-      // Inject APP_ID and Firebase config if available
+      // Inject APP_ID
       window.__app_id = 'morning-pulse-app';
-      // Firebase config will be injected at build time via VITE_FIREBASE_CONFIG
-      // or can be set here if needed for runtime injection
+      
+      // Firebase config will be injected from:
+      // 1. Runtime script (for GitHub Pages) - firebase-config.js (if exists)
+      // 2. Build-time injection via Vite (for local dev with .env.local)
+      // The Vite build process will inject VITE_FIREBASE_CONFIG into the bundle
     </script>
+    <!-- Firebase config for GitHub Pages (loaded at runtime if file exists) -->
+    <!-- This will be generated during build if FIREBASE_CONFIG is set -->
+    <script src="/morning-pulse/firebase-config.js" defer></script>
   </head>
   <body>
     <div id="root"></div>

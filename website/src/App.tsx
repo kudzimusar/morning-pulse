@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import NewsGrid from './components/NewsGrid';
 import FirebaseConnector from './components/FirebaseConnector';
@@ -14,7 +14,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [useFirestore, setUseFirestore] = useState(true);
 
-  // Try to load static data first (Mode B), fallback to Firestore (Mode A)
+  // Try to load static data first (Mode B), fallback to Firestore (Mode A), then mock data
   useEffect(() => {
     const loadStaticData = async () => {
       try {
@@ -32,30 +32,45 @@ const App: React.FC = () => {
           setUseFirestore(false);
           return;
         } else {
-          console.log('ℹ️ Static news file not found (404), will try Firestore');
+          console.log('ℹ️ Static news file not found (404)');
         }
       } catch (err) {
         console.log('❌ Static data fetch error:', err);
-        console.log('🔄 Falling back to Firestore mode');
       }
-      // If static data fails, use Firestore
-      setUseFirestore(true);
-      setLoading(false);
+      
+      // Check if Firebase config is available
+      const firebaseConfig = typeof window !== 'undefined' && (window as any).__firebase_config 
+        ? (window as any).__firebase_config 
+        : import.meta.env.VITE_FIREBASE_CONFIG;
+      
+      if (firebaseConfig && firebaseConfig.trim() !== '') {
+        // Try Firestore
+        console.log('🔄 Trying Firestore mode');
+        setUseFirestore(true);
+        setLoading(false);
+      } else {
+        // No Firebase config, show message
+        console.log('ℹ️ No Firebase config available');
+        setLoading(false);
+        setUseFirestore(false);
+        setError('Firebase configuration not available. Please configure Firebase to view news.');
+      }
     };
 
     loadStaticData();
   }, []);
 
-  const handleNewsUpdate = (data: NewsData) => {
+  const handleNewsUpdate = useCallback((data: NewsData) => {
     setNewsData(data);
     setLoading(false);
     setError(null);
-  };
+  }, []);
 
-  const handleError = (errorMessage: string) => {
+  const handleError = useCallback((errorMessage: string) => {
+    console.error('⚠️ Error loading news:', errorMessage);
     setError(errorMessage);
     setLoading(false);
-  };
+  }, []);
 
   return (
     <div className="app">
