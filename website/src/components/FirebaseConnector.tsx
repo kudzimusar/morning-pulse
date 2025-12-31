@@ -27,12 +27,19 @@ const getFirebaseConfig = (): any => {
   
   // Try to get from environment variable (build time)
   const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
-  if (configStr && typeof configStr === 'string' && configStr.trim()) {
+  if (configStr && typeof configStr === 'string' && configStr.trim() && configStr !== 'null') {
     try {
-      return JSON.parse(configStr);
+      // The config might be double-stringified, so try parsing twice if needed
+      let parsed = JSON.parse(configStr);
+      // If the result is still a string, parse again
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+      }
+      return parsed;
     } catch (e) {
       console.error('Failed to parse Firebase config from env:', e);
-      console.error('Config string:', configStr?.substring(0, 50) + '...');
+      console.error('Config string preview:', configStr?.substring(0, 100) + '...');
+      console.error('Config string type:', typeof configStr);
     }
   }
   
