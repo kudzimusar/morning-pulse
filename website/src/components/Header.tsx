@@ -101,31 +101,6 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
         </div>
       </div>
 
-      {/* Remove old header-main div that's below */}
-        </div>
-      </div>
-
-      {/* Main Header with Logo */}
-      <div className="header-main">
-        <div className="header-main-content">
-          <h1 className="premium-logo" onClick={() => handleCategoryClick(null)}>
-            Morning Pulse
-          </h1>
-          {selectedCategory && (
-            <div className="selected-category-badge">
-              {selectedCategory}
-              <button 
-                className="clear-filter"
-                onClick={() => handleCategoryClick(null)}
-                aria-label="Clear filter"
-              >
-                ×
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Categories Dropdown */}
       {isDropdownOpen && (
         <div className="categories-dropdown">
