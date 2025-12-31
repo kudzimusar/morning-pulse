@@ -3,18 +3,46 @@ import Header from './components/Header';
 import NewsGrid from './components/NewsGrid';
 import Footer from './components/Footer';
 import FirebaseConnector from './components/FirebaseConnector';
+import AdvertisePage from './components/AdvertisePage';
+import SubscriptionPage from './components/SubscriptionPage';
+import AboutPage from './components/AboutPage';
+import EditorialPage from './components/EditorialPage';
+import PrivacyPage from './components/PrivacyPage';
+import DatePicker from './components/DatePicker';
 import { NewsStory } from '../../types';
+
+type Page = 'news' | 'advertise' | 'subscribe' | 'about' | 'editorial' | 'privacy';
 
 interface NewsData {
   [category: string]: NewsStory[];
 }
 
 const App: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState<Page>('news');
   const [newsData, setNewsData] = useState<NewsData>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useFirestore, setUseFirestore] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [isSubscribed, setIsSubscribed] = useState(false); // TODO: Get from user session/auth
+
+  // Handle page navigation from hash changes (for footer links)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash === 'advertise') setCurrentPage('advertise');
+      else if (hash === 'subscription' || hash === 'subscribe') setCurrentPage('subscribe');
+      else if (hash === 'about') setCurrentPage('about');
+      else if (hash === 'editorial') setCurrentPage('editorial');
+      else if (hash === 'privacy') setCurrentPage('privacy');
+      else setCurrentPage('news');
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Get top headlines for ticker
   const topHeadlines = useMemo(() => {
@@ -28,58 +56,49 @@ const App: React.FC = () => {
       .map(article => article.headline);
   }, [newsData]);
 
-  // Try to load static data first (Mode B), fallback to Firestore (Mode A), then mock data
+  // Load news data for selected date
   useEffect(() => {
-    const loadStaticData = async () => {
+    if (currentPage !== 'news') return;
+
+    const loadNewsForDate = async () => {
+      setLoading(true);
       try {
-        const today = new Date().toISOString().split('T')[0];
-        const url = `/morning-pulse/data/news-${today}.json`;
-        console.log('🔍 Attempting to load static news from:', url);
+        // Try static file first
+        const url = `/morning-pulse/data/news-${selectedDate}.json`;
+        console.log('🔍 Attempting to load news from:', url);
         const response = await fetch(url);
-        console.log('📡 Static news response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          const categoryCount = Object.keys(data.categories || {}).length;
-          console.log('✅ Static news loaded successfully:', categoryCount, 'categories');
           setNewsData(data.categories || {});
           setLoading(false);
           setUseFirestore(false);
+          setError(null);
           return;
+        }
+        
+        // If static file not found, check Firebase config
+        const windowConfig = typeof window !== 'undefined' ? (window as any).__firebase_config : null;
+        const envConfig = import.meta.env.VITE_FIREBASE_CONFIG;
+        const hasConfig = windowConfig && typeof windowConfig === 'object' && windowConfig.apiKey
+          || (envConfig && typeof envConfig === 'string' && envConfig.trim() !== '');
+        
+        if (hasConfig) {
+          setUseFirestore(true);
+          setLoading(false);
         } else {
-          console.log('ℹ️ Static news file not found (404)');
+          setLoading(false);
+          setError('News not available for this date.');
         }
       } catch (err) {
-        console.log('❌ Static data fetch error:', err);
-      }
-      
-      // Check if Firebase config is available
-      // Check window first (from firebase-config.js)
-      const windowConfig = typeof window !== 'undefined' ? (window as any).__firebase_config : null;
-      // Check env var (from build-time)
-      const envConfig = import.meta.env.VITE_FIREBASE_CONFIG;
-      
-      // Determine if we have a valid config
-      const hasConfig = windowConfig && typeof windowConfig === 'object' && windowConfig.apiKey
-        || (envConfig && typeof envConfig === 'string' && envConfig.trim() !== '');
-      
-      if (hasConfig) {
-        // Try Firestore
-        console.log('🔄 Trying Firestore mode');
-        setUseFirestore(true);
+        console.error('Error loading news:', err);
+        setError('Failed to load news.');
         setLoading(false);
-      } else {
-        // No Firebase config, show message
-        console.log('ℹ️ No Firebase config available');
-        console.log('   Window config:', windowConfig ? 'exists' : 'missing');
-        console.log('   Env config:', envConfig ? 'exists' : 'missing');
-        setLoading(false);
-        setUseFirestore(false);
-        setError('Firebase configuration not available. Please configure Firebase to view news.');
       }
     };
 
-    loadStaticData();
-  }, []);
+    loadNewsForDate();
+  }, [selectedDate, currentPage]);
 
   const handleNewsUpdate = useCallback((data: NewsData) => {
     setNewsData(data);
@@ -93,49 +112,87 @@ const App: React.FC = () => {
     setLoading(false);
   }, []);
 
+  const handleDateChange = useCallback((date: string) => {
+    setSelectedDate(date);
+  }, []);
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'advertise':
+        return <AdvertisePage onBack={() => { setCurrentPage('news'); window.location.hash = ''; }} />;
+      case 'subscribe':
+        return <SubscriptionPage onBack={() => { setCurrentPage('news'); window.location.hash = ''; }} />;
+      case 'about':
+        return <AboutPage onBack={() => { setCurrentPage('news'); window.location.hash = ''; }} />;
+      case 'editorial':
+        return <EditorialPage onBack={() => { setCurrentPage('news'); window.location.hash = ''; }} />;
+      case 'privacy':
+        return <PrivacyPage onBack={() => { setCurrentPage('news'); window.location.hash = ''; }} />;
+      case 'news':
+      default:
+        return (
+          <>
+            <div className="news-controls">
+              <DatePicker 
+                currentDate={selectedDate}
+                onDateSelect={handleDateChange}
+                maxDaysBack={isSubscribed ? 365 : 2}
+              />
+            </div>
+            {loading && (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading news for {selectedDate}...</p>
+              </div>
+            )}
+            {error && (
+              <div className="error-container">
+                <p>{error}</p>
+              </div>
+            )}
+            {!loading && !error && Object.keys(newsData).length === 0 && (
+              <div className="no-news-container">
+                <p>Morning Pulse is currently gathering news for this date. Please check back later.</p>
+              </div>
+            )}
+            {!loading && !error && Object.keys(newsData).length > 0 && (
+              <NewsGrid 
+                newsData={newsData} 
+                selectedCategory={selectedCategory}
+              />
+            )}
+          </>
+        );
+    }
+  };
+
   return (
     <div className="app">
       <Header 
         topHeadlines={topHeadlines}
         onCategorySelect={setSelectedCategory}
+        onSubscribeClick={() => { setCurrentPage('subscribe'); window.location.hash = 'subscription'; }}
       />
-      {useFirestore && (
+      {useFirestore && currentPage === 'news' && (
         <FirebaseConnector
           onNewsUpdate={handleNewsUpdate}
           onError={handleError}
         />
       )}
       
-      {loading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading today's news...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="error-container">
-          <p>{error}</p>
-        </div>
-      )}
-
-      {!loading && !error && Object.keys(newsData).length === 0 && (
-        <div className="no-news-container">
-          <p>Morning Pulse is currently gathering today's news. Please check back shortly.</p>
-        </div>
-      )}
-
-      {!loading && !error && Object.keys(newsData).length > 0 && (
-        <NewsGrid 
-          newsData={newsData} 
-          selectedCategory={selectedCategory}
-        />
-      )}
+      {renderPage()}
       
-      <Footer />
+      <Footer onNavigate={(page) => {
+        if (page === 'news') setCurrentPage('news');
+        else if (page === 'subscribe') setCurrentPage('subscribe');
+        else if (page === 'advertise') setCurrentPage('advertise');
+        else if (page === 'about') setCurrentPage('about');
+        else if (page === 'editorial') setCurrentPage('editorial');
+        else if (page === 'privacy') setCurrentPage('privacy');
+        window.location.hash = page;
+      }} />
     </div>
   );
 };
 
 export default App;
-

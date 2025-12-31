@@ -14,9 +14,10 @@ const CATEGORIES = [
 interface HeaderProps {
   topHeadlines?: string[];
   onCategorySelect?: (category: string | null) => void;
+  onSubscribeClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect }) => {
+const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, onSubscribeClick }) => {
   const [harareTime, setHarareTime] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -68,6 +69,39 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect }) 
               <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Main Header with Logo and Subscribe */}
+      <div className="header-main">
+        <div className="header-main-content">
+          <h1 className="premium-logo" onClick={() => handleCategoryClick(null)}>
+            Morning Pulse
+          </h1>
+          {onSubscribeClick && (
+            <button 
+              className="subscribe-button"
+              onClick={onSubscribeClick}
+            >
+              Subscribe
+            </button>
+          )}
+          {selectedCategory && (
+            <div className="selected-category-badge">
+              {selectedCategory}
+              <button 
+                className="clear-filter"
+                onClick={() => handleCategoryClick(null)}
+                aria-label="Clear filter"
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Remove old header-main div that's below */}
         </div>
       </div>
 

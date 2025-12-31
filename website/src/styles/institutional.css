@@ -1,0 +1,526 @@
+/* Institutional Pages Styling */
+
+/* ============================================
+   INSTITUTIONAL PAGES
+   ============================================ */
+
+.institutional-page {
+  max-width: 1000px;
+  margin: var(--spacing-xl) auto;
+  padding: 0 var(--spacing-md);
+}
+
+.page-header {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.back-button {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+  transition: var(--transition);
+}
+
+.back-button:hover {
+  background: var(--hover-bg);
+  border-color: var(--primary-color);
+}
+
+.page-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.page-content {
+  line-height: 1.8;
+}
+
+.content-section h2 {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.content-section h3 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+}
+
+.content-section p {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-color);
+  font-size: 1.0625rem;
+}
+
+.lead-text {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--secondary-color);
+  margin-bottom: var(--spacing-lg);
+}
+
+.content-section ul {
+  margin-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.content-section li {
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-color);
+}
+
+.content-section a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.content-section a:hover {
+  opacity: 0.8;
+}
+
+.last-updated {
+  font-size: 0.875rem;
+  color: var(--light-text);
+  font-style: italic;
+  margin-bottom: var(--spacing-md);
+}
+
+/* ============================================
+   ADVERTISE PAGE
+   ============================================ */
+
+.value-proposition {
+  background: var(--card-bg);
+  padding: var(--spacing-xl);
+  border-radius: 12px;
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.value-proposition h2 {
+  margin-top: 0;
+}
+
+.pricing-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.pricing-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  position: relative;
+  transition: var(--transition);
+}
+
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.pricing-card.featured {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-lg);
+}
+
+.featured-badge {
+  position: absolute;
+  top: -12px;
+  right: var(--spacing-md);
+  background: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pricing-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.pricing-header h3 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.price .currency {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.price .amount {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--primary-color);
+  font-family: var(--font-heading);
+}
+
+.price .period {
+  font-size: 1rem;
+  color: var(--light-text);
+  font-weight: 400;
+}
+
+.pricing-features {
+  list-style: none;
+  margin: var(--spacing-lg) 0;
+  padding: 0;
+}
+
+.pricing-features li {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-color);
+}
+
+.pricing-features li:last-child {
+  border-bottom: none;
+}
+
+.pricing-cta {
+  width: 100%;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: var(--spacing-md);
+}
+
+.pricing-cta:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.cta-section {
+  background: var(--card-bg);
+  padding: var(--spacing-xl);
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.cta-section h2 {
+  margin-top: 0;
+}
+
+.primary-cta-button {
+  display: inline-block;
+  background: var(--primary-color);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  margin-top: var(--spacing-md);
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+.primary-cta-button:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================
+   SUBSCRIPTION PAGE
+   ============================================ */
+
+.subscription-hero {
+  background: var(--card-bg);
+  padding: var(--spacing-xl);
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.subscription-hero h2 {
+  margin-top: 0;
+}
+
+.free-trial-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  font-weight: 600;
+  margin-top: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+}
+
+.subscription-pricing {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.subscription-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.price-note {
+  font-size: 0.875rem;
+  color: var(--light-text);
+  font-style: italic;
+  margin-top: var(--spacing-xs);
+}
+
+.subscription-benefits {
+  margin: var(--spacing-xl) 0;
+}
+
+.subscription-benefits h4 {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--primary-color);
+}
+
+.benefits-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.benefits-list li {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.benefits-list li:last-child {
+  border-bottom: none;
+}
+
+.subscription-form {
+  margin-top: var(--spacing-xl);
+}
+
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-color);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.875rem;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: var(--font-body);
+  transition: var(--transition);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 0, 33, 0.1);
+}
+
+.subscription-cta {
+  width: 100%;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+}
+
+.subscription-cta:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.form-note {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--light-text);
+  margin-top: var(--spacing-sm);
+}
+
+/* ============================================
+   DATE PICKER
+   ============================================ */
+
+.news-controls {
+  max-width: 1400px;
+  margin: var(--spacing-md) auto 0;
+  padding: 0 var(--spacing-md);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.date-picker-container {
+  position: relative;
+}
+
+.date-picker-button {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: var(--transition);
+}
+
+.date-picker-button:hover {
+  border-color: var(--primary-color);
+  background: var(--hover-bg);
+}
+
+.dropdown-icon {
+  transition: transform 0.2s;
+  font-size: 0.75rem;
+}
+
+.dropdown-icon.open {
+  transform: rotate(180deg);
+}
+
+.date-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  min-width: 250px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.date-picker-header {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.date-limit-badge {
+  background: var(--section-bg);
+  color: var(--light-text);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.date-picker-list {
+  padding: var(--spacing-xs) 0;
+}
+
+.date-option {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: var(--text-color);
+  transition: var(--transition);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.date-option:hover {
+  background: var(--hover-bg);
+}
+
+.date-option.active {
+  background: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+.current-indicator {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-left: var(--spacing-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pricing-tiers {
+    grid-template-columns: 1fr;
+  }
+
+  .news-controls {
+    justify-content: center;
+  }
+
+  .date-picker-dropdown {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
