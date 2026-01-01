@@ -620,7 +620,15 @@ exports.webhook = async (req, res) => {
             // Handle news queries - this may take 20-30 seconds
             // Process in background and send response when ready
             console.log(`🔄 Starting news query processing for ${from}...`);
-            const aiResponse = await handleNewsQuery(messageText, from);
+            
+            // Extract country from message if specified, otherwise default to Zimbabwe
+            let country = 'Zimbabwe';
+            const countryMatch = messageText.match(/(?:for|from)\s+([A-Za-z\s]+)/i);
+            if (countryMatch) {
+              country = countryMatch[1].trim();
+            }
+            
+            const aiResponse = await handleNewsQuery(messageText, from, country);
             
             if (!aiResponse || aiResponse.trim() === '') {
               console.error('❌ Empty response from handleNewsQuery');
@@ -679,3 +687,4 @@ try {
   console.warn('newsAggregator module not available:', error.message);
   console.warn('News aggregation features will be unavailable.');
 }
+

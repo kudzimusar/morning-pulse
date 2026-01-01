@@ -121,32 +121,29 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         const country = userCountry || { code: 'ZW', name: 'Zimbabwe' };
         const dateString = selectedDate || new Date().toISOString().split('T')[0];
         
-        // Determine Firestore path based on country
-        // If Zimbabwe, use standard path: artifacts/morning-pulse-app/public/data/news/${date}
-        // If other country, use: artifacts/morning-pulse-app/public/data/news/${date}/${countryCode}
-        let newsRef;
-        let newsPath: string;
-        
-        if (country.code === 'ZW') {
-          // Standard Zimbabwe path
-          newsPath = `artifacts/${appId}/public/data/news/${dateString}`;
-          newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
-        } else {
-          // Country-specific path
-          newsPath = `artifacts/${appId}/public/data/news/${dateString}/${country.code}`;
-          newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString, country.code);
-        }
+        // Use exactly 6 segments: artifacts/morning-pulse-app/public/data/news/${dateString}
+        const newsPath = `artifacts/${appId}/public/data/news/${dateString}`;
+        const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
         
         console.log(`📂 Fetching news from Firestore...`);
         console.log(`   Country: ${country.name} (${country.code})`);
-        console.log(`   Path: ${newsPath}`);
+        console.log(`   Path: ${newsPath} (6 segments)`);
         
-        // Try selected date first
+        // Fetch the daily document
         let snapshot = await getDoc(newsRef);
         
         if (snapshot.exists()) {
           const data = snapshot.data();
-          const categories = data.categories || {};
+          
+          // Extract country-specific data from document fields
+          // Try country code first, then country name, then fallback to 'Zimbabwe'
+          let categories = data[country.code] || data[country.name] || data['Zimbabwe'] || data.categories || {};
+          
+          // If categories is empty, try fallback
+          if (!categories || Object.keys(categories).length === 0) {
+            categories = data.categories || data['Zimbabwe'] || {};
+          }
+          
           const categoryCount = Object.keys(categories).length;
           
           if (categoryCount > 0) {
@@ -163,7 +160,12 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               (realtimeSnapshot) => {
                 if (realtimeSnapshot.exists()) {
                   const realtimeData = realtimeSnapshot.data();
-                  const realtimeCategories = realtimeData.categories || {};
+                  let realtimeCategories = realtimeData[country.code] || realtimeData[country.name] || realtimeData['Zimbabwe'] || realtimeData.categories || {};
+                  
+                  if (!realtimeCategories || Object.keys(realtimeCategories).length === 0) {
+                    realtimeCategories = realtimeData.categories || realtimeData['Zimbabwe'] || {};
+                  }
+                  
                   if (Object.keys(realtimeCategories).length > 0) {
                     console.log('✅ News updated in real-time');
                     const transformed = transformCategoriesForCountry(realtimeCategories, country);
@@ -176,43 +178,6 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               }
             );
             return;
-          }
-        }
-        
-        // If country-specific news not found and not Zimbabwe, try fallback to Zimbabwe
-        if (country.code !== 'ZW') {
-          console.log(`⚠️ No news found for ${country.name}, trying Zimbabwe fallback...`);
-          const fallbackRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
-          snapshot = await getDoc(fallbackRef);
-          
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            const categories = data.categories || {};
-            const categoryCount = Object.keys(categories).length;
-            
-            if (categoryCount > 0) {
-              console.log(`✅ Using Zimbabwe news as fallback:`, categoryCount, 'categories');
-              const transformed = transformCategoriesForCountry(categories, country);
-              onNewsUpdate(transformed);
-              
-              unsubscribe = onSnapshot(
-                fallbackRef,
-                (realtimeSnapshot) => {
-                  if (realtimeSnapshot.exists()) {
-                    const realtimeData = realtimeSnapshot.data();
-                    const realtimeCategories = realtimeData.categories || {};
-                    if (Object.keys(realtimeCategories).length > 0) {
-                      const transformed = transformCategoriesForCountry(realtimeCategories, country);
-                      onNewsUpdate(transformed);
-                    }
-                  }
-                },
-                (error: any) => {
-                  console.error('❌ Firestore real-time error:', error);
-                }
-              );
-              return;
-            }
           }
         }
         

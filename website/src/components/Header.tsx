@@ -23,10 +23,11 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, onSubscribeClick, currentCountry, onCountryChange }) => {
   const [harareTime, setHarareTime] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [harareDate, setHarareDate] = useState('');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Update Harare time every second
+  // Update Harare time and date every second
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -36,7 +37,12 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
         minute: '2-digit', 
         second: '2-digit',
         hour12: true 
-      }) + ' CAT');
+      }));
+      setHarareDate(harareTime.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      }));
     };
     
     updateTime();
@@ -46,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
 
   const handleCategoryClick = (category: string | null) => {
     setSelectedCategory(category);
-    setIsDropdownOpen(false);
+    setIsCategoryDropdownOpen(false);
     if (onCategorySelect) {
       onCategorySelect(category);
     }
@@ -54,30 +60,60 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
 
   return (
     <header className="premium-header">
-      {/* Top Bar with Live indicator, time, and weather */}
+      {/* Top Bar with Live indicator, time, date, and dropdowns */}
       <div className="header-top-bar">
         <div className="header-top-content">
+          {/* Left side: Live indicator */}
           <div className="live-indicator">
             <span className="live-dot"></span>
-            <span>LIVE</span>
-            <span className="time-indicator">{harareTime}</span>
+            <span>LIVE GLOBAL</span>
+            <span className="time-indicator">{harareTime} | {harareDate}</span>
           </div>
+          
+          {/* Center: Weather */}
           <WeatherBar />
-          <div className="header-actions">
+          
+          {/* Right side: Dropdowns */}
+          <div className="header-actions-right">
+            {/* Country Chooser - Top Dropdown */}
             {currentCountry && onCountryChange && (
               <CountrySwitcher 
                 currentCountry={currentCountry}
                 onCountryChange={onCountryChange}
               />
             )}
-            <button 
-              className="categories-btn"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              aria-expanded={isDropdownOpen}
-            >
-              Categories
-              <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
-            </button>
+            
+            {/* Category Chooser - Bottom Dropdown */}
+            <div className="category-dropdown-container">
+              <button 
+                className="category-dropdown-btn"
+                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                aria-expanded={isCategoryDropdownOpen}
+              >
+                <span className="category-dropdown-text">Categories</span>
+                <span className={`dropdown-arrow ${isCategoryDropdownOpen ? 'open' : ''}`}>▼</span>
+              </button>
+              
+              {isCategoryDropdownOpen && (
+                <div className="category-dropdown-menu">
+                  <button 
+                    className="category-dropdown-option"
+                    onClick={() => handleCategoryClick(null)}
+                  >
+                    All News
+                  </button>
+                  {CATEGORIES.map((category) => (
+                    <button
+                      key={category}
+                      className="category-dropdown-option"
+                      onClick={() => handleCategoryClick(category)}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -110,29 +146,6 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
           )}
         </div>
       </div>
-
-      {/* Categories Dropdown */}
-      {isDropdownOpen && (
-        <div className="categories-dropdown">
-          <div className="categories-dropdown-content">
-            <button 
-              className="category-option"
-              onClick={() => handleCategoryClick(null)}
-            >
-              All News
-            </button>
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                className="category-option"
-                onClick={() => handleCategoryClick(category)}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Scrolling Ticker */}
       {topHeadlines.length > 0 && (

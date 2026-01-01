@@ -106,8 +106,12 @@ export const getCountryByName = (name: string): CountryInfo | undefined => {
 export const saveUserCountry = (country: CountryInfo): void => {
   try {
     localStorage.setItem('morning-pulse-country', JSON.stringify(country));
-  } catch (e) {
-    console.error('Failed to save country preference:', e);
+  } catch (e: any) {
+    if (e.name === 'QuotaExceededError') {
+      console.warn('LocalStorage quota exceeded, country preference not saved');
+    } else {
+      console.error('Failed to save country preference:', e);
+    }
   }
 };
 
