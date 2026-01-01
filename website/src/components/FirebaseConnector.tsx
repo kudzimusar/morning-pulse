@@ -160,15 +160,17 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               (realtimeSnapshot) => {
                 if (realtimeSnapshot.exists()) {
                   const realtimeData = realtimeSnapshot.data();
-                  let realtimeCategories = realtimeData[country.code] || realtimeData[country.name] || realtimeData['Zimbabwe'] || realtimeData.categories || {};
+                  // Use current userCountry from props, not closure-captured country
+                  const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
+                  let realtimeCategories = realtimeData[currentCountry.code] || realtimeData[currentCountry.name] || realtimeData['Zimbabwe'] || realtimeData.categories || {};
                   
                   if (!realtimeCategories || Object.keys(realtimeCategories).length === 0) {
                     realtimeCategories = realtimeData.categories || realtimeData['Zimbabwe'] || {};
                   }
                   
                   if (Object.keys(realtimeCategories).length > 0) {
-                    console.log('✅ News updated in real-time');
-                    const transformed = transformCategoriesForCountry(realtimeCategories, country);
+                    console.log('✅ News updated in real-time for', currentCountry.name);
+                    const transformed = transformCategoriesForCountry(realtimeCategories, currentCountry);
                     onNewsUpdate(transformed);
                   }
                 }
@@ -191,11 +193,18 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data();
-              const categories = data.categories || {};
+              // Use current userCountry from props
+              const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
+              let categories = data[currentCountry.code] || data[currentCountry.name] || data['Zimbabwe'] || data.categories || {};
+              
+              if (!categories || Object.keys(categories).length === 0) {
+                categories = data.categories || data['Zimbabwe'] || {};
+              }
+              
               const categoryCount = Object.keys(categories).length;
               if (categoryCount > 0) {
-                console.log('✅ News found in Firestore (real-time):', categoryCount, 'categories');
-                const transformed = transformCategoriesForCountry(categories, country);
+                console.log('✅ News found in Firestore (real-time) for', currentCountry.name, ':', categoryCount, 'categories');
+                const transformed = transformCategoriesForCountry(categories, currentCountry);
                 onNewsUpdate(transformed);
               }
             }

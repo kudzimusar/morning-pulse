@@ -1,11 +1,13 @@
 import React from 'react';
 import { NewsStory } from '../../../types';
+import { CountryInfo } from '../services/locationService';
 
 interface HeroCardProps {
   article: NewsStory;
+  userCountry?: CountryInfo;
 }
 
-const HeroCard: React.FC<HeroCardProps> = ({ article }) => {
+const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
   const handleClick = () => {
     if (article.url) {
       window.open(article.url, '_blank', 'noopener,noreferrer');
@@ -53,7 +55,21 @@ const HeroCard: React.FC<HeroCardProps> = ({ article }) => {
   // Generate tags for glassmorphism overlay
   const getTags = () => {
     const tags = [`#${article.category.replace(/\s+/g, '')}`];
-    if (article.category === 'Local (Zim)') tags.push('#ZimNews');
+    
+    // Dynamically add country tag based on userCountry prop
+    if (article.category.includes('Local')) {
+      if (userCountry?.code) {
+        tags.push(`#${userCountry.code}News`);
+      } else if (userCountry?.name) {
+        tags.push(`#${userCountry.name.replace(/\s+/g, '')}News`);
+      } else {
+        tags.push('#ZimNews'); // Fallback
+      }
+    }
+    
+    if (article.category.includes('Business')) tags.push('#Business');
+    if (article.category.includes('African')) tags.push('#Africa');
+    
     return tags;
   };
 
@@ -89,8 +105,9 @@ const HeroCard: React.FC<HeroCardProps> = ({ article }) => {
         <div className="hero-footer">
           <span className="hero-source">{article.source}</span>
           <div className="hero-tags">
-            <span className="hero-tag">#{article.category.replace(/\s+/g, '')}</span>
-            {article.category === 'Local (Zim)' && <span className="hero-tag">#ZimNews</span>}
+            {getTags().map((tag, index) => (
+              <span key={index} className="hero-tag">{tag}</span>
+            ))}
           </div>
           {article.url && (
             <span className="hero-link">Read Full Story →</span>

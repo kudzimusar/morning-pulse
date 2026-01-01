@@ -110,7 +110,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
       {/* Hero Section */}
       {heroArticle && (
         <section className="hero-section">
-          <HeroCard article={heroArticle} />
+          <HeroCard article={heroArticle} userCountry={userCountry} />
         </section>
       )}
 
@@ -130,6 +130,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
               key={article.id} 
               article={article} 
               variant="grid"
+              userCountry={userCountry}
             />
           ))}
         </div>

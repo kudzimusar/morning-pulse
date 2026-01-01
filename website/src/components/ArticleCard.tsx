@@ -1,12 +1,14 @@
 import React from 'react';
 import { NewsStory } from '../../../types';
+import { CountryInfo } from '../services/locationService';
 
 interface ArticleCardProps {
   article: NewsStory;
   variant?: 'grid' | 'compact';
+  userCountry?: CountryInfo;
 }
 
-const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid' }) => {
+const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', userCountry }) => {
   const handleClick = () => {
     if (article.url) {
       window.open(article.url, '_blank', 'noopener,noreferrer');
@@ -44,9 +46,21 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid' }) 
   // Generate tags
   const getTags = () => {
     const tags = [`#${article.category.replace(/\s+/g, '')}`];
-    if (article.category === 'Local (Zim)') tags.push('#ZimNews');
-    if (article.category === 'Business (Zim)') tags.push('#Business');
-    if (article.category === 'African Focus') tags.push('#Africa');
+    
+    // Dynamically add country tag based on userCountry prop
+    if (article.category.includes('Local')) {
+      if (userCountry?.code) {
+        tags.push(`#${userCountry.code}News`);
+      } else if (userCountry?.name) {
+        tags.push(`#${userCountry.name.replace(/\s+/g, '')}News`);
+      } else {
+        tags.push('#ZimNews'); // Fallback
+      }
+    }
+    
+    if (article.category.includes('Business')) tags.push('#Business');
+    if (article.category.includes('African')) tags.push('#Africa');
+    
     return tags;
   };
 

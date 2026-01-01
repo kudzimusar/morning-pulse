@@ -133,12 +133,29 @@ body {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.75rem; /* text-xs */
+  font-size: 0.625rem; /* 10px base - equivalent to text-[10px] */
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.375rem;
   transition: var(--transition);
+}
+
+/* Responsive scaling - equivalent to sm:text-xs md:text-sm */
+@media (min-width: 640px) {
+  .live-indicator,
+  .time-indicator,
+  .category-dropdown-btn {
+    font-size: 0.75rem; /* 12px - equivalent to sm:text-xs */
+  }
+}
+
+@media (min-width: 768px) {
+  .live-indicator,
+  .time-indicator,
+  .category-dropdown-btn {
+    font-size: 0.875rem; /* 14px - equivalent to md:text-sm */
+  }
 }
 
 .category-dropdown-btn:hover {

@@ -27,18 +27,18 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Update Harare time and date every second
+  // Update local time and date every second (use browser's timezone)
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const harareTime = new Date(now.toLocaleString('en-US', { timeZone: 'Africa/Harare' }));
-      setHarareTime(harareTime.toLocaleTimeString('en-US', { 
+      // Use browser's local timezone instead of hardcoded Zimbabwe time
+      setHarareTime(now.toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit', 
         second: '2-digit',
         hour12: true 
       }));
-      setHarareDate(harareTime.toLocaleDateString('en-US', { 
+      setHarareDate(now.toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric',
         year: 'numeric'
