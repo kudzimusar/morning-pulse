@@ -115,7 +115,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
       )}
 
       {/* Advertising Slot */}
-      <AdSlot />
+      <AdSlot userCountry={userCountry} />
 
       {/* Grid Section */}
       <section className="news-grid-section">
