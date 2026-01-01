@@ -389,11 +389,14 @@ function formatNewsForPrompt(newsData) {
  * Handle news query - processes news request and returns formatted response
  * This function is called asynchronously after webhook acknowledges Meta
  */
-async function handleNewsQuery(userMessage, userId) {
+async function handleNewsQuery(userMessage, userId, country = 'Zimbabwe') {
   try {
     // Get current date for header
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    
+    // Get system prompt based on country
+    const systemPrompt = getSystemPrompt(country);
     
     // Step 1: Try to get news from Firestore
     let newsData = await getTodaysNews();
