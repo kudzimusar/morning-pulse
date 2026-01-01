@@ -2,10 +2,13 @@ import React, { useEffect } from 'react';
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, getDoc, Firestore } from 'firebase/firestore';
 import { NewsStory } from '../../../types';
+import { CountryInfo } from '../services/locationService';
 
 interface FirebaseConnectorProps {
   onNewsUpdate: (data: { [category: string]: NewsStory[] }) => void;
   onError: (error: string) => void;
+  userCountry?: CountryInfo;
+  selectedDate?: string;
 }
 
 // Hardcoded Firebase config for local development fallback
@@ -62,7 +65,38 @@ const getFirebaseConfig = (): any => {
   return HARDCODED_FIREBASE_CONFIG;
 };
 
-const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onError }) => {
+// Helper function to transform category names based on country
+const transformCategoriesForCountry = (
+  categories: { [category: string]: NewsStory[] },
+  country: CountryInfo
+): { [category: string]: NewsStory[] } => {
+  const transformed: { [category: string]: NewsStory[] } = {};
+  
+  Object.keys(categories).forEach((categoryKey) => {
+    let newCategoryKey = categoryKey;
+    
+    // Transform Local category based on country
+    if (categoryKey === 'Local (Zim)' || categoryKey.startsWith('Local')) {
+      if (country.code === 'ZW') {
+        newCategoryKey = 'Local (Zim)';
+      } else {
+        newCategoryKey = `Local (${country.name})`;
+      }
+    }
+    
+    // Update articles' category field
+    const articles = categories[categoryKey].map(article => ({
+      ...article,
+      category: newCategoryKey
+    }));
+    
+    transformed[newCategoryKey] = articles;
+  });
+  
+  return transformed;
+};
+
+const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onError, userCountry, selectedDate }) => {
   useEffect(() => {
     console.log('🔍 FirebaseConnector: Initializing...');
     const config = getFirebaseConfig();
@@ -84,23 +118,31 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         db = getFirestore(app);
         
         const appId = (window as any).__app_id || 'morning-pulse-app';
+        const country = userCountry || { code: 'ZW', name: 'Zimbabwe' };
+        const dateString = selectedDate || new Date().toISOString().split('T')[0];
         
-        // Use Firestore path segments: artifacts/morning-pulse-app/public/data/news/${YYYY-MM-DD}
-        // Path structure: doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString)
+        // Determine Firestore path based on country
+        // If Zimbabwe, use standard path: artifacts/morning-pulse-app/public/data/news/${date}
+        // If other country, use: artifacts/morning-pulse-app/public/data/news/${date}/${countryCode}
+        let newsRef;
+        let newsPath: string;
         
-        // Try today first, then yesterday as fallback
-        const today = new Date();
-        const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
-        
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayString = yesterday.toISOString().split('T')[0];
+        if (country.code === 'ZW') {
+          // Standard Zimbabwe path
+          newsPath = `artifacts/${appId}/public/data/news/${dateString}`;
+          newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
+        } else {
+          // Country-specific path
+          newsPath = `artifacts/${appId}/public/data/news/${dateString}/${country.code}`;
+          newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString, country.code);
+        }
         
         console.log(`📂 Fetching news from Firestore...`);
-        console.log(`   Path: artifacts/${appId}/public/data/news/${todayString}`);
+        console.log(`   Country: ${country.name} (${country.code})`);
+        console.log(`   Path: ${newsPath}`);
         
-        // Try today first
-        const todayRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', todayString);
+        // Try selected date first
+        let snapshot = await getDoc(newsRef);
         let snapshot = await getDoc(todayRef);
         
         if (snapshot.exists()) {
@@ -109,20 +151,24 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           const categoryCount = Object.keys(categories).length;
           
           if (categoryCount > 0) {
-            console.log(`✅ News found for today (${todayString}):`, categoryCount, 'categories');
+            console.log(`✅ News found for ${country.name} (${dateString}):`, categoryCount, 'categories');
             console.log('   Categories:', Object.keys(categories));
-            onNewsUpdate(categories);
             
-            // Set up real-time listener for today's document
+            // Transform Local category name based on country
+            const transformedCategories = transformCategoriesForCountry(categories, country);
+            onNewsUpdate(transformedCategories);
+            
+            // Set up real-time listener
             unsubscribe = onSnapshot(
-              todayRef,
+              newsRef,
               (realtimeSnapshot) => {
                 if (realtimeSnapshot.exists()) {
                   const realtimeData = realtimeSnapshot.data();
                   const realtimeCategories = realtimeData.categories || {};
                   if (Object.keys(realtimeCategories).length > 0) {
                     console.log('✅ News updated in real-time');
-                    onNewsUpdate(realtimeCategories);
+                    const transformed = transformCategoriesForCountry(realtimeCategories, country);
+                    onNewsUpdate(transformed);
                   }
                 }
               },
@@ -134,49 +180,50 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           }
         }
         
-        // Fallback to yesterday
-        console.log(`⚠️ No news found for today, trying yesterday (${yesterdayString})...`);
-        const yesterdayRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', yesterdayString);
-        snapshot = await getDoc(yesterdayRef);
-        
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          const categories = data.categories || {};
-          const categoryCount = Object.keys(categories).length;
+        // If country-specific news not found and not Zimbabwe, try fallback to Zimbabwe
+        if (country.code !== 'ZW') {
+          console.log(`⚠️ No news found for ${country.name}, trying Zimbabwe fallback...`);
+          const fallbackRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
+          snapshot = await getDoc(fallbackRef);
           
-          if (categoryCount > 0) {
-            console.log(`✅ News found for yesterday (${yesterdayString}):`, categoryCount, 'categories');
-            console.log('   Categories:', Object.keys(categories));
-            onNewsUpdate(categories);
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            const categories = data.categories || {};
+            const categoryCount = Object.keys(categories).length;
             
-            // Set up real-time listener for yesterday's document
-            unsubscribe = onSnapshot(
-              yesterdayRef,
-              (realtimeSnapshot) => {
-                if (realtimeSnapshot.exists()) {
-                  const realtimeData = realtimeSnapshot.data();
-                  const realtimeCategories = realtimeData.categories || {};
-                  if (Object.keys(realtimeCategories).length > 0) {
-                    console.log('✅ News updated in real-time');
-                    onNewsUpdate(realtimeCategories);
+            if (categoryCount > 0) {
+              console.log(`✅ Using Zimbabwe news as fallback:`, categoryCount, 'categories');
+              const transformed = transformCategoriesForCountry(categories, country);
+              onNewsUpdate(transformed);
+              
+              unsubscribe = onSnapshot(
+                fallbackRef,
+                (realtimeSnapshot) => {
+                  if (realtimeSnapshot.exists()) {
+                    const realtimeData = realtimeSnapshot.data();
+                    const realtimeCategories = realtimeData.categories || {};
+                    if (Object.keys(realtimeCategories).length > 0) {
+                      const transformed = transformCategoriesForCountry(realtimeCategories, country);
+                      onNewsUpdate(transformed);
+                    }
                   }
+                },
+                (error: any) => {
+                  console.error('❌ Firestore real-time error:', error);
                 }
-              },
-              (error: any) => {
-                console.error('❌ Firestore real-time error:', error);
-              }
-            );
-            return;
+              );
+              return;
+            }
           }
         }
         
         // No news found at all
-        console.warn('⚠️ No news found for today or yesterday');
-        onError('Morning Pulse is currently gathering today\'s news. Please check back shortly.');
+        console.warn(`⚠️ No news found for ${country.name} on ${dateString}`);
+        onError(`Morning Pulse is currently gathering news for ${country.name}. Please check back shortly.`);
         
-        // Set up real-time listener for today as fallback (in case news gets added)
+        // Set up real-time listener as fallback
         unsubscribe = onSnapshot(
-          todayRef,
+          newsRef,
           (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data();
@@ -184,7 +231,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               const categoryCount = Object.keys(categories).length;
               if (categoryCount > 0) {
                 console.log('✅ News found in Firestore (real-time):', categoryCount, 'categories');
-                onNewsUpdate(categories);
+                const transformed = transformCategoriesForCountry(categories, country);
+                onNewsUpdate(transformed);
               }
             }
           },

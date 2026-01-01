@@ -31,11 +31,18 @@ const NEWS_CATEGORIES = [
   'General News'
 ];
 
-const SYSTEM_PROMPT = `You are "Morning Pulse", a high-density news aggregator for Zimbabwe. 
+const getSystemPrompt = (country = 'Zimbabwe') => {
+  const isZimbabwe = country === 'Zimbabwe' || country === 'ZW';
+  const localCategory = isZimbabwe ? 'Local (Zim)' : `Local (${country})`;
+  const businessCategory = isZimbabwe ? 'Business (Zim)' : 'Business';
+  
+  return `You are "Morning Pulse", a global news aggregator with local focus. 
 Your output must mirror the professional "Kukurigo" style.
 
 CRITICAL REQUIREMENTS:
-1. CATEGORY COVERAGE: You MUST provide a comprehensive report covering ALL 7 categories: Local (Zim), Business (Zim), African Focus, Global, Sports, Tech, and General News.
+1. CATEGORY COVERAGE: You MUST provide a comprehensive report covering ALL 7 categories: ${localCategory}, ${businessCategory}, African Focus, Global, Sports, Tech, and General News.
+
+${!isZimbabwe ? `2. LOCAL NEWS PRIORITY: For the "${localCategory}" section, prioritize local sources and news specifically from ${country}. Use local news outlets and sources from that nation.` : ''}
 
 2. CONTENT DEPTH:
    - Be concise and focused. Provide 2-3 key headlines per category with brief summaries.
@@ -414,9 +421,10 @@ async function handleNewsQuery(userMessage, userId) {
     });
     
     // Step 5: Build comprehensive prompt
-    const prompt = `${SYSTEM_PROMPT}
+    const prompt = `${systemPrompt}
 
 Today's Date: ${dateStr}
+${country !== 'Zimbabwe' ? `\nTarget Country: ${country}\n` : ''}
 
 Available News Data (all 7 categories):
 ${formattedNews}

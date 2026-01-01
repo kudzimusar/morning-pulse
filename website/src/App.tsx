@@ -10,6 +10,13 @@ import EditorialPage from './components/EditorialPage';
 import PrivacyPage from './components/PrivacyPage';
 import DatePicker from './components/DatePicker';
 import { NewsStory } from '../../types';
+import { 
+  detectUserLocation, 
+  getUserCountry, 
+  saveUserCountry,
+  CountryInfo,
+  SUPPORTED_COUNTRIES 
+} from './services/locationService';
 
 type Page = 'news' | 'advertise' | 'subscribe' | 'about' | 'editorial' | 'privacy';
 
@@ -26,6 +33,46 @@ const App: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [isSubscribed, setIsSubscribed] = useState(false); // TODO: Get from user session/auth
+  const [userCountry, setUserCountry] = useState<CountryInfo>(SUPPORTED_COUNTRIES[0]); // Default to Zimbabwe
+  const [locationDetecting, setLocationDetecting] = useState(true);
+
+  // Detect user location on mount
+  useEffect(() => {
+    const initializeLocation = async () => {
+      setLocationDetecting(true);
+      
+      // First, check if user has a saved preference
+      const savedCountry = getUserCountry();
+      if (savedCountry) {
+        console.log('✅ Using saved country preference:', savedCountry.name);
+        setUserCountry(savedCountry);
+        setLocationDetecting(false);
+        return;
+      }
+      
+      // Otherwise, detect location
+      try {
+        const detectedCountry = await detectUserLocation();
+        setUserCountry(detectedCountry);
+        saveUserCountry(detectedCountry);
+        console.log('✅ Location detected:', detectedCountry.name);
+      } catch (error) {
+        console.error('❌ Location detection failed:', error);
+        // Keep default (Zimbabwe)
+      } finally {
+        setLocationDetecting(false);
+      }
+    };
+
+    initializeLocation();
+  }, []);
+
+  // Handle country change
+  const handleCountryChange = useCallback((country: CountryInfo) => {
+    setUserCountry(country);
+    saveUserCountry(country);
+    console.log('✅ Country changed to:', country.name);
+  }, []);
 
   // Handle page navigation from hash changes (for footer links)
   useEffect(() => {
@@ -172,11 +219,15 @@ const App: React.FC = () => {
         topHeadlines={topHeadlines}
         onCategorySelect={setSelectedCategory}
         onSubscribeClick={() => { setCurrentPage('subscribe'); window.location.hash = 'subscription'; }}
+        currentCountry={userCountry}
+        onCountryChange={handleCountryChange}
       />
       {useFirestore && currentPage === 'news' && (
         <FirebaseConnector
           onNewsUpdate={handleNewsUpdate}
           onError={handleError}
+          userCountry={userCountry}
+          selectedDate={selectedDate}
         />
       )}
       

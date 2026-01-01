@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import WeatherBar from './WeatherBar';
+import CountrySwitcher from './CountrySwitcher';
+import { CountryInfo } from '../services/locationService';
 
 const CATEGORIES = [
   'Local (Zim)',
@@ -15,9 +17,11 @@ interface HeaderProps {
   topHeadlines?: string[];
   onCategorySelect?: (category: string | null) => void;
   onSubscribeClick?: () => void;
+  currentCountry?: CountryInfo;
+  onCountryChange?: (country: CountryInfo) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, onSubscribeClick }) => {
+const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, onSubscribeClick, currentCountry, onCountryChange }) => {
   const [harareTime, setHarareTime] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -60,6 +64,12 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
           </div>
           <WeatherBar />
           <div className="header-actions">
+            {currentCountry && onCountryChange && (
+              <CountrySwitcher 
+                currentCountry={currentCountry}
+                onCountryChange={onCountryChange}
+              />
+            )}
             <button 
               className="categories-btn"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}

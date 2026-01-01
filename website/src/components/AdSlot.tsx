@@ -10,7 +10,7 @@ const AdSlot: React.FC<AdSlotProps> = ({ label = 'Sponsored' }) => {
       <div className="ad-slot-content">
         <div className="ad-label">{label}</div>
         <div className="ad-placeholder">
-          <p>Advertising Space</p>
+          <p>{getAdMessage()}</p>
           <a href="#advertising" className="ad-cta">Partner with us</a>
         </div>
       </div>

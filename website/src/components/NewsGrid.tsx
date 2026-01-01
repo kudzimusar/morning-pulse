@@ -9,12 +9,13 @@ interface NewsGridProps {
     [category: string]: NewsStory[];
   };
   selectedCategory?: string | null;
+  userCountry?: string; // Country name for dynamic Local category
 }
 
-const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory }) => {
-  // Define category order for display
-  const categoryOrder = [
-    'Local (Zim)',
+const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCountry }) => {
+  // Define category order for display - Local category will be dynamic
+  const baseCategoryOrder = [
+    'Local', // Will be replaced with actual Local category name
     'Business (Zim)',
     'African Focus',
     'Global',
@@ -22,6 +23,15 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory }) => {
     'Tech',
     'General News'
   ];
+  
+  // Get the actual Local category name from newsData
+  const localCategoryKey = Object.keys(newsData).find(key => 
+    key.startsWith('Local')
+  ) || 'Local (Zim)';
+  
+  const categoryOrder = baseCategoryOrder.map(cat => 
+    cat === 'Local' ? localCategoryKey : cat
+  );
 
   // Get all articles, sorted by timestamp (most recent first)
   const allArticles = useMemo(() => {
@@ -37,15 +47,18 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory }) => {
     });
   }, [newsData]);
 
-  // Get hero article (top story from Local (Zim) or first article)
+  // Get hero article (top story from Local category or first article)
   const heroArticle = useMemo(() => {
     if (selectedCategory) {
       // If a category is selected, use first article from that category
       const categoryArticles = newsData[selectedCategory] || [];
       return categoryArticles.length > 0 ? categoryArticles[0] : null;
     }
-    // Otherwise, use top story from Local (Zim)
-    const localArticles = newsData['Local (Zim)'] || [];
+    // Otherwise, use top story from Local category (dynamic)
+    const localCategoryKey = Object.keys(newsData).find(key => 
+      key.startsWith('Local')
+    ) || 'Local (Zim)';
+    const localArticles = newsData[localCategoryKey] || [];
     if (localArticles.length > 0) {
       return localArticles[0];
     }
@@ -65,7 +78,8 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory }) => {
       // Get articles from all categories except the hero's category
       categoryOrder.forEach(category => {
         const categoryArticles = newsData[category] || [];
-        if (category !== heroArticle?.category) {
+        const heroCategory = heroArticle?.category || '';
+        if (category !== heroCategory) {
           articles.push(...categoryArticles);
         } else {
           // Include all but the first (hero) from this category
@@ -80,7 +94,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory }) => {
       const timeB = b.timestamp || 0;
       return timeB - timeA;
     });
-  }, [newsData, selectedCategory, heroArticle]);
+  }, [newsData, selectedCategory, heroArticle, categoryOrder]);
 
   // Get top headlines for ticker
   const topHeadlines = useMemo(() => {
