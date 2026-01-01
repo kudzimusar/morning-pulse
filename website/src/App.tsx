@@ -206,6 +206,7 @@ const App: React.FC = () => {
               <NewsGrid 
                 newsData={newsData} 
                 selectedCategory={selectedCategory}
+                userCountry={userCountry}
               />
             )}
           </>
