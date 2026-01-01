@@ -143,7 +143,6 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         
         // Try selected date first
         let snapshot = await getDoc(newsRef);
-        let snapshot = await getDoc(todayRef);
         
         if (snapshot.exists()) {
           const data = snapshot.data();
@@ -257,7 +256,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         unsubscribe();
       }
     };
-  }, [onNewsUpdate, onError]); // Handlers are stable via useCallback in App.tsx
+  }, [onNewsUpdate, onError, userCountry, selectedDate]); // Include country and date dependencies
 
   return null; // This component doesn't render anything
 };
