@@ -8,6 +8,9 @@ import SubscriptionPage from './components/SubscriptionPage';
 import AboutPage from './components/AboutPage';
 import EditorialPage from './components/EditorialPage';
 import PrivacyPage from './components/PrivacyPage';
+import OpinionPage from './components/OpinionPage';
+import OpinionSubmissionForm from './components/OpinionSubmissionForm';
+import AdminOpinionReview from './components/AdminOpinionReview';
 import DatePicker from './components/DatePicker';
 import { NewsStory } from '../../types';
 import { 
@@ -18,7 +21,7 @@ import {
   SUPPORTED_COUNTRIES 
 } from './services/locationService';
 
-type Page = 'news' | 'advertise' | 'subscribe' | 'about' | 'editorial' | 'privacy';
+type Page = 'news' | 'advertise' | 'subscribe' | 'about' | 'editorial' | 'privacy' | 'opinion' | 'opinion-submit';
 
 interface NewsData {
   [category: string]: NewsStory[];
@@ -35,6 +38,8 @@ const App: React.FC = () => {
   const [isSubscribed, setIsSubscribed] = useState(false); // TODO: Get from user session/auth
   const [userCountry, setUserCountry] = useState<CountryInfo>(SUPPORTED_COUNTRIES[0]); // Default to Zimbabwe
   const [locationDetecting, setLocationDetecting] = useState(true);
+  const [globalNewsData, setGlobalNewsData] = useState<any>(null); // Store entire Firestore document
+  const [copyToast, setCopyToast] = useState(false); // Toast notification for copy action
 
   // Detect user location on mount
   useEffect(() => {
@@ -83,6 +88,8 @@ const App: React.FC = () => {
       else if (hash === 'about') setCurrentPage('about');
       else if (hash === 'editorial') setCurrentPage('editorial');
       else if (hash === 'privacy') setCurrentPage('privacy');
+      else if (hash === 'opinion') setCurrentPage('opinion');
+      else if (hash === 'opinion/submit' || hash === 'opinion-submit') setCurrentPage('opinion-submit');
       else setCurrentPage('news');
     };
 
@@ -163,6 +170,204 @@ const App: React.FC = () => {
     setSelectedDate(date);
   }, []);
 
+  // Store global news data from Firestore
+  const handleGlobalDataUpdate = useCallback((data: any) => {
+    setGlobalNewsData(data);
+  }, []);
+
+  /**
+   * Country flag emoji mapping
+   */
+  const getCountryFlag = (countryCode: string, countryName: string): string => {
+    const flagMap: { [key: string]: string } = {
+      'ZW': '🇿🇼', 'Zimbabwe': '🇿🇼',
+      'ZA': '🇿🇦', 'South Africa': '🇿🇦',
+      'GB': '🇬🇧', 'United Kingdom': '🇬🇧', 'UK': '🇬🇧',
+      'US': '🇺🇸', 'United States': '🇺🇸', 'USA': '🇺🇸',
+      'KE': '🇰🇪', 'Kenya': '🇰🇪',
+      'NG': '🇳🇬', 'Nigeria': '🇳🇬',
+      'GH': '🇬🇭', 'Ghana': '🇬🇭',
+      'EG': '🇪🇬', 'Egypt': '🇪🇬',
+      'AU': '🇦🇺', 'Australia': '🇦🇺',
+      'CA': '🇨🇦', 'Canada': '🇨🇦',
+      'IN': '🇮🇳', 'India': '🇮🇳',
+      'CN': '🇨🇳', 'China': '🇨🇳',
+      'JP': '🇯🇵', 'Japan': '🇯🇵',
+      'FR': '🇫🇷', 'France': '🇫🇷',
+      'DE': '🇩🇪', 'Germany': '🇩🇪',
+    };
+    return flagMap[countryCode] || flagMap[countryName] || '🌍';
+  };
+
+  /**
+   * Generate WhatsApp summary from global news data
+   * Formats news from all countries into the Global Edition template
+   */
+  const generateWhatsAppSummary = useCallback((newsData: any, currentCountry?: CountryInfo): string => {
+    if (!newsData || typeof newsData !== 'object') {
+      return 'No news data available.';
+    }
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+    let summary = `🗞️ *MORNING PULSE | GLOBAL EDITION* 🗞️\n`;
+    summary += `🗓️ ${dateStr} | ${timeStr}\n\n`;
+
+    // TOP GLOBAL PULSE - Get Global category headlines from all countries
+    summary += `🌍 *TOP GLOBAL PULSE*\n`;
+    const globalHeadlines: string[] = [];
+    
+    // Iterate through all countries in the document
+    Object.keys(newsData).forEach((countryKey) => {
+      // Skip metadata fields
+      if (countryKey === 'categories' || countryKey === 'timestamp' || countryKey === 'date') {
+        return;
+      }
+      
+      const countryData = newsData[countryKey];
+      if (countryData && typeof countryData === 'object') {
+        // Try different variations of Global category name
+        const globalCategory = countryData['Global'] || countryData['global'] || countryData['Global News'];
+        if (globalCategory && Array.isArray(globalCategory) && globalCategory.length > 0) {
+          const headline = globalCategory[0]?.headline;
+          if (headline && headline.trim()) {
+            globalHeadlines.push(`• ${headline}`);
+          }
+        }
+      }
+    });
+
+    if (globalHeadlines.length > 0) {
+      summary += globalHeadlines.slice(0, 5).join('\n') + '\n\n';
+    } else {
+      summary += `• Global news updates coming soon...\n\n`;
+    }
+
+    // REGIONAL ROUNDUP - Iterate through all countries, get Local or Business headlines
+    summary += `📍 *REGIONAL ROUNDUP*\n`;
+    const countryKeys = Object.keys(newsData).filter(key => 
+      key !== 'categories' && key !== 'timestamp' && key !== 'date' && 
+      typeof newsData[key] === 'object'
+    );
+
+    const regionalEntries: string[] = [];
+    
+    countryKeys.forEach((countryKey) => {
+      const countryData = newsData[countryKey];
+      if (countryData && typeof countryData === 'object') {
+        // Try to get country info from SUPPORTED_COUNTRIES
+        const countryInfo = SUPPORTED_COUNTRIES.find(c => 
+          c.code === countryKey || c.name === countryKey || 
+          c.code.toLowerCase() === countryKey.toLowerCase() ||
+          c.name.toLowerCase() === countryKey.toLowerCase()
+        );
+        
+        const countryName = countryInfo?.name || countryKey;
+        const countryCode = countryInfo?.code || countryKey;
+        const flag = getCountryFlag(countryCode, countryName);
+
+        // Try to get Local or Business headline (priority: Local first, then Business)
+        let headline: string | null = null;
+        
+        // Try Local category variations
+        const localCategory = countryData['Local'] || countryData['local'] || 
+                             countryData['Local (Zim)'] || countryData[`Local (${countryName})`] ||
+                             countryData['Local News'];
+        
+        if (localCategory && Array.isArray(localCategory) && localCategory.length > 0) {
+          headline = localCategory[0]?.headline;
+        }
+        
+        // If no Local, try Business
+        if (!headline || !headline.trim()) {
+          const businessCategory = countryData['Business'] || countryData['business'] ||
+                                   countryData['Business (Zim)'] || countryData[`Business (${countryName})`] ||
+                                   countryData['Business News'];
+          
+          if (businessCategory && Array.isArray(businessCategory) && businessCategory.length > 0) {
+            headline = businessCategory[0]?.headline;
+          }
+        }
+
+        // Only add if we have a valid headline
+        if (headline && headline.trim()) {
+          regionalEntries.push(`${flag} ${countryName}: ${headline}`);
+        }
+      }
+    });
+
+    if (regionalEntries.length > 0) {
+      summary += regionalEntries.join('\n') + '\n\n';
+    } else {
+      summary += `Regional updates coming soon...\n\n`;
+    }
+
+    // BUSINESS & TECH - Get from current selected country
+    summary += `💼 *BUSINESS & TECH*\n`;
+    if (currentCountry) {
+      const currentCountryKey = currentCountry.code || currentCountry.name;
+      const currentCountryData = newsData[currentCountryKey] || newsData[currentCountry.name];
+      
+      if (currentCountryData && typeof currentCountryData === 'object') {
+        // Try Business category
+        const businessCategory = currentCountryData['Business'] || currentCountryData['business'] ||
+                               currentCountryData['Business (Zim)'] || currentCountryData[`Business (${currentCountry.name})`] ||
+                               currentCountryData['Business News'];
+        
+        // Try Tech category
+        const techCategory = currentCountryData['Tech'] || currentCountryData['tech'] ||
+                            currentCountryData['Technology'] || currentCountryData['Technology News'];
+        
+        const businessHeadline = businessCategory && Array.isArray(businessCategory) && businessCategory.length > 0
+          ? businessCategory[0]?.headline : null;
+        
+        const techHeadline = techCategory && Array.isArray(techCategory) && techCategory.length > 0
+          ? techCategory[0]?.headline : null;
+
+        if (businessHeadline && businessHeadline.trim()) {
+          summary += `• ${businessHeadline}\n`;
+        }
+        if (techHeadline && techHeadline.trim()) {
+          summary += `• ${techHeadline}\n`;
+        }
+        
+        if (!businessHeadline && !techHeadline) {
+          summary += `• Business and tech updates coming soon...\n`;
+        }
+      } else {
+        summary += `• Business and tech updates coming soon...\n`;
+      }
+    } else {
+      summary += `• Business and tech updates coming soon...\n`;
+    }
+
+    summary += `\n🌐 *LIVE DASHBOARD*\n`;
+    summary += `https://kudzimusar.github.io/morning-pulse/\n`;
+    summary += `\n_Reliable. Glocal. Instant._`;
+
+    return summary;
+  }, []);
+
+  // Handle copy summary to clipboard
+  const handleCopySummary = useCallback(async () => {
+    if (!globalNewsData) {
+      alert('No news data available. Please wait for news to load.');
+      return;
+    }
+
+    try {
+      const summary = generateWhatsAppSummary(globalNewsData, userCountry);
+      await navigator.clipboard.writeText(summary);
+      setCopyToast(true);
+      setTimeout(() => setCopyToast(false), 3000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      alert('Failed to copy summary. Please try again.');
+    }
+  }, [globalNewsData, generateWhatsAppSummary, userCountry]);
+
   const renderPage = () => {
     switch (currentPage) {
       case 'advertise':
@@ -175,8 +380,31 @@ const App: React.FC = () => {
         return <EditorialPage onBack={() => { setCurrentPage('news'); window.location.hash = ''; }} />;
       case 'privacy':
         return <PrivacyPage onBack={() => { setCurrentPage('news'); window.location.hash = ''; }} />;
+      case 'opinion':
+        return (
+          <OpinionPage 
+            onBack={() => { setCurrentPage('news'); window.location.hash = ''; setSelectedCategory(null); }}
+            onNavigateToSubmit={() => { setCurrentPage('opinion-submit'); window.location.hash = 'opinion/submit'; }}
+          />
+        );
+      case 'opinion-submit':
+        return (
+          <OpinionSubmissionForm 
+            onBack={() => { setCurrentPage('opinion'); window.location.hash = 'opinion'; }}
+            onSuccess={() => { setCurrentPage('opinion'); window.location.hash = 'opinion'; }}
+          />
+        );
       case 'news':
       default:
+        // If Opinion category is selected, show OpinionPage instead of NewsGrid
+        if (selectedCategory === 'Opinion') {
+          return (
+            <OpinionPage 
+              onBack={() => { setSelectedCategory(null); }}
+              onNavigateToSubmit={() => { setCurrentPage('opinion-submit'); window.location.hash = 'opinion/submit'; }}
+            />
+          );
+        }
         return (
           <>
             <div className="news-controls">
@@ -229,10 +457,75 @@ const App: React.FC = () => {
           onError={handleError}
           userCountry={userCountry}
           selectedDate={selectedDate}
+          onGlobalDataUpdate={handleGlobalDataUpdate}
         />
       )}
       
       {renderPage()}
+      
+      {/* Admin Opinion Review - Only visible when VITE_ENABLE_ADMIN=true */}
+      {(currentPage === 'news' || currentPage === 'opinion') && (import.meta.env.VITE_ENABLE_ADMIN === 'true') && (
+        <AdminOpinionReview />
+      )}
+      
+      {/* Admin Copy Summary Button - Only visible when VITE_ENABLE_ADMIN=true */}
+      {currentPage === 'news' && (import.meta.env.VITE_ENABLE_ADMIN === 'true') && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          right: '20px',
+          zIndex: 1000
+        }}>
+          <button
+            onClick={handleCopySummary}
+            disabled={!globalNewsData}
+            style={{
+              padding: '12px 20px',
+              backgroundColor: globalNewsData ? '#25D366' : '#cccccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: globalNewsData ? 'pointer' : 'not-allowed',
+              fontSize: '14px',
+              fontWeight: '600',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.2s',
+              opacity: globalNewsData ? 1 : 0.6,
+            }}
+            onMouseOver={(e) => {
+              if (globalNewsData) {
+                e.currentTarget.style.backgroundColor = '#20BA5A';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (globalNewsData) {
+                e.currentTarget.style.backgroundColor = '#25D366';
+                e.currentTarget.style.transform = 'scale(1)';
+              }
+            }}
+            title={globalNewsData ? 'Copy daily summary to clipboard' : 'Loading news data...'}
+          >
+            {globalNewsData ? '📋 Copy Daily Summary for WhatsApp' : '⏳ Loading news...'}
+          </button>
+          {copyToast && (
+            <div style={{
+              position: 'absolute',
+              bottom: '60px',
+              right: '0',
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              padding: '10px 16px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+              animation: 'fadeIn 0.3s ease-in',
+            }}>
+              ✅ Copied to clipboard!
+            </div>
+          )}
+        </div>
+      )}
       
       <Footer onNavigate={(page) => {
         if (page === 'news') setCurrentPage('news');

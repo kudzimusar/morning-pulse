@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:admin": "VITE_ENABLE_ADMIN=true vite",
     "build": "vite build && node scripts/inject-firebase-config.js",
+    "build:public": "VITE_ENABLE_ADMIN=false vite build && node scripts/inject-firebase-config.js",
+    "build:admin": "VITE_ENABLE_ADMIN=true vite build && node scripts/inject-firebase-config.js",
     "preview": "vite preview"
   },
   "dependencies": {

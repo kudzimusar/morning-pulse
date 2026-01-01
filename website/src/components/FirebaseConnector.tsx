@@ -9,6 +9,7 @@ interface FirebaseConnectorProps {
   onError: (error: string) => void;
   userCountry?: CountryInfo;
   selectedDate?: string;
+  onGlobalDataUpdate?: (globalData: any) => void; // Callback to store entire document
 }
 
 // Hardcoded Firebase config for local development fallback
@@ -96,7 +97,7 @@ const transformCategoriesForCountry = (
   return transformed;
 };
 
-const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onError, userCountry, selectedDate }) => {
+const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onError, userCountry, selectedDate, onGlobalDataUpdate }) => {
   useEffect(() => {
     console.log('🔍 FirebaseConnector: Initializing...');
     const config = getFirebaseConfig();
@@ -135,6 +136,11 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         if (snapshot.exists()) {
           const data = snapshot.data();
           
+          // Store entire document globally for admin tool
+          if (onGlobalDataUpdate) {
+            onGlobalDataUpdate(data);
+          }
+          
           // Extract country-specific data from document fields
           // Try country code first, then country name, then fallback to 'Zimbabwe'
           let categories = data[country.code] || data[country.name] || data['Zimbabwe'] || data.categories || {};
@@ -160,6 +166,12 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               (realtimeSnapshot) => {
                 if (realtimeSnapshot.exists()) {
                   const realtimeData = realtimeSnapshot.data();
+                  
+                  // Store entire document globally for admin tool
+                  if (onGlobalDataUpdate) {
+                    onGlobalDataUpdate(realtimeData);
+                  }
+                  
                   // Use current userCountry from props, not closure-captured country
                   const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
                   let realtimeCategories = realtimeData[currentCountry.code] || realtimeData[currentCountry.name] || realtimeData['Zimbabwe'] || realtimeData.categories || {};
@@ -193,6 +205,12 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data();
+              
+              // Store entire document globally for admin tool
+              if (onGlobalDataUpdate) {
+                onGlobalDataUpdate(data);
+              }
+              
               // Use current userCountry from props
               const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
               let categories = data[currentCountry.code] || data[currentCountry.name] || data['Zimbabwe'] || data.categories || {};
@@ -230,7 +248,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         unsubscribe();
       }
     };
-  }, [onNewsUpdate, onError, userCountry, selectedDate]); // Include country and date dependencies
+  }, [onNewsUpdate, onError, userCountry, selectedDate, onGlobalDataUpdate]); // Include country and date dependencies
 
   return null; // This component doesn't render anything
 };

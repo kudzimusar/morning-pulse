@@ -10,7 +10,8 @@ const CATEGORIES = [
   'Global',
   'Sports',
   'Tech',
-  'General News'
+  'General News',
+  'Opinion'
 ];
 
 interface HeaderProps {
@@ -55,6 +56,10 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
     setIsCategoryDropdownOpen(false);
     if (onCategorySelect) {
       onCategorySelect(category);
+    }
+    // If Opinion is selected, navigate to opinion page
+    if (category === 'Opinion') {
+      window.location.hash = 'opinion';
     }
   };
 

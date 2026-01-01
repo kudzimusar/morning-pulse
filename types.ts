@@ -51,3 +51,31 @@ export interface GroundingSource {
   title: string;
   uri: string;
 }
+
+// Opinion & Editorial Types
+export interface Opinion {
+  id: string;
+  writerType: string;
+  authorName: string;
+  authorTitle?: string;
+  headline: string;
+  subHeadline: string;
+  body: string;
+  category?: string;
+  country?: string;
+  status: 'pending' | 'published' | 'rejected';
+  submittedAt: Date;
+  publishedAt?: Date | null;
+  reviewedBy?: string;
+}
+
+export interface OpinionSubmissionData {
+  writerType?: string;
+  authorName: string;
+  authorTitle?: string;
+  headline: string;
+  subHeadline: string;
+  body: string;
+  category?: string;
+  country?: string;
+}
