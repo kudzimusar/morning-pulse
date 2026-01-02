@@ -249,63 +249,14 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
 
 /**
  * Subscribe to published opinions with real-time updates
- * FIX: Use Cloud Function endpoint instead of direct Firestore collection access
+ * TEMPORARY: Disabled - focusing on submission only
  */
 export const subscribeToPublishedOpinions = (
   callback: (opinions: Opinion[]) => void
 ): (() => void) => {
-  let isUnsubscribed = false;
-  let pollInterval: NodeJS.Timeout | null = null;
-
-  const fetchOpinions = async () => {
-    if (isUnsubscribed) return;
-
-    try {
-      // Get Cloud Function URL from environment or use default
-      const functionUrl = import.meta.env.VITE_CLOUD_FUNCTION_URL || 
-        'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/getOpinions';
-      
-      const response = await fetch(`${functionUrl}?status=published`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      // Convert ISO strings back to Date objects
-      const opinions: Opinion[] = (data.opinions || []).map((op: any) => ({
-        ...op,
-        submittedAt: op.submittedAt ? new Date(op.submittedAt) : new Date(),
-        publishedAt: op.publishedAt ? new Date(op.publishedAt) : null,
-      }));
-
-      console.log(`✅ Fetched ${opinions.length} published opinions via Cloud Function`);
-      callback(opinions);
-    } catch (error: any) {
-      console.error('❌ Error fetching published opinions from Cloud Function:', error);
-      callback([]);
-    }
-  };
-
-  // Initial fetch
-  fetchOpinions();
-
-  // Poll every 10 seconds for real-time updates (less frequent for public page)
-  pollInterval = setInterval(() => {
-    if (!isUnsubscribed) {
-      fetchOpinions();
-    }
-  }, 10000);
-
-  // Return unsubscribe function
-  return () => {
-    isUnsubscribed = true;
-    if (pollInterval) {
-      clearInterval(pollInterval);
-      pollInterval = null;
-    }
-  };
+  console.log('📝 Opinion feed temporarily disabled - focusing on submission');
+  callback([]);
+  return () => {}; // Empty unsubscribe function
 };
 
 /**
