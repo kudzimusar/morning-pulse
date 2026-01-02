@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, getDoc, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 import { NewsStory } from '../../../types';
 import { CountryInfo } from '../services/locationService';
 
@@ -122,12 +123,14 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
     console.log('✅ Firebase config found, initializing connection...');
 
     let app: FirebaseApp;
+    let auth: Auth;
     let db: Firestore;
     let unsubscribe: (() => void) | null = null;
 
     const loadLatestNews = async () => {
       try {
         app = initializeApp(config);
+        auth = getAuth(app);
         db = getFirestore(app);
         
         const appId = (window as any).__app_id || 'morning-pulse-app';
@@ -141,10 +144,6 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         console.log(`📂 Fetching news from Firestore...`);
         console.log(`   Country: ${country.name} (${country.code})`);
         console.log(`   Path: ${newsPath} (6 segments)`);
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FirebaseConnector.tsx:139',message:'Before getDoc news (working path)',data:{newsPath,refType:'doc',hasAuth:!!auth?.currentUser,authUid:auth?.currentUser?.uid,isAnonymous:auth?.currentUser?.isAnonymous},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
-        // #endregion
         
         // Fetch the daily document
         let snapshot = await getDoc(newsRef);
