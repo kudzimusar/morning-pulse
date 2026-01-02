@@ -3,7 +3,8 @@ import { Opinion } from '../../../types';
 import { 
   subscribeToPendingOpinions, 
   approveOpinion, 
-  rejectOpinion 
+  rejectOpinion,
+  getCurrentAuthUser
 } from '../services/opinionsService';
 
 const AdminOpinionReview: React.FC = () => {
@@ -11,9 +12,30 @@ const AdminOpinionReview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [authUser, setAuthUser] = useState<any>(null);
+
+  // Wait for authentication before subscribing
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = getCurrentAuthUser();
+      if (user) {
+        setAuthUser(user);
+      } else {
+        // Retry after a short delay
+        setTimeout(checkAuth, 500);
+      }
+    };
+    checkAuth();
+  }, []);
 
   useEffect(() => {
+    // Guard: Don't subscribe until auth is ready
+    if (!authUser) {
+      return;
+    }
+
     setLoading(true);
+    console.log('🔐 Auth ready, starting pending opinions subscription...');
     
     // Subscribe to pending opinions with real-time updates
     const unsubscribe = subscribeToPendingOpinions((opinions) => {
@@ -26,7 +48,7 @@ const AdminOpinionReview: React.FC = () => {
         unsubscribe();
       }
     };
-  }, []);
+  }, [authUser]);
 
   const handleApprove = async (opinionId: string) => {
     setProcessingId(opinionId);

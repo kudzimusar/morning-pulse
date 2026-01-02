@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../../types';
-import { subscribeToPublishedOpinions } from '../services/opinionsService';
+import { 
+  subscribeToPublishedOpinions,
+  getCurrentAuthUser
+} from '../services/opinionsService';
 
 interface OpinionFeedProps {
   onOpinionClick?: (opinion: Opinion) => void;
@@ -10,10 +13,31 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
   const [opinions, setOpinions] = useState<Opinion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authUser, setAuthUser] = useState<any>(null);
+
+  // Wait for authentication before subscribing
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = getCurrentAuthUser();
+      if (user) {
+        setAuthUser(user);
+      } else {
+        // Retry after a short delay
+        setTimeout(checkAuth, 500);
+      }
+    };
+    checkAuth();
+  }, []);
 
   useEffect(() => {
+    // Guard: Don't subscribe until auth is ready
+    if (!authUser) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    console.log('🔐 Auth ready, starting published opinions subscription...');
 
     // Subscribe to published opinions with real-time updates
     const unsubscribe = subscribeToPublishedOpinions((fetchedOpinions) => {
@@ -28,7 +52,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
         unsubscribe();
       }
     };
-  }, []);
+  }, [authUser]);
 
   if (loading) {
     return (

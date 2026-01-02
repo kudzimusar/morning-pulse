@@ -124,6 +124,13 @@ const ensureAuthenticated = async (): Promise<void> => {
 const OPINIONS_COLLECTION = 'artifacts/morning-pulse-app/public/data/opinions';
 
 /**
+ * Get current auth user (for components to check auth state)
+ */
+export const getCurrentAuthUser = () => {
+  return auth?.currentUser || null;
+};
+
+/**
  * Submit a new opinion for review
  */
 export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise<string> => {
@@ -213,6 +220,7 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
 
 /**
  * Subscribe to published opinions with real-time updates
+ * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
  */
 export const subscribeToPublishedOpinions = (
   callback: (opinions: Opinion[]) => void
@@ -223,50 +231,96 @@ export const subscribeToPublishedOpinions = (
     return () => {};
   }
 
-  try {
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    const path = `artifacts/${appId}/public/data/opinions`;
-    console.log('📝 Attempting to subscribe to published opinions from path:', path);
-    console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
-    
-    const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
-    const q = query(
-      opinionsRef,
-      where('status', '==', 'published'),
-      orderBy('publishedAt', 'desc')
-    );
+  let unsubscribeFn: (() => void) | null = null;
+  let isUnsubscribed = false;
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const opinions: Opinion[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          opinions.push({
-            id: docSnap.id,
-            ...data,
-            submittedAt: data.submittedAt?.toDate?.() || new Date(),
-            publishedAt: data.publishedAt?.toDate?.() || null,
-          } as Opinion);
-        });
-        callback(opinions);
-      },
-      (error) => {
-        console.error('❌ Error in published opinions subscription:', error);
-        callback([]);
+  // CRITICAL: Ensure authentication before setting up subscription
+  ensureAuthenticated()
+    .then(() => {
+      if (isUnsubscribed) return;
+      
+      // Wait for auth.currentUser to be truthy
+      if (!auth?.currentUser) {
+        console.warn('⚠️ Auth not ready for published opinions, waiting...');
+        setTimeout(() => {
+          if (auth?.currentUser && !isUnsubscribed) {
+            setupSubscription();
+          }
+        }, 500);
+        return;
       }
-    );
+      
+      setupSubscription();
+    })
+    .catch((error) => {
+      console.error('❌ Authentication failed for published opinions subscription:', error);
+      callback([]);
+    });
 
-    return unsubscribe;
-  } catch (error: any) {
-    console.error('❌ Error setting up published opinions subscription:', error);
-    return () => {};
-  }
+  const setupSubscription = () => {
+    if (isUnsubscribed) return;
+    
+    try {
+      // Get app ID (same pattern as FirebaseConnector)
+      const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
+      const path = `artifacts/${appId}/public/data/opinions`;
+      console.log('📝 Attempting to subscribe to published opinions from path:', path);
+      console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
+      
+      // MANDATORY PATH: Use exact path structure
+      const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+      
+      // FIX: Subscribe to entire collection without where/orderBy to avoid permission errors
+      unsubscribeFn = onSnapshot(
+        opinionsRef,
+        (snapshot) => {
+          if (isUnsubscribed) return;
+          const allOpinions: Opinion[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            allOpinions.push({
+              id: docSnap.id,
+              ...data,
+              submittedAt: data.submittedAt?.toDate?.() || new Date(),
+              publishedAt: data.publishedAt?.toDate?.() || null,
+            } as Opinion);
+          });
+          
+          // Filter for published status in JavaScript memory
+          const publishedOpinions = allOpinions
+            .filter(opinion => opinion.status === 'published')
+            .sort((a, b) => {
+              const timeA = a.publishedAt?.getTime() || 0;
+              const timeB = b.publishedAt?.getTime() || 0;
+              return timeB - timeA; // Newest first
+            });
+          
+          console.log(`✅ Subscription update: ${allOpinions.length} total, ${publishedOpinions.length} published`);
+          callback(publishedOpinions);
+        },
+        (error) => {
+          console.error('❌ Error in published opinions subscription:', error);
+          callback([]);
+        }
+      );
+    } catch (error: any) {
+      console.error('❌ Error setting up published opinions subscription:', error);
+      callback([]);
+    }
+  };
+
+  // Return unsubscribe function
+  return () => {
+    isUnsubscribed = true;
+    if (unsubscribeFn) {
+      unsubscribeFn();
+    }
+  };
 };
 
 /**
  * Get all pending opinions (admin only)
+ * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
  */
 export const getPendingOpinions = async (): Promise<Opinion[]> => {
   const db = getDb();
@@ -284,19 +338,16 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
     console.log('📝 Attempting to fetch pending opinions from path:', path);
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
+    // MANDATORY PATH: Use exact path structure
     const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
-    const q = query(
-      opinionsRef,
-      where('status', '==', 'pending'),
-      orderBy('submittedAt', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-    const opinions: Opinion[] = [];
+    
+    // FIX: Fetch entire collection without where/orderBy to avoid permission errors
+    const snapshot = await getDocs(opinionsRef);
+    const allOpinions: Opinion[] = [];
 
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      opinions.push({
+      allOpinions.push({
         id: docSnap.id,
         ...data,
         submittedAt: data.submittedAt?.toDate?.() || new Date(),
@@ -304,7 +355,17 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
       } as Opinion);
     });
 
-    return opinions;
+    // Filter for pending status in JavaScript memory
+    const pendingOpinions = allOpinions
+      .filter(opinion => opinion.status === 'pending')
+      .sort((a, b) => {
+        const timeA = a.submittedAt?.getTime() || 0;
+        const timeB = b.submittedAt?.getTime() || 0;
+        return timeB - timeA; // Newest first
+      });
+
+    console.log(`✅ Fetched ${allOpinions.length} total opinions, ${pendingOpinions.length} pending`);
+    return pendingOpinions;
   } catch (error: any) {
     console.error('❌ Error fetching pending opinions:', error);
     throw new Error(`Failed to fetch pending opinions: ${error.message}`);
@@ -313,6 +374,7 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
 
 /**
  * Subscribe to pending opinions with real-time updates (admin only)
+ * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
  */
 export const subscribeToPendingOpinions = (
   callback: (opinions: Opinion[]) => void
@@ -331,50 +393,76 @@ export const subscribeToPendingOpinions = (
     .then(() => {
       if (isUnsubscribed) return; // Don't set up if already unsubscribed
       
-      // Get app ID (same pattern as FirebaseConnector)
-      const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-      const path = `artifacts/${appId}/public/data/opinions`;
-      console.log('📝 Attempting to subscribe to pending opinions from path:', path);
-      console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
-      
-      try {
-        const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
-        const q = query(
-          opinionsRef,
-          where('status', '==', 'pending'),
-          orderBy('submittedAt', 'desc')
-        );
-
-        unsubscribeFn = onSnapshot(
-          q,
-          (snapshot) => {
-            if (isUnsubscribed) return;
-            const opinions: Opinion[] = [];
-            snapshot.forEach((docSnap) => {
-              const data = docSnap.data();
-              opinions.push({
-                id: docSnap.id,
-                ...data,
-                submittedAt: data.submittedAt?.toDate?.() || new Date(),
-                publishedAt: data.publishedAt?.toDate?.() || null,
-              } as Opinion);
-            });
-            callback(opinions);
-          },
-          (error) => {
-            console.error('❌ Error in pending opinions subscription:', error);
-            callback([]);
+      // Wait for auth.currentUser to be truthy
+      if (!auth?.currentUser) {
+        console.warn('⚠️ Auth not ready, waiting...');
+        // Retry after a short delay
+        setTimeout(() => {
+          if (auth?.currentUser && !isUnsubscribed) {
+            setupSubscription();
           }
-        );
-      } catch (error: any) {
-        console.error('❌ Error setting up pending opinions subscription:', error);
-        callback([]);
+        }, 500);
+        return;
       }
+      
+      setupSubscription();
     })
     .catch((error) => {
       console.error('❌ Authentication failed for pending opinions subscription:', error);
       callback([]);
     });
+
+  const setupSubscription = () => {
+    if (isUnsubscribed) return;
+    
+    // Get app ID (same pattern as FirebaseConnector)
+    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
+    const path = `artifacts/${appId}/public/data/opinions`;
+    console.log('📝 Attempting to subscribe to pending opinions from path:', path);
+    console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
+    
+    try {
+      // MANDATORY PATH: Use exact path structure
+      const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+      
+      // FIX: Subscribe to entire collection without where/orderBy to avoid permission errors
+      unsubscribeFn = onSnapshot(
+        opinionsRef,
+        (snapshot) => {
+          if (isUnsubscribed) return;
+          const allOpinions: Opinion[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            allOpinions.push({
+              id: docSnap.id,
+              ...data,
+              submittedAt: data.submittedAt?.toDate?.() || new Date(),
+              publishedAt: data.publishedAt?.toDate?.() || null,
+            } as Opinion);
+          });
+          
+          // Filter for pending status in JavaScript memory
+          const pendingOpinions = allOpinions
+            .filter(opinion => opinion.status === 'pending')
+            .sort((a, b) => {
+              const timeA = a.submittedAt?.getTime() || 0;
+              const timeB = b.submittedAt?.getTime() || 0;
+              return timeB - timeA; // Newest first
+            });
+          
+          console.log(`✅ Subscription update: ${allOpinions.length} total, ${pendingOpinions.length} pending`);
+          callback(pendingOpinions);
+        },
+        (error) => {
+          console.error('❌ Error in pending opinions subscription:', error);
+          callback([]);
+        }
+      );
+    } catch (error: any) {
+      console.error('❌ Error setting up pending opinions subscription:', error);
+      callback([]);
+    }
+  };
 
   // Return unsubscribe function
   return () => {
