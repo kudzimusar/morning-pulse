@@ -688,7 +688,3 @@ try {
   console.warn('newsAggregator module not available:', error.message);
   console.warn('News aggregation features will be unavailable.');
 }
-}
-}
-}
-}
