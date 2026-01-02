@@ -688,3 +688,73 @@ try {
   console.warn('newsAggregator module not available:', error.message);
   console.warn('News aggregation features will be unavailable.');
 }
+/**
+ * HTTP Cloud Function to fetch opinions from Firestore
+ * This endpoint allows the frontend to fetch opinions without needing 'list' permission
+ * Backend has admin access, so it can list the collection
+ */
+exports.getOpinions = async (req, res) => {
+  // CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'GET') {
+    res.status(405).send('Method Not Allowed');
+    return;
+  }
+
+  try {
+    if (!db) {
+      res.status(500).json({ error: 'Firebase not initialized' });
+      return;
+    }
+
+    const status = req.query.status || 'all'; // 'pending', 'published', or 'all'
+    const appId = APP_ID;
+    
+    // Use admin SDK path structure: artifacts/{appId}/public/data/opinions
+    const opinionsRef = db.collection('artifacts').doc(appId)
+      .collection('public').doc('data')
+      .collection('opinions');
+
+    let query = opinionsRef;
+    
+    // Apply status filter if specified
+    if (status === 'pending') {
+      query = query.where('status', '==', 'pending');
+    } else if (status === 'published') {
+      query = query.where('status', '==', 'published');
+    }
+
+    // Order by submittedAt or publishedAt
+    if (status === 'published') {
+      query = query.orderBy('publishedAt', 'desc');
+    } else if (status === 'pending') {
+      query = query.orderBy('submittedAt', 'desc');
+    }
+
+    const snapshot = await query.get();
+    const opinions = [];
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      opinions.push({
+        id: docSnap.id,
+        ...data,
+        submittedAt: data.submittedAt?.toDate ? data.submittedAt.toDate().toISOString() : (data.submittedAt || null),
+        publishedAt: data.publishedAt?.toDate ? data.publishedAt.toDate().toISOString() : (data.publishedAt || null),
+      });
+    });
+
+    res.status(200).json({ opinions });
+  } catch (error) {
+    console.error('Error fetching opinions:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
