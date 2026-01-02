@@ -136,34 +136,85 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
             </div>
 
             <div className="form-group">
-              <label htmlFor="headline" className="form-label">
+              <label 
+                htmlFor="headline" 
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: '#6b7280',
+                  display: 'block',
+                  marginBottom: '0.5rem'
+                }}
+              >
                 Guest Essay Headline <span className="required">*</span>
               </label>
               <input
                 type="text"
                 id="headline"
-                className="form-input form-input-bold"
                 value={formData.headline}
                 onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
                 placeholder="e.g., Here's What MAGA Gets Wrong About..."
                 required
                 disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  borderBottom: '2px solid #e5e7eb',
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  padding: '12px 0',
+                  fontSize: '1.25rem',
+                  fontFamily: 'Georgia, serif',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                  ...(isSubmitting ? { opacity: 0.6, cursor: 'not-allowed' } : {})
+                }}
+                onFocus={(e) => e.target.style.borderBottomColor = '#000000'}
+                onBlur={(e) => e.target.style.borderBottomColor = '#e5e7eb'}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="subHeadline" className="form-label">
+              <label 
+                htmlFor="subHeadline"
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: '#6b7280',
+                  display: 'block',
+                  marginBottom: '0.5rem'
+                }}
+              >
                 Sub-headline / Summary <span className="required">*</span>
               </label>
               <textarea
                 id="subHeadline"
-                className="form-textarea form-textarea-small"
                 value={formData.subHeadline}
                 onChange={(e) => setFormData({ ...formData, subHeadline: e.target.value })}
                 placeholder="A brief summary or sub-headline for your essay"
-                rows={3}
                 required
                 disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  borderBottom: '2px solid #e5e7eb',
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  padding: '12px 0',
+                  fontSize: '1.25rem',
+                  fontFamily: 'Georgia, serif',
+                  outline: 'none',
+                  resize: 'none',
+                  height: '100px',
+                  transition: 'border-color 0.2s',
+                  ...(isSubmitting ? { opacity: 0.6, cursor: 'not-allowed' } : {})
+                }}
+                onFocus={(e) => e.target.style.borderBottomColor = '#000000'}
+                onBlur={(e) => e.target.style.borderBottomColor = '#e5e7eb'}
               />
             </div>
 
@@ -210,10 +261,29 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
 
             <button
               type="submit"
-              className="submit-button"
               disabled={isSubmitting}
+              style={{
+                width: '100%',
+                backgroundColor: '#000000',
+                color: 'white',
+                padding: '20px 40px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                border: 'none',
+                marginTop: '2rem',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.2s',
+                ...(isSubmitting ? { opacity: 0.6 } : {})
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting) e.currentTarget.style.backgroundColor = '#1f2937';
+              }}
+              onMouseLeave={(e) => {
+                if (!isSubmitting) e.currentTarget.style.backgroundColor = '#000000';
+              }}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit for Editorial Review'}
+              {isSubmitting ? 'Verifying Authentication & Sending...' : 'Submit for Editorial Review'}
             </button>
           </form>
         </div>

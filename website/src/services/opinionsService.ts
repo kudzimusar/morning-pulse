@@ -62,7 +62,7 @@ let db: Firestore | null = null;
 let auth: Auth | null = null;
 
 const getDb = (): Firestore | null => {
-  if (db) return db;
+  if (db && auth) return db;
   
   try {
     const config = getFirebaseConfig();
@@ -78,7 +78,10 @@ const getDb = (): Firestore | null => {
     }
     
     db = getFirestore(app);
-    auth = getAuth(app);
+    // CRITICAL: Initialize auth from the same app instance
+    if (!auth) {
+      auth = getAuth(app);
+    }
     return db;
   } catch (e) {
     console.error('Firebase initialization error:', e);
@@ -101,8 +104,19 @@ const ensureAuthenticated = async (): Promise<void> => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
       console.log('🔐 No user authenticated, signing in anonymously...');
-      await signInAnonymously(auth);
-      console.log('✅ Anonymous authentication successful');
+      try {
+        await signInAnonymously(auth);
+        console.log('✅ Anonymous authentication successful');
+      } catch (error: any) {
+        console.error('❌ Anonymous authentication failed:', error);
+        if (error.code === 'auth/configuration-not-found') {
+          const message = 'CRITICAL: Enable Anonymous Auth in Firebase Console > Authentication > Sign-in Method.';
+          console.error(message);
+          alert(message);
+          throw new Error(message);
+        }
+        throw error;
+      }
     }
   }
 };
