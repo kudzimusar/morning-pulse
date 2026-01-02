@@ -177,6 +177,7 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
 
 /**
  * Get all published opinions, ordered by publishedAt (newest first)
+ * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
  */
 export const getPublishedOpinions = async (): Promise<Opinion[]> => {
   const db = getDb();
@@ -185,25 +186,25 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
   }
 
   try {
+    // CRITICAL: Ensure authentication before fetching
+    await ensureAuthenticated();
+    
     // Get app ID (same pattern as FirebaseConnector)
     const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
     const path = `artifacts/${appId}/public/data/opinions`;
     console.log('📝 Attempting to fetch published opinions from path:', path);
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
+    // MANDATORY PATH: Use exact path structure
     const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
-    const q = query(
-      opinionsRef,
-      where('status', '==', 'published'),
-      orderBy('publishedAt', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-    const opinions: Opinion[] = [];
+    
+    // FIX: Fetch entire collection without where/orderBy to avoid permission errors
+    const snapshot = await getDocs(opinionsRef);
+    const allOpinions: Opinion[] = [];
 
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      opinions.push({
+      allOpinions.push({
         id: docSnap.id,
         ...data,
         submittedAt: data.submittedAt?.toDate?.() || new Date(),
@@ -211,7 +212,17 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
       } as Opinion);
     });
 
-    return opinions;
+    // Filter for published status in JavaScript memory
+    const publishedOpinions = allOpinions
+      .filter(opinion => opinion.status === 'published')
+      .sort((a, b) => {
+        const timeA = a.publishedAt?.getTime() || 0;
+        const timeB = b.publishedAt?.getTime() || 0;
+        return timeB - timeA; // Newest first
+      });
+
+    console.log(`✅ Fetched ${allOpinions.length} total opinions, ${publishedOpinions.length} published`);
+    return publishedOpinions;
   } catch (error: any) {
     console.error('❌ Error fetching published opinions:', error);
     throw new Error(`Failed to fetch opinions: ${error.message}`);
