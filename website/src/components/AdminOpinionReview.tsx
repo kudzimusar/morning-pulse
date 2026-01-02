@@ -4,7 +4,8 @@ import {
   subscribeToPendingOpinions, 
   approveOpinion, 
   rejectOpinion,
-  getCurrentAuthUser
+  getCurrentAuthUser,
+  ensureAuthenticated
 } from '../services/opinionsService';
 
 const AdminOpinionReview: React.FC = () => {
@@ -12,43 +13,69 @@ const AdminOpinionReview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [authUser, setAuthUser] = useState<any>(null);
-
-  // Wait for authentication before subscribing
-  useEffect(() => {
-    const checkAuth = () => {
-      const user = getCurrentAuthUser();
-      if (user) {
-        setAuthUser(user);
-      } else {
-        // Retry after a short delay
-        setTimeout(checkAuth, 500);
-      }
-    };
-    checkAuth();
-  }, []);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Guard: Don't subscribe until auth is ready
-    if (!authUser) {
-      return;
-    }
-
     setLoading(true);
-    console.log('🔐 Auth ready, starting pending opinions subscription...');
+    setError(null);
     
-    // Subscribe to pending opinions with real-time updates
-    const unsubscribe = subscribeToPendingOpinions((opinions) => {
-      setPendingOpinions(opinions);
-      setLoading(false);
-    });
+    // Ensure authentication inside useEffect
+    ensureAuthenticated()
+      .then(() => {
+        const user = getCurrentAuthUser();
+        if (!user) {
+          console.log('👤 Waiting for Anonymous Auth...');
+          // Retry after a short delay
+          setTimeout(() => {
+            const retryUser = getCurrentAuthUser();
+            if (retryUser) {
+              startSubscription();
+            } else {
+              console.error('❌ Auth still not ready after retry');
+              setError('Authentication failed. Please refresh the page.');
+              setLoading(false);
+            }
+          }, 500);
+          return;
+        }
+        
+        startSubscription();
+      })
+      .catch((err) => {
+        console.error('❌ Authentication error:', err);
+        setError(`Authentication failed: ${err.message}`);
+        setLoading(false);
+      });
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+    const startSubscription = () => {
+      console.log('🔐 Auth ready, starting pending opinions subscription...');
+      
+      // Subscribe to pending opinions with real-time updates
+      const unsubscribe = subscribeToPendingOpinions(
+        (opinions) => {
+          setPendingOpinions(opinions);
+          setLoading(false);
+          setError(null);
+        },
+        (errorMessage) => {
+          console.error('❌ Subscription error:', errorMessage);
+          setError(errorMessage);
+          setLoading(false);
+        }
+      );
+
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
     };
-  }, [authUser]);
+
+    // Cleanup will be handled by the unsubscribe function
+    return () => {
+      // Component unmounting - cleanup handled by unsubscribe
+    };
+  }, []);
 
   const handleApprove = async (opinionId: string) => {
     setProcessingId(opinionId);
@@ -87,7 +114,20 @@ const AdminOpinionReview: React.FC = () => {
           <h2>Review Opinions</h2>
         </div>
         <div className="admin-opinion-review-loading">
-          Loading pending submissions...
+          Reviewing Submissions...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-opinion-review">
+        <div className="admin-opinion-review-header">
+          <h2>Review Opinions</h2>
+        </div>
+        <div className="admin-opinion-review-error" style={{ color: '#dc2626', padding: '20px' }}>
+          {error}
         </div>
       </div>
     );

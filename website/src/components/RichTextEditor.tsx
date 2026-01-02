@@ -226,7 +226,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         suppressContentEditableWarning={true}
         style={{
           minHeight: '500px',
-          padding: '30px',
+          padding: '24px',
           outline: 'none',
           fontFamily: "'Georgia', serif",
           lineHeight: '1.6',
@@ -235,10 +235,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           })
         }}
       />
-      {/* Word Count Indicator */}
+      {/* Word Count Indicator - bottom-right */}
       <div
         style={{
-          padding: '10px 30px',
+          padding: '10px 24px',
           borderTop: '1px solid #e2e8f0',
           backgroundColor: '#f8fafc',
           fontSize: '0.875rem',

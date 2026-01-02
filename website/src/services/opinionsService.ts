@@ -388,16 +388,33 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
  * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
  */
 export const subscribeToPendingOpinions = (
-  callback: (opinions: Opinion[]) => void
+  callback: (opinions: Opinion[]) => void,
+  onError?: (error: string) => void
 ): (() => void) => {
+  console.log('📝 Review Page: Initiating fetch for Pending Opinions...');
+  
   const db = getDb();
   if (!db) {
     console.warn('Firebase not initialized, returning empty unsubscribe');
+    if (onError) onError('Firebase not initialized');
     return () => {};
   }
 
   let unsubscribeFn: (() => void) | null = null;
   let isUnsubscribed = false;
+  let hasReceivedData = false;
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  // Set timeout for 8 seconds
+  timeoutId = setTimeout(() => {
+    if (!hasReceivedData && !isUnsubscribed) {
+      console.error('⏱️ Timeout: Could not reach the editorial database after 8 seconds');
+      if (onError) {
+        onError('Timeout: Could not reach the editorial database.');
+      }
+      callback([]);
+    }
+  }, 8000);
 
   // CRITICAL: Ensure authentication before setting up subscription
   ensureAuthenticated()
@@ -406,11 +423,15 @@ export const subscribeToPendingOpinions = (
       
       // Wait for auth.currentUser to be truthy
       if (!auth?.currentUser) {
-        console.warn('⚠️ Auth not ready, waiting...');
+        console.log('👤 Waiting for Anonymous Auth...');
         // Retry after a short delay
         setTimeout(() => {
           if (auth?.currentUser && !isUnsubscribed) {
             setupSubscription();
+          } else if (!isUnsubscribed) {
+            console.error('❌ Auth still not ready after retry');
+            if (onError) onError('Authentication failed');
+            callback([]);
           }
         }, 500);
         return;
@@ -420,20 +441,22 @@ export const subscribeToPendingOpinions = (
     })
     .catch((error) => {
       console.error('❌ Authentication failed for pending opinions subscription:', error);
+      if (onError) onError(`Authentication failed: ${error.message}`);
       callback([]);
     });
 
   const setupSubscription = () => {
     if (isUnsubscribed) return;
     
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
+    // Use absolute path: artifacts/morning-pulse-app/public/data/opinions
+    const appId = 'morning-pulse-app';
     const path = `artifacts/${appId}/public/data/opinions`;
     console.log('📝 Attempting to subscribe to pending opinions from path:', path);
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
+    console.log('🔍 Final path being queried:', path);
     
     try {
-      // MANDATORY PATH: Use exact path structure
+      // MANDATORY PATH: Use exact absolute path structure
       const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
       
       // FIX: Subscribe to entire collection without where/orderBy to avoid permission errors
@@ -441,6 +464,12 @@ export const subscribeToPendingOpinions = (
         opinionsRef,
         (snapshot) => {
           if (isUnsubscribed) return;
+          hasReceivedData = true;
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          
           const allOpinions: Opinion[] = [];
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
@@ -465,12 +494,28 @@ export const subscribeToPendingOpinions = (
           callback(pendingOpinions);
         },
         (error) => {
-          console.error('❌ Error in pending opinions subscription:', error);
+          console.error('❌ Firestore Opinion Error:', error);
+          hasReceivedData = true;
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          if (onError) {
+            onError(`Firestore error: ${error.message}`);
+          }
           callback([]);
         }
       );
     } catch (error: any) {
       console.error('❌ Error setting up pending opinions subscription:', error);
+      hasReceivedData = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (onError) {
+        onError(`Setup error: ${error.message}`);
+      }
       callback([]);
     }
   };
@@ -478,6 +523,10 @@ export const subscribeToPendingOpinions = (
   // Return unsubscribe function
   return () => {
     isUnsubscribed = true;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
     if (unsubscribeFn) {
       unsubscribeFn();
     }

@@ -54,26 +54,27 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
     };
   }, [authUser]);
 
-  if (loading) {
+  // Public page: Don't block with loading state
+  if (loading && opinions.length === 0) {
     return (
-      <div className="opinion-feed-loading">
-        <p>Loading opinions...</p>
+      <div className="opinion-feed-loading" style={{ padding: '40px', textAlign: 'center' }}>
+        <p>Loading guest essays...</p>
       </div>
     );
   }
 
-  if (error) {
+  if (error && opinions.length === 0) {
     return (
-      <div className="opinion-feed-error">
+      <div className="opinion-feed-error" style={{ padding: '40px', textAlign: 'center', color: '#dc2626' }}>
         <p>Error loading opinions: {error}</p>
       </div>
     );
   }
 
-  if (opinions.length === 0) {
+  if (!loading && opinions.length === 0) {
     return (
-      <div className="opinion-feed-empty">
-        <p>No published opinions yet. Check back soon!</p>
+      <div className="opinion-feed-empty" style={{ padding: '40px', textAlign: 'center' }}>
+        <p>No guest essays published yet.</p>
       </div>
     );
   }
