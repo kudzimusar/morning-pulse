@@ -455,9 +455,17 @@ export const subscribeToPendingOpinions = (
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     console.log('🔍 Final path being queried:', path);
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'opinionsService.ts:458',message:'setupSubscription entry',data:{appId,path,hasAuth:!!auth?.currentUser,authUid:auth?.currentUser?.uid,isAnonymous:auth?.currentUser?.isAnonymous},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
+    // #endregion
+    
     try {
       // MANDATORY PATH: Use exact absolute path structure
       const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'opinionsService.ts:463',message:'Before onSnapshot collection',data:{collectionPath:path,refType:'collection'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+      // #endregion
       
       // FIX: Subscribe to entire collection without where/orderBy to avoid permission errors
       unsubscribeFn = onSnapshot(
@@ -495,6 +503,11 @@ export const subscribeToPendingOpinions = (
         },
         (error) => {
           console.error('❌ Firestore Opinion Error:', error);
+          
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'opinionsService.ts:496',message:'onSnapshot error callback',data:{errorCode:error.code,errorMessage:error.message,errorStack:error.stack,path,hasAuth:!!auth?.currentUser,authUid:auth?.currentUser?.uid,isAnonymous:auth?.currentUser?.isAnonymous},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D'})}).catch(()=>{});
+          // #endregion
+          
           hasReceivedData = true;
           if (timeoutId) {
             clearTimeout(timeoutId);

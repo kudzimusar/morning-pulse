@@ -142,6 +142,10 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         console.log(`   Country: ${country.name} (${country.code})`);
         console.log(`   Path: ${newsPath} (6 segments)`);
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FirebaseConnector.tsx:139',message:'Before getDoc news (working path)',data:{newsPath,refType:'doc',hasAuth:!!auth?.currentUser,authUid:auth?.currentUser?.uid,isAnonymous:auth?.currentUser?.isAnonymous},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
+        // #endregion
+        
         // Fetch the daily document
         let snapshot = await getDoc(newsRef);
         
