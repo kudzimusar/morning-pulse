@@ -4,6 +4,12 @@ import NewsGrid from './components/NewsGrid';
 import FirebaseConnector from './components/FirebaseConnector';
 import OpinionPage from './components/OpinionPage';
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
+import Footer from './components/Footer';
+import PrivacyPage from './components/PrivacyPage';
+import AboutPage from './components/AboutPage';
+import SubscriptionPage from './components/SubscriptionPage';
+import AdvertisePage from './components/AdvertisePage';
+import EditorialPage from './components/EditorialPage';
 import { NewsStory } from '../../types';
 import { CountryInfo } from './services/locationService';
 
@@ -30,6 +36,16 @@ const App: React.FC = () => {
         } else {
           setCurrentPage('opinion');
         }
+      } else if (hash === 'privacy') {
+        setCurrentPage('privacy');
+      } else if (hash === 'about') {
+        setCurrentPage('about');
+      } else if (hash === 'subscribe' || hash === 'subscription') {
+        setCurrentPage('subscription');
+      } else if (hash === 'advertise') {
+        setCurrentPage('advertise');
+      } else if (hash === 'editorial') {
+        setCurrentPage('editorial');
       } else {
         setCurrentPage('news');
       }
@@ -103,6 +119,10 @@ const App: React.FC = () => {
     setCurrentPage('news');
   };
 
+  const handleSubscribeClick = () => {
+    window.location.hash = 'subscribe';
+  };
+
   // Get top headlines for ticker
   const topHeadlines = React.useMemo(() => {
     const allArticles: NewsStory[] = [];
@@ -122,6 +142,7 @@ const App: React.FC = () => {
         currentCountry={currentCountry}
         onCountryChange={setCurrentCountry}
         topHeadlines={topHeadlines}
+        onSubscribeClick={handleSubscribeClick}
       />
       
       {useFirestore && currentPage === 'news' && (
@@ -147,6 +168,26 @@ const App: React.FC = () => {
           }}
           onSuccess={handleBackToNews}
         />
+      )}
+
+      {currentPage === 'privacy' && (
+        <PrivacyPage onBack={handleBackToNews} />
+      )}
+
+      {currentPage === 'about' && (
+        <AboutPage onBack={handleBackToNews} />
+      )}
+
+      {currentPage === 'subscription' && (
+        <SubscriptionPage onBack={handleBackToNews} />
+      )}
+
+      {currentPage === 'advertise' && (
+        <AdvertisePage onBack={handleBackToNews} />
+      )}
+
+      {currentPage === 'editorial' && (
+        <EditorialPage onBack={handleBackToNews} />
       )}
       
       {currentPage === 'news' && (
@@ -178,6 +219,9 @@ const App: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Footer - always visible at bottom */}
+      <Footer />
     </div>
   );
 };

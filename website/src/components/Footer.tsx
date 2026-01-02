@@ -1,6 +1,11 @@
 import React from 'react';
 
 const Footer: React.FC = () => {
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, page: string) => {
+    e.preventDefault();
+    window.location.hash = page;
+  };
+
   return (
     <footer className="premium-footer">
       <div className="footer-content">
