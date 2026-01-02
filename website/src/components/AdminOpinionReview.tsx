@@ -19,6 +19,26 @@ const AdminOpinionReview: React.FC = () => {
     setLoading(true);
     setError(null);
     
+    let unsubscribe: (() => void) | null = null;
+    
+    const startSubscription = () => {
+      console.log('🔐 Auth ready, starting pending opinions subscription...');
+      
+      // Subscribe to pending opinions with real-time updates
+      unsubscribe = subscribeToPendingOpinions(
+        (opinions) => {
+          setPendingOpinions(opinions);
+          setLoading(false);
+          setError(null);
+        },
+        (errorMessage) => {
+          console.error('❌ Subscription error:', errorMessage);
+          setError(errorMessage);
+          setLoading(false);
+        }
+      );
+    };
+    
     // Ensure authentication inside useEffect
     ensureAuthenticated()
       .then(() => {
@@ -47,33 +67,11 @@ const AdminOpinionReview: React.FC = () => {
         setLoading(false);
       });
 
-    const startSubscription = () => {
-      console.log('🔐 Auth ready, starting pending opinions subscription...');
-      
-      // Subscribe to pending opinions with real-time updates
-      const unsubscribe = subscribeToPendingOpinions(
-        (opinions) => {
-          setPendingOpinions(opinions);
-          setLoading(false);
-          setError(null);
-        },
-        (errorMessage) => {
-          console.error('❌ Subscription error:', errorMessage);
-          setError(errorMessage);
-          setLoading(false);
-        }
-      );
-
-      return () => {
-        if (unsubscribe) {
-          unsubscribe();
-        }
-      };
-    };
-
-    // Cleanup will be handled by the unsubscribe function
+    // Cleanup function
     return () => {
-      // Component unmounting - cleanup handled by unsubscribe
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, []);
 
