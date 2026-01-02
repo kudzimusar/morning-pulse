@@ -17,16 +17,25 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value;
+      // Update word count when value changes externally
+      const text = editorRef.current.innerText || editorRef.current.textContent || '';
+      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+      setWordCount(words.length);
     }
   }, [value]);
 
   const handleInput = () => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
+      // Calculate word count (strip HTML tags and count words)
+      const text = editorRef.current.innerText || editorRef.current.textContent || '';
+      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+      setWordCount(words.length);
     }
   };
 
@@ -226,6 +235,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           })
         }}
       />
+      {/* Word Count Indicator */}
+      <div
+        style={{
+          padding: '10px 30px',
+          borderTop: '1px solid #e2e8f0',
+          backgroundColor: '#f8fafc',
+          fontSize: '0.875rem',
+          color: '#6b7280',
+          textAlign: 'right'
+        }}
+      >
+        {wordCount} {wordCount === 1 ? 'word' : 'words'}
+      </div>
       <style>{`
         [contenteditable][data-placeholder]:empty:before {
           content: attr(data-placeholder);

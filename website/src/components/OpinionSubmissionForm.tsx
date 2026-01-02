@@ -200,21 +200,19 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
                 disabled={isSubmitting}
                 style={{
                   width: '100%',
-                  borderBottom: '2px solid #e5e7eb',
-                  borderTop: 'none',
-                  borderLeft: 'none',
-                  borderRight: 'none',
-                  padding: '12px 0',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '4px',
+                  padding: '12px',
                   fontSize: '1.25rem',
                   fontFamily: 'Georgia, serif',
                   outline: 'none',
-                  resize: 'none',
-                  height: '100px',
+                  resize: 'vertical',
+                  minHeight: '100px',
                   transition: 'border-color 0.2s',
                   ...(isSubmitting ? { opacity: 0.6, cursor: 'not-allowed' } : {})
                 }}
-                onFocus={(e) => e.target.style.borderBottomColor = '#000000'}
-                onBlur={(e) => e.target.style.borderBottomColor = '#e5e7eb'}
+                onFocus={(e) => e.target.style.borderColor = '#000000'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
               />
             </div>
 
