@@ -364,101 +364,15 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
 
 /**
  * Subscribe to pending opinions with real-time updates (admin only)
- * FIX: Use Cloud Function endpoint instead of direct Firestore collection access
- * This bypasses the 'list' permission requirement by using backend admin access
+ * TEMPORARY: Disabled - focusing on submission only
  */
 export const subscribeToPendingOpinions = (
   callback: (opinions: Opinion[]) => void,
   onError?: (error: string) => void
 ): (() => void) => {
-  console.log('📝 Review Page: Initiating fetch for Pending Opinions via Cloud Function...');
-  
-  let isUnsubscribed = false;
-  let hasReceivedData = false;
-  let timeoutId: NodeJS.Timeout | null = null;
-  let pollInterval: NodeJS.Timeout | null = null;
-
-  // Set timeout for 8 seconds
-  timeoutId = setTimeout(() => {
-    if (!hasReceivedData && !isUnsubscribed) {
-      console.error('⏱️ Timeout: Could not reach the editorial database after 8 seconds');
-      if (onError) {
-        onError('Timeout: Could not reach the editorial database.');
-      }
-      callback([]);
-    }
-  }, 8000);
-
-  const fetchOpinions = async () => {
-    if (isUnsubscribed) return;
-
-    try {
-      // Get Cloud Function URL from environment or use default
-      const functionUrl = import.meta.env.VITE_CLOUD_FUNCTION_URL || 
-        'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/getOpinions';
-      
-      const response = await fetch(`${functionUrl}?status=pending`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      hasReceivedData = true;
-      
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-
-      // Convert ISO strings back to Date objects
-      const opinions: Opinion[] = (data.opinions || []).map((op: any) => ({
-        ...op,
-        submittedAt: op.submittedAt ? new Date(op.submittedAt) : new Date(),
-        publishedAt: op.publishedAt ? new Date(op.publishedAt) : null,
-      }));
-
-      console.log(`✅ Fetched ${opinions.length} pending opinions via Cloud Function`);
-      callback(opinions);
-    } catch (error: any) {
-      console.error('❌ Error fetching opinions from Cloud Function:', error);
-      
-      if (!hasReceivedData) {
-        hasReceivedData = true;
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        if (onError) {
-          onError(`Failed to fetch opinions: ${error.message}`);
-        }
-        callback([]);
-      }
-    }
-  };
-
-  // Initial fetch
-  fetchOpinions();
-
-  // Poll every 5 seconds for real-time updates
-  pollInterval = setInterval(() => {
-    if (!isUnsubscribed) {
-      fetchOpinions();
-    }
-  }, 5000);
-
-  // Return unsubscribe function
-  return () => {
-    isUnsubscribed = true;
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-    if (pollInterval) {
-      clearInterval(pollInterval);
-      pollInterval = null;
-    }
-  };
+  console.log('📝 Review Page: Opinion review temporarily disabled - focusing on submission');
+  callback([]);
+  return () => {}; // Empty unsubscribe function
 };
 
 /**
