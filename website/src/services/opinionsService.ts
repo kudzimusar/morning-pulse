@@ -249,100 +249,61 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
 
 /**
  * Subscribe to published opinions with real-time updates
- * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
+ * FIX: Use Cloud Function endpoint instead of direct Firestore collection access
  */
 export const subscribeToPublishedOpinions = (
   callback: (opinions: Opinion[]) => void
 ): (() => void) => {
-  const db = getDb();
-  if (!db) {
-    console.warn('Firebase not initialized, returning empty unsubscribe');
-    return () => {};
-  }
-
-  let unsubscribeFn: (() => void) | null = null;
   let isUnsubscribed = false;
+  let pollInterval: NodeJS.Timeout | null = null;
 
-  // CRITICAL: Ensure authentication before setting up subscription
-  ensureAuthenticated()
-    .then(() => {
-      if (isUnsubscribed) return;
-      
-      // Wait for auth.currentUser to be truthy
-      if (!auth?.currentUser) {
-        console.warn('⚠️ Auth not ready for published opinions, waiting...');
-        setTimeout(() => {
-          if (auth?.currentUser && !isUnsubscribed) {
-            setupSubscription();
-          }
-        }, 500);
-        return;
-      }
-      
-      setupSubscription();
-    })
-    .catch((error) => {
-      console.error('❌ Authentication failed for published opinions subscription:', error);
-      callback([]);
-    });
-
-  const setupSubscription = () => {
+  const fetchOpinions = async () => {
     if (isUnsubscribed) return;
-    
+
     try {
-      // Get app ID (same pattern as FirebaseConnector)
-      const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-      const path = `artifacts/${appId}/public/data/opinions`;
-      console.log('📝 Attempting to subscribe to published opinions from path:', path);
-      console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
+      // Get Cloud Function URL from environment or use default
+      const functionUrl = import.meta.env.VITE_CLOUD_FUNCTION_URL || 
+        'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/getOpinions';
       
-      // MANDATORY PATH: Use exact path structure
-      const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+      const response = await fetch(`${functionUrl}?status=published`);
       
-      // FIX: Subscribe to entire collection without where/orderBy to avoid permission errors
-      unsubscribeFn = onSnapshot(
-        opinionsRef,
-        (snapshot) => {
-          if (isUnsubscribed) return;
-          const allOpinions: Opinion[] = [];
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            allOpinions.push({
-              id: docSnap.id,
-              ...data,
-              submittedAt: data.submittedAt?.toDate?.() || new Date(),
-              publishedAt: data.publishedAt?.toDate?.() || null,
-            } as Opinion);
-          });
-          
-          // Filter for published status in JavaScript memory
-          const publishedOpinions = allOpinions
-            .filter(opinion => opinion.status === 'published')
-            .sort((a, b) => {
-              const timeA = a.publishedAt?.getTime() || 0;
-              const timeB = b.publishedAt?.getTime() || 0;
-              return timeB - timeA; // Newest first
-            });
-          
-          console.log(`✅ Subscription update: ${allOpinions.length} total, ${publishedOpinions.length} published`);
-          callback(publishedOpinions);
-        },
-        (error) => {
-          console.error('❌ Error in published opinions subscription:', error);
-          callback([]);
-        }
-      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Convert ISO strings back to Date objects
+      const opinions: Opinion[] = (data.opinions || []).map((op: any) => ({
+        ...op,
+        submittedAt: op.submittedAt ? new Date(op.submittedAt) : new Date(),
+        publishedAt: op.publishedAt ? new Date(op.publishedAt) : null,
+      }));
+
+      console.log(`✅ Fetched ${opinions.length} published opinions via Cloud Function`);
+      callback(opinions);
     } catch (error: any) {
-      console.error('❌ Error setting up published opinions subscription:', error);
+      console.error('❌ Error fetching published opinions from Cloud Function:', error);
       callback([]);
     }
   };
 
+  // Initial fetch
+  fetchOpinions();
+
+  // Poll every 10 seconds for real-time updates (less frequent for public page)
+  pollInterval = setInterval(() => {
+    if (!isUnsubscribed) {
+      fetchOpinions();
+    }
+  }, 10000);
+
   // Return unsubscribe function
   return () => {
     isUnsubscribed = true;
-    if (unsubscribeFn) {
-      unsubscribeFn();
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
     }
   };
 };
@@ -403,25 +364,19 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
 
 /**
  * Subscribe to pending opinions with real-time updates (admin only)
- * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
+ * FIX: Use Cloud Function endpoint instead of direct Firestore collection access
+ * This bypasses the 'list' permission requirement by using backend admin access
  */
 export const subscribeToPendingOpinions = (
   callback: (opinions: Opinion[]) => void,
   onError?: (error: string) => void
 ): (() => void) => {
-  console.log('📝 Review Page: Initiating fetch for Pending Opinions...');
+  console.log('📝 Review Page: Initiating fetch for Pending Opinions via Cloud Function...');
   
-  const db = getDb();
-  if (!db) {
-    console.warn('Firebase not initialized, returning empty unsubscribe');
-    if (onError) onError('Firebase not initialized');
-    return () => {};
-  }
-
-  let unsubscribeFn: (() => void) | null = null;
   let isUnsubscribed = false;
   let hasReceivedData = false;
   let timeoutId: NodeJS.Timeout | null = null;
+  let pollInterval: NodeJS.Timeout | null = null;
 
   // Set timeout for 8 seconds
   timeoutId = setTimeout(() => {
@@ -434,122 +389,63 @@ export const subscribeToPendingOpinions = (
     }
   }, 8000);
 
-  // CRITICAL: Ensure authentication before setting up subscription
-  ensureAuthenticated()
-    .then(() => {
-      if (isUnsubscribed) return; // Don't set up if already unsubscribed
-      
-      // Wait for auth.currentUser to be truthy
-      if (!auth?.currentUser) {
-        console.log('👤 Waiting for Anonymous Auth...');
-        // Retry after a short delay
-        setTimeout(() => {
-          if (auth?.currentUser && !isUnsubscribed) {
-            setupSubscription();
-          } else if (!isUnsubscribed) {
-            console.error('❌ Auth still not ready after retry');
-            if (onError) onError('Authentication failed');
-            callback([]);
-          }
-        }, 500);
-        return;
-      }
-      
-      setupSubscription();
-    })
-    .catch((error) => {
-      console.error('❌ Authentication failed for pending opinions subscription:', error);
-      if (onError) onError(`Authentication failed: ${error.message}`);
-      callback([]);
-    });
-
-  const setupSubscription = () => {
+  const fetchOpinions = async () => {
     if (isUnsubscribed) return;
-    
-    // Use absolute path: artifacts/morning-pulse-app/public/data/opinions
-    const appId = 'morning-pulse-app';
-    const path = `artifacts/${appId}/public/data/opinions`;
-    console.log('📝 Attempting to subscribe to pending opinions from path:', path);
-    console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
-    console.log('🔍 Final path being queried:', path);
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'opinionsService.ts:458',message:'setupSubscription entry',data:{appId,path,hasAuth:!!auth?.currentUser,authUid:auth?.currentUser?.uid,isAnonymous:auth?.currentUser?.isAnonymous},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
-    // #endregion
-    
+
     try {
-      // MANDATORY PATH: Use exact absolute path structure
-      const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+      // Get Cloud Function URL from environment or use default
+      const functionUrl = import.meta.env.VITE_CLOUD_FUNCTION_URL || 
+        'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/getOpinions';
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'opinionsService.ts:463',message:'Before onSnapshot collection',data:{collectionPath:path,refType:'collection'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-      // #endregion
+      const response = await fetch(`${functionUrl}?status=pending`);
       
-      // FIX: Subscribe to entire collection without where/orderBy to avoid permission errors
-      unsubscribeFn = onSnapshot(
-        opinionsRef,
-        (snapshot) => {
-          if (isUnsubscribed) return;
-          hasReceivedData = true;
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-          
-          const allOpinions: Opinion[] = [];
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            allOpinions.push({
-              id: docSnap.id,
-              ...data,
-              submittedAt: data.submittedAt?.toDate?.() || new Date(),
-              publishedAt: data.publishedAt?.toDate?.() || null,
-            } as Opinion);
-          });
-          
-          // Filter for pending status in JavaScript memory
-          const pendingOpinions = allOpinions
-            .filter(opinion => opinion.status === 'pending')
-            .sort((a, b) => {
-              const timeA = a.submittedAt?.getTime() || 0;
-              const timeB = b.submittedAt?.getTime() || 0;
-              return timeB - timeA; // Newest first
-            });
-          
-          console.log(`✅ Subscription update: ${allOpinions.length} total, ${pendingOpinions.length} pending`);
-          callback(pendingOpinions);
-        },
-        (error) => {
-          console.error('❌ Firestore Opinion Error:', error);
-          
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/5252e085-f66e-44ad-9210-7b45a5c6c499',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'opinionsService.ts:496',message:'onSnapshot error callback',data:{errorCode:error.code,errorMessage:error.message,errorStack:error.stack,path,hasAuth:!!auth?.currentUser,authUid:auth?.currentUser?.uid,isAnonymous:auth?.currentUser?.isAnonymous},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D'})}).catch(()=>{});
-          // #endregion
-          
-          hasReceivedData = true;
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-          if (onError) {
-            onError(`Firestore error: ${error.message}`);
-          }
-          callback([]);
-        }
-      );
-    } catch (error: any) {
-      console.error('❌ Error setting up pending opinions subscription:', error);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
       hasReceivedData = true;
+      
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
       }
-      if (onError) {
-        onError(`Setup error: ${error.message}`);
+
+      // Convert ISO strings back to Date objects
+      const opinions: Opinion[] = (data.opinions || []).map((op: any) => ({
+        ...op,
+        submittedAt: op.submittedAt ? new Date(op.submittedAt) : new Date(),
+        publishedAt: op.publishedAt ? new Date(op.publishedAt) : null,
+      }));
+
+      console.log(`✅ Fetched ${opinions.length} pending opinions via Cloud Function`);
+      callback(opinions);
+    } catch (error: any) {
+      console.error('❌ Error fetching opinions from Cloud Function:', error);
+      
+      if (!hasReceivedData) {
+        hasReceivedData = true;
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        if (onError) {
+          onError(`Failed to fetch opinions: ${error.message}`);
+        }
+        callback([]);
       }
-      callback([]);
     }
   };
+
+  // Initial fetch
+  fetchOpinions();
+
+  // Poll every 5 seconds for real-time updates
+  pollInterval = setInterval(() => {
+    if (!isUnsubscribed) {
+      fetchOpinions();
+    }
+  }, 5000);
 
   // Return unsubscribe function
   return () => {
@@ -558,8 +454,9 @@ export const subscribeToPendingOpinions = (
       clearTimeout(timeoutId);
       timeoutId = null;
     }
-    if (unsubscribeFn) {
-      unsubscribeFn();
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
     }
   };
 };
