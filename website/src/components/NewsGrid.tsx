@@ -125,9 +125,9 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
           </div>
         )}
         <div className="news-grid-container">
-          {gridArticles.map((article) => (
+          {gridArticles.map((article, index) => (
             <ArticleCard 
-              key={`${userCountry || 'default'}-${article.id}`}
+              key={`${userCountry || 'default'}-${article.id}-${index}`}
               article={article} 
               variant="grid"
               userCountry={userCountry}

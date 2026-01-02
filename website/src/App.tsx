@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import NewsGrid from './components/NewsGrid';
 import FirebaseConnector from './components/FirebaseConnector';
+import OpinionPage from './components/OpinionPage';
+import OpinionSubmissionForm from './components/OpinionSubmissionForm';
 import { NewsStory } from '../../types';
+import { CountryInfo } from './services/locationService';
 
 interface NewsData {
   [category: string]: NewsStory[];
@@ -13,6 +16,29 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useFirestore, setUseFirestore] = useState(true);
+  const [currentPage, setCurrentPage] = useState<string>('news');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [currentCountry, setCurrentCountry] = useState<CountryInfo>({ code: 'ZW', name: 'Zimbabwe' });
+
+  // Handle hash-based routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'opinion' || hash.startsWith('opinion')) {
+        if (hash === 'opinion/submit' || hash.startsWith('opinion/submit')) {
+          setCurrentPage('opinion-submit');
+        } else {
+          setCurrentPage('opinion');
+        }
+      } else {
+        setCurrentPage('news');
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Try to load static data first (Mode B), fallback to Firestore (Mode A)
   useEffect(() => {
@@ -46,47 +72,111 @@ const App: React.FC = () => {
     loadStaticData();
   }, []);
 
-  const handleNewsUpdate = (data: NewsData) => {
+  // Memoize callbacks to prevent FirebaseConnector re-initialization
+  const handleNewsUpdate = React.useCallback((data: NewsData) => {
     setNewsData(data);
     setLoading(false);
     setError(null);
-  };
+  }, []);
 
-  const handleError = (errorMessage: string) => {
+  const handleError = React.useCallback((errorMessage: string) => {
     setError(errorMessage);
     setLoading(false);
+  }, []);
+
+  const handleCategorySelect = (category: string | null) => {
+    setSelectedCategory(category);
+    if (category === 'Opinion') {
+      window.location.hash = 'opinion';
+    } else {
+      window.location.hash = '';
+      setCurrentPage('news');
+    }
   };
+
+  const handleNavigateToSubmit = () => {
+    window.location.hash = 'opinion/submit';
+  };
+
+  const handleBackToNews = () => {
+    window.location.hash = '';
+    setCurrentPage('news');
+  };
+
+  // Get top headlines for ticker
+  const topHeadlines = React.useMemo(() => {
+    const allArticles: NewsStory[] = [];
+    Object.values(newsData).forEach(categoryArticles => {
+      allArticles.push(...categoryArticles);
+    });
+    return allArticles
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, 5)
+      .map(article => article.headline);
+  }, [newsData]);
 
   return (
     <div className="app">
-      <Header />
-      {useFirestore && (
+      <Header 
+        onCategorySelect={handleCategorySelect}
+        currentCountry={currentCountry}
+        onCountryChange={setCurrentCountry}
+        topHeadlines={topHeadlines}
+      />
+      
+      {useFirestore && currentPage === 'news' && (
         <FirebaseConnector
           onNewsUpdate={handleNewsUpdate}
           onError={handleError}
+          userCountry={currentCountry}
         />
       )}
       
-      {loading && (
-        <div className="loading-container">
-          <p>Loading today's news...</p>
-        </div>
+      {currentPage === 'opinion' && (
+        <OpinionPage 
+          onBack={handleBackToNews}
+          onNavigateToSubmit={handleNavigateToSubmit}
+        />
       )}
 
-      {error && (
-        <div className="error-container">
-          <p>Error: {error}</p>
-        </div>
+      {currentPage === 'opinion-submit' && (
+        <OpinionSubmissionForm 
+          onBack={() => {
+            window.location.hash = 'opinion';
+            setCurrentPage('opinion');
+          }}
+          onSuccess={handleBackToNews}
+        />
       )}
+      
+      {currentPage === 'news' && (
+        <>
+          {loading && (
+            <div className="loading-container">
+              <p>Loading today's news...</p>
+            </div>
+          )}
 
-      {!loading && !error && Object.keys(newsData).length === 0 && (
-        <div className="no-news-container">
-          <p>No news available for today. Please check back later.</p>
-        </div>
-      )}
+          {error && (
+            <div className="error-container">
+              <p>Error: {error}</p>
+            </div>
+          )}
 
-      {!loading && !error && Object.keys(newsData).length > 0 && (
-        <NewsGrid newsData={newsData} />
+          {!loading && !error && Object.keys(newsData).length === 0 && (
+            <div className="no-news-container">
+              <p>No news available for today. Please check back later.</p>
+            </div>
+          )}
+
+          {!loading && !error && Object.keys(newsData).length > 0 && (
+            <NewsGrid 
+              newsData={newsData} 
+              selectedCategory={selectedCategory}
+              userCountry={currentCountry.name}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, getDoc, Firestore } from 'firebase/firestore';
 import { NewsStory } from '../../../types';
@@ -98,6 +98,18 @@ const transformCategoriesForCountry = (
 };
 
 const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onError, userCountry, selectedDate, onGlobalDataUpdate }) => {
+  // Use refs to store latest callbacks to avoid re-initialization
+  const onNewsUpdateRef = useRef(onNewsUpdate);
+  const onErrorRef = useRef(onError);
+  const onGlobalDataUpdateRef = useRef(onGlobalDataUpdate);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onNewsUpdateRef.current = onNewsUpdate;
+    onErrorRef.current = onError;
+    onGlobalDataUpdateRef.current = onGlobalDataUpdate;
+  }, [onNewsUpdate, onError, onGlobalDataUpdate]);
+
   useEffect(() => {
     console.log('🔍 FirebaseConnector: Initializing...');
     const config = getFirebaseConfig();
@@ -137,8 +149,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           const data = snapshot.data();
           
           // Store entire document globally for admin tool
-          if (onGlobalDataUpdate) {
-            onGlobalDataUpdate(data);
+          if (onGlobalDataUpdateRef.current) {
+            onGlobalDataUpdateRef.current(data);
           }
           
           // Extract country-specific data from document fields
@@ -158,7 +170,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
             
             // Transform Local category name based on country
             const transformedCategories = transformCategoriesForCountry(categories, country);
-            onNewsUpdate(transformedCategories);
+            onNewsUpdateRef.current(transformedCategories);
             
             // Set up real-time listener
             unsubscribe = onSnapshot(
@@ -168,8 +180,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
                   const realtimeData = realtimeSnapshot.data();
                   
                   // Store entire document globally for admin tool
-                  if (onGlobalDataUpdate) {
-                    onGlobalDataUpdate(realtimeData);
+                  if (onGlobalDataUpdateRef.current) {
+                    onGlobalDataUpdateRef.current(realtimeData);
                   }
                   
                   // Use current userCountry from props, not closure-captured country
@@ -183,7 +195,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
                   if (Object.keys(realtimeCategories).length > 0) {
                     console.log('✅ News updated in real-time for', currentCountry.name);
                     const transformed = transformCategoriesForCountry(realtimeCategories, currentCountry);
-                    onNewsUpdate(transformed);
+                    onNewsUpdateRef.current(transformed);
                   }
                 }
               },
@@ -197,7 +209,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         
         // No news found at all
         console.warn(`⚠️ No news found for ${country.name} on ${dateString}`);
-        onError(`Morning Pulse is currently gathering news for ${country.name}. Please check back shortly.`);
+        onErrorRef.current(`Morning Pulse is currently gathering news for ${country.name}. Please check back shortly.`);
         
         // Set up real-time listener as fallback
         unsubscribe = onSnapshot(
@@ -207,8 +219,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               const data = snapshot.data();
               
               // Store entire document globally for admin tool
-              if (onGlobalDataUpdate) {
-                onGlobalDataUpdate(data);
+              if (onGlobalDataUpdateRef.current) {
+                onGlobalDataUpdateRef.current(data);
               }
               
               // Use current userCountry from props
@@ -223,7 +235,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               if (categoryCount > 0) {
                 console.log('✅ News found in Firestore (real-time) for', currentCountry.name, ':', categoryCount, 'categories');
                 const transformed = transformCategoriesForCountry(categories, currentCountry);
-                onNewsUpdate(transformed);
+                onNewsUpdateRef.current(transformed);
               }
             }
           },
@@ -237,7 +249,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         console.error('❌ Firebase initialization error:', error);
         console.error('   Error code:', error.code);
         console.error('   Error message:', error.message);
-        onError('Failed to initialize Firebase: ' + error.message);
+        onErrorRef.current('Failed to initialize Firebase: ' + error.message);
       }
     };
     
@@ -248,7 +260,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         unsubscribe();
       }
     };
-  }, [onNewsUpdate, onError, userCountry, selectedDate, onGlobalDataUpdate]); // Include country and date dependencies
+  }, [userCountry?.code, userCountry?.name, selectedDate]); // Only depend on primitive values, not functions
 
   return null; // This component doesn't render anything
 };
