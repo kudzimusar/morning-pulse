@@ -92,7 +92,7 @@ const getDb = (): Firestore | null => {
 /**
  * Ensure user is authenticated (anonymous auth for public submissions)
  */
-const ensureAuthenticated = async (): Promise<void> => {
+export const ensureAuthenticated = async (): Promise<void> => {
   if (!auth) {
     const db = getDb();
     if (!db) {
