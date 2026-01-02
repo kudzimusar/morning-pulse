@@ -61,6 +61,7 @@ ${!isZimbabwe ? `2. LOCAL NEWS PRIORITY: For the "${localCategory}" section, pri
 4. TONE: Factual, journalistic, and strictly objective. Do not add personal AI commentary.
 
 5. STYLE: Maintain Kukurigo professional newspaper style with proper formatting.`;
+};
 
 // Mock Data for fallback (kept for backward compatibility)
 const NEWS_DATA = {
