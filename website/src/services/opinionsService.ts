@@ -12,6 +12,11 @@ import {
   Timestamp,
   Firestore
 } from 'firebase/firestore';
+import { 
+  getAuth, 
+  signInAnonymously,
+  Auth
+} from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { Opinion, OpinionSubmissionData } from '../../../types';
 
@@ -54,6 +59,7 @@ const getFirebaseConfig = (): any => {
 // Get Firestore instance
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
+let auth: Auth | null = null;
 
 const getDb = (): Firestore | null => {
   if (db) return db;
@@ -72,10 +78,32 @@ const getDb = (): Firestore | null => {
     }
     
     db = getFirestore(app);
+    auth = getAuth(app);
     return db;
   } catch (e) {
     console.error('Firebase initialization error:', e);
     return null;
+  }
+};
+
+/**
+ * Ensure user is authenticated (anonymous auth for public submissions)
+ */
+const ensureAuthenticated = async (): Promise<void> => {
+  if (!auth) {
+    const db = getDb();
+    if (!db) {
+      throw new Error('Firebase not initialized');
+    }
+  }
+  
+  if (auth) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.log('🔐 No user authenticated, signing in anonymously...');
+      await signInAnonymously(auth);
+      console.log('✅ Anonymous authentication successful');
+    }
   }
 };
 
@@ -91,6 +119,9 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
   }
 
   try {
+    // CRITICAL: Ensure anonymous authentication before writing to Firestore
+    await ensureAuthenticated();
+    
     // Create document path: artifacts/morning-pulse-app/public/data/opinions
     const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
@@ -100,7 +131,7 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
       authorTitle: opinionData.authorTitle || '',
       headline: opinionData.headline,
       subHeadline: opinionData.subHeadline,
-      body: opinionData.body,
+      body: opinionData.body, // This will be HTML string from rich text editor
       category: opinionData.category || 'General',
       country: opinionData.country || 'Global',
       status: 'pending' as const,

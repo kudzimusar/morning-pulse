@@ -42,13 +42,10 @@ const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit })
                 {selectedOpinion.authorTitle && `, ${selectedOpinion.authorTitle}`}
               </span>
             </div>
-            <div className="opinion-detail-body">
-              {selectedOpinion.body.split('\n').map((paragraph, index) => (
-                <p key={index} className="opinion-body-paragraph">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+            <div 
+              className="opinion-detail-body"
+              dangerouslySetInnerHTML={{ __html: selectedOpinion.body }}
+            />
           </div>
         </div>
       </div>

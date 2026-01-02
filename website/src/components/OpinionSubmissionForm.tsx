@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { OpinionSubmissionData } from '../../../types';
 import { submitOpinion } from '../services/opinionsService';
+import RichTextEditor from './RichTextEditor';
 
 interface OpinionSubmissionFormProps {
   onBack?: () => void;
@@ -170,15 +171,12 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
               <label htmlFor="body" className="form-label">
                 Your Story (Body) <span className="required">*</span>
               </label>
-              <textarea
-                id="body"
-                className="form-textarea form-textarea-large"
+              <RichTextEditor
                 value={formData.body}
-                onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-                placeholder="Write your full essay here..."
-                rows={12}
-                required
+                onChange={(html) => setFormData({ ...formData, body: html })}
+                placeholder="Write your full essay here... You can use the toolbar above to format text with bold, italic, and links."
                 disabled={isSubmitting}
+                className="form-textarea-large"
               />
             </div>
 

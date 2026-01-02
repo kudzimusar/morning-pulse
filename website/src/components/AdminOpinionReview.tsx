@@ -112,11 +112,10 @@ const AdminOpinionReview: React.FC = () => {
                 {isExpanded && (
                   <div className="admin-opinion-review-body">
                     <p className="admin-opinion-review-body-label">Full Essay:</p>
-                    <div className="admin-opinion-review-body-text">
-                      {opinion.body.split('\n').map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
-                      ))}
-                    </div>
+                    <div 
+                      className="admin-opinion-review-body-text"
+                      dangerouslySetInnerHTML={{ __html: opinion.body }}
+                    />
                   </div>
                 )}
 

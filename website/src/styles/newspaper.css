@@ -569,3 +569,116 @@ body {
   outline-offset: 2px;
 }
 
+
+
+/* Rich Text Editor Styles */
+.rich-text-editor {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: white;
+  transition: border-color var(--transition-normal);
+}
+
+.rich-text-editor.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rich-text-editor:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.rich-text-toolbar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+  background-color: #f9fafb;
+  border-radius: 4px 4px 0 0;
+}
+
+.toolbar-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+}
+
+.toolbar-button:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: var(--primary-color);
+}
+
+.toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-button.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.toolbar-button strong {
+  font-weight: 700;
+}
+
+.toolbar-button em {
+  font-style: italic;
+}
+
+.rich-text-content {
+  min-height: 300px;
+  padding: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: var(--line-height-relaxed);
+  color: var(--text-color);
+  outline: none;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.rich-text-content:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.rich-text-content.focused {
+  outline: none;
+}
+
+.rich-text-content p {
+  margin: 0 0 0.75rem 0;
+}
+
+.rich-text-content p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-content a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.rich-text-content a:hover {
+  color: #1d4ed8;
+}
+
+.rich-text-content strong {
+  font-weight: 700;
+}
+
+.rich-text-content em {
+  font-style: italic;
+}
