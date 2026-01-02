@@ -63,6 +63,7 @@ jobs:
         env:
           FIREBASE_ADMIN_CONFIG: ${{ secrets.GCP_SA_KEY }}
           APP_ID: ${{ env.APP_ID }}
+          NODE_PATH: ${{ github.workspace }}/functions/node_modules
         run: |
           node scripts/generateStaticSite.js
         continue-on-error: true # Continue even if static generation fails
