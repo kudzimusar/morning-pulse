@@ -137,7 +137,7 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
 
             <div className="form-group">
               <label htmlFor="headline" className="form-label">
-                Headline <span className="required">*</span>
+                Guest Essay Headline <span className="required">*</span>
               </label>
               <input
                 type="text"
@@ -169,12 +169,12 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
 
             <div className="form-group">
               <label htmlFor="body" className="form-label">
-                Your Story (Body) <span className="required">*</span>
+                The Narrative (Body) <span className="required">*</span>
               </label>
               <RichTextEditor
                 value={formData.body}
                 onChange={(html) => setFormData({ ...formData, body: html })}
-                placeholder="Write your full essay here... You can use the toolbar above to format text with bold, italic, and links."
+                placeholder="Write your full essay here (up to 1,500 words). Paste from Word or Google Docs to preserve formatting. Use the toolbar above to format text."
                 disabled={isSubmitting}
                 className="form-textarea-large"
               />

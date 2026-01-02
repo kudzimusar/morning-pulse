@@ -684,7 +684,11 @@ try {
     console.log('newsAggregator function exported successfully.');
   }
 } catch (error) {
+  console.error('Error loading newsAggregator:', error);
   console.warn('newsAggregator module not available:', error.message);
   console.warn('News aggregation features will be unavailable.');
 }
-
+}
+}
+}
+}
