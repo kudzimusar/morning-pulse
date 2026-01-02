@@ -4,6 +4,7 @@ import NewsGrid from './components/NewsGrid';
 import FirebaseConnector from './components/FirebaseConnector';
 import OpinionPage from './components/OpinionPage';
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
+import AdminOpinionReview from './components/AdminOpinionReview';
 import Footer from './components/Footer';
 import PrivacyPage from './components/PrivacyPage';
 import AboutPage from './components/AboutPage';
@@ -135,6 +136,9 @@ const App: React.FC = () => {
       .map(article => article.headline);
   }, [newsData]);
 
+  // Check if admin mode is enabled
+  const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
+
   return (
     <div className="app">
       <Header 
@@ -218,6 +222,11 @@ const App: React.FC = () => {
             />
           )}
         </>
+      )}
+
+      {/* Admin Review Panel - only visible in admin mode on news and opinion pages */}
+      {isAdminMode && (currentPage === 'news' || currentPage === 'opinion') && (
+        <AdminOpinionReview />
       )}
 
       {/* Footer - always visible at bottom */}
