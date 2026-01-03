@@ -140,7 +140,7 @@ export const ensureAuthenticated = async (): Promise<void> => {
   }
 };
 
-const OPINIONS_COLLECTION = 'data/opinions';
+const OPINIONS_COLLECTION = 'artifacts/morning-pulse-app/public/data/opinions';
 
 /**
  * Get current auth user (for components to check auth state)
@@ -162,10 +162,10 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
     // CRITICAL: Ensure anonymous authentication before writing to Firestore
     await ensureAuthenticated();
     
-    console.log('📝 Attempting to submit opinion to path: data/opinions');
+    console.log('📝 Attempting to submit opinion to path: artifacts/morning-pulse-app/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    const opinionsRef = collection(db, 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
     const docData = {
       writerType: opinionData.writerType || 'Guest Essay',
@@ -203,10 +203,10 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
     
-    console.log('📝 Attempting to fetch published opinions from path: data/opinions');
+    console.log('📝 Attempting to fetch published opinions from path: artifacts/morning-pulse-app/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    const opinionsRef = collection(db, 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
@@ -257,7 +257,7 @@ export const subscribeToPublishedOpinions = (
   try {
     console.log('📰 Subscribing to published opinions in Firestore...');
     
-    const opinionsRef = collection(db, 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
     // Query for published opinions, ordered by publishedAt descending
     const q = query(
@@ -312,10 +312,10 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
     
-    console.log('📝 Attempting to fetch pending opinions from path: data/opinions');
+    console.log('📝 Attempting to fetch pending opinions from path: artifacts/morning-pulse-app/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    const opinionsRef = collection(db, 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
@@ -366,7 +366,7 @@ export const subscribeToPendingOpinions = (
   try {
     console.log('📝 Subscribing to pending opinions in Firestore...');
     
-    const opinionsRef = collection(db, 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
     // Query for pending opinions, ordered by submittedAt descending
     const q = query(
@@ -417,7 +417,7 @@ export const approveOpinion = async (opinionId: string, reviewedBy?: string): Pr
   }
 
   try {
-    const opinionRef = doc(db, 'data', 'opinions', opinionId);
+    const opinionRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
     await updateDoc(opinionRef, {
       status: 'published',
       publishedAt: serverTimestamp(),
@@ -440,7 +440,7 @@ export const rejectOpinion = async (opinionId: string, reviewedBy?: string): Pro
   }
 
   try {
-    const opinionRef = doc(db, 'data', 'opinions', opinionId);
+    const opinionRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
     await updateDoc(opinionRef, {
       status: 'rejected',
       reviewedBy: reviewedBy || 'admin',
