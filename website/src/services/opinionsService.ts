@@ -3,8 +3,6 @@ import {
   collection, 
   addDoc, 
   query, 
-  where, 
-  orderBy, 
   getDocs, 
   doc, 
   updateDoc, 
@@ -257,27 +255,32 @@ export const subscribeToPublishedOpinions = (
   try {
     console.log('📰 Subscribing to published opinions in Firestore...');
     
+    // BYPASS INDEX: Fetch entire collection without where/orderBy to avoid index requirement
     const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
-    
-    // Query for published opinions, ordered by publishedAt descending
-    const q = query(
-      opinionsRef,
-      where('status', '==', 'published'),
-      orderBy('publishedAt', 'desc')
-    );
+    const q = query(opinionsRef);
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const opinions = snapshot.docs.map(doc => ({
+        // Filter and sort in JavaScript memory
+        const allData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
           submittedAt: doc.data().submittedAt?.toDate?.() || new Date(),
           publishedAt: doc.data().publishedAt?.toDate?.() || null,
         })) as Opinion[];
         
-        console.log(`✅ Found ${opinions.length} published opinions`);
-        callback(opinions);
+        // Filter for published status and sort by publishedAt descending
+        const publishedOpinions = allData
+          .filter(item => item.status === 'published')
+          .sort((a, b) => {
+            const timeA = a.publishedAt?.getTime() || 0;
+            const timeB = b.publishedAt?.getTime() || 0;
+            return timeB - timeA; // Newest first
+          });
+        
+        console.log(`✅ Found ${allData.length} total opinions, ${publishedOpinions.length} published`);
+        callback(publishedOpinions);
       },
       (error) => {
         console.error('❌ Error in published opinions subscription:', error);
@@ -366,27 +369,32 @@ export const subscribeToPendingOpinions = (
   try {
     console.log('📝 Subscribing to pending opinions in Firestore...');
     
+    // BYPASS INDEX: Fetch entire collection without where/orderBy to avoid index requirement
     const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
-    
-    // Query for pending opinions, ordered by submittedAt descending
-    const q = query(
-      opinionsRef,
-      where('status', '==', 'pending'),
-      orderBy('submittedAt', 'desc')
-    );
+    const q = query(opinionsRef);
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const opinions = snapshot.docs.map(doc => ({
+        // Filter and sort in JavaScript memory
+        const allData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
           submittedAt: doc.data().submittedAt?.toDate?.() || new Date(),
           publishedAt: doc.data().publishedAt?.toDate?.() || null,
         })) as Opinion[];
         
-        console.log(`✅ Found ${opinions.length} pending opinions`);
-        callback(opinions);
+        // Filter for pending status and sort by submittedAt descending
+        const pendingOpinions = allData
+          .filter(item => item.status === 'pending')
+          .sort((a, b) => {
+            const timeA = a.submittedAt?.getTime() || 0;
+            const timeB = b.submittedAt?.getTime() || 0;
+            return timeB - timeA; // Newest first
+          });
+        
+        console.log(`✅ Found ${allData.length} total opinions, ${pendingOpinions.length} pending`);
+        callback(pendingOpinions);
       },
       (error) => {
         console.error('❌ Error in pending opinions subscription:', error);
