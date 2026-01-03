@@ -6,9 +6,10 @@ import {
 
 interface OpinionFeedProps {
   onOpinionClick?: (opinion: Opinion) => void;
+  onNavigateToSubmit?: () => void;
 }
 
-const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
+const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToSubmit }) => {
   const [opinions, setOpinions] = useState<Opinion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,71 +72,193 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
   const leadEssay = opinions[0];
   const otherEssays = opinions.slice(1);
 
+  // Helper function to get author initial
+  const getAuthorInitial = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
+
+  // Helper function to extract first letter from HTML body
+  const getFirstLetter = (html: string) => {
+    const text = html.replace(/<[^>]*>/g, '').trim();
+    return text.charAt(0).toUpperCase();
+  };
+
   return (
     <div className="opinion-feed" style={{ fontFamily: 'Georgia, serif' }}>
-      {/* NYT Masthead */}
+      {/* NYT Masthead - Single, Large Header */}
       <div style={{
         borderTop: '4px solid #000',
-        borderBottom: '1px solid #000',
-        padding: '16px 0',
-        marginBottom: '32px'
+        borderBottom: '2px solid #000',
+        padding: '24px 0',
+        marginBottom: '48px',
+        maxWidth: '1200px',
+        margin: '0 auto 48px',
+        paddingLeft: '24px',
+        paddingRight: '24px'
       }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          fontWeight: '900',
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-          fontFamily: '"Times New Roman", serif',
-          margin: 0,
-          color: '#000'
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          OPINION
-        </h1>
+          <h1 style={{
+            fontSize: '4.5rem',
+            fontWeight: '900',
+            letterSpacing: '0.02em',
+            textTransform: 'uppercase',
+            fontFamily: '"Times New Roman", serif',
+            margin: 0,
+            color: '#000',
+            lineHeight: '1'
+          }}>
+            OPINION
+          </h1>
+          {onNavigateToSubmit && (
+            <a 
+              href="#opinion/submit" 
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigateToSubmit();
+              }}
+              style={{
+                fontSize: '0.875rem',
+                color: '#000',
+                textDecoration: 'underline',
+                fontFamily: 'Georgia, serif',
+                fontWeight: '500'
+              }}
+            >
+              Submit a Guest Essay
+            </a>
+          )}
+        </div>
       </div>
 
-      {/* Grid Layout: Main Content (8 cols) + Sidebar (4 cols) */}
+      {/* Grid Layout: Main Content (7 cols) + Sidebar (5 cols) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr',
-        gap: '32px',
+        gap: '48px',
         maxWidth: '1200px',
         margin: '0 auto',
         padding: '0 24px'
       }}>
-        {/* Main Content Column */}
+        {/* Main Content Column - 7 cols equivalent */}
         <div style={{ gridColumn: '1 / -1' }}>
           {leadEssay && (
             <article
               key={leadEssay.id}
               style={{
                 borderBottom: '3px solid #000',
-                padding: '32px 0',
-                marginBottom: '48px'
+                padding: '48px 0',
+                marginBottom: '64px'
               }}
             >
-              {/* Author and Date at top */}
+              {/* Enhanced Byline Card */}
               <div style={{
-                marginBottom: '16px',
-                fontSize: '0.875rem',
-                color: '#4b5563',
-                fontFamily: 'Georgia, serif'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                marginBottom: '24px',
+                paddingBottom: '16px',
+                borderBottom: '1px solid #e5e7eb'
               }}>
-                <span style={{ fontWeight: '600' }}>
-                  By {leadEssay.authorName}
-                  {leadEssay.authorTitle && `, ${leadEssay.authorTitle}`}
-                </span>
-                {leadEssay.publishedAt && (
-                  <>
-                    <span style={{ margin: '0 8px' }}>•</span>
-                    <span>
+                {/* Avatar Placeholder */}
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  fontWeight: 'bold',
+                  fontFamily: 'Georgia, serif',
+                  flexShrink: 0
+                }}>
+                  {getAuthorInitial(leadEssay.authorName)}
+                </div>
+                
+                {/* Author Info */}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '0.875rem',
+                    fontWeight: '900',
+                    textTransform: 'uppercase',
+                    color: '#000',
+                    fontFamily: 'Georgia, serif',
+                    letterSpacing: '0.05em',
+                    marginBottom: '4px'
+                  }}>
+                    {leadEssay.authorName}
+                  </div>
+                  {leadEssay.authorTitle && (
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#78716c',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      fontFamily: 'Georgia, serif',
+                      fontWeight: '500'
+                    }}>
+                      {leadEssay.authorTitle}
+                    </div>
+                  )}
+                  {leadEssay.publishedAt && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      marginTop: '4px',
+                      fontFamily: 'Georgia, serif'
+                    }}>
                       {new Date(leadEssay.publishedAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
                       })}
-                    </span>
-                  </>
-                )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Share and Bookmark Icons */}
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  alignItems: 'center'
+                }}>
+                  <button
+                    style={{
+                      background: 'none',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      color: '#4b5563',
+                      fontFamily: 'Georgia, serif'
+                    }}
+                    title="Share"
+                  >
+                    Share
+                  </button>
+                  <button
+                    style={{
+                      background: 'none',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      color: '#4b5563',
+                      fontFamily: 'Georgia, serif'
+                    }}
+                    title="Bookmark"
+                  >
+                    Bookmark
+                  </button>
+                </div>
               </div>
 
               {/* Headline */}
@@ -164,7 +287,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
                 </p>
               )}
 
-              {/* Full Essay Body with Drop Cap */}
+              {/* Full Essay Body with Enhanced Drop Cap */}
               {leadEssay.body && (
                 <div style={{
                   fontSize: '1.125rem',
@@ -173,28 +296,32 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
                   fontFamily: 'Georgia, serif',
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
-                  marginTop: '24px'
+                  marginTop: '32px',
+                  position: 'relative'
                 }}>
-                  {/* Drop Cap for first paragraph */}
+                  {/* Enhanced Drop Cap - Massive First Letter */}
+                  <span
+                    style={{
+                      float: 'left',
+                      fontSize: '8rem',
+                      lineHeight: '0.75',
+                      fontWeight: 'bold',
+                      marginRight: '12px',
+                      marginTop: '8px',
+                      color: '#000',
+                      fontFamily: 'Georgia, serif',
+                      display: 'block',
+                      height: '6rem'
+                    }}
+                  >
+                    {getFirstLetter(leadEssay.body)}
+                  </span>
                   <div
                     style={{
-                      display: 'inline-block',
-                      float: 'left',
-                      fontSize: '5rem',
-                      lineHeight: '0.8',
-                      fontWeight: 'bold',
-                      marginRight: '8px',
-                      marginTop: '4px',
-                      color: '#000',
-                      fontFamily: 'Georgia, serif'
+                      display: 'inline'
                     }}
                     dangerouslySetInnerHTML={{ 
-                      __html: leadEssay.body.substring(0, 1) 
-                    }}
-                  />
-                  <div
-                    dangerouslySetInnerHTML={{ 
-                      __html: leadEssay.body.substring(1) 
+                      __html: leadEssay.body.substring(leadEssay.body.indexOf('>') + 1) || leadEssay.body.substring(1)
                     }}
                   />
                 </div>
@@ -204,82 +331,205 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
 
           {/* Other Essays */}
           {otherEssays.map((opinion) => (
-            <article
-              key={opinion.id}
-              style={{
+        <article
+          key={opinion.id}
+          style={{
                 borderBottom: '2px solid #000',
                 padding: '24px 0',
-                marginBottom: '24px'
-              }}
-            >
+            marginBottom: '24px'
+          }}
+        >
               {/* Author and Date */}
               <div style={{
                 marginBottom: '12px',
-                fontSize: '0.875rem',
-                color: '#4b5563',
-                fontFamily: 'Georgia, serif'
-              }}>
+              fontSize: '0.875rem',
+              color: '#4b5563',
+              fontFamily: 'Georgia, serif'
+            }}>
                 <span style={{ fontWeight: '600' }}>
-                  By {opinion.authorName}
-                  {opinion.authorTitle && `, ${opinion.authorTitle}`}
-                </span>
-                {opinion.publishedAt && (
-                  <>
+                By {opinion.authorName}
+                {opinion.authorTitle && `, ${opinion.authorTitle}`}
+              </span>
+              {opinion.publishedAt && (
+                <>
                     <span style={{ margin: '0 8px' }}>•</span>
                     <span>
-                      {new Date(opinion.publishedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </>
-                )}
-              </div>
+                    {new Date(opinion.publishedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </>
+              )}
+            </div>
 
-              {/* Headline */}
+            {/* Headline */}
               <h3 style={{
                 fontSize: '1.75rem',
-                fontWeight: 'bold',
+              fontWeight: 'bold',
                 lineHeight: '1.3',
-                marginBottom: '12px',
-                fontFamily: 'Georgia, serif',
-                color: '#000'
-              }}>
-                {opinion.headline}
+              marginBottom: '12px',
+              fontFamily: 'Georgia, serif',
+              color: '#000'
+            }}>
+              {opinion.headline}
               </h3>
 
-              {/* Sub-headline */}
-              {opinion.subHeadline && (
+            {/* Sub-headline */}
+            {opinion.subHeadline && (
                 <p style={{
                   fontSize: '1rem',
-                  color: '#4b5563',
+                color: '#4b5563',
                   marginBottom: '16px',
-                  fontFamily: 'Georgia, serif',
-                  fontStyle: 'italic',
-                  lineHeight: '1.5'
-                }}>
-                  {opinion.subHeadline}
-                </p>
-              )}
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                lineHeight: '1.5'
+              }}>
+                {opinion.subHeadline}
+              </p>
+            )}
 
               {/* Essay Body */}
-              {opinion.body && (
-                <div
-                  style={{
+            {opinion.body && (
+              <div 
+                style={{
                     fontSize: '1rem',
-                    lineHeight: '1.8',
-                    color: '#1f2937',
-                    fontFamily: 'Georgia, serif',
-                    whiteSpace: 'pre-wrap',
+                  lineHeight: '1.8',
+                  color: '#1f2937',
+                  fontFamily: 'Georgia, serif',
+                  whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: opinion.body }}
-                />
-              )}
-            </article>
+                }}
+                dangerouslySetInnerHTML={{ __html: opinion.body }}
+              />
+            )}
+        </article>
           ))}
         </div>
+
+        {/* Sidebar - 5 cols equivalent */}
+        <aside style={{
+          gridColumn: '1 / -1',
+          marginTop: '32px'
+        }}>
+          {/* The Editorial Board */}
+          <div style={{
+            border: '2px solid #000',
+            padding: '24px',
+            marginBottom: '32px',
+            backgroundColor: '#fafafa'
+          }}>
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              fontFamily: 'Georgia, serif',
+              marginBottom: '16px',
+              color: '#000',
+              borderBottom: '2px solid #000',
+              paddingBottom: '12px'
+            }}>
+              The Editorial Board
+            </h3>
+            <p style={{
+              fontSize: '0.875rem',
+              lineHeight: '1.6',
+              color: '#4b5563',
+              fontFamily: 'Georgia, serif',
+              marginBottom: '16px'
+            }}>
+              The Editorial Board represents the opinions of the Morning Pulse editorial staff. Our board members are independent voices committed to providing thoughtful analysis and commentary on the issues that matter most.
+            </p>
+            <p style={{
+              fontSize: '0.875rem',
+              lineHeight: '1.6',
+              color: '#4b5563',
+              fontFamily: 'Georgia, serif'
+            }}>
+              To submit an opinion piece for consideration, please use the submission form below.
+            </p>
+          </div>
+
+          {/* Submission Box */}
+          {onNavigateToSubmit && (
+            <div style={{
+              border: '2px solid #000',
+              padding: '32px',
+              backgroundColor: '#fff',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  fontWeight: 'bold',
+                  fontFamily: 'Georgia, serif',
+                  flexShrink: 0
+                }}>
+                  ✎
+                </div>
+                <h3 style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontFamily: 'Georgia, serif',
+                  margin: 0,
+                  color: '#000'
+                }}>
+                  Submit a Guest Essay
+                </h3>
+              </div>
+              <p style={{
+                fontSize: '0.875rem',
+                lineHeight: '1.6',
+                color: '#4b5563',
+                fontFamily: 'Georgia, serif',
+                marginBottom: '20px'
+              }}>
+                Share your perspective with Morning Pulse readers. All submissions are reviewed by our editorial team before publication.
+              </p>
+              <a 
+                href="#opinion/submit" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigateToSubmit();
+                }}
+                style={{
+                  display: 'inline-block',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  padding: '12px 24px',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  fontFamily: 'Georgia, serif',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f2937'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#000'}
+              >
+                Submit Your Essay →
+              </a>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   );

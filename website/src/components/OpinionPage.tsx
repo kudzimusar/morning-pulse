@@ -60,22 +60,12 @@ const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit })
             ← Back to News
           </button>
         )}
-        <h1 className="opinion-page-title">OPINION</h1>
-        {onNavigateToSubmit && (
-          <a 
-            href="#opinion/submit" 
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigateToSubmit();
-            }}
-            className="opinion-submit-link"
-          >
-            Submit a Guest Essay
-          </a>
-        )}
       </div>
       <div className="opinion-page-content">
-        <OpinionFeed onOpinionClick={handleOpinionClick} />
+        <OpinionFeed 
+          onOpinionClick={handleOpinionClick}
+          onNavigateToSubmit={onNavigateToSubmit}
+        />
       </div>
     </div>
   );
