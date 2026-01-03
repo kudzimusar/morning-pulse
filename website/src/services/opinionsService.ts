@@ -425,11 +425,17 @@ export const approveOpinion = async (opinionId: string, reviewedBy?: string): Pr
   }
 
   try {
+    // CRITICAL: Ensure authentication before write operation
+    await ensureAuthenticated();
+    console.log('✅ Authentication verified for approval');
+    
+    // Use exact mandatory path structure
     const opinionRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
+    
+    // Simple flat update object
     await updateDoc(opinionRef, {
       status: 'published',
-      publishedAt: serverTimestamp(),
-      reviewedBy: reviewedBy || 'admin',
+      updatedAt: new Date().toISOString(),
     });
     console.log('✅ Opinion approved:', opinionId);
   } catch (error: any) {
@@ -448,10 +454,17 @@ export const rejectOpinion = async (opinionId: string, reviewedBy?: string): Pro
   }
 
   try {
+    // CRITICAL: Ensure authentication before write operation
+    await ensureAuthenticated();
+    console.log('✅ Authentication verified for rejection');
+    
+    // Use exact mandatory path structure
     const opinionRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
+    
+    // Simple flat update object
     await updateDoc(opinionRef, {
       status: 'rejected',
-      reviewedBy: reviewedBy || 'admin',
+      updatedAt: new Date().toISOString(),
     });
     console.log('✅ Opinion rejected:', opinionId);
   } catch (error: any) {
