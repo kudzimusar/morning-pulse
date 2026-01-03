@@ -102,35 +102,29 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
 
   return (
     <div className="opinion-feed" style={{ fontFamily: 'Georgia, serif' }}>
-      {/* NYT Masthead - Single, Large Header */}
+      {/* NYT Masthead - Centered, Authoritative */}
       <div style={{
         borderTop: '4px solid #000',
         borderBottom: '2px solid #000',
-        padding: '24px 0',
+        padding: '32px 16px',
         marginBottom: '48px',
-        maxWidth: '1200px',
-        margin: '0 auto 48px',
-        paddingLeft: '24px',
-        paddingRight: '24px'
+        textAlign: 'center'
       }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+        <h1 style={{
+          fontSize: 'clamp(2.5rem, 8vw, 7rem)',
+          fontWeight: '900',
+          letterSpacing: '0.02em',
+          textTransform: 'uppercase',
+          fontFamily: '"Times New Roman", serif',
+          margin: 0,
+          color: '#000',
+          lineHeight: '1',
+          fontStyle: 'italic'
         }}>
-          <h1 style={{
-            fontSize: '4.5rem',
-            fontWeight: '900',
-            letterSpacing: '0.02em',
-            textTransform: 'uppercase',
-            fontFamily: '"Times New Roman", serif',
-            margin: 0,
-            color: '#000',
-            lineHeight: '1'
-          }}>
-            OPINION
-          </h1>
-          {onNavigateToSubmit && (
+          OPINION
+        </h1>
+        {onNavigateToSubmit && (
+          <div style={{ marginTop: '16px' }}>
             <a 
               href="#opinion/submit" 
               onClick={(e) => {
@@ -147,21 +141,26 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
             >
               Submit a Guest Essay
             </a>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Grid Layout: Main Content (7 cols) + Sidebar (5 cols) */}
+      {/* Grid Layout: Main Content + Sidebar (responsive) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr',
         gap: '48px',
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '0 24px'
+        padding: '0 16px'
       }}>
-        {/* Main Content Column - 7 cols equivalent */}
-        <div style={{ gridColumn: '1 / -1' }}>
+        {/* Main Content Column - Centered reading column */}
+        <div style={{ 
+          gridColumn: '1 / -1',
+          maxWidth: '680px',
+          margin: '0 auto',
+          width: '100%'
+        }}>
           {leadEssay && (
             <article
               key={leadEssay.id}
@@ -171,26 +170,26 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                 marginBottom: '64px'
               }}
             >
-              {/* Enhanced Byline Card */}
+              {/* Credit Card Style Byline */}
               <div style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                marginBottom: '24px',
-                paddingBottom: '16px',
-                borderBottom: '1px solid #e5e7eb'
+                alignItems: 'flex-start',
+                gap: '12px',
+                marginBottom: '32px',
+                paddingBottom: '20px',
+                borderBottom: '2px solid #000'
               }}>
-                {/* Avatar Placeholder */}
+                {/* Small Avatar - 10x10 equivalent (40px) */}
                 <div style={{
-                  width: '48px',
-                  height: '48px',
+                  width: '40px',
+                  height: '40px',
                   borderRadius: '50%',
                   backgroundColor: '#000',
                   color: '#fff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.25rem',
+                  fontSize: '1rem',
                   fontWeight: 'bold',
                   fontFamily: 'Georgia, serif',
                   flexShrink: 0
@@ -198,7 +197,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                   {getAuthorInitial(leadEssay.authorName)}
                 </div>
                 
-                {/* Author Info */}
+                {/* Multi-line Meta Data */}
                 <div style={{ flex: 1 }}>
                   <div style={{
                     fontSize: '0.875rem',
@@ -207,18 +206,18 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                     color: '#000',
                     fontFamily: 'Georgia, serif',
                     letterSpacing: '0.05em',
-                    marginBottom: '4px'
+                    marginBottom: '6px',
+                    lineHeight: '1.2'
                   }}>
                     {leadEssay.authorName}
                   </div>
                   {leadEssay.authorTitle && (
                     <div style={{
-                      fontSize: '11px',
-                      color: '#78716c',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
+                      fontSize: '0.75rem',
+                      color: '#4b5563',
                       fontFamily: 'Georgia, serif',
-                      fontWeight: '500'
+                      marginBottom: '6px',
+                      lineHeight: '1.4'
                     }}>
                       {leadEssay.authorTitle}
                     </div>
@@ -227,8 +226,8 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                     <div style={{
                       fontSize: '0.75rem',
                       color: '#6b7280',
-                      marginTop: '4px',
-                      fontFamily: 'Georgia, serif'
+                      fontFamily: 'Georgia, serif',
+                      lineHeight: '1.4'
                     }}>
                       {new Date(leadEssay.publishedAt).toLocaleDateString('en-US', {
                         year: 'numeric',
@@ -242,15 +241,16 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                 {/* Share and Bookmark Icons */}
                 <div style={{
                   display: 'flex',
-                  gap: '12px',
-                  alignItems: 'center'
+                  gap: '8px',
+                  alignItems: 'flex-start',
+                  paddingTop: '4px'
                 }}>
                   <button
                     style={{
                       background: 'none',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
-                      padding: '8px 12px',
+                      padding: '6px 10px',
                       cursor: 'pointer',
                       fontSize: '0.75rem',
                       color: '#4b5563',
@@ -265,7 +265,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                       background: 'none',
                       border: '1px solid #d1d5db',
                       borderRadius: '4px',
-                      padding: '8px 12px',
+                      padding: '6px 10px',
                       cursor: 'pointer',
                       fontSize: '0.75rem',
                       color: '#4b5563',
@@ -278,10 +278,10 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                 </div>
               </div>
 
-              {/* Headline */}
+              {/* Headline - Responsive */}
               <h2 style={{
-                fontSize: '2.5rem',
-                fontWeight: 'bold',
+                fontSize: 'clamp(1.875rem, 5vw, 3rem)',
+                fontWeight: '900',
                 lineHeight: '1.2',
                 marginBottom: '16px',
                 fontFamily: 'Georgia, serif',
@@ -307,8 +307,8 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
               {/* Full Essay Body with Enhanced Drop Cap */}
               {leadEssay.body && (
                 <div style={{
-                  fontSize: '1.125rem',
-                  lineHeight: '1.8',
+                  fontSize: 'clamp(1rem, 2vw, 1.1rem)',
+                  lineHeight: '1.65',
                   color: '#1f2937',
                   fontFamily: 'Georgia, serif',
                   whiteSpace: 'pre-wrap',
@@ -316,19 +316,19 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                   marginTop: '32px',
                   position: 'relative'
                 }}>
-                  {/* Enhanced Drop Cap - Massive First Letter */}
+                  {/* Enhanced Drop Cap - Tighter, Smaller */}
                   <span
                     style={{
                       float: 'left',
-                      fontSize: '8rem',
+                      fontSize: 'clamp(4rem, 8vw, 7rem)',
                       lineHeight: '0.75',
                       fontWeight: 'bold',
-                      marginRight: '12px',
+                      marginRight: '10px',
                       marginTop: '8px',
                       color: '#000',
                       fontFamily: 'Georgia, serif',
                       display: 'block',
-                      height: '6rem',
+                      height: '5rem',
                       paddingRight: '4px'
                     }}
                   >
@@ -383,16 +383,16 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
               )}
             </div>
 
-            {/* Headline */}
+              {/* Headline - Responsive */}
               <h3 style={{
-                fontSize: '1.75rem',
-              fontWeight: 'bold',
+                fontSize: 'clamp(1.5rem, 4vw, 1.875rem)',
+                fontWeight: '900',
                 lineHeight: '1.3',
-              marginBottom: '12px',
-              fontFamily: 'Georgia, serif',
-              color: '#000'
-            }}>
-              {opinion.headline}
+                marginBottom: '12px',
+                fontFamily: 'Georgia, serif',
+                color: '#000'
+              }}>
+                {opinion.headline}
               </h3>
 
             {/* Sub-headline */}
@@ -409,28 +409,31 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
               </p>
             )}
 
-              {/* Essay Body */}
-            {opinion.body && (
-              <div 
-                style={{
-                    fontSize: '1rem',
-                  lineHeight: '1.8',
-                  color: '#1f2937',
-                  fontFamily: 'Georgia, serif',
-                  whiteSpace: 'pre-wrap',
+              {/* Essay Body - Responsive */}
+              {opinion.body && (
+                <div
+                  style={{
+                    fontSize: 'clamp(1rem, 2vw, 1.1rem)',
+                    lineHeight: '1.65',
+                    color: '#1f2937',
+                    fontFamily: 'Georgia, serif',
+                    whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word'
-                }}
-                dangerouslySetInnerHTML={{ __html: opinion.body }}
-              />
-            )}
+                  }}
+                  dangerouslySetInnerHTML={{ __html: opinion.body }}
+                />
+              )}
         </article>
           ))}
         </div>
 
-        {/* Sidebar - 5 cols equivalent */}
+        {/* Sidebar - Stacks on mobile, fixed width on desktop */}
         <aside style={{
           gridColumn: '1 / -1',
-          marginTop: '32px'
+          marginTop: '32px',
+          maxWidth: '680px',
+          margin: '32px auto 0',
+          width: '100%'
         }}>
           {/* The Editorial Board */}
           <div style={{
