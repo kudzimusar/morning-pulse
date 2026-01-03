@@ -70,33 +70,32 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
   return (
     <div className="opinion-feed">
       {opinions.map((opinion) => (
-        <div
+        <article
           key={opinion.id}
           className="opinion-card"
-          onClick={() => onOpinionClick?.(opinion)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onOpinionClick?.(opinion);
-            }
+          style={{
+            borderBottom: '3px solid #000',
+            padding: '32px 0',
+            marginBottom: '24px'
           }}
         >
           <div className="opinion-card-content">
-            <p className="opinion-tag">{opinion.writerType || 'Guest Essay'}</p>
-            <h2 className="opinion-headline">{opinion.headline}</h2>
-            <p className="opinion-subheadline">{opinion.subHeadline}</p>
-            <div className="opinion-byline">
-              <span className="opinion-author">
+            {/* Author and Date at top */}
+            <div className="opinion-byline" style={{
+              marginBottom: '16px',
+              fontSize: '0.875rem',
+              color: '#4b5563',
+              fontFamily: 'Georgia, serif'
+            }}>
+              <span className="opinion-author" style={{ fontWeight: '600' }}>
                 By {opinion.authorName}
                 {opinion.authorTitle && `, ${opinion.authorTitle}`}
               </span>
               {opinion.publishedAt && (
                 <>
-                  <span className="opinion-separator">•</span>
+                  <span className="opinion-separator" style={{ margin: '0 8px' }}>•</span>
                   <span className="opinion-time">
-                    {opinion.publishedAt.toLocaleDateString('en-US', {
+                    {new Date(opinion.publishedAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -105,8 +104,51 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
                 </>
               )}
             </div>
+
+            {/* Headline */}
+            <h2 className="opinion-headline" style={{
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              lineHeight: '1.2',
+              marginBottom: '12px',
+              fontFamily: 'Georgia, serif',
+              color: '#000'
+            }}>
+              {opinion.headline}
+            </h2>
+
+            {/* Sub-headline */}
+            {opinion.subHeadline && (
+              <p className="opinion-subheadline" style={{
+                fontSize: '1.125rem',
+                color: '#4b5563',
+                marginBottom: '24px',
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                lineHeight: '1.5'
+              }}>
+                {opinion.subHeadline}
+              </p>
+            )}
+
+            {/* Full Essay Body */}
+            {opinion.body && (
+              <div 
+                className="opinion-body"
+                style={{
+                  fontSize: '1.125rem',
+                  lineHeight: '1.8',
+                  color: '#1f2937',
+                  fontFamily: 'Georgia, serif',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  marginTop: '24px'
+                }}
+                dangerouslySetInnerHTML={{ __html: opinion.body }}
+              />
+            )}
           </div>
-        </div>
+        </article>
       ))}
     </div>
   );
