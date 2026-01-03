@@ -417,9 +417,7 @@ export const approveOpinion = async (opinionId: string, reviewedBy?: string): Pr
   }
 
   try {
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    const opinionRef = doc(db, 'artifacts', appId, 'public', 'data', 'opinions', opinionId);
+    const opinionRef = doc(db, 'data', 'opinions', opinionId);
     await updateDoc(opinionRef, {
       status: 'published',
       publishedAt: serverTimestamp(),
@@ -442,9 +440,7 @@ export const rejectOpinion = async (opinionId: string, reviewedBy?: string): Pro
   }
 
   try {
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    const opinionRef = doc(db, 'artifacts', appId, 'public', 'data', 'opinions', opinionId);
+    const opinionRef = doc(db, 'data', 'opinions', opinionId);
     await updateDoc(opinionRef, {
       status: 'rejected',
       reviewedBy: reviewedBy || 'admin',
