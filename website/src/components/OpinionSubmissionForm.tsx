@@ -87,17 +87,56 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
   };
 
   return (
-    <div className="institutional-page">
-      <div className="page-header">
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#fafafa',
+      padding: '48px 24px'
+    }}>
+      <div style={{
+        maxWidth: '768px',
+        margin: '0 auto',
+        backgroundColor: 'white',
+        padding: '64px 48px',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+      }}>
         {onBack && (
-          <button onClick={onBack} className="back-button">
+          <button 
+            onClick={onBack} 
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#6b7280',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              marginBottom: '24px',
+              padding: '8px 0'
+            }}
+          >
             ← Back
           </button>
         )}
-        <h1 className="page-title">Submit a Guest Essay</h1>
-      </div>
+        
+        <h1 style={{
+          fontSize: '2.5rem',
+          fontWeight: 'bold',
+          fontFamily: 'Georgia, serif',
+          marginBottom: '16px',
+          color: '#000'
+        }}>
+          Submit a Guest Essay
+        </h1>
+        
+        <p style={{
+          fontSize: '1.125rem',
+          color: '#4b5563',
+          fontFamily: 'Georgia, serif',
+          marginBottom: '48px',
+          lineHeight: '1.6'
+        }}>
+          Share your perspective with Morning Pulse readers. All submissions are reviewed by our editorial team before publication.
+        </p>
 
-      <div className="page-content">
+      <div>
         <div className="content-section">
           <p className="lead-text">
             Share your perspective with Morning Pulse readers. All submissions are reviewed by our editorial team before publication.
@@ -155,20 +194,20 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
                 id="headline"
                 value={formData.headline}
                 onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-                placeholder="e.g., Here's What MAGA Gets Wrong About..."
+                placeholder="Enter your essay headline..."
                 required
                 disabled={isSubmitting}
                 style={{
                   width: '100%',
+                  border: 'none',
                   borderBottom: '2px solid #e5e7eb',
-                  borderTop: 'none',
-                  borderLeft: 'none',
-                  borderRight: 'none',
-                  padding: '12px 0',
-                  fontSize: '1.25rem',
+                  padding: '16px 0',
+                  fontSize: '2rem',
+                  fontWeight: 'bold',
                   fontFamily: 'Georgia, serif',
                   outline: 'none',
                   transition: 'border-color 0.2s',
+                  backgroundColor: 'transparent',
                   ...(isSubmitting ? { opacity: 0.6, cursor: 'not-allowed' } : {})
                 }}
                 onFocus={(e) => e.target.style.borderBottomColor = '#000000'}

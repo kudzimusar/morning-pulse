@@ -233,45 +233,47 @@ const AdminOpinionReview: React.FC = () => {
         ))}
       </div>
 
-      {/* Review Panel */}
+      {/* Review Panel - Bottom Right with High Contrast */}
       <div style={{
         position: 'fixed',
         bottom: '0',
-        left: '0',
+        right: '0',
         width: '400px',
         maxHeight: '70vh',
-        backgroundColor: 'white',
-        borderTop: '2px solid #000',
-        borderRight: '2px solid #000',
-        boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.15)',
+        backgroundColor: '#000',
+        borderTop: '4px solid #fff',
+        borderLeft: '4px solid #fff',
+        boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* Header with Close button */}
+        {/* Header with Close button - High Contrast */}
         <div style={{
-          backgroundColor: '#000',
-          color: 'white',
-          padding: '8px 12px',
+          backgroundColor: '#fff',
+          color: '#000',
+          padding: '12px 16px',
           fontSize: '0.75rem',
-          fontWeight: 'bold',
+          fontWeight: '900',
           textTransform: 'uppercase',
-          letterSpacing: '0.05em',
+          letterSpacing: '0.1em',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          borderBottom: '2px solid #000'
         }}>
-          <span>Review Opinions ({pendingOpinions.length})</span>
+          <span style={{ fontFamily: 'monospace' }}>REVIEW ({pendingOpinions.length})</span>
           <button
             onClick={() => setIsVisible(false)}
             style={{
               background: 'transparent',
-              border: 'none',
-              color: 'white',
+              border: '2px solid #000',
+              color: '#000',
               cursor: 'pointer',
               fontSize: '1rem',
-              padding: '0 4px',
-              lineHeight: '1'
+              padding: '2px 8px',
+              lineHeight: '1',
+              fontWeight: 'bold'
             }}
             title="Close panel"
           >
@@ -292,18 +294,18 @@ const AdminOpinionReview: React.FC = () => {
               <div
                 key={opinion.id}
                 style={{
-                  borderBottom: '1px solid #e5e7eb',
+                  borderBottom: '2px solid #fff',
                   padding: '16px',
-                  backgroundColor: 'white',
+                  backgroundColor: '#000',
                   transition: 'background-color 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1a1a1a'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#000'}
               >
-                {/* Meta Info */}
+                {/* Meta Info - High Contrast */}
                 <div style={{
                   fontSize: '0.75rem',
-                  color: '#6b7280',
+                  color: '#fff',
                   marginBottom: '8px',
                   display: 'flex',
                   gap: '8px',
@@ -312,30 +314,30 @@ const AdminOpinionReview: React.FC = () => {
                   <span style={{ fontWeight: '600' }}>{opinion.authorName}</span>
                   {opinion.writerType && (
                     <>
-                      <span>•</span>
-                      <span>{opinion.writerType}</span>
+                      <span style={{ color: '#999' }}>•</span>
+                      <span style={{ color: '#999' }}>{opinion.writerType}</span>
                     </>
                   )}
-                  <span>•</span>
-                  <span>{opinion.submittedAt?.toLocaleDateString() || 'Recently'}</span>
+                  <span style={{ color: '#999' }}>•</span>
+                  <span style={{ color: '#999' }}>{opinion.submittedAt?.toLocaleDateString() || 'Recently'}</span>
                 </div>
 
-                {/* Headline */}
+                {/* Headline - High Contrast */}
                 <h3 style={{
                   fontSize: '1rem',
                   fontWeight: 'bold',
-                  color: '#000',
+                  color: '#fff',
                   marginBottom: '8px',
                   lineHeight: '1.4'
                 }}>
                   {opinion.headline}
                 </h3>
 
-                {/* Sub-headline */}
+                {/* Sub-headline - High Contrast */}
                 {opinion.subHeadline && (
                   <p style={{
                     fontSize: '0.875rem',
-                    color: '#4b5563',
+                    color: '#ccc',
                     marginBottom: '12px',
                     lineHeight: '1.5'
                   }}>
@@ -343,30 +345,34 @@ const AdminOpinionReview: React.FC = () => {
                   </p>
                 )}
 
-                {/* Expanded Body */}
+                {/* Expanded Body - High Contrast */}
                 {isExpanded && (
                   <div style={{
                     marginTop: '12px',
                     paddingTop: '12px',
-                    borderTop: '1px solid #e5e7eb'
+                    borderTop: '2px solid #fff'
                   }}>
                     <p style={{
                       fontSize: '0.75rem',
-                      fontWeight: '600',
+                      fontWeight: '900',
                       textTransform: 'uppercase',
-                      color: '#6b7280',
-                      marginBottom: '8px'
+                      color: '#fff',
+                      marginBottom: '12px',
+                      letterSpacing: '0.1em'
                     }}>
-                      Full Essay:
+                      FULL ESSAY:
                     </p>
                     <div
                       style={{
                         fontSize: '0.875rem',
-                        lineHeight: '1.6',
-                        color: '#1f2937',
+                        lineHeight: '1.8',
+                        color: '#fff',
                         fontFamily: 'Georgia, serif',
                         whiteSpace: 'pre-wrap',
-                        wordWrap: 'break-word'
+                        wordWrap: 'break-word',
+                        backgroundColor: '#1a1a1a',
+                        padding: '16px',
+                        borderRadius: '4px'
                       }}
                       dangerouslySetInnerHTML={{ __html: opinion.body }}
                     />
@@ -385,16 +391,18 @@ const AdminOpinionReview: React.FC = () => {
                     style={{
                       padding: '6px 12px',
                       fontSize: '0.75rem',
-                      border: '1px solid #d1d5db',
-                      backgroundColor: 'white',
+                      border: '2px solid #fff',
+                      backgroundColor: 'transparent',
+                      color: '#fff',
                       cursor: isProcessing ? 'not-allowed' : 'pointer',
-                      borderRadius: '4px',
+                      borderRadius: '0',
+                      fontWeight: 'bold',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#fff') && (e.currentTarget.style.color = '#000')}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#fff'; }}
                   >
-                    {isExpanded ? '▼ Collapse' : '▶ Expand'}
+                    {isExpanded ? '▼ COLLAPSE' : '▶ EXPAND'}
                   </button>
                   <button
                     onClick={() => handleApprove(opinion.id)}
@@ -402,18 +410,18 @@ const AdminOpinionReview: React.FC = () => {
                     style={{
                       padding: '6px 12px',
                       fontSize: '0.75rem',
-                      border: '1px solid #10b981',
-                      backgroundColor: isProcessing ? '#d1d5db' : '#10b981',
-                      color: 'white',
+                      border: '2px solid #fff',
+                      backgroundColor: isProcessing ? '#333' : '#fff',
+                      color: isProcessing ? '#999' : '#000',
                       cursor: isProcessing ? 'not-allowed' : 'pointer',
-                      borderRadius: '4px',
-                      fontWeight: '600',
+                      borderRadius: '0',
+                      fontWeight: '900',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#059669')}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isProcessing ? '#d1d5db' : '#10b981'}
+                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#10b981') && (e.currentTarget.style.color = '#fff')}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isProcessing ? '#333' : '#fff'; e.currentTarget.style.color = isProcessing ? '#999' : '#000'; }}
                   >
-                    ✓ Approve
+                    ✓ APPROVE
                   </button>
                   <button
                     onClick={() => handleReject(opinion.id)}
@@ -421,18 +429,18 @@ const AdminOpinionReview: React.FC = () => {
                     style={{
                       padding: '6px 12px',
                       fontSize: '0.75rem',
-                      border: '1px solid #ef4444',
-                      backgroundColor: isProcessing ? '#d1d5db' : '#ef4444',
-                      color: 'white',
+                      border: '2px solid #fff',
+                      backgroundColor: isProcessing ? '#333' : '#000',
+                      color: '#fff',
                       cursor: isProcessing ? 'not-allowed' : 'pointer',
-                      borderRadius: '4px',
-                      fontWeight: '600',
+                      borderRadius: '0',
+                      fontWeight: '900',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#dc2626')}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isProcessing ? '#d1d5db' : '#ef4444'}
+                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#ef4444') && (e.currentTarget.style.color = '#fff')}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isProcessing ? '#333' : '#000'; e.currentTarget.style.color = '#fff'; }}
                   >
-                    ✗ Reject
+                    ✗ REJECT
                   </button>
                 </div>
               </div>

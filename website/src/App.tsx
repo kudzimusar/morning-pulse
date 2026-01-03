@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
 import Header from './components/Header';
 import NewsGrid from './components/NewsGrid';
 import FirebaseConnector from './components/FirebaseConnector';
@@ -13,6 +15,38 @@ import AdvertisePage from './components/AdvertisePage';
 import EditorialPage from './components/EditorialPage';
 import { NewsStory } from '../../types';
 import { CountryInfo } from './services/locationService';
+
+// Get Firebase config (same pattern as FirebaseConnector)
+const getFirebaseConfig = (): any => {
+  if (typeof window !== 'undefined' && (window as any).__firebase_config) {
+    const config = (window as any).__firebase_config;
+    if (typeof config === 'object' && config !== null && config.apiKey && config.apiKey !== 'YOUR_API_KEY') {
+      return config;
+    }
+  }
+  const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
+  if (configStr && typeof configStr === 'string' && configStr.trim() && configStr !== 'null') {
+    try {
+      let parsed = JSON.parse(configStr);
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+      }
+      return parsed;
+    } catch (e) {
+      console.error('Failed to parse VITE_FIREBASE_CONFIG:', e);
+    }
+  }
+  // Hardcoded fallback
+  return {
+    apiKey: "AIzaSyCAh6j7mhTtiQGN5855Tt-hCRVrNXbNxYE",
+    authDomain: "gen-lang-client-0999441419.firebaseapp.com",
+    projectId: "gen-lang-client-0999441419",
+    storageBucket: "gen-lang-client-0999441419.firebasestorage.app",
+    messagingSenderId: "328455476104",
+    appId: "1:328455476104:web:396deccbc5613e353f603d",
+    measurementId: "G-60S2YK429K"
+  };
+};
 
 interface NewsData {
   [category: string]: NewsStory[];
@@ -138,6 +172,35 @@ const App: React.FC = () => {
 
   // Check if admin mode is enabled
   const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
+
+  // CRITICAL: Sign in anonymously on app load for public access
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const config = getFirebaseConfig();
+        let app: FirebaseApp;
+        try {
+          app = getApp();
+        } catch (e) {
+          app = initializeApp(config);
+        }
+        const auth = getAuth(app);
+        
+        if (!auth.currentUser) {
+          console.log('🔐 App: Signing in anonymously for public access...');
+          await signInAnonymously(auth);
+          console.log('✅ App: Anonymous authentication successful');
+        }
+      } catch (error: any) {
+        console.error('❌ App: Anonymous authentication failed:', error);
+        if (error.code === 'auth/configuration-not-found') {
+          console.error('CRITICAL: Enable Anonymous Auth in Firebase Console > Authentication > Sign-in Method.');
+        }
+      }
+    };
+    
+    initializeAuth();
+  }, []);
 
   return (
     <div className="app">
