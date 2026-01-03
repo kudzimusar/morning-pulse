@@ -136,12 +136,7 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
           Share your perspective with Morning Pulse readers. All submissions are reviewed by our editorial team before publication.
         </p>
 
-      <div>
         <div className="content-section">
-          <p className="lead-text">
-            Share your perspective with Morning Pulse readers. All submissions are reviewed by our editorial team before publication.
-          </p>
-
           <form onSubmit={handleSubmit} className="opinion-submit-form">
             <div className="form-group">
               <label htmlFor="authorName" className="form-label">
