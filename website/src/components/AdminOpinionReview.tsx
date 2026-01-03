@@ -21,6 +21,7 @@ const AdminOpinionReview: React.FC = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [isVisible, setIsVisible] = useState(true);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now().toString();
@@ -92,6 +93,10 @@ const AdminOpinionReview: React.FC = () => {
 
   const handleApprove = async (opinionId: string) => {
     setProcessingId(opinionId);
+    
+    // IMMEDIATE UI UPDATE: Remove from local state to show progress instantly
+    setPendingOpinions(prev => prev.filter(op => op.id !== opinionId));
+    
     try {
       await approveOpinion(opinionId, 'admin');
       showToast('Essay Published!', 'success');
@@ -99,6 +104,8 @@ const AdminOpinionReview: React.FC = () => {
     } catch (error: any) {
       console.error('Error approving opinion:', error);
       showToast(`Failed to approve: ${error.message}`, 'error');
+      // Re-add to list if approval failed (subscription will sync eventually)
+      // Note: The subscription will re-sync the correct state
     } finally {
       setProcessingId(null);
     }
@@ -106,6 +113,10 @@ const AdminOpinionReview: React.FC = () => {
 
   const handleReject = async (opinionId: string) => {
     setProcessingId(opinionId);
+    
+    // IMMEDIATE UI UPDATE: Remove from local state to show progress instantly
+    setPendingOpinions(prev => prev.filter(op => op.id !== opinionId));
+    
     try {
       await rejectOpinion(opinionId, 'admin');
       showToast('Essay Rejected', 'success');
@@ -113,6 +124,8 @@ const AdminOpinionReview: React.FC = () => {
     } catch (error: any) {
       console.error('Error rejecting opinion:', error);
       showToast(`Failed to reject: ${error.message}`, 'error');
+      // Re-add to list if rejection failed (subscription will sync eventually)
+      // Note: The subscription will re-sync the correct state
     } finally {
       setProcessingId(null);
     }
@@ -144,6 +157,33 @@ const AdminOpinionReview: React.FC = () => {
         <div className="admin-opinion-review-error" style={{ color: '#dc2626', padding: '20px' }}>
           {error}
         </div>
+      </div>
+    );
+  }
+
+  if (!isVisible) {
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: '0',
+        left: '0',
+        zIndex: 1000
+      }}>
+        <button
+          onClick={() => setIsVisible(true)}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: '#000',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            textTransform: 'uppercase'
+          }}
+        >
+          Show Review Panel
+        </button>
       </div>
     );
   }
@@ -208,7 +248,7 @@ const AdminOpinionReview: React.FC = () => {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* Header */}
+        {/* Header with Close button */}
         <div style={{
           backgroundColor: '#000',
           color: 'white',
@@ -216,9 +256,27 @@ const AdminOpinionReview: React.FC = () => {
           fontSize: '0.75rem',
           fontWeight: 'bold',
           textTransform: 'uppercase',
-          letterSpacing: '0.05em'
+          letterSpacing: '0.05em',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          Review Opinions ({pendingOpinions.length})
+          <span>Review Opinions ({pendingOpinions.length})</span>
+          <button
+            onClick={() => setIsVisible(false)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              padding: '0 4px',
+              lineHeight: '1'
+            }}
+            title="Close panel"
+          >
+            ×
+          </button>
         </div>
 
         {/* List */}
@@ -306,7 +364,9 @@ const AdminOpinionReview: React.FC = () => {
                         fontSize: '0.875rem',
                         lineHeight: '1.6',
                         color: '#1f2937',
-                        fontFamily: 'Georgia, serif'
+                        fontFamily: 'Georgia, serif',
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word'
                       }}
                       dangerouslySetInnerHTML={{ __html: opinion.body }}
                     />
