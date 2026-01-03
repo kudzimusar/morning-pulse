@@ -79,8 +79,25 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
 
   // Helper function to extract first letter from HTML body
   const getFirstLetter = (html: string) => {
+    if (!html) return '';
+    // Remove HTML tags and get first character
     const text = html.replace(/<[^>]*>/g, '').trim();
-    return text.charAt(0).toUpperCase();
+    const firstChar = text.charAt(0);
+    // Return uppercase if it's a letter, otherwise return as-is
+    return firstChar.match(/[a-zA-Z]/) ? firstChar.toUpperCase() : firstChar;
+  };
+
+  // Helper function to remove first letter from HTML body for drop cap effect
+  const getBodyWithoutFirstLetter = (html: string) => {
+    if (!html) return '';
+    // Find the first text character (not in a tag)
+    const match = html.match(/^([^<]*<[^>]*>)*([a-zA-Z])/);
+    if (match) {
+      const index = match[0].length - 1;
+      return html.substring(0, index) + html.substring(index + 1);
+    }
+    // Fallback: just remove first character
+    return html.substring(1);
   };
 
   return (
@@ -311,17 +328,19 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                       color: '#000',
                       fontFamily: 'Georgia, serif',
                       display: 'block',
-                      height: '6rem'
+                      height: '6rem',
+                      paddingRight: '4px'
                     }}
                   >
                     {getFirstLetter(leadEssay.body)}
                   </span>
                   <div
                     style={{
-                      display: 'inline'
+                      display: 'inline',
+                      textIndent: '0'
                     }}
                     dangerouslySetInnerHTML={{ 
-                      __html: leadEssay.body.substring(leadEssay.body.indexOf('>') + 1) || leadEssay.body.substring(1)
+                      __html: getBodyWithoutFirstLetter(leadEssay.body)
                     }}
                   />
                 </div>
