@@ -233,7 +233,8 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
       <main style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '32px 16px'
+        padding: '32px 16px',
+        paddingTop: '32px'
       }}>
         {loading ? (
           <div style={{
@@ -366,9 +367,14 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                         marginBottom: '24px',
                         fontFamily: 'Georgia, serif',
                         fontStyle: 'italic',
-                        lineHeight: '1.6'
+                        lineHeight: '1.6',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
                       }}>
-                        {leadEssay.subHeadline}
+                        {leadEssay.subHeadline || "Exploring the deep intersections of technology, sovereignty, and the human spirit in a rapidly changing digital landscape."}
                       </p>
                     )}
 
@@ -438,6 +444,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                         gap: '20px',
                         cursor: onOpinionClick ? 'pointer' : 'default'
                       }}
+                      className="group"
                       onClick={() => onOpinionClick?.(opinion)}
                       onMouseEnter={(e) => {
                         if (onOpinionClick) {
@@ -483,7 +490,10 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                           fontFamily: 'Georgia, serif',
                           color: '#000',
                           transition: 'color 0.2s'
-                        }}>
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#57534e'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#000'}
+                        >
                           {opinion.headline}
                         </h3>
                         <div style={{
@@ -587,7 +597,8 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                 flexDirection: 'column',
                 gap: '48px',
                 borderTop: '1px solid #e7e5e4',
-                paddingTop: '48px'
+                paddingTop: '48px',
+                marginTop: '0'
               }}>
                 {/* The Editorial Board */}
                 <section>
@@ -618,7 +629,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                       letterSpacing: '0.2em',
                       fontFamily: 'Georgia, serif',
                       borderBottom: '1px solid #000',
-                      flex: 1,
+                      flexGrow: 1,
                       paddingBottom: '4px',
                       color: '#000'
                     }}>
