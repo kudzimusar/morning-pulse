@@ -140,7 +140,7 @@ export const ensureAuthenticated = async (): Promise<void> => {
   }
 };
 
-const OPINIONS_COLLECTION = 'artifacts/morning-pulse-app/public/data/opinions';
+const OPINIONS_COLLECTION = 'data/opinions';
 
 /**
  * Get current auth user (for components to check auth state)
@@ -162,15 +162,10 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
     // CRITICAL: Ensure anonymous authentication before writing to Firestore
     await ensureAuthenticated();
     
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    
-    // Create document path: artifacts/{appId}/public/data/opinions
-    const path = `artifacts/${appId}/public/data/opinions`;
-    console.log('📝 Attempting to submit opinion to path:', path);
+    console.log('📝 Attempting to submit opinion to path: data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'data', 'opinions');
     
     const docData = {
       writerType: opinionData.writerType || 'Guest Essay',
@@ -208,14 +203,10 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
     
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    const path = `artifacts/${appId}/public/data/opinions`;
-    console.log('📝 Attempting to fetch published opinions from path:', path);
+    console.log('📝 Attempting to fetch published opinions from path: data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    // MANDATORY PATH: Use exact path structure
-    const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'data', 'opinions');
     
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
@@ -266,9 +257,7 @@ export const subscribeToPublishedOpinions = (
   try {
     console.log('📰 Subscribing to published opinions in Firestore...');
     
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'data', 'opinions');
     
     // Query for published opinions, ordered by publishedAt descending
     const q = query(
@@ -323,14 +312,10 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
     
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    const path = `artifacts/${appId}/public/data/opinions`;
-    console.log('📝 Attempting to fetch pending opinions from path:', path);
+    console.log('📝 Attempting to fetch pending opinions from path: data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    // MANDATORY PATH: Use exact path structure
-    const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'data', 'opinions');
     
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
@@ -381,9 +366,7 @@ export const subscribeToPendingOpinions = (
   try {
     console.log('📝 Subscribing to pending opinions in Firestore...');
     
-    // Get app ID (same pattern as FirebaseConnector)
-    const appId = (typeof window !== 'undefined' && (window as any).__app_id) || 'morning-pulse-app';
-    const opinionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'data', 'opinions');
     
     // Query for pending opinions, ordered by submittedAt descending
     const q = query(
