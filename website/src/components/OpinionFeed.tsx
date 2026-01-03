@@ -69,10 +69,6 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
     );
   }
 
-  // NYT-style layout: Lead essay + sidebar
-  const leadEssay = opinions[0];
-  const otherEssays = opinions.slice(1);
-
   // Helper function to get author initial
   const getAuthorInitial = (name: string) => {
     return name.charAt(0).toUpperCase();
