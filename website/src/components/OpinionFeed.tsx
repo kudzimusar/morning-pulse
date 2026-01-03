@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../../types';
 import { 
-  subscribeToPublishedOpinions,
-  getCurrentAuthUser
+  subscribeToPublishedOpinions
 } from '../services/opinionsService';
 
 interface OpinionFeedProps {
@@ -13,46 +12,35 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick }) => {
   const [opinions, setOpinions] = useState<Opinion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authUser, setAuthUser] = useState<any>(null);
-
-  // Wait for authentication before subscribing
-  useEffect(() => {
-    const checkAuth = () => {
-      const user = getCurrentAuthUser();
-      if (user) {
-        setAuthUser(user);
-      } else {
-        // Retry after a short delay
-        setTimeout(checkAuth, 500);
-      }
-    };
-    checkAuth();
-  }, []);
 
   useEffect(() => {
-    // Guard: Don't subscribe until auth is ready
-    if (!authUser) {
-      return;
-    }
-
     setLoading(true);
     setError(null);
-    console.log('🔐 Auth ready, starting published opinions subscription...');
+    console.log('📰 Starting published opinions subscription...');
 
     // Subscribe to published opinions with real-time updates
-    const unsubscribe = subscribeToPublishedOpinions((fetchedOpinions) => {
-      setOpinions(fetchedOpinions);
-      setLoading(false);
-      setError(null);
-    });
+    const unsubscribe = subscribeToPublishedOpinions(
+      (fetchedOpinions) => {
+        console.log(`📝 Received ${fetchedOpinions.length} published opinions`);
+        setOpinions(fetchedOpinions);
+        setLoading(false);
+        setError(null);
+      },
+      (errorMessage) => {
+        console.error('❌ Subscription error:', errorMessage);
+        setError(errorMessage);
+        setLoading(false);
+      }
+    );
 
     // Cleanup subscription on unmount
     return () => {
+      console.log('🔌 Unsubscribing from published opinions');
       if (unsubscribe) {
         unsubscribe();
       }
     };
-  }, [authUser]);
+  }, []);
 
   // Public page: Don't block with loading state
   if (loading && opinions.length === 0) {
