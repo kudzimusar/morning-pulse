@@ -13,6 +13,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
   const [opinions, setOpinions] = useState<Opinion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('Latest');
 
   useEffect(() => {
     setLoading(true);
@@ -100,256 +101,409 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
     return html.substring(1);
   };
 
+  // Helper function to get image URL with fallback
+  const getImageUrl = (opinion: Opinion, index: number = 0) => {
+    if (opinion.imageUrl) {
+      return opinion.imageUrl;
+    }
+    // Use different Unsplash images based on index for variety
+    const unsplashIds = [
+      '1504711434812-13ee07f6fa43',
+      '1488190211421-dd24b4761e27',
+      '1499750310107-5fef28a66643',
+      '1507003211169-0a1dd7228f2d'
+    ];
+    const seed = unsplashIds[index % unsplashIds.length];
+    return `https://images.unsplash.com/photo-${seed}?auto=format&fit=crop&q=80&w=1200`;
+  };
+
+  // Filter opinions by category
+  const categories = ['Latest', 'The Board', 'Guest Essays', 'Letters', 'Culture', 'Video', 'Audio'];
+  const filteredOpinions = activeCategory === 'Latest' 
+    ? opinions 
+    : activeCategory === 'Guest Essays'
+    ? opinions.filter(o => o.writerType === 'Guest Essay')
+    : opinions.filter(o => o.category === activeCategory);
+
+  // NYT-style layout: Lead essay + secondary grid
+  const leadEssay = filteredOpinions[0];
+  const secondaryEssays = filteredOpinions.slice(1, 4);
+  const remainingEssays = filteredOpinions.slice(4);
+
   return (
-    <div className="opinion-feed" style={{ fontFamily: 'Georgia, serif' }}>
-      {/* NYT Masthead - Centered, Authoritative */}
+    <div className="opinion-feed" style={{ fontFamily: 'Georgia, serif', backgroundColor: '#fffdfa', minHeight: '100vh' }}>
+      {/* Category Navigation Bar - Sticky */}
       <div style={{
-        borderTop: '4px solid #000',
-        borderBottom: '2px solid #000',
-        padding: '32px 16px',
-        marginBottom: '48px',
-        textAlign: 'center'
+        position: 'sticky',
+        top: '56px', // Below main header (h-14 = 56px)
+        zIndex: 30,
+        backgroundColor: '#fff',
+        borderBottom: '1px solid #e7e5e4',
+        height: '48px' // h-12 = 48px
       }}>
-        <h1 style={{
-          fontSize: 'clamp(2.5rem, 8vw, 7rem)',
-          fontWeight: '900',
-          letterSpacing: '0.02em',
-          textTransform: 'uppercase',
-          fontFamily: '"Times New Roman", serif',
-          margin: 0,
-          color: '#000',
-          lineHeight: '1',
-          fontStyle: 'italic'
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 16px',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          overflowX: 'auto'
         }}>
-          OPINION
-        </h1>
-        {onNavigateToSubmit && (
-          <div style={{ marginTop: '16px' }}>
-            <a 
-              href="#opinion/submit" 
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigateToSubmit();
-              }}
-              style={{
-                fontSize: '0.875rem',
-                color: '#000',
-                textDecoration: 'underline',
-                fontFamily: 'Georgia, serif',
-                fontWeight: '500'
-              }}
-            >
-              Submit a Guest Essay
-            </a>
+          <div style={{
+            display: 'flex',
+            gap: '24px',
+            whiteSpace: 'nowrap'
+          }}>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.15em',
+                  transition: 'color 0.2s',
+                  color: activeCategory === cat ? '#991b1b' : '#a8a29e',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '0',
+                  fontFamily: 'Georgia, serif'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeCategory !== cat) e.currentTarget.style.color = '#000';
+                }}
+                onMouseLeave={(e) => {
+                  if (activeCategory !== cat) e.currentTarget.style.color = '#a8a29e';
+                }}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
-        )}
+          {onNavigateToSubmit && (
+            <div style={{
+              display: 'none', // Hidden on mobile, shown on desktop via media query
+              alignItems: 'center',
+              gap: '16px',
+              color: '#a8a29e',
+              borderLeft: '1px solid #e7e5e4',
+              paddingLeft: '16px',
+              marginLeft: '16px'
+            }}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigateToSubmit();
+                }}
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.15em',
+                  color: '#000',
+                  border: '1px solid #000',
+                  padding: '4px 12px',
+                  background: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: 'Georgia, serif'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#000';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#000';
+                }}
+              >
+                Submit
+              </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Grid Layout: Main Content + Sidebar (responsive) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        gap: '48px',
+      {/* Main Content Grid - 12 column layout */}
+      <main style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '0 16px'
+        padding: '32px 16px'
       }}>
-        {/* Main Content Column - Centered reading column */}
-        <div style={{ 
-          gridColumn: '1 / -1',
-          maxWidth: '680px',
-          margin: '0 auto',
-          width: '100%'
-        }}>
-          {leadEssay && (
-            <article
-              key={leadEssay.id}
-              style={{
-                borderBottom: '3px solid #000',
-                padding: '48px 0',
-                marginBottom: '64px'
-              }}
-            >
-              {/* Credit Card Style Byline */}
-              <div style={{
+        {loading ? (
+          <div style={{
+            height: '384px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontStyle: 'italic',
+            color: '#a8a29e',
+            fontFamily: 'Georgia, serif'
+          }}>
+            Loading perspectives...
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: '48px'
+          }}>
+            {/* Media query for 12-column grid on desktop */}
+            <style>{`
+              @media (min-width: 1024px) {
+                .opinion-main-grid {
+                  grid-template-columns: repeat(12, 1fr) !important;
+                }
+                .opinion-main-content {
+                  grid-column: span 8 !important;
+                }
+                .opinion-sidebar {
+                  grid-column: span 4 !important;
+                  border-left: 1px solid #e7e5e4 !important;
+                  padding-left: 40px !important;
+                  border-top: none !important;
+                  padding-top: 0 !important;
+                }
+              }
+            `}</style>
+            <div className="opinion-main-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: '48px'
+            }}>
+              {/* LEFT COLUMN: PRIMARY CONTENT (8 cols on desktop) */}
+              <div className="opinion-main-content" style={{
                 display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-                marginBottom: '32px',
-                paddingBottom: '20px',
-                borderBottom: '2px solid #000'
+                flexDirection: 'column',
+                gap: '48px'
               }}>
-                {/* Small Avatar - 10x10 equivalent (40px) */}
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  fontFamily: 'Georgia, serif',
-                  flexShrink: 0
-                }}>
-                  {getAuthorInitial(leadEssay.authorName)}
-                </div>
-                
-                {/* Multi-line Meta Data */}
-                <div style={{ flex: 1 }}>
+              {/* Hero Lead Story */}
+              {leadEssay && (
+                <article
+                  key={leadEssay.id}
+                  style={{
+                    cursor: onOpinionClick ? 'pointer' : 'default'
+                  }}
+                  onClick={() => onOpinionClick?.(leadEssay)}
+                  onMouseEnter={(e) => {
+                    if (onOpinionClick) {
+                      e.currentTarget.style.opacity = '0.95';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  {/* Hero Image */}
                   <div style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '900',
-                    textTransform: 'uppercase',
-                    color: '#000',
-                    fontFamily: 'Georgia, serif',
-                    letterSpacing: '0.05em',
-                    marginBottom: '6px',
-                    lineHeight: '1.2'
+                    position: 'relative',
+                    aspectRatio: '16/9',
+                    marginBottom: '32px',
+                    overflow: 'hidden',
+                    backgroundColor: '#f5f5f4',
+                    borderRadius: '2px'
                   }}>
-                    {leadEssay.authorName}
+                    <img
+                      src={getImageUrl(leadEssay, 0)}
+                      alt={leadEssay.headline}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 1s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      top: '16px',
+                      left: '16px',
+                      backgroundColor: '#991b1b',
+                      color: '#fff',
+                      fontSize: '9px',
+                      fontWeight: '900',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.15em',
+                      padding: '4px 8px'
+                    }}>
+                      Featured Essay
+                    </div>
                   </div>
-                  {leadEssay.authorTitle && (
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: '#4b5563',
+
+                  {/* Hero Content */}
+                  <div style={{
+                    maxWidth: '720px'
+                  }}>
+                    {/* Headline - Large for Hero */}
+                    <h2 style={{
+                      fontSize: 'clamp(2.25rem, 6vw, 3.75rem)',
+                      fontWeight: '900',
+                      lineHeight: '0.95',
+                      marginBottom: '24px',
                       fontFamily: 'Georgia, serif',
-                      marginBottom: '6px',
-                      lineHeight: '1.4'
-                    }}>
-                      {leadEssay.authorTitle}
-                    </div>
-                  )}
-                  {leadEssay.publishedAt && (
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      fontFamily: 'Georgia, serif',
-                      lineHeight: '1.4'
-                    }}>
-                      {new Date(leadEssay.publishedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Share and Bookmark Icons */}
-                <div style={{
-                  display: 'flex',
-                  gap: '8px',
-                  alignItems: 'flex-start',
-                  paddingTop: '4px'
-                }}>
-                  <button
-                    style={{
-                      background: 'none',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      padding: '6px 10px',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      color: '#4b5563',
-                      fontFamily: 'Georgia, serif'
-                    }}
-                    title="Share"
-                  >
-                    Share
-                  </button>
-                  <button
-                    style={{
-                      background: 'none',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      padding: '6px 10px',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      color: '#4b5563',
-                      fontFamily: 'Georgia, serif'
-                    }}
-                    title="Bookmark"
-                  >
-                    Bookmark
-                  </button>
-                </div>
-              </div>
-
-              {/* Headline - Responsive */}
-              <h2 style={{
-                fontSize: 'clamp(1.875rem, 5vw, 3rem)',
-                fontWeight: '900',
-                lineHeight: '1.2',
-                marginBottom: '16px',
-                fontFamily: 'Georgia, serif',
-                color: '#000'
-              }}>
-                {leadEssay.headline}
-              </h2>
-
-              {/* Sub-headline */}
-              {leadEssay.subHeadline && (
-                <p style={{
-                  fontSize: '1.25rem',
-                  color: '#4b5563',
-                  marginBottom: '24px',
-                  fontFamily: 'Georgia, serif',
-                  fontStyle: 'italic',
-                  lineHeight: '1.5'
-                }}>
-                  {leadEssay.subHeadline}
-                </p>
-              )}
-
-              {/* Full Essay Body with Enhanced Drop Cap */}
-              {leadEssay.body && (
-                <div style={{
-                  fontSize: 'clamp(1rem, 2vw, 1.1rem)',
-                  lineHeight: '1.65',
-                  color: '#1f2937',
-                  fontFamily: 'Georgia, serif',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  marginTop: '32px',
-                  position: 'relative'
-                }}>
-                  {/* Enhanced Drop Cap - Tighter, Smaller */}
-                  <span
-                    style={{
-                      float: 'left',
-                      fontSize: 'clamp(4rem, 8vw, 7rem)',
-                      lineHeight: '0.75',
-                      fontWeight: 'bold',
-                      marginRight: '10px',
-                      marginTop: '8px',
                       color: '#000',
-                      fontFamily: 'Georgia, serif',
-                      display: 'block',
-                      height: '5rem',
-                      paddingRight: '4px'
-                    }}
-                  >
-                    {getFirstLetter(leadEssay.body)}
-                  </span>
-                  <div
-                    style={{
-                      display: 'inline',
-                      textIndent: '0'
-                    }}
-                    dangerouslySetInnerHTML={{ 
-                      __html: getBodyWithoutFirstLetter(leadEssay.body)
-                    }}
-                  />
-                </div>
-              )}
-            </article>
-          )}
+                      letterSpacing: '-0.02em',
+                      transition: 'color 0.2s'
+                    }}>
+                      {leadEssay.headline}
+                    </h2>
 
-          {/* Other Essays */}
-          {otherEssays.map((opinion) => (
+                    {/* Sub-headline */}
+                    {leadEssay.subHeadline && (
+                      <p style={{
+                        fontSize: 'clamp(1.125rem, 2vw, 1.25rem)',
+                        color: '#78716c',
+                        marginBottom: '24px',
+                        fontFamily: 'Georgia, serif',
+                        fontStyle: 'italic',
+                        lineHeight: '1.6'
+                      }}>
+                        {leadEssay.subHeadline}
+                      </p>
+                    )}
+
+                    {/* Byline */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginBottom: '32px'
+                    }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: '#e7e5e4',
+                        color: '#78716c',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'Georgia, serif',
+                        textTransform: 'uppercase'
+                      }}>
+                        {getAuthorInitial(leadEssay.authorName)}
+                      </div>
+                      <div style={{
+                        fontSize: '11px',
+                        fontWeight: '900',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.15em',
+                        color: '#000',
+                        fontFamily: 'Georgia, serif'
+                      }}>
+                        By {leadEssay.authorName}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              )}
+
+              {/* Secondary Grid - 2 columns (responsive) */}
+              {secondaryEssays.length > 0 && (
+                <div style={{
+                  borderTop: '1px solid #e7e5e4',
+                  paddingTop: '48px'
+                }}>
+                  {/* Media query for 2 columns on larger screens */}
+                  <style>{`
+                    @media (min-width: 768px) {
+                      .opinion-secondary-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                      }
+                    }
+                  `}</style>
+                  <div className="opinion-secondary-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '48px'
+                  }}>
+                  {secondaryEssays.map((opinion, idx) => (
+                    <article
+                      key={opinion.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '20px',
+                        cursor: onOpinionClick ? 'pointer' : 'default'
+                      }}
+                      onClick={() => onOpinionClick?.(opinion)}
+                      onMouseEnter={(e) => {
+                        if (onOpinionClick) {
+                          e.currentTarget.style.opacity = '0.95';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = '1';
+                      }}
+                    >
+                      {/* Image */}
+                      <div style={{
+                        aspectRatio: '16/9',
+                        backgroundColor: '#f5f5f4',
+                        overflow: 'hidden',
+                        borderRadius: '2px'
+                      }}>
+                        <img
+                          src={getImageUrl(opinion, idx + 1)}
+                          alt={opinion.headline}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transition: 'transform 0.7s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        />
+                      </div>
+
+                      {/* Content */}
+                      <div>
+                        <h3 style={{
+                          fontSize: 'clamp(1.5rem, 3vw, 1.875rem)',
+                          fontWeight: '900',
+                          lineHeight: '1.3',
+                          marginBottom: '12px',
+                          fontFamily: 'Georgia, serif',
+                          color: '#000',
+                          transition: 'color 0.2s'
+                        }}>
+                          {opinion.headline}
+                        </h3>
+                        <div style={{
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.15em',
+                          color: '#a8a29e',
+                          fontFamily: 'Georgia, serif'
+                        }}>
+                          By {opinion.authorName}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                  </div>
+              )}
+
+              {/* Remaining Essays */}
+              {remainingEssays.map((opinion) => (
         <article
           key={opinion.id}
           style={{
@@ -425,134 +579,163 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
               )}
         </article>
           ))}
-        </div>
-
-        {/* Sidebar - Stacks on mobile, fixed width on desktop */}
-        <aside style={{
-          gridColumn: '1 / -1',
-          marginTop: '32px',
-          maxWidth: '680px',
-          margin: '32px auto 0',
-          width: '100%'
-        }}>
-          {/* The Editorial Board */}
-          <div style={{
-            border: '2px solid #000',
-            padding: '24px',
-            marginBottom: '32px',
-            backgroundColor: '#fafafa'
-          }}>
-            <h3 style={{
-              fontSize: '1.25rem',
-              fontWeight: '900',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              fontFamily: 'Georgia, serif',
-              marginBottom: '16px',
-              color: '#000',
-              borderBottom: '2px solid #000',
-              paddingBottom: '12px'
-            }}>
-              The Editorial Board
-            </h3>
-            <p style={{
-              fontSize: '0.875rem',
-              lineHeight: '1.6',
-              color: '#4b5563',
-              fontFamily: 'Georgia, serif',
-              marginBottom: '16px'
-            }}>
-              The Editorial Board represents the opinions of the Morning Pulse editorial staff. Our board members are independent voices committed to providing thoughtful analysis and commentary on the issues that matter most.
-            </p>
-            <p style={{
-              fontSize: '0.875rem',
-              lineHeight: '1.6',
-              color: '#4b5563',
-              fontFamily: 'Georgia, serif'
-            }}>
-              To submit an opinion piece for consideration, please use the submission form below.
-            </p>
-          </div>
-
-          {/* Submission Box */}
-          {onNavigateToSubmit && (
-            <div style={{
-              border: '2px solid #000',
-              padding: '32px',
-              backgroundColor: '#fff',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '16px'
-              }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.25rem',
-                  fontWeight: 'bold',
-                  fontFamily: 'Georgia, serif',
-                  flexShrink: 0
-                }}>
-                  ✎
-                </div>
-                <h3 style={{
-                  fontSize: '1.125rem',
-                  fontWeight: '900',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontFamily: 'Georgia, serif',
-                  margin: 0,
-                  color: '#000'
-                }}>
-                  Submit a Guest Essay
-                </h3>
               </div>
-              <p style={{
-                fontSize: '0.875rem',
-                lineHeight: '1.6',
-                color: '#4b5563',
-                fontFamily: 'Georgia, serif',
-                marginBottom: '20px'
+
+              {/* RIGHT COLUMN: SIDEBAR (4 cols on desktop) */}
+              <aside className="opinion-sidebar" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '48px',
+                borderTop: '1px solid #e7e5e4',
+                paddingTop: '48px'
               }}>
-                Share your perspective with Morning Pulse readers. All submissions are reviewed by our editorial team before publication.
-              </p>
-              <a 
-                href="#opinion/submit" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  onNavigateToSubmit();
-                }}
-                style={{
-                  display: 'inline-block',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  padding: '12px 24px',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  fontFamily: 'Georgia, serif',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f2937'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#000'}
-              >
-                Submit Your Essay →
-              </a>
+                {/* The Editorial Board */}
+                <section>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '32px'
+                  }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      backgroundColor: '#000',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}>
+                      🎤
+                    </div>
+                    <h3 style={{
+                      fontSize: '11px',
+                      fontWeight: '900',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.2em',
+                      fontFamily: 'Georgia, serif',
+                      borderBottom: '1px solid #000',
+                      flex: 1,
+                      paddingBottom: '4px',
+                      color: '#000'
+                    }}>
+                      The Board
+                    </h3>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '32px'
+                  }}>
+                    {["The Path to Digital Sovereignty", "Why Local Journalism Matters"].map((title, i) => (
+                      <div 
+                        key={i}
+                        style={{
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f5f5f4',
+                          paddingBottom: '24px'
+                        }}
+                      >
+                        <h4 style={{
+                          fontWeight: 'bold',
+                          fontSize: '1.25rem',
+                          lineHeight: '1.3',
+                          marginBottom: '8px',
+                          fontFamily: 'Georgia, serif',
+                          color: '#000',
+                          transition: 'text-decoration 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                        onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                        >
+                          {title}
+                        </h4>
+                        <p style={{
+                          fontSize: '10px',
+                          color: '#a8a29e',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          fontWeight: '900',
+                          fontFamily: 'Georgia, serif'
+                        }}>
+                          Editorial Board • 4 MIN READ
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Submission Box - Multimedia Section */}
+                {onNavigateToSubmit && (
+                  <div 
+                    style={{
+                      backgroundColor: '#000',
+                      color: '#fff',
+                      padding: '40px',
+                      textAlign: 'center',
+                      borderRadius: '2px',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigateToSubmit();
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1c1917'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#000'}
+                  >
+                    <div style={{
+                      fontSize: '32px',
+                      marginBottom: '24px',
+                      color: '#78716c'
+                    }}>
+                      ✎
+                    </div>
+                    <h4 style={{
+                      fontWeight: '900',
+                      fontSize: '1.5rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '-0.02em',
+                      fontFamily: 'Georgia, serif',
+                      marginBottom: '16px',
+                      color: '#fff'
+                    }}>
+                      Submit Your Perspective
+                    </h4>
+                    <p style={{
+                      color: '#a8a29e',
+                      fontSize: '12px',
+                      marginBottom: '32px',
+                      lineHeight: '1.6',
+                      fontFamily: 'Georgia, serif'
+                    }}>
+                      Join the Morning Pulse community. We publish deep-dives that challenge the digital status quo.
+                    </p>
+                    <button
+                      style={{
+                        width: '100%',
+                        backgroundColor: '#fff',
+                        color: '#000',
+                        padding: '16px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        fontSize: '10px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'Georgia, serif'
+                      }}
+                    >
+                      Write for us
+                    </button>
+                  </div>
+                )}
+              </aside>
             </div>
-          )}
-        </aside>
-      </div>
+          </div>
     </div>
   );
 };
