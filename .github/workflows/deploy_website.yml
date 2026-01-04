@@ -31,12 +31,36 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history to avoid cache issues
+          ref: main  # Explicitly specify the branch
+      
+      - name: Verify Commit and File
+        run: |
+          echo "=== VERIFICATION ==="
+          echo "Current commit: $(git rev-parse HEAD)"
+          echo "Commit message: $(git log -1 --pretty=%B)"
+          echo "Branch: $(git branch --show-current || echo 'detached')"
+          echo ""
+          echo "Checking OpinionFeed.tsx for *** characters:"
+          if grep -q "\*\*\*" website/src/components/OpinionFeed.tsx; then
+            echo "❌ ERROR: Found *** characters!"
+            grep -n "\*\*\*" website/src/components/OpinionFeed.tsx
+            exit 1
+          else
+            echo "✓ No *** characters found"
+          fi
+          echo ""
+          echo "File info:"
+          echo "  Lines: $(wc -l < website/src/components/OpinionFeed.tsx)"
+          echo "  Size: $(wc -c < website/src/components/OpinionFeed.tsx) bytes"
+          echo "=== VERIFICATION COMPLETE ==="
       
       - name: Clear Build Cache
         run: |
           echo "Clearing any stale caches..."
           rm -rf website/node_modules/.cache || true
           rm -rf website/.vite || true
+          rm -rf ~/.npm || true
+          npm cache clean --force || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -75,6 +99,21 @@ jobs:
         run: |
           node scripts/generateStaticSite.js
         continue-on-error: true # Continue even if static generation fails
+
+      # Pre-build verification
+      - name: Pre-Build Verification
+        run: |
+          echo "=== PRE-BUILD VERIFICATION ==="
+          cd website
+          echo "Checking OpinionFeed.tsx syntax..."
+          if grep -q "\*\*\*" src/components/OpinionFeed.tsx; then
+            echo "❌ ERROR: Found *** characters in OpinionFeed.tsx!"
+            grep -n "\*\*\*" src/components/OpinionFeed.tsx
+            exit 1
+          else
+            echo "✓ OpinionFeed.tsx is clean"
+          fi
+          echo "=== VERIFICATION COMPLETE ==="
 
       # Build website
       - name: Build Website
