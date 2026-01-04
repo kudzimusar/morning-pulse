@@ -8,7 +8,29 @@ const fs = require('fs');
 const path = require('path');
 
 // Initialize Firebase Admin
-const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG || '{}');
+// Handle base64-encoded config or plain JSON
+let serviceAccount = {};
+try {
+  const configStr = process.env.FIREBASE_ADMIN_CONFIG || '{}';
+  // Try to decode as base64 first, then parse as JSON
+  let decoded = configStr;
+  try {
+    // Check if it's base64 encoded (starts with common base64 chars and no {)
+    if (!configStr.trim().startsWith('{') && !configStr.trim().startsWith('***')) {
+      decoded = Buffer.from(configStr, 'base64').toString('utf-8');
+    }
+  } catch (e) {
+    // Not base64, use as-is
+    decoded = configStr;
+  }
+  // Remove any leading *** characters
+  decoded = decoded.replace(/^\*\*\*+/, '').trim();
+  serviceAccount = JSON.parse(decoded);
+} catch (error) {
+  console.error('Failed to parse FIREBASE_ADMIN_CONFIG:', error.message);
+  console.error('Config starts with:', process.env.FIREBASE_ADMIN_CONFIG?.substring(0, 50));
+  serviceAccount = {};
+}
 const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
 if (Object.keys(serviceAccount).length === 0) {
