@@ -32,40 +32,46 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history to avoid cache issues
       
-      - name: Clear Build Cache
+      - name: Clear All Caches
         run: |
-          echo "Clearing any stale caches..."
+          echo "Clearing all build caches..."
           rm -rf website/node_modules/.cache || true
           rm -rf website/.vite || true
-
+          rm -rf website/dist || true
+          rm -rf ~/.npm || true
+          npm cache clean --force || true
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
+          cache: 'npm'
+          cache-dependency-path: 'website/package-lock.json'
+      
       # Authenticate to Google Cloud for Firestore access
       - name: Authenticate Google Cloud
         uses: 'google-github-actions/auth@v2'
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
+      
       - name: Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
-
-      # Install website dependencies
+      
+      # Install website dependencies with clean install
       - name: Install Website Dependencies
         run: |
           cd website
+          rm -rf node_modules package-lock.json || true
           npm install
-
+      
       # Install script dependencies (for static generation)
       - name: Install Script Dependencies
         run: |
           cd functions
           npm install
-
+      
       # Generate static news data from Firestore (Mode B)
       - name: Generate Static News Data
         env:
@@ -75,7 +81,17 @@ jobs:
         run: |
           node scripts/generateStaticSite.js
         continue-on-error: true # Continue even if static generation fails
-
+      
+      # Verify OpinionFeed.tsx has no syntax errors
+      - name: Verify Source Files
+        run: |
+          echo "Checking OpinionFeed.tsx for syntax issues..."
+          if grep -r "\*\*\*" website/src/components/OpinionFeed.tsx; then
+            echo "ERROR: Found *** characters in OpinionFeed.tsx"
+            exit 1
+          fi
+          echo "✅ No syntax issues found"
+      
       # Build website
       - name: Build Website
         env:
@@ -84,17 +100,17 @@ jobs:
         run: |
           cd website
           npm run build
-
+      
       # Setup Pages
       - name: Setup Pages
         uses: actions/configure-pages@v4
-
+      
       # Upload artifact
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './website/dist'
-
+      
       # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
