@@ -29,6 +29,14 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history to avoid cache issues
+      
+      - name: Clear Build Cache
+        run: |
+          echo "Clearing any stale caches..."
+          rm -rf website/node_modules/.cache || true
+          rm -rf website/.vite || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
