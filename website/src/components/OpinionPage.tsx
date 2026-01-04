@@ -44,31 +44,11 @@ const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit })
         }}>
           OPINION
         </h1>
-        {onNavigateToSubmit && (
-          <a 
-            href="#opinion/submit" 
-            onClick={(e) => {
-              e.preventDefault();
-              onNavigateToSubmit();
-            }}
-            className="opinion-submit-link"
-            style={{
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#dc2626',
-              textDecoration: 'none',
-              padding: '8px 16px',
-              border: '1px solid #dc2626',
-              borderRadius: '4px',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Submit a Guest Essay
-          </a>
-        )}
+        {/* Spacer for layout balance when no submit button in header */}
+        <div style={{ width: onBack ? '100px' : '0' }}></div>
       </div>
       <div className="opinion-page-content">
-        <OpinionFeed />
+        <OpinionFeed onNavigateToSubmit={onNavigateToSubmit} />
       </div>
     </div>
   );
