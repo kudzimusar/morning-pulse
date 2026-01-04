@@ -31,65 +31,47 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history to avoid cache issues
-          ref: main  # Explicitly specify the branch
       
-      - name: Verify Commit and File
+      - name: Clear All Caches
         run: |
-          echo "=== VERIFICATION ==="
-          echo "Current commit: $(git rev-parse HEAD)"
-          echo "Commit message: $(git log -1 --pretty=%B)"
-          echo "Branch: $(git branch --show-current || echo 'detached')"
-          echo ""
-          echo "Checking OpinionFeed.tsx for *** characters:"
-          if grep -q "\*\*\*" website/src/components/OpinionFeed.tsx; then
-            echo "❌ ERROR: Found *** characters!"
-            grep -n "\*\*\*" website/src/components/OpinionFeed.tsx
-            exit 1
-          else
-            echo "✓ No *** characters found"
-          fi
-          echo ""
-          echo "File info:"
-          echo "  Lines: $(wc -l < website/src/components/OpinionFeed.tsx)"
-          echo "  Size: $(wc -c < website/src/components/OpinionFeed.tsx) bytes"
-          echo "=== VERIFICATION COMPLETE ==="
-      
-      - name: Clear Build Cache
-        run: |
-          echo "Clearing any stale caches..."
+          echo "Clearing all build caches..."
           rm -rf website/node_modules/.cache || true
           rm -rf website/.vite || true
+          rm -rf website/dist || true
           rm -rf ~/.npm || true
           npm cache clean --force || true
-
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
+          cache: 'npm'
+          cache-dependency-path: 'website/package-lock.json'
+      
       # Authenticate to Google Cloud for Firestore access
       - name: Authenticate Google Cloud
         uses: 'google-github-actions/auth@v2'
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
+      
       - name: Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
-
-      # Install website dependencies
+      
+      # Install website dependencies with clean install
       - name: Install Website Dependencies
         run: |
           cd website
+          rm -rf node_modules package-lock.json || true
           npm install
-
+      
       # Install script dependencies (for static generation)
       - name: Install Script Dependencies
         run: |
           cd functions
           npm install
-
+      
       # Generate static news data from Firestore (Mode B)
       - name: Generate Static News Data
         env:
@@ -99,22 +81,17 @@ jobs:
         run: |
           node scripts/generateStaticSite.js
         continue-on-error: true # Continue even if static generation fails
-
-      # Pre-build verification
-      - name: Pre-Build Verification
+      
+      # Verify OpinionFeed.tsx has no syntax errors
+      - name: Verify Source Files
         run: |
-          echo "=== PRE-BUILD VERIFICATION ==="
-          cd website
-          echo "Checking OpinionFeed.tsx syntax..."
-          if grep -q "\*\*\*" src/components/OpinionFeed.tsx; then
-            echo "❌ ERROR: Found *** characters in OpinionFeed.tsx!"
-            grep -n "\*\*\*" src/components/OpinionFeed.tsx
+          echo "Checking OpinionFeed.tsx for syntax issues..."
+          if grep -r "\*\*\*" website/src/components/OpinionFeed.tsx; then
+            echo "ERROR: Found *** characters in OpinionFeed.tsx"
             exit 1
-          else
-            echo "✓ OpinionFeed.tsx is clean"
           fi
-          echo "=== VERIFICATION COMPLETE ==="
-
+          echo "✅ No syntax issues found"
+      
       # Build website
       - name: Build Website
         env:
@@ -123,17 +100,17 @@ jobs:
         run: |
           cd website
           npm run build
-
+      
       # Setup Pages
       - name: Setup Pages
         uses: actions/configure-pages@v4
-
+      
       # Upload artifact
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './website/dist'
-
+      
       # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
