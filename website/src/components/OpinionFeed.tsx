@@ -219,7 +219,6 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
               >
                 Submit
               </button>
-              </div>
             </div>
           )}
         </div>
