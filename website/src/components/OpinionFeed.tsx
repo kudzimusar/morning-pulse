@@ -551,11 +551,11 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
                 fontSize: 'clamp(1.5rem, 4vw, 1.875rem)',
                 fontWeight: '900',
                 lineHeight: '1.3',
-                marginBottom: '12px',
-                fontFamily: 'Georgia, serif',
-                color: '#000'
-              }}>
-                {opinion.headline}
+              marginBottom: '12px',
+              fontFamily: 'Georgia, serif',
+              color: '#000'
+            }}>
+              {opinion.headline}
               </h3>
 
             {/* Sub-headline */}
@@ -573,21 +573,21 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onOpinionClick, onNavigateToS
             )}
 
               {/* Essay Body - Responsive */}
-              {opinion.body && (
-                <div
-                  style={{
+            {opinion.body && (
+              <div 
+                style={{
                     fontSize: 'clamp(1rem, 2vw, 1.1rem)',
                     lineHeight: '1.65',
-                    color: '#1f2937',
-                    fontFamily: 'Georgia, serif',
-                    whiteSpace: 'pre-wrap',
+                  color: '#1f2937',
+                  fontFamily: 'Georgia, serif',
+                  whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: opinion.body }}
-                />
-              )}
+                }}
+                dangerouslySetInnerHTML={{ __html: opinion.body }}
+              />
+            )}
         </article>
-          ))}
+      ))}
               </div>
 
               {/* RIGHT COLUMN: SIDEBAR (4 cols on desktop) */}
