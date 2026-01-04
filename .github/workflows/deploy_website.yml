@@ -33,13 +33,25 @@ jobs:
           fetch-depth: 0  # Fetch all history to avoid cache issues
           ref: main  # Explicitly specify the branch
       
+      - name: Pull latest changes
+        run: |
+          git pull origin main || true
+          git fetch --all
+      
+      - name: Log commit details
+        run: |
+          echo "=== COMMIT VERIFICATION ==="
+          echo "Building commit: $GITHUB_SHA"
+          echo "Branch: $GITHUB_REF"
+          echo "Current HEAD: $(git rev-parse HEAD)"
+          echo "Commit message: $(git log -1 --pretty=%B)"
+          echo "Full commit log:"
+          git log -1
+          echo "=== END COMMIT VERIFICATION ==="
+      
       - name: Verify Commit and File
         run: |
-          echo "=== VERIFICATION ==="
-          echo "Current commit: $(git rev-parse HEAD)"
-          echo "Commit message: $(git log -1 --pretty=%B)"
-          echo "Branch: $(git branch --show-current || echo 'detached')"
-          echo ""
+          echo "=== FILE VERIFICATION ==="
           echo "Checking OpinionFeed.tsx for *** characters:"
           if grep -q "\*\*\*" website/src/components/OpinionFeed.tsx; then
             echo "❌ ERROR: Found *** characters!"
@@ -52,6 +64,7 @@ jobs:
           echo "File info:"
           echo "  Lines: $(wc -l < website/src/components/OpinionFeed.tsx)"
           echo "  Size: $(wc -c < website/src/components/OpinionFeed.tsx) bytes"
+          echo "  Encoding: $(file -bi website/src/components/OpinionFeed.tsx)"
           echo "=== VERIFICATION COMPLETE ==="
       
       - name: Clear All Caches
@@ -67,8 +80,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'website/package-lock.json'
+          # Disable npm cache to avoid stale builds
+          # cache: 'npm'
+          # cache-dependency-path: 'website/package-lock.json'
       
       # Authenticate to Google Cloud for Firestore access
       - name: Authenticate Google Cloud
