@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../../types';
 import { subscribeToPublishedOpinions } from '../services/opinionsService';
-import { X, Mic2, Clock, Share2, ChevronRight } from 'lucide-react';
+import { X, Mic2, Clock, Share2, Camera } from 'lucide-react';
+
+const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
 interface OpinionFeedProps {
   onOpinionClick?: (opinion: Opinion) => void;
@@ -11,11 +13,9 @@ interface OpinionFeedProps {
 const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
   const [opinions, setOpinions] = useState<Opinion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState<string>('Latest');
   const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null);
 
   useEffect(() => {
-    setLoading(true);
     const unsubscribe = subscribeToPublishedOpinions(
       (fetched) => {
         setOpinions(fetched);
@@ -29,118 +29,76 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
     return () => { if (unsubscribe) unsubscribe(); };
   }, []);
 
-  const getImageUrl = (opinion: Opinion, seed: number = 0) => {
+  const getDynamicImage = (opinion: Opinion, width: number = 1200) => {
     if (opinion.imageUrl && opinion.imageUrl.startsWith('http')) return opinion.imageUrl;
-    const fallbacks = [
-      'https://images.unsplash.com/photo-1504711434812-13ee07f6fa43',
-      'https://images.unsplash.com/photo-1488190211421-dd24b4761e27',
-      'https://images.unsplash.com/photo-1499750310107-5fef28a66643',
-      'https://images.unsplash.com/photo-1457369804613-52c61a468e7d'
-    ];
-    return `${fallbacks[seed % fallbacks.length]}?auto=format&fit=crop&q=80&w=1200`;
+    const keywords = `${opinion.category || 'news'} ${opinion.headline.split(' ').slice(0, 2).join(' ')}`;
+    const encodedQuery = encodeURIComponent(keywords);
+    return `https://source.unsplash.com/featured/${width}x${Math.round(width*0.6)}/?${encodedQuery}&sig=${opinion.id}`;
   };
 
-  const categories = ['Latest', 'The Board', 'Guest Essays', 'Letters', 'Culture'];
-  
-  const filtered = activeCategory === 'Latest' 
-    ? opinions 
-    : opinions.filter(o => o.category === activeCategory || (activeCategory === 'Guest Essays' && o.writerType === 'Guest Essay'));
-
-  const leadEssay = filtered[0];
-  const secondaryEssays = filtered.slice(1, 5);
-  const sidebarEssays = filtered.slice(5);
-
   if (loading && opinions.length === 0) {
-    return <div style={{ padding: '100px 20px', textAlign: 'center', fontFamily: 'serif', fontStyle: 'italic', color: '#78716c' }}>Loading the day's perspectives...</div>;
+    return <div style={{ padding: '100px 20px', textAlign: 'center', fontFamily: 'serif', fontStyle: 'italic', color: '#78716c' }}>Curating today's perspectives...</div>;
   }
 
   return (
     <div style={{ fontFamily: 'Georgia, serif', backgroundColor: '#fffdfa', minHeight: '100vh', color: '#1a1a1a' }}>
-      
-      {/* Responsive Navigation Bar */}
-      <nav style={{ position: 'sticky', top: '56px', zIndex: 30, backgroundColor: '#fff', borderBottom: '1px solid #e7e5e4' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-            {categories.map(cat => (
-              <button 
-                key={cat} 
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em',
-                  color: activeCategory === cat ? '#991b1b' : '#a8a29e', background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      <style>{`
+        .mag-container { max-width: 1280px; margin: 0 auto; padding: 20px; }
+        .mag-grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
+        @media (min-width: 1024px) {
+          .mag-grid { grid-template-columns: repeat(12, 1fr); }
+          .mag-main { grid-column: span 8; }
+          .mag-sidebar { grid-column: span 4; border-left: 1px solid #e7e5e4; padding-left: 40px; }
+        }
+        .headline-xl { font-size: clamp(2.2rem, 7vw, 4rem); line-height: 0.95; font-weight: 900; letter-spacing: -0.04em; }
+        .drop-cap::first-letter {
+          float: left; font-size: 5rem; line-height: 0.8; padding-top: 4px; padding-right: 12px; font-weight: 900;
+        }
+        .essay-body p { margin-bottom: 1.8rem; font-size: 1.25rem; line-height: 1.7; }
+      `}</style>
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
-        {/* Mobile-Friendly Grid Styles */}
-        <style>{`
-          .mag-grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
-          @media (min-width: 1024px) {
-            .mag-grid { grid-template-columns: repeat(12, 1fr); }
-            .mag-main { grid-column: span 8; }
-            .mag-sidebar { grid-column: span 4; border-left: 1px solid #e7e5e4; padding-left: 32px; margin-top: 0; }
-          }
-          .drop-cap::first-letter {
-            float: left; font-size: 5rem; line-height: 0.8; padding-top: 4px; padding-right: 12px; font-weight: 900; color: #000;
-          }
-          .essay-content p { margin-bottom: 1.5rem; font-size: 1.2rem; line-height: 1.7; }
-        `}</style>
-
+      <main className="mag-container">
         <div className="mag-grid">
-          {/* Main Column */}
           <div className="mag-main">
-            {leadEssay && (
-              <article onClick={() => setSelectedOpinion(leadEssay)} style={{ cursor: 'pointer', marginBottom: '48px' }}>
-                <div style={{ width: '100%', aspectRatio: '16/9', marginBottom: '24px', overflow: 'hidden', backgroundColor: '#f5f5f4' }}>
-                  <img src={getImageUrl(leadEssay, 0)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Feature" />
+            {opinions[0] && (
+              <article onClick={() => setSelectedOpinion(opinions[0])} style={{ cursor: 'pointer', marginBottom: '60px' }}>
+                <div style={{ aspectRatio: '16/9', marginBottom: '24px', overflow: 'hidden', backgroundColor: '#f5f5f4' }}>
+                  <img src={getDynamicImage(opinions[0], 1200)} alt={opinions[0].headline} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <h1 style={{ fontSize: 'clamp(2.2rem, 6vw, 3.8rem)', fontWeight: '900', lineHeight: '0.95', marginBottom: '16px', letterSpacing: '-0.04em' }}>
-                  {leadEssay.headline}
-                </h1>
-                <p style={{ fontSize: 'clamp(1.1rem, 2vw, 1.3rem)', color: '#57534e', fontStyle: 'italic', lineHeight: '1.4', marginBottom: '16px' }}>
-                  {leadEssay.subHeadline}
-                </p>
-                <div style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  By {leadEssay.authorName}
-                </div>
+                <h1 className="headline-xl">{opinions[0].headline}</h1>
+                <p style={{ fontSize: '1.3rem', color: '#57534e', fontStyle: 'italic', marginTop: '16px' }}>{opinions[0].subHeadline}</p>
+                <div style={{ marginTop: '20px', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>By {opinions[0].authorName}</div>
               </article>
             )}
 
-            {/* Secondary Stories Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', borderTop: '1px solid #e7e5e4', paddingTop: '32px' }}>
-              {secondaryEssays.map((op, i) => (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', borderTop: '4px solid #000', paddingTop: '32px' }}>
+              {opinions.slice(1, 4).map((op, i) => (
                 <article key={op.id} onClick={() => setSelectedOpinion(op)} style={{ cursor: 'pointer' }}>
-                  <div style={{ width: '100%', aspectRatio: '3/2', backgroundColor: '#f5f5f4', overflow: 'hidden', marginBottom: '12px' }}>
-                    <img src={getImageUrl(op, i + 1)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Post" />
+                  <div style={{ aspectRatio: '3/2', marginBottom: '12px', overflow: 'hidden', backgroundColor: '#f5f5f4' }}>
+                    <img src={getDynamicImage(op, 600)} alt={op.headline} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', lineHeight: '1.2', marginBottom: '8px' }}>{op.headline}</h3>
-                  <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#a8a29e', textTransform: 'uppercase' }}>{op.authorName}</div>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', lineHeight: '1.2' }}>{op.headline}</h3>
+                  <div style={{ fontSize: '10px', color: '#a8a29e', textTransform: 'uppercase', marginTop: '8px', fontWeight: 'bold' }}>{op.authorName}</div>
                 </article>
               ))}
             </div>
-          </div>
-
-          {/* Sidebar */}
-          <aside className="mag-sidebar" style={{ marginTop: '40px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #000', paddingBottom: '8px', marginBottom: '24px' }}>
-              <Mic2 size={16} />
-              <h2 style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }}>The Board</h2>
             </div>
-            {sidebarEssays.length > 0 ? sidebarEssays.map(op => (
-              <div key={op.id} onClick={() => setSelectedOpinion(op)} style={{ cursor: 'pointer', borderBottom: '1px solid #f5f5f4', paddingBottom: '16px', marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', lineHeight: '1.3' }}>{op.headline}</h4>
-                <p style={{ fontSize: '10px', color: '#a8a29e', textTransform: 'uppercase', marginTop: '4px' }}>{op.authorName}</p>
+
+          <aside className="mag-sidebar">
+            <div style={{ borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Mic2 size={16} />
+              <h2 style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>The Board</h2>
+            </div>
+            {opinions.slice(4).length > 0 ? opinions.slice(4).map(op => (
+              <div key={op.id} onClick={() => setSelectedOpinion(op)} style={{ cursor: 'pointer', borderBottom: '1px solid #e7e5e4', paddingBottom: '16px', marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{op.headline}</h4>
+                <div style={{ fontSize: '10px', color: '#a8a29e', textTransform: 'uppercase', marginTop: '4px' }}>{op.authorName}</div>
               </div>
             )) : (
-              <p style={{ fontSize: '13px', fontStyle: 'italic', color: '#a8a29e' }}>More opinions coming soon.</p>
+              <p style={{ fontSize: '13px', fontStyle: 'italic', color: '#a8a29e' }}>More perspectives arriving soon.</p>
             )}
 
+            {/* Submit CTA */}
             <div style={{ marginTop: '48px', padding: '32px', backgroundColor: '#000', color: '#fff' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '12px', textTransform: 'uppercase' }}>Submit</h3>
               <p style={{ fontSize: '13px', color: '#a8a29e', marginBottom: '24px', lineHeight: '1.6' }}>Share your perspective with the Morning Pulse community.</p>
@@ -152,27 +110,18 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
 
       {/* FULL ESSAY MODAL */}
       {selectedOpinion && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, backgroundColor: '#fffdfa', overflowY: 'auto' }}>
-          {/* Modal Header */}
-          <div style={{ position: 'sticky', top: 0, backgroundColor: '#fffdfa', borderBottom: '1px solid #e7e5e4', padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', zIndex: 10 }}>
-            <button onClick={() => setSelectedOpinion(null)} style={{ background: '#000', color: '#fff', border: 'none', padding: '8px', borderRadius: '50%', cursor: 'pointer', display: 'flex' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, backgroundColor: '#fffdfa', overflowY: 'auto', padding: '20px' }}>
+          <div style={{ maxWidth: '800px', margin: '40px auto' }}>
+            <button onClick={() => setSelectedOpinion(null)} style={{ position: 'fixed', top: '20px', right: '20px', background: '#000', color: '#fff', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={20} />
             </button>
-          </div>
-
-          <article style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-            <header style={{ textAlign: 'center', marginBottom: '48px' }}>
-              <div style={{ color: '#991b1b', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', marginBottom: '20px', letterSpacing: '0.1em' }}>
+            <header style={{ textAlign: 'center', marginBottom: '40px' }}>
+              <div style={{ color: '#991b1b', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.1em' }}>
                 {selectedOpinion.writerType || 'Guest Essay'}
               </div>
-              <h1 style={{ fontSize: 'clamp(2.5rem, 7vw, 4rem)', fontWeight: '900', lineHeight: '0.95', marginBottom: '24px', letterSpacing: '-0.04em' }}>
-                {selectedOpinion.headline}
-              </h1>
-              <p style={{ fontSize: '1.5rem', color: '#57534e', fontStyle: 'italic', marginBottom: '32px', lineHeight: '1.3' }}>
-                {selectedOpinion.subHeadline}
-              </p>
-              
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '16px', borderTop: '1px solid #e7e5e4', paddingTop: '24px' }}>
+              <h1 className="headline-xl" style={{ marginBottom: '20px' }}>{selectedOpinion.headline}</h1>
+              <p style={{ fontSize: '1.5rem', fontStyle: 'italic', color: '#57534e' }}>{selectedOpinion.subHeadline}</p>
+              <div style={{ marginTop: '24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '16px', borderTop: '1px solid #e7e5e4', paddingTop: '20px' }}>
                 <div style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '12px' }}>By {selectedOpinion.authorName}</div>
                 <div style={{ display: 'flex', gap: '16px', color: '#a8a29e', fontSize: '12px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14}/> 6 min read</span>
@@ -180,15 +129,11 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
                 </div>
               </div>
             </header>
-
-            <div style={{ width: '100%', aspectRatio: '16/9', marginBottom: '48px', overflow: 'hidden' }}>
-              <img src={getImageUrl(selectedOpinion, 0)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Article Visual" />
+            <div style={{ aspectRatio: '16/9', marginBottom: '40px', overflow: 'hidden', backgroundColor: '#f5f5f4' }}>
+              <img src={getDynamicImage(selectedOpinion, 1200)} alt={selectedOpinion.headline} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-
-            <div className="essay-content drop-cap" 
-                 style={{ fontSize: '1.25rem', lineHeight: '1.8', color: '#1a1a1a', whiteSpace: 'pre-wrap' }} 
-                 dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
-          </article>
+            <div className="essay-body drop-cap" style={{ whiteSpace: 'pre-wrap', fontSize: '1.25rem', lineHeight: '1.8', color: '#1a1a1a' }} dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
+          </div>
         </div>
       )}
     </div>
