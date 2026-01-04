@@ -4,6 +4,8 @@ import {
   subscribeToPublishedOpinions
 } from '../services/opinionsService';
 
+// OpinionFeed component - NYT-style opinion section with magazine layout
+
 interface OpinionFeedProps {
   onOpinionClick?: (opinion: Opinion) => void;
   onNavigateToSubmit?: () => void;
