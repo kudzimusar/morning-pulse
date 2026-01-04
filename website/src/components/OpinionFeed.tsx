@@ -6,7 +6,7 @@ import {
 
 // OpinionFeed component - NYT-style opinion section with magazine layout
 // All JSX syntax verified: proper comments {/* */}, correct closing parentheses, valid style attributes
-// No  characters - all syntax is valid JSX/React
+// All syntax is valid JSX/React - no invalid characters
 
 interface OpinionFeedProps {
   onOpinionClick?: (opinion: Opinion) => void;
