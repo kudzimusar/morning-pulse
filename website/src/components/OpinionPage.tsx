@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import OpinionFeed from './OpinionFeed';
-import { Opinion } from '../../../types';
 
 interface OpinionPageProps {
   onBack?: () => void;
@@ -8,64 +7,68 @@ interface OpinionPageProps {
 }
 
 const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit }) => {
-  const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null);
-
-  const handleOpinionClick = (opinion: Opinion) => {
-    setSelectedOpinion(opinion);
-  };
-
-  const handleBackToList = () => {
-    setSelectedOpinion(null);
-  };
-
-  if (selectedOpinion) {
-    return (
-      <div className="opinion-page">
-        <div className="opinion-page-header">
-          {onBack && (
-            <button onClick={onBack} className="back-button">
-              ← Back to News
-            </button>
-          )}
-          <button onClick={handleBackToList} className="back-button">
-            ← Back to Opinions
-          </button>
-        </div>
-        <div className="opinion-detail-page">
-          <div className="opinion-detail-content">
-            <p className="opinion-tag">{selectedOpinion.writerType || 'Guest Essay'}</p>
-            <h1 className="opinion-detail-headline">{selectedOpinion.headline}</h1>
-            <p className="opinion-detail-subheadline">{selectedOpinion.subHeadline}</p>
-            <div className="opinion-detail-byline">
-              <span className="opinion-author">
-                By {selectedOpinion.authorName}
-                {selectedOpinion.authorTitle && `, ${selectedOpinion.authorTitle}`}
-              </span>
-            </div>
-            <div 
-              className="opinion-detail-body"
-              dangerouslySetInnerHTML={{ __html: selectedOpinion.body }}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="opinion-page">
-      <div className="opinion-page-header">
+      <div className="opinion-page-header" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '16px 20px',
+        borderBottom: '1px solid #e7e5e4',
+        backgroundColor: '#fffdfa'
+      }}>
         {onBack && (
-          <button onClick={onBack} className="back-button">
+          <button 
+            onClick={onBack} 
+            className="back-button"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontFamily: 'Georgia, serif',
+              color: '#44403c',
+              padding: '8px 0'
+            }}
+          >
             ← Back to News
           </button>
         )}
+        <h1 className="opinion-page-title" style={{
+          fontSize: '14px',
+          fontWeight: '900',
+          textTransform: 'uppercase',
+          letterSpacing: '0.15em',
+          margin: 0,
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
+          OPINION
+        </h1>
+        {onNavigateToSubmit && (
+          <a 
+            href="#opinion/submit" 
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateToSubmit();
+            }}
+            className="opinion-submit-link"
+            style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#dc2626',
+              textDecoration: 'none',
+              padding: '8px 16px',
+              border: '1px solid #dc2626',
+              borderRadius: '4px',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Submit a Guest Essay
+          </a>
+        )}
       </div>
       <div className="opinion-page-content">
-        <OpinionFeed 
-          onOpinionClick={handleOpinionClick}
-          onNavigateToSubmit={onNavigateToSubmit}
-        />
+        <OpinionFeed />
       </div>
     </div>
   );

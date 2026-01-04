@@ -61,9 +61,9 @@ export interface Opinion {
   headline: string;
   subHeadline: string;
   body: string;
-  imageUrl?: string;
   category?: string;
   country?: string;
+  imageUrl?: string;
   status: 'pending' | 'published' | 'rejected';
   submittedAt: Date;
   publishedAt?: Date | null;
