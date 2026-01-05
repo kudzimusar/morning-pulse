@@ -1,31 +1,60 @@
 /**
  * Location Detection Service
  * Detects user's country via IP geolocation and provides country switching
+ * Supports manual selection persistence (overrides auto-detection)
  */
 
 export interface CountryInfo {
   code: string;
   name: string;
+  flag?: string;
+  timezone?: string;
 }
+
+// Country to timezone mapping
+const COUNTRY_TIMEZONES: { [code: string]: string } = {
+  'ZW': 'Africa/Harare',
+  'ZA': 'Africa/Johannesburg',
+  'GB': 'Europe/London',
+  'US': 'America/New_York',
+  'KE': 'Africa/Nairobi',
+  'NG': 'Africa/Lagos',
+  'GH': 'Africa/Accra',
+  'EG': 'Africa/Cairo',
+  'AU': 'Australia/Sydney',
+  'CA': 'America/Toronto',
+  'IN': 'Asia/Kolkata',
+  'CN': 'Asia/Shanghai',
+  'JP': 'Asia/Tokyo',
+  'FR': 'Europe/Paris',
+  'DE': 'Europe/Berlin',
+};
 
 // Common countries for news aggregation
 export const SUPPORTED_COUNTRIES: CountryInfo[] = [
-  { code: 'ZW', name: 'Zimbabwe' },
-  { code: 'ZA', name: 'South Africa' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'US', name: 'United States' },
-  { code: 'KE', name: 'Kenya' },
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'GH', name: 'Ghana' },
-  { code: 'EG', name: 'Egypt' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'IN', name: 'India' },
-  { code: 'CN', name: 'China' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'FR', name: 'France' },
-  { code: 'DE', name: 'Germany' },
+  { code: 'ZW', name: 'Zimbabwe', flag: '🇿🇼', timezone: COUNTRY_TIMEZONES['ZW'] },
+  { code: 'ZA', name: 'South Africa', flag: '🇿🇦', timezone: COUNTRY_TIMEZONES['ZA'] },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', timezone: COUNTRY_TIMEZONES['GB'] },
+  { code: 'US', name: 'United States', flag: '🇺🇸', timezone: COUNTRY_TIMEZONES['US'] },
+  { code: 'KE', name: 'Kenya', flag: '🇰🇪', timezone: COUNTRY_TIMEZONES['KE'] },
+  { code: 'NG', name: 'Nigeria', flag: '🇳🇬', timezone: COUNTRY_TIMEZONES['NG'] },
+  { code: 'GH', name: 'Ghana', flag: '🇬🇭', timezone: COUNTRY_TIMEZONES['GH'] },
+  { code: 'EG', name: 'Egypt', flag: '🇪🇬', timezone: COUNTRY_TIMEZONES['EG'] },
+  { code: 'AU', name: 'Australia', flag: '🇦🇺', timezone: COUNTRY_TIMEZONES['AU'] },
+  { code: 'CA', name: 'Canada', flag: '🇨🇦', timezone: COUNTRY_TIMEZONES['CA'] },
+  { code: 'IN', name: 'India', flag: '🇮🇳', timezone: COUNTRY_TIMEZONES['IN'] },
+  { code: 'CN', name: 'China', flag: '🇨🇳', timezone: COUNTRY_TIMEZONES['CN'] },
+  { code: 'JP', name: 'Japan', flag: '🇯🇵', timezone: COUNTRY_TIMEZONES['JP'] },
+  { code: 'FR', name: 'France', flag: '🇫🇷', timezone: COUNTRY_TIMEZONES['FR'] },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪', timezone: COUNTRY_TIMEZONES['DE'] },
 ];
+
+/**
+ * Get timezone for a country code
+ */
+export const getCountryTimezone = (code: string): string => {
+  return COUNTRY_TIMEZONES[code] || 'UTC';
+};
 
 /**
  * Detect user's country via IP geolocation
@@ -36,7 +65,7 @@ export const detectUserLocation = async (): Promise<CountryInfo> => {
     // Try ipapi.co first (free tier: 1000 requests/day)
     try {
       const response = await fetch('https://ipapi.co/json/', {
-        timeout: 5000,
+        signal: AbortSignal.timeout(5000),
       });
       if (response.ok) {
         const data = await response.json();
@@ -59,7 +88,7 @@ export const detectUserLocation = async (): Promise<CountryInfo> => {
     // Fallback to ip-api.com
     try {
       const response = await fetch('http://ip-api.com/json/?fields=countryCode,country', {
-        timeout: 5000,
+        signal: AbortSignal.timeout(5000),
       });
       if (response.ok) {
         const data = await response.json();
@@ -102,10 +131,16 @@ export const getCountryByName = (name: string): CountryInfo | undefined => {
 
 /**
  * Store user's selected country in localStorage
+ * Marks it as a manual selection to override auto-detection
  */
-export const saveUserCountry = (country: CountryInfo): void => {
+export const saveUserCountry = (country: CountryInfo, isManualSelection: boolean = true): void => {
   try {
-    localStorage.setItem('morning-pulse-country', JSON.stringify(country));
+    const countryData = {
+      ...country,
+      manualSelection: isManualSelection,
+    };
+    localStorage.setItem('morning-pulse-country', JSON.stringify(countryData));
+    console.log(`✅ Saved country preference: ${country.name} (${isManualSelection ? 'manual' : 'auto'})`);
   } catch (e: any) {
     if (e.name === 'QuotaExceededError') {
       console.warn('LocalStorage quota exceeded, country preference not saved');
@@ -117,19 +152,52 @@ export const saveUserCountry = (country: CountryInfo): void => {
 
 /**
  * Get user's selected country from localStorage
+ * Returns null if no manual selection exists (allows auto-detection)
  */
 export const getUserCountry = (): CountryInfo | null => {
   try {
     const stored = localStorage.getItem('morning-pulse-country');
     if (stored) {
-      const country = JSON.parse(stored);
-      // Verify it's still a supported country
-      if (SUPPORTED_COUNTRIES.find(c => c.code === country.code)) {
-        return country;
+      const data = JSON.parse(stored);
+      // Check if it's a manual selection (if manualSelection is true or undefined for backward compatibility)
+      if (data.manualSelection !== false) {
+        // Verify it's still a supported country
+        const country = SUPPORTED_COUNTRIES.find(c => c.code === data.code);
+        if (country) {
+          return country;
+        }
       }
     }
   } catch (e) {
     console.error('Failed to load country preference:', e);
   }
   return null;
+};
+
+/**
+ * Check if user has manually selected a country
+ */
+export const hasManualCountrySelection = (): boolean => {
+  try {
+    const stored = localStorage.getItem('morning-pulse-country');
+    if (stored) {
+      const data = JSON.parse(stored);
+      return data.manualSelection !== false; // Default to true for backward compatibility
+    }
+  } catch (e) {
+    // Ignore errors
+  }
+  return false;
+};
+
+/**
+ * Clear manual country selection (allows auto-detection on next load)
+ */
+export const clearManualCountrySelection = (): void => {
+  try {
+    localStorage.removeItem('morning-pulse-country');
+    console.log('✅ Cleared manual country selection');
+  } catch (e) {
+    console.error('Failed to clear country preference:', e);
+  }
 };

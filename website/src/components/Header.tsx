@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import WeatherBar from './WeatherBar';
 import CountrySwitcher from './CountrySwitcher';
-import { CountryInfo } from '../services/locationService';
+import { CountryInfo, getCountryTimezone } from '../services/locationService';
+import { getOrderedCategories, trackCategoryInteraction } from '../services/userPreferences';
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'Local (Zim)',
   'Business (Zim)',
   'African Focus',
-  'Global',
+  'World News',
   'Sports',
-  'Tech',
+  'Tech & AI',
+  'Environment',
+  'Health',
   'General News',
+  'In-Depth Analysis',
   'Opinion'
 ];
 
@@ -28,32 +32,53 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Update local time and date every second (use browser's timezone)
+  // Get ordered categories based on user preferences
+  const categories = useMemo(() => {
+    // Dynamically adjust "Local" category name based on current country
+    const adjustedCategories = DEFAULT_CATEGORIES.map(cat => 
+      cat === 'Local (Zim)' && currentCountry?.code !== 'ZW' 
+        ? `Local (${currentCountry?.name || 'Zimbabwe'})`
+        : cat
+    );
+    return getOrderedCategories(adjustedCategories);
+  }, [currentCountry]);
+
+  // Update time and date every second using selected country's timezone
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      // Use browser's local timezone instead of hardcoded Zimbabwe time
+      const timezone = currentCountry?.timezone || getCountryTimezone(currentCountry?.code || 'ZW') || 'UTC';
+      
+      // Use selected country's timezone
       setHarareTime(now.toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit', 
         second: '2-digit',
-        hour12: true 
+        hour12: true,
+        timeZone: timezone
       }));
       setHarareDate(now.toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric',
-        year: 'numeric'
+        year: 'numeric',
+        timeZone: timezone
       }));
     };
     
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentCountry]);
 
   const handleCategoryClick = (category: string | null) => {
     setSelectedCategory(category);
     setIsCategoryDropdownOpen(false);
+    
+    // Track category interaction for personalization
+    if (category) {
+      trackCategoryInteraction(category);
+    }
+    
     if (onCategorySelect) {
       onCategorySelect(category);
     }
@@ -107,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
                   >
                     All News
                   </button>
-                  {CATEGORIES.map((category) => (
+                  {categories.map((category) => (
                     <button
                       key={category}
                       className="category-dropdown-option"

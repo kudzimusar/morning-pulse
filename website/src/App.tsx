@@ -14,7 +14,7 @@ import SubscriptionPage from './components/SubscriptionPage';
 import AdvertisePage from './components/AdvertisePage';
 import EditorialPage from './components/EditorialPage';
 import { NewsStory } from '../../types';
-import { CountryInfo } from './services/locationService';
+import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
 
 // Get Firebase config (same pattern as FirebaseConnector)
 const getFirebaseConfig = (): any => {
@@ -59,8 +59,43 @@ const App: React.FC = () => {
   const [useFirestore, setUseFirestore] = useState(true);
   const [currentPage, setCurrentPage] = useState<string>('news');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [currentCountry, setCurrentCountry] = useState<CountryInfo>({ code: 'ZW', name: 'Zimbabwe' });
+  const [currentCountry, setCurrentCountry] = useState<CountryInfo>(() => {
+    // Initialize from localStorage if available, otherwise default
+    return getUserCountry() || { code: 'ZW', name: 'Zimbabwe' };
+  });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Initialize country: check for manual selection first, then auto-detect
+  useEffect(() => {
+    const initializeCountry = async () => {
+      const manualSelection = hasManualCountrySelection();
+      
+      if (manualSelection) {
+        // User has manually selected a country, use it
+        const savedCountry = getUserCountry();
+        if (savedCountry) {
+          setCurrentCountry(savedCountry);
+          console.log(`✅ Using saved country preference: ${savedCountry.name}`);
+          return;
+        }
+      }
+      
+      // No manual selection, auto-detect
+      try {
+        console.log('🔍 Auto-detecting user location...');
+        const detectedCountry = await detectUserLocation();
+        setCurrentCountry(detectedCountry);
+        // Save as auto-detected (manualSelection: false)
+        saveUserCountry(detectedCountry, false);
+        console.log(`✅ Auto-detected country: ${detectedCountry.name}`);
+      } catch (error) {
+        console.error('❌ Location detection failed:', error);
+        // Keep default (Zimbabwe)
+      }
+    };
+
+    initializeCountry();
+  }, []);
 
   // Handle hash-based routing
   useEffect(() => {
@@ -228,7 +263,7 @@ const App: React.FC = () => {
       <Header 
         onCategorySelect={handleCategorySelect}
         currentCountry={currentCountry}
-        onCountryChange={setCurrentCountry}
+        onCountryChange={handleCountryChange}
         topHeadlines={topHeadlines}
         onSubscribeClick={handleSubscribeClick}
       />
