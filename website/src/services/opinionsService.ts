@@ -18,6 +18,7 @@ import {
   Auth
 } from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 import { Opinion, OpinionSubmissionData } from '../../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
 
@@ -61,6 +62,7 @@ const getFirebaseConfig = (): any => {
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
+let storage: FirebaseStorage | null = null;
 
 const getDb = (): Firestore | null => {
   if (db && auth) return db;
@@ -88,6 +90,42 @@ const getDb = (): Firestore | null => {
     console.error('Firebase initialization error:', e);
     return null;
   }
+};
+
+const getStorageInstance = (): FirebaseStorage | null => {
+  if (storage && app) return storage;
+  const _db = getDb();
+  if (!_db || !app) return null;
+  storage = getStorage(app);
+  return storage;
+};
+
+/**
+ * Upload an opinion image to Firebase Storage and return the public download URL.
+ * - pending_uploads/: writer suggested images
+ * - published_images/: editor-approved/replacement images
+ */
+export const uploadOpinionImage = async (
+  file: File,
+  folder: 'pending_uploads' | 'published_images',
+  opinionId?: string
+): Promise<string> => {
+  const s = getStorageInstance();
+  if (!s) {
+    throw new Error('Firebase not initialized');
+  }
+
+  await ensureAuthenticated();
+
+  const safeName = (file.name || 'upload.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+  const key = `${folder}/${opinionId || 'misc'}/${Date.now()}-${safeName}`;
+  const objRef = storageRef(s, key);
+
+  await uploadBytes(objRef, file, {
+    contentType: file.type || 'image/jpeg',
+  });
+
+  return await getDownloadURL(objRef);
 };
 
 /**
@@ -168,7 +206,8 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
     const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
     // PRIMARY: Generate imageUrl on submit so admins see an image during review
-    const imageUrl = (opinionData as any).imageUrl || getImageByTopic(opinionData.headline || '');
+    const suggestedImageUrl = opinionData.suggestedImageUrl;
+    const imageUrl = suggestedImageUrl || (opinionData as any).imageUrl || getImageByTopic(opinionData.headline || '');
     const imageGeneratedAt = new Date().toISOString();
 
     const docData = {
@@ -180,6 +219,9 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
       body: opinionData.body, // This will be HTML string from rich text editor
       category: opinionData.category || 'General',
       country: opinionData.country || 'Global',
+      suggestedImageUrl: suggestedImageUrl || null,
+      finalImageUrl: null,
+      isPublished: false,
       imageUrl,
       imageGeneratedAt,
       status: 'pending' as const,
@@ -426,7 +468,11 @@ export const subscribeToPendingOpinions = (
 /**
  * Approve an opinion (change status to 'published')
  */
-export const approveOpinion = async (opinionId: string, reviewedBy?: string): Promise<void> => {
+export const approveOpinion = async (
+  opinionId: string,
+  reviewedBy?: string,
+  replacementFinalImageUrl?: string
+): Promise<void> => {
   const db = getDb();
   if (!db) {
     throw new Error('Firebase not initialized');
@@ -440,24 +486,33 @@ export const approveOpinion = async (opinionId: string, reviewedBy?: string): Pr
     // Use exact mandatory path structure
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
 
-    // SAFETY NET: ensure imageUrl exists before publishing
+    // SAFETY NET: ensure finalImageUrl exists before publishing
     const snap = await getDoc(docRef);
-    if (!snap.exists()) {
-      throw new Error('Opinion not found');
-    }
+    if (!snap.exists()) throw new Error('Opinion not found');
 
     const existing = snap.data() as any;
-    const existingUrl = typeof existing?.imageUrl === 'string' ? existing.imageUrl : '';
-    const hasValidUrl = /^https?:\/\//i.test(existingUrl);
-    const imageUrl = hasValidUrl ? existingUrl : getImageByTopic(existing?.headline || '', opinionId);
+    const suggested = typeof existing?.suggestedImageUrl === 'string' ? existing.suggestedImageUrl : '';
+    const existingFinal = typeof existing?.finalImageUrl === 'string' ? existing.finalImageUrl : '';
+    const legacy = typeof existing?.imageUrl === 'string' ? existing.imageUrl : '';
+
+    // Editorial Gate:
+    // - If editor uploaded a replacement, use that.
+    // - Else keep existing finalImageUrl if present.
+    // - Else fallback to suggestedImageUrl, then legacy imageUrl.
+    const candidate = replacementFinalImageUrl || existingFinal || suggested || legacy;
+    const hasValidUrl = /^https?:\/\//i.test(candidate);
+    const finalImageUrl = hasValidUrl ? candidate : getImageByTopic(existing?.headline || '', opinionId);
+
     const patch: any = {
       status: 'published',
+      isPublished: true,
+      reviewedBy: reviewedBy || null,
       publishedAt: Date.now(),
-      imageUrl,
+      finalImageUrl,
+      // Keep legacy field aligned for older UIs
+      imageUrl: finalImageUrl,
     };
-    if (!hasValidUrl) {
-      patch.imageGeneratedAt = new Date().toISOString();
-    }
+    if (!hasValidUrl) patch.imageGeneratedAt = new Date().toISOString();
     
     // Direct Firestore update with merge
     await setDoc(docRef, patch, { merge: true });
