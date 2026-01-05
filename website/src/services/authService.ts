@@ -9,12 +9,14 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  User 
+  User,
+  Auth
 } from 'firebase/auth';
 import { 
   getFirestore, 
   doc, 
-  getDoc 
+  getDoc,
+  Firestore
 } from 'firebase/firestore';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 
@@ -55,34 +57,50 @@ const getFirebaseConfig = (): any => {
 };
 
 // Get Firebase app instance (reuse if exists, create if not)
+// Use a named app to avoid conflicts with other Firebase initializations
 let app: FirebaseApp | null = null;
-let auth: ReturnType<typeof getAuth> | null = null;
-let db: ReturnType<typeof getFirestore> | null = null;
+let authInstance: Auth | null = null;
+let dbInstance: Firestore | null = null;
 
 const getAppInstance = (): FirebaseApp => {
   if (app) return app;
   
   const config = getFirebaseConfig();
   try {
+    // Try to get default app first (might be initialized by opinionsService)
     app = getApp();
-  } catch {
-    app = initializeApp(config);
+  } catch (e) {
+    // Default app doesn't exist, create it
+    try {
+      app = initializeApp(config);
+    } catch (initError: any) {
+      // App might already exist with a different name, try to get it again
+      if (initError.code === 'app/duplicate-app') {
+        app = getApp();
+      } else {
+        throw initError;
+      }
+    }
   }
   return app;
 };
 
-const getAuthInstance = () => {
-  if (auth) return auth;
+const getAuthInstance = (): Auth => {
+  if (authInstance) return authInstance;
+  
+  // Lazy initialization - only when needed
   const appInstance = getAppInstance();
-  auth = getAuth(appInstance);
-  return auth;
+  authInstance = getAuth(appInstance);
+  return authInstance;
 };
 
-const getDbInstance = () => {
-  if (db) return db;
+const getDbInstance = (): Firestore => {
+  if (dbInstance) return dbInstance;
+  
+  // Lazy initialization - only when needed
   const appInstance = getAppInstance();
-  db = getFirestore(appInstance);
-  return db;
+  dbInstance = getFirestore(appInstance);
+  return dbInstance;
 };
 
 // Staff role types
@@ -164,6 +182,12 @@ export const getCurrentEditor = (): User | null => {
 export const onEditorAuthStateChanged = (
   callback: (user: User | null) => void
 ): (() => void) => {
-  const authInstance = getAuthInstance();
-  return onAuthStateChanged(authInstance, callback);
+  try {
+    const authInstance = getAuthInstance();
+    return onAuthStateChanged(authInstance, callback);
+  } catch (error) {
+    console.error('Error setting up auth state listener:', error);
+    // Return a no-op unsubscribe function
+    return () => {};
+  }
 };

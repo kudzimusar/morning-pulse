@@ -167,18 +167,23 @@ const App: React.FC = () => {
       }
     };
 
-    // Check current editor
-    const currentEditor = getCurrentEditor();
-    if (currentEditor) {
-      checkRole(currentEditor);
-    } else {
-      setAdminAuthLoading(false);
-    }
-
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes first (handles initial state)
     const unsubscribe = onEditorAuthStateChanged((user) => {
       checkRole(user);
     });
+
+    // Also check current editor after a short delay to ensure Firebase is initialized
+    setTimeout(() => {
+      try {
+        const currentEditor = getCurrentEditor();
+        if (currentEditor) {
+          checkRole(currentEditor);
+        }
+      } catch (error) {
+        console.error('Error checking current editor:', error);
+        setAdminAuthLoading(false);
+      }
+    }, 100);
 
     return () => {
       unsubscribe();
