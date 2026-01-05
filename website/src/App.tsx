@@ -175,6 +175,14 @@ const App: React.FC = () => {
     setLoading(false);
   }, []);
 
+  // Handle country change (when user manually selects)
+  const handleCountryChange = React.useCallback((country: CountryInfo) => {
+    setCurrentCountry(country);
+    // Save as manual selection (overrides auto-detection)
+    saveUserCountry(country, true);
+    console.log(`✅ Country changed to: ${country.name} (manual selection)`);
+  }, []);
+
   const handleCategorySelect = (category: string | null) => {
     setSelectedCategory(category);
     if (category === 'Opinion') {
