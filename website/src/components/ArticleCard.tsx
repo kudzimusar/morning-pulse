@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NewsStory } from '../../../types';
 import { CountryInfo } from '../services/locationService';
+import { getCachedUnsplashImageUrl } from '../services/imageService';
 
 interface ArticleCardProps {
   article: NewsStory;
@@ -9,6 +10,36 @@ interface ArticleCardProps {
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', userCountry }) => {
+  const [imageUrl, setImageUrl] = useState<string>('');
+
+  // Fetch image URL on mount
+  useEffect(() => {
+    const loadImageUrl = async () => {
+      if (article.urlToImage) {
+        setImageUrl(article.urlToImage);
+        return;
+      }
+
+      // Use Unsplash proxy
+      try {
+        const url = await getCachedUnsplashImageUrl(
+          article.id,
+          article.category,
+          article.headline,
+          800,
+          600
+        );
+        setImageUrl(url);
+      } catch (error) {
+        console.warn('Failed to load image:', error);
+        // Fallback to gradient placeholder
+        setImageUrl('');
+      }
+    };
+
+    loadImageUrl();
+  }, [article.id, article.urlToImage, article.category, article.headline]);
+
   const handleClick = () => {
     if (article.url) {
       window.open(article.url, '_blank', 'noopener,noreferrer');
@@ -85,10 +116,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
       <div 
         className="article-image"
         style={{ 
-          backgroundImage: `url(${getImageUrl()})`,
-          background: article.urlToImage 
-            ? `url(${article.urlToImage})` 
-            : `url(${getImageUrl()}), ${getCategoryGradient(article.category)}`
+          backgroundImage: imageUrl 
+            ? `url(${imageUrl})` 
+            : getCategoryGradient(article.category),
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
         {/* Glassmorphism overlay with tags */}

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NewsStory } from '../../../types';
 import { CountryInfo } from '../services/locationService';
+import { getCachedUnsplashImageUrl } from '../services/imageService';
 
 interface HeroCardProps {
   article: NewsStory;
@@ -82,10 +83,11 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
       <div 
         className="hero-image"
         style={{ 
-          backgroundImage: `url(${getImageUrl()})`,
-          background: article.urlToImage 
-            ? `url(${article.urlToImage})` 
-            : `url(${getImageUrl()}), ${getCategoryGradient(article.category)}`
+          backgroundImage: imageUrl 
+            ? `url(${imageUrl})` 
+            : getCategoryGradient(article.category),
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
         {/* Glassmorphism overlay with tags */}
