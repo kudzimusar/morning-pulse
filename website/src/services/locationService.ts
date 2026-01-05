@@ -64,9 +64,15 @@ export const detectUserLocation = async (): Promise<CountryInfo> => {
   try {
     // Try ipapi.co first (free tier: 1000 requests/day)
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       const response = await fetch('https://ipapi.co/json/', {
-        signal: AbortSignal.timeout(5000),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const data = await response.json();
         const countryCode = data.country_code || 'ZW';
@@ -81,8 +87,10 @@ export const detectUserLocation = async (): Promise<CountryInfo> => {
         console.log(`⚠️ Country ${countryName} not fully supported, defaulting to Zimbabwe`);
         return SUPPORTED_COUNTRIES[0]; // Default to Zimbabwe
       }
-    } catch (e) {
-      console.log('⚠️ ipapi.co failed, trying fallback...');
+    } catch (e: any) {
+      if (e.name !== 'AbortError') {
+        console.log('⚠️ ipapi.co failed, trying fallback...');
+      }
     }
 
     // Fallback to ip-api.com (use HTTPS to avoid mixed content issues)
