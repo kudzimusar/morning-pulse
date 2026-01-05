@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { OpinionSubmissionData } from '../../../types';
-import { submitOpinion } from '../services/opinionsService';
+import { submitOpinion, uploadOpinionImage } from '../services/opinionsService';
 import RichTextEditor from './RichTextEditor';
 
 interface OpinionSubmissionFormProps {
   onBack?: () => void;
   onSuccess?: () => void;
 }
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 
 const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, onSuccess }) => {
   const [formData, setFormData] = useState<OpinionSubmissionData>({
@@ -25,6 +27,8 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
     type: null,
     message: '',
   });
+  const [suggestedImage, setSuggestedImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +55,16 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
     setSubmitStatus({ type: null, message: '' });
 
     try {
-      await submitOpinion(formData);
+      // Upload suggested image (optional) to Storage pending_uploads/
+      let suggestedImageUrl: string | undefined;
+      if (suggestedImage) {
+        suggestedImageUrl = await uploadOpinionImage(suggestedImage, 'pending_uploads');
+      }
+
+      await submitOpinion({
+        ...formData,
+        suggestedImageUrl,
+      });
       setSubmitStatus({
         type: 'success',
         message: 'Your essay has been submitted for editorial review. We will notify you once it has been reviewed.',
@@ -68,6 +81,8 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
         category: 'General',
         country: 'Global',
       });
+      setSuggestedImage(null);
+      setImageError(null);
 
       // Call success callback after a delay
       if (onSuccess) {
@@ -167,6 +182,40 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
                 placeholder="e.g., Economist at University of Tokyo"
                 disabled={isSubmitting}
               />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="suggestedImage" className="form-label">
+                Suggested Image (Optional)
+              </label>
+              <div style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '10px' }}>
+                Recommended size: 2000px × 1125px (16:9 ratio). Max file size: 5MB.
+              </div>
+              <input
+                type="file"
+                id="suggestedImage"
+                accept="image/*"
+                disabled={isSubmitting}
+                onChange={(e) => {
+                  setImageError(null);
+                  const f = e.target.files?.[0] || null;
+                  if (!f) {
+                    setSuggestedImage(null);
+                    return;
+                  }
+                  if (f.size > MAX_IMAGE_BYTES) {
+                    setSuggestedImage(null);
+                    setImageError('Image too large. Max file size is 5MB.');
+                    return;
+                  }
+                  setSuggestedImage(f);
+                }}
+              />
+              {imageError && (
+                <div style={{ marginTop: '8px', color: '#dc2626', fontSize: '0.9rem' }}>
+                  {imageError}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
