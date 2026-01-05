@@ -2,6 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com https://*.googleapis.com; 
+                   style-src 'self' 'unsafe-inline'; 
+                   img-src 'self' https: data: blob: https://images.unsplash.com https://*.unsplash.com; 
+                   connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://images.unsplash.com https://source.unsplash.com wss://*.firebaseio.com; 
+                   font-src 'self' https://fonts.gstatic.com data:; 
+                   frame-src 'self' https://*.firebaseapp.com;">
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Morning Pulse - Multi-Dimensional News covering Local, Business, African Focus, Global, Sports, Tech, and General News" />

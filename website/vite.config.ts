@@ -37,6 +37,12 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       }
     },
+    // CSP headers for local development
+    server: {
+      headers: {
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com https://*.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob: https://images.unsplash.com https://*.unsplash.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://images.unsplash.com https://source.unsplash.com wss://*.firebaseio.com; font-src 'self' https://fonts.gstatic.com data:; frame-src 'self' https://*.firebaseapp.com;"
+      }
+    },
     // Expose environment variables to the client
     define: {
       'import.meta.env.VITE_FIREBASE_CONFIG': configValue,
