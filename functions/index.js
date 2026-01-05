@@ -758,3 +758,15 @@ exports.getOpinions = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Export Unsplash image proxy function (with error handling)
+try {
+  const unsplashProxyModule = require('./unsplashProxy');
+  if (unsplashProxyModule && unsplashProxyModule.unsplashImage) {
+    exports.unsplashImage = unsplashProxyModule.unsplashImage;
+    console.log('unsplashImage function exported successfully.');
+  }
+} catch (error) {
+  console.warn('unsplashProxy module not available:', error.message);
+  console.warn('Unsplash image proxy features will be unavailable.');
+}
