@@ -65,6 +65,9 @@ export interface Opinion {
   country?: string;
   imageUrl?: string;
   imageGeneratedAt?: string;
+  suggestedImageUrl?: string;
+  finalImageUrl?: string;
+  isPublished?: boolean;
   status: 'pending' | 'published' | 'rejected';
   submittedAt: Date;
   publishedAt?: Date | null;
@@ -80,4 +83,5 @@ export interface OpinionSubmissionData {
   body: string;
   category?: string;
   country?: string;
+  suggestedImageUrl?: string;
 }
