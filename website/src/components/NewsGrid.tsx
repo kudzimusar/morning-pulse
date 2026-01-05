@@ -3,13 +3,14 @@ import { NewsStory } from '../../../types';
 import HeroCard from './HeroCard';
 import ArticleCard from './ArticleCard';
 import AdSlot from './AdSlot';
+import { CountryInfo } from '../services/locationService';
 
 interface NewsGridProps {
   newsData: {
     [category: string]: NewsStory[];
   };
   selectedCategory?: string | null;
-  userCountry?: string; // Country name for dynamic Local category
+  userCountry?: CountryInfo; // Country info for dynamic Local category
 }
 
 const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCountry }) => {

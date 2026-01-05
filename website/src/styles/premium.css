@@ -1135,6 +1135,21 @@ body {
   margin: var(--spacing-2xl) auto;
 }
 
+.last-updated-container {
+  max-width: 1400px;
+  margin: var(--spacing-md) auto var(--spacing-sm);
+  padding: 0 var(--spacing-md);
+  text-align: right;
+}
+
+.last-updated-text {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--light-text);
+  font-style: italic;
+  margin: 0;
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;

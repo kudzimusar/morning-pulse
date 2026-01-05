@@ -6,7 +6,7 @@ import { NewsStory } from '../../../types';
 import { CountryInfo } from '../services/locationService';
 
 interface FirebaseConnectorProps {
-  onNewsUpdate: (data: { [category: string]: NewsStory[] }) => void;
+  onNewsUpdate: (data: { [category: string]: NewsStory[] }, lastUpdated?: Date) => void;
   onError: (error: string) => void;
   userCountry?: CountryInfo;
   selectedDate?: string;
@@ -98,11 +98,27 @@ const transformCategoriesForCountry = (
   return transformed;
 };
 
+// Helper to extract timestamp from document data
+const getDocumentTimestamp = (data: any): Date | null => {
+  if (data.updatedAt?.toDate) {
+    return data.updatedAt.toDate();
+  }
+  if (data.updatedAt?.seconds) {
+    return new Date(data.updatedAt.seconds * 1000);
+  }
+  if (data.timestamp) {
+    return new Date(data.timestamp);
+  }
+  return null;
+};
+
 const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onError, userCountry, selectedDate, onGlobalDataUpdate }) => {
   // Use refs to store latest callbacks to avoid re-initialization
   const onNewsUpdateRef = useRef(onNewsUpdate);
   const onErrorRef = useRef(onError);
   const onGlobalDataUpdateRef = useRef(onGlobalDataUpdate);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchedDateRef = useRef<string>('');
 
   // Update refs when callbacks change
   useEffect(() => {
@@ -116,7 +132,6 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
     const config = getFirebaseConfig();
     if (!config || Object.keys(config).length === 0) {
       console.log('ℹ️ Firebase configuration not available - will use static mode');
-      // Don't call onError - let static mode handle it silently
       return;
     }
     
@@ -127,40 +142,22 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
     let db: Firestore;
     let unsubscribe: (() => void) | null = null;
 
-    const loadLatestNews = async () => {
+    // Function to try fetching news for a specific date
+    const tryFetchNewsForDate = async (dateString: string, country: CountryInfo): Promise<{ success: boolean; data?: any; timestamp?: Date }> => {
       try {
-        app = initializeApp(config);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        
         const appId = (window as any).__app_id || 'morning-pulse-app';
-        const country = userCountry || { code: 'ZW', name: 'Zimbabwe' };
-        const dateString = selectedDate || new Date().toISOString().split('T')[0];
-        
-        // Use exactly 6 segments: artifacts/morning-pulse-app/public/data/news/${dateString}
         const newsPath = `artifacts/${appId}/public/data/news/${dateString}`;
         const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
         
-        console.log(`📂 Fetching news from Firestore...`);
-        console.log(`   Country: ${country.name} (${country.code})`);
-        console.log(`   Path: ${newsPath} (6 segments)`);
-        
-        // Fetch the daily document
-        let snapshot = await getDoc(newsRef);
+        const snapshot = await getDoc(newsRef);
         
         if (snapshot.exists()) {
           const data = snapshot.data();
-          
-          // Store entire document globally for admin tool
-          if (onGlobalDataUpdateRef.current) {
-            onGlobalDataUpdateRef.current(data);
-          }
+          const currentCountry = country;
           
           // Extract country-specific data from document fields
-          // Try country code first, then country name, then fallback to 'Zimbabwe'
-          let categories = data[country.code] || data[country.name] || data['Zimbabwe'] || data.categories || {};
+          let categories = data[currentCountry.code] || data[currentCountry.name] || data['Zimbabwe'] || data.categories || {};
           
-          // If categories is empty, try fallback
           if (!categories || Object.keys(categories).length === 0) {
             categories = data.categories || data['Zimbabwe'] || {};
           }
@@ -168,14 +165,135 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           const categoryCount = Object.keys(categories).length;
           
           if (categoryCount > 0) {
-            console.log(`✅ News found for ${country.name} (${dateString}):`, categoryCount, 'categories');
-            console.log('   Categories:', Object.keys(categories));
+            const timestamp = getDocumentTimestamp(data) || new Date();
+            console.log(`✅ News found for ${currentCountry.name} on ${dateString}:`, categoryCount, 'categories');
+            return { success: true, data: { categories, fullData: data }, timestamp };
+          }
+        }
+        
+        return { success: false };
+      } catch (error: any) {
+        console.error(`❌ Error fetching news for ${dateString}:`, error);
+        return { success: false };
+      }
+    };
+
+    // Function to try additional dates beyond the 7-day window
+    const tryExtendedDateFallback = async (country: CountryInfo, startDate: Date): Promise<{ success: boolean; data?: any; timestamp?: Date; date?: string }> => {
+      try {
+        // Try up to 30 days back
+        for (let i = 7; i < 30; i++) {
+          const checkDate = new Date(startDate);
+          checkDate.setDate(startDate.getDate() - i);
+          const dateString = checkDate.toISOString().split('T')[0];
+          
+          console.log(`   Trying extended date: ${dateString} (${i} days ago)...`);
+          const result = await tryFetchNewsForDate(dateString, country);
+          
+          if (result.success && result.data) {
+            return { success: true, data: result.data, timestamp: result.timestamp, date: dateString };
+          }
+        }
+        
+        return { success: false };
+      } catch (error: any) {
+        console.error('❌ Error in extended date fallback:', error);
+        return { success: false };
+      }
+    };
+
+    // Main function to load news with rolling date fallback
+    const loadLatestNews = async (isIntervalCheck = false) => {
+      try {
+        if (!app || !db) {
+          app = initializeApp(config);
+          auth = getAuth(app);
+          db = getFirestore(app);
+        }
+        
+        const country = userCountry || { code: 'ZW', name: 'Zimbabwe' };
+        const targetDate = selectedDate || new Date().toISOString().split('T')[0];
+        
+        console.log(`📂 Fetching news (${isIntervalCheck ? 'interval check' : 'initial load'})...`);
+        console.log(`   Country: ${country.name} (${country.code})`);
+        console.log(`   Target date: ${targetDate}`);
+        
+        let foundNews = false;
+        let newsData: any = null;
+        let newsTimestamp: Date | null = null;
+        let foundDate = '';
+        
+        // Strategy 1: Try target date first (if it's a selected date, not just today)
+        if (selectedDate) {
+          const result = await tryFetchNewsForDate(targetDate, country);
+          if (result.success && result.data) {
+            foundNews = true;
+            newsData = result.data;
+            newsTimestamp = result.timestamp || null;
+            foundDate = targetDate;
+          }
+        }
+        
+        // Strategy 2: Rolling date fallback - try today, then yesterday, then day before (up to 7 days back)
+        if (!foundNews) {
+          const today = new Date();
+          for (let i = 0; i < 7; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(today.getDate() - i);
+            const dateString = checkDate.toISOString().split('T')[0];
             
-            // Transform Local category name based on country
-            const transformedCategories = transformCategoriesForCountry(categories, country);
-            onNewsUpdateRef.current(transformedCategories);
+            // Skip if we already tried this date
+            if (dateString === targetDate && selectedDate) {
+              continue;
+            }
             
-            // Set up real-time listener
+            console.log(`   Trying date: ${dateString} (${i === 0 ? 'today' : i === 1 ? 'yesterday' : `${i} days ago`})...`);
+            const result = await tryFetchNewsForDate(dateString, country);
+            
+            if (result.success && result.data) {
+              foundNews = true;
+              newsData = result.data;
+              newsTimestamp = result.timestamp || null;
+              foundDate = dateString;
+              console.log(`   ✅ Found news on ${dateString}`);
+              break;
+            }
+          }
+        }
+        
+        // Strategy 3: If still no news, try extended date fallback (up to 30 days)
+        if (!foundNews) {
+          console.log('   No news found in 7-day window, trying extended date range (up to 30 days)...');
+          const result = await tryExtendedDateFallback(country, today);
+          if (result.success && result.data) {
+            foundNews = true;
+            newsData = result.data;
+            newsTimestamp = result.timestamp || null;
+            foundDate = result.date || '';
+            console.log(`   ✅ Found news from extended range: ${foundDate}`);
+          }
+        }
+        
+        if (foundNews && newsData) {
+          const { categories, fullData } = newsData;
+          
+          // Store entire document globally for admin tool
+          if (onGlobalDataUpdateRef.current && fullData) {
+            onGlobalDataUpdateRef.current(fullData);
+          }
+          
+          // Transform categories for country
+          const transformedCategories = transformCategoriesForCountry(categories, country);
+          lastFetchedDateRef.current = foundDate;
+          
+          // Update news with timestamp
+          onNewsUpdateRef.current(transformedCategories, newsTimestamp || undefined);
+          
+          // Set up real-time listener on the found date
+          if (!unsubscribe) {
+            const appId = (window as any).__app_id || 'morning-pulse-app';
+            const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', foundDate);
+            
             unsubscribe = onSnapshot(
               newsRef,
               (realtimeSnapshot) => {
@@ -187,7 +305,6 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
                     onGlobalDataUpdateRef.current(realtimeData);
                   }
                   
-                  // Use current userCountry from props, not closure-captured country
                   const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
                   let realtimeCategories = realtimeData[currentCountry.code] || realtimeData[currentCountry.name] || realtimeData['Zimbabwe'] || realtimeData.categories || {};
                   
@@ -197,8 +314,9 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
                   
                   if (Object.keys(realtimeCategories).length > 0) {
                     console.log('✅ News updated in real-time for', currentCountry.name);
+                    const timestamp = getDocumentTimestamp(realtimeData) || new Date();
                     const transformed = transformCategoriesForCountry(realtimeCategories, currentCountry);
-                    onNewsUpdateRef.current(transformed);
+                    onNewsUpdateRef.current(transformed, timestamp);
                   }
                 }
               },
@@ -206,48 +324,12 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
                 console.error('❌ Firestore real-time error:', error);
               }
             );
-            return;
           }
+        } else {
+          // Only show error if NO news exists at all (after trying all strategies)
+          console.warn(`⚠️ No news found for ${country.name} after checking all dates and most recent document`);
+          onErrorRef.current(`Morning Pulse is currently gathering news for ${country.name}. Please check back shortly.`);
         }
-        
-        // No news found at all
-        console.warn(`⚠️ No news found for ${country.name} on ${dateString}`);
-        onErrorRef.current(`Morning Pulse is currently gathering news for ${country.name}. Please check back shortly.`);
-        
-        // Set up real-time listener as fallback
-        unsubscribe = onSnapshot(
-          newsRef,
-          (snapshot) => {
-            if (snapshot.exists()) {
-              const data = snapshot.data();
-              
-              // Store entire document globally for admin tool
-              if (onGlobalDataUpdateRef.current) {
-                onGlobalDataUpdateRef.current(data);
-              }
-              
-              // Use current userCountry from props
-              const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
-              let categories = data[currentCountry.code] || data[currentCountry.name] || data['Zimbabwe'] || data.categories || {};
-              
-              if (!categories || Object.keys(categories).length === 0) {
-                categories = data.categories || data['Zimbabwe'] || {};
-              }
-              
-              const categoryCount = Object.keys(categories).length;
-              if (categoryCount > 0) {
-                console.log('✅ News found in Firestore (real-time) for', currentCountry.name, ':', categoryCount, 'categories');
-                const transformed = transformCategoriesForCountry(categories, currentCountry);
-                onNewsUpdateRef.current(transformed);
-              }
-            }
-          },
-          (error: any) => {
-            console.error('❌ Firestore error:', error);
-            console.error('   Error code:', error.code);
-            console.error('   Error message:', error.message);
-          }
-        );
       } catch (error: any) {
         console.error('❌ Firebase initialization error:', error);
         console.error('   Error code:', error.code);
@@ -256,11 +338,21 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
       }
     };
     
-    loadLatestNews();
+    // Initial load
+    loadLatestNews(false);
+    
+    // Set up 30-minute interval to check for newer news
+    intervalRef.current = setInterval(() => {
+      console.log('🔄 Interval check: Looking for newer news...');
+      loadLatestNews(true);
+    }, 30 * 60 * 1000); // 30 minutes
 
     return () => {
       if (unsubscribe) {
         unsubscribe();
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
   }, [userCountry?.code, userCountry?.name, selectedDate]); // Only depend on primitive values, not functions
@@ -269,4 +361,3 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
 };
 
 export default FirebaseConnector;
-

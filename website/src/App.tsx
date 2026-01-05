@@ -60,6 +60,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<string>('news');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentCountry, setCurrentCountry] = useState<CountryInfo>({ code: 'ZW', name: 'Zimbabwe' });
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Handle hash-based routing
   useEffect(() => {
@@ -124,13 +125,17 @@ const App: React.FC = () => {
   }, []);
 
   // Memoize callbacks to prevent FirebaseConnector re-initialization
-  const handleNewsUpdate = React.useCallback((data: NewsData) => {
+  const handleNewsUpdate = React.useCallback((data: NewsData, timestamp?: Date) => {
     setNewsData(data);
     setLoading(false);
     setError(null);
+    if (timestamp) {
+      setLastUpdated(timestamp);
+    }
   }, []);
 
   const handleError = React.useCallback((errorMessage: string) => {
+    // Error handler - errors will be set by FirebaseConnector only if no news found
     setError(errorMessage);
     setLoading(false);
   }, []);
@@ -156,6 +161,22 @@ const App: React.FC = () => {
 
   const handleSubscribeClick = () => {
     window.location.hash = 'subscribe';
+  };
+
+  // Format last updated timestamp
+  const formatLastUpdated = (timestamp: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - timestamp.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    
+    return timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   // Get top headlines for ticker
@@ -265,7 +286,7 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {error && (
+          {error && Object.keys(newsData).length === 0 && (
             <div className="error-container">
               <p>Error: {error}</p>
             </div>
@@ -277,12 +298,21 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {!loading && !error && Object.keys(newsData).length > 0 && (
-            <NewsGrid 
-              newsData={newsData} 
-              selectedCategory={selectedCategory}
-              userCountry={currentCountry.name}
-            />
+          {!loading && Object.keys(newsData).length > 0 && (
+            <>
+              {lastUpdated && (
+                <div className="last-updated-container">
+                  <p className="last-updated-text">
+                    Last Updated: {formatLastUpdated(lastUpdated)}
+                  </p>
+                </div>
+              )}
+              <NewsGrid 
+                newsData={newsData} 
+                selectedCategory={selectedCategory}
+                userCountry={currentCountry}
+              />
+            </>
           )}
         </>
       )}

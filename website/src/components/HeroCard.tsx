@@ -42,14 +42,15 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
     return icons[category] || icons['General News'];
   };
 
-  // Get image URL - use urlToImage if available, otherwise Unsplash fallback
+  // Get image URL - use urlToImage if available, otherwise fallback
   const getImageUrl = () => {
     if (article.urlToImage) {
       return article.urlToImage;
     }
-    // Unsplash fallback based on category
-    const categoryQuery = article.category.toLowerCase().replace(/\s+/g, ',').replace(/\(zim\)/g, 'zimbabwe');
-    return `https://source.unsplash.com/featured/?${categoryQuery},news`;
+    // Use placeholder service for images (Unsplash Source is blocked, API requires key)
+    // Use Picsum Photos as a reliable fallback
+    const seed = (article.headline + article.category).replace(/[^a-z0-9]/gi, '').substring(0, 20);
+    return `https://picsum.photos/seed/${seed}/800/600`;
   };
 
   // Generate tags for glassmorphism overlay

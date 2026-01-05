@@ -64,14 +64,17 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
     return tags;
   };
 
-  // Get image URL - use urlToImage if available, otherwise Unsplash fallback
+  // Get image URL - use urlToImage if available, otherwise Unsplash API fallback
   const getImageUrl = () => {
     if (article.urlToImage) {
       return article.urlToImage;
     }
-    // Unsplash fallback based on category
+    // Use Unsplash API with category and headline
     const categoryQuery = article.category.toLowerCase().replace(/\s+/g, ',').replace(/\(zim\)/g, 'zimbabwe');
-    return `https://source.unsplash.com/featured/?${categoryQuery},news`;
+    const headlineQuery = article.headline.substring(0, 50).toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ',');
+    // Use api.unsplash.com with search query - note: this requires API key in production
+    // For now, use a placeholder service that works without API key
+    return `https://picsum.photos/800/600?random=${article.id}`;
   };
 
   return (
