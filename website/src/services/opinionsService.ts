@@ -6,6 +6,7 @@ import {
   getDocs, 
   doc, 
   setDoc,
+  getDoc,
   onSnapshot,
   Timestamp,
   serverTimestamp,
@@ -18,6 +19,7 @@ import {
 } from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { Opinion, OpinionSubmissionData } from '../../../types';
+import { getImageByTopic } from '../utils/imageGenerator';
 
 // Get Firebase config (same pattern as FirebaseConnector)
 const getFirebaseConfig = (): any => {
@@ -165,6 +167,10 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
     
     const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     
+    // PRIMARY: Generate imageUrl on submit so admins see an image during review
+    const imageUrl = (opinionData as any).imageUrl || getImageByTopic(opinionData.headline || '');
+    const imageGeneratedAt = new Date().toISOString();
+
     const docData = {
       writerType: opinionData.writerType || 'Guest Essay',
       authorName: opinionData.authorName,
@@ -174,6 +180,8 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
       body: opinionData.body, // This will be HTML string from rich text editor
       category: opinionData.category || 'General',
       country: opinionData.country || 'Global',
+      imageUrl,
+      imageGeneratedAt,
       status: 'pending' as const,
       submittedAt: Timestamp.now(),
     };
