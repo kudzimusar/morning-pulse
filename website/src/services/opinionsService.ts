@@ -439,12 +439,28 @@ export const approveOpinion = async (opinionId: string, reviewedBy?: string): Pr
     
     // Use exact mandatory path structure
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
-    
-    // Direct Firestore update with merge
-    await setDoc(docRef, {
+
+    // SAFETY NET: ensure imageUrl exists before publishing
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      throw new Error('Opinion not found');
+    }
+
+    const existing = snap.data() as any;
+    const existingUrl = typeof existing?.imageUrl === 'string' ? existing.imageUrl : '';
+    const hasValidUrl = /^https?:\/\//i.test(existingUrl);
+    const imageUrl = hasValidUrl ? existingUrl : getImageByTopic(existing?.headline || '', opinionId);
+    const patch: any = {
       status: 'published',
       publishedAt: Date.now(),
-    }, { merge: true });
+      imageUrl,
+    };
+    if (!hasValidUrl) {
+      patch.imageGeneratedAt = new Date().toISOString();
+    }
+    
+    // Direct Firestore update with merge
+    await setDoc(docRef, patch, { merge: true });
     
     console.log('✅ Opinion approved:', opinionId);
   } catch (error: any) {
