@@ -152,6 +152,8 @@ const App: React.FC = () => {
       return;
     }
 
+    let unsubscribe: (() => void) | null = null;
+
     // Delay initialization to ensure Firebase is ready and prevent blocking main app
     const timeoutId = setTimeout(() => {
       setAdminAuthLoading(true);
@@ -173,8 +175,6 @@ const App: React.FC = () => {
           setAdminAuthLoading(false);
         }
       };
-
-      let unsubscribe: (() => void) | null = null;
 
       try {
         // Subscribe to auth state changes first (handles initial state)
@@ -200,16 +200,13 @@ const App: React.FC = () => {
         console.error('Error initializing admin auth:', error);
         setAdminAuthLoading(false);
       }
-
-      return () => {
-        if (unsubscribe) {
-          unsubscribe();
-        }
-      };
     }, 500); // Delay to ensure main app loads first
     
     return () => {
       clearTimeout(timeoutId);
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, [isAdminMode]);
 
