@@ -72,6 +72,7 @@ export interface Opinion {
   submittedAt: Date;
   publishedAt?: Date | null;
   reviewedBy?: string;
+  editorNotes?: string; // Internal notes visible only to editors
 }
 
 export interface OpinionSubmissionData {

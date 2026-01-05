@@ -7,12 +7,20 @@ import FirebaseConnector from './components/FirebaseConnector';
 import OpinionPage from './components/OpinionPage';
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
 import AdminOpinionReview from './components/AdminOpinionReview';
+import AdminLogin from './components/AdminLogin';
 import Footer from './components/Footer';
 import PrivacyPage from './components/PrivacyPage';
 import AboutPage from './components/AboutPage';
 import SubscriptionPage from './components/SubscriptionPage';
 import AdvertisePage from './components/AdvertisePage';
 import EditorialPage from './components/EditorialPage';
+import { 
+  getCurrentEditor, 
+  onEditorAuthStateChanged, 
+  getStaffRole, 
+  StaffRole,
+  requireEditor 
+} from './services/authService';
 import { NewsStory } from '../../types';
 import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
 
@@ -117,15 +125,65 @@ const App: React.FC = () => {
         setCurrentPage('advertise');
       } else if (hash === 'editorial') {
         setCurrentPage('editorial');
+      } else if (hash === 'admin') {
+        setShowAdminLogin(true);
       } else {
         setCurrentPage('news');
+        setShowAdminLogin(false);
       }
     };
+
+    // Check URL path for /admin
+    if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
+      setShowAdminLogin(true);
+    }
 
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // Check editor role when admin mode is enabled
+  useEffect(() => {
+    if (!isAdminMode) return;
+
+    setAdminAuthLoading(true);
+
+    const checkRole = async (user: any) => {
+      if (!user) {
+        setUserRole(null);
+        setAdminAuthLoading(false);
+        return;
+      }
+
+      try {
+        const role = await getStaffRole(user.uid);
+        setUserRole(role);
+      } catch (err) {
+        console.error('Error checking role:', err);
+        setUserRole(null);
+      } finally {
+        setAdminAuthLoading(false);
+      }
+    };
+
+    // Check current editor
+    const currentEditor = getCurrentEditor();
+    if (currentEditor) {
+      checkRole(currentEditor);
+    } else {
+      setAdminAuthLoading(false);
+    }
+
+    // Subscribe to auth state changes
+    const unsubscribe = onEditorAuthStateChanged((user) => {
+      checkRole(user);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isAdminMode]);
 
   // Try to load static data first (Mode B), fallback to Firestore (Mode A)
   useEffect(() => {
@@ -236,6 +294,11 @@ const App: React.FC = () => {
 
   // Check if admin mode is enabled
   const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
+  
+  // Admin authentication state
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [userRole, setUserRole] = useState<StaffRole>(null);
+  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
 
   // CRITICAL: Sign in anonymously on app load for public access
   useEffect(() => {
@@ -360,8 +423,18 @@ const App: React.FC = () => {
         </>
       )}
 
+      {/* Admin Login Page */}
+      {showAdminLogin && !requireEditor(userRole) && (
+        <AdminLogin 
+          onLoginSuccess={() => {
+            setShowAdminLogin(false);
+            // Role will be updated by auth state listener
+          }}
+        />
+      )}
+
       {/* Admin Review Panel - only visible in admin mode on news and opinion pages */}
-      {isAdminMode && (currentPage === 'news' || currentPage === 'opinion') && (
+      {isAdminMode && requireEditor(userRole) && (currentPage === 'news' || currentPage === 'opinion') && (
         <AdminOpinionReview />
       )}
 

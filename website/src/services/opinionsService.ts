@@ -471,7 +471,8 @@ export const subscribeToPendingOpinions = (
 export const approveOpinion = async (
   opinionId: string,
   reviewedBy?: string,
-  replacementFinalImageUrl?: string
+  replacementFinalImageUrl?: string,
+  editorNotes?: string
 ): Promise<void> => {
   const db = getDb();
   if (!db) {
@@ -513,6 +514,7 @@ export const approveOpinion = async (
       imageUrl: finalImageUrl,
     };
     if (!hasValidUrl) patch.imageGeneratedAt = new Date().toISOString();
+    if (editorNotes) patch.editorNotes = editorNotes;
     
     // Direct Firestore update with merge
     await setDoc(docRef, patch, { merge: true });

@@ -9,6 +9,15 @@ import {
   uploadOpinionImage
 } from '../services/opinionsService';
 import { getImageByTopic } from '../utils/imageGenerator';
+import { 
+  getStaffRole, 
+  requireEditor, 
+  StaffRole,
+  getCurrentEditor,
+  onEditorAuthStateChanged,
+  logoutEditor
+} from '../services/authService';
+import { getUIStatusLabel } from '../utils/opinionStatus';
 
 interface ToastMessage {
   id: string;
@@ -28,6 +37,11 @@ const AdminOpinionReview: React.FC = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isVisible, setIsVisible] = useState(true);
   const [replacementUrls, setReplacementUrls] = useState<Record<string, string>>({});
+  
+  // Role-based access control
+  const [userRole, setUserRole] = useState<StaffRole>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [editorNotes, setEditorNotes] = useState<Record<string, string>>({});
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now().toString();
@@ -37,7 +51,59 @@ const AdminOpinionReview: React.FC = () => {
     }, 3000);
   };
 
+  // Check editor role on mount and auth state changes
   useEffect(() => {
+    setAuthLoading(true);
+    
+    const checkRole = async (user: any) => {
+      if (!user) {
+        setUserRole(null);
+        setAuthLoading(false);
+        return;
+      }
+      
+      try {
+        const role = await getStaffRole(user.uid);
+        setUserRole(role);
+        
+        if (requireEditor(role)) {
+          // Only start subscription if user is an editor
+          console.log('✅ Editor authenticated, starting subscription...');
+        } else {
+          console.warn('⚠️ User is not an authorized editor');
+        }
+      } catch (err) {
+        console.error('❌ Error checking role:', err);
+        setUserRole(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    
+    // Check current editor auth state
+    const currentEditor = getCurrentEditor();
+    if (currentEditor) {
+      checkRole(currentEditor);
+    } else {
+      setAuthLoading(false);
+    }
+    
+    // Subscribe to auth state changes
+    const unsubscribeAuth = onEditorAuthStateChanged((user) => {
+      checkRole(user);
+    });
+    
+    return () => {
+      unsubscribeAuth();
+    };
+  }, []);
+
+  // Subscribe to pending opinions (only if editor is authenticated)
+  useEffect(() => {
+    if (!requireEditor(userRole)) {
+      return; // Don't subscribe if not an editor
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -95,7 +161,7 @@ const AdminOpinionReview: React.FC = () => {
         unsubscribe();
       }
     };
-  }, []);
+  }, [userRole]);
 
   const handleReplaceImage = async (opinion: Opinion, file: File) => {
     if (file.size > MAX_IMAGE_BYTES) {
@@ -123,7 +189,8 @@ const AdminOpinionReview: React.FC = () => {
     setPendingOpinions(prev => prev.filter(op => op.id !== opinionId));
     
     try {
-      await approveOpinion(opinionId, 'admin', replacementUrls[opinionId]);
+      const notes = editorNotes[opinionId] || undefined;
+      await approveOpinion(opinionId, 'admin', replacementUrls[opinionId], notes);
       showToast('Essay Published!', 'success');
       // Opinion will be removed from pending list automatically via subscription
     } catch (error: any) {
@@ -288,22 +355,48 @@ const AdminOpinionReview: React.FC = () => {
           borderBottom: '2px solid #000'
         }}>
           <span style={{ fontFamily: 'monospace' }}>REVIEW ({pendingOpinions.length})</span>
-          <button
-            onClick={() => setIsVisible(false)}
-            style={{
-              background: 'transparent',
-              border: '2px solid #000',
-              color: '#000',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '2px 8px',
-              lineHeight: '1',
-              fontWeight: 'bold'
-            }}
-            title="Close panel"
-          >
-            ×
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={async () => {
+                try {
+                  await logoutEditor();
+                  window.location.reload();
+                } catch (err) {
+                  console.error('Logout error:', err);
+                  showToast('Logout failed', 'error');
+                }
+              }}
+              style={{
+                background: 'transparent',
+                border: '1px solid #666',
+                color: '#666',
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                padding: '4px 8px',
+                borderRadius: '2px',
+                fontWeight: 'bold'
+              }}
+              title="Logout"
+            >
+              LOGOUT
+            </button>
+            <button
+              onClick={() => setIsVisible(false)}
+              style={{
+                background: 'transparent',
+                border: '2px solid #000',
+                color: '#000',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                padding: '2px 8px',
+                lineHeight: '1',
+                fontWeight: 'bold'
+              }}
+              title="Close panel"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* List */}
