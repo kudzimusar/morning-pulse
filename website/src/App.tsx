@@ -14,6 +14,7 @@ import AboutPage from './components/AboutPage';
 import SubscriptionPage from './components/SubscriptionPage';
 import AdvertisePage from './components/AdvertisePage';
 import EditorialPage from './components/EditorialPage';
+// Import admin auth service (will only be used when admin mode is enabled)
 import { 
   getCurrentEditor, 
   onEditorAuthStateChanged, 
@@ -145,48 +146,70 @@ const App: React.FC = () => {
 
   // Check editor role when admin mode is enabled
   useEffect(() => {
-    if (!isAdminMode) return;
+    if (!isAdminMode) {
+      setUserRole(null);
+      setAdminAuthLoading(false);
+      return;
+    }
 
-    setAdminAuthLoading(true);
+    // Delay initialization to ensure Firebase is ready and prevent blocking main app
+    const timeoutId = setTimeout(() => {
+      setAdminAuthLoading(true);
 
-    const checkRole = async (user: any) => {
-      if (!user) {
-        setUserRole(null);
-        setAdminAuthLoading(false);
-        return;
-      }
-
-      try {
-        const role = await getStaffRole(user.uid);
-        setUserRole(role);
-      } catch (err) {
-        console.error('Error checking role:', err);
-        setUserRole(null);
-      } finally {
-        setAdminAuthLoading(false);
-      }
-    };
-
-    // Subscribe to auth state changes first (handles initial state)
-    const unsubscribe = onEditorAuthStateChanged((user) => {
-      checkRole(user);
-    });
-
-    // Also check current editor after a short delay to ensure Firebase is initialized
-    setTimeout(() => {
-      try {
-        const currentEditor = getCurrentEditor();
-        if (currentEditor) {
-          checkRole(currentEditor);
+      const checkRole = async (user: any) => {
+        if (!user) {
+          setUserRole(null);
+          setAdminAuthLoading(false);
+          return;
         }
+
+        try {
+          const role = await getStaffRole(user.uid);
+          setUserRole(role);
+        } catch (err) {
+          console.error('Error checking role:', err);
+          setUserRole(null);
+        } finally {
+          setAdminAuthLoading(false);
+        }
+      };
+
+      let unsubscribe: (() => void) | null = null;
+
+      try {
+        // Subscribe to auth state changes first (handles initial state)
+        unsubscribe = onEditorAuthStateChanged((user) => {
+          checkRole(user);
+        });
+
+        // Also check current editor after a short delay to ensure Firebase is initialized
+        setTimeout(() => {
+          try {
+            const currentEditor = getCurrentEditor();
+            if (currentEditor) {
+              checkRole(currentEditor);
+            } else {
+              setAdminAuthLoading(false);
+            }
+          } catch (error) {
+            console.error('Error checking current editor:', error);
+            setAdminAuthLoading(false);
+          }
+        }, 200);
       } catch (error) {
-        console.error('Error checking current editor:', error);
+        console.error('Error initializing admin auth:', error);
         setAdminAuthLoading(false);
       }
-    }, 100);
 
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
+    }, 500); // Delay to ensure main app loads first
+    
     return () => {
-      unsubscribe();
+      clearTimeout(timeoutId);
     };
   }, [isAdminMode]);
 
@@ -429,7 +452,7 @@ const App: React.FC = () => {
       )}
 
       {/* Admin Login Page */}
-      {showAdminLogin && !requireEditor(userRole) && (
+      {showAdminLogin && userRole !== undefined && !requireEditor(userRole) && (
         <AdminLogin 
           onLoginSuccess={() => {
             setShowAdminLogin(false);
