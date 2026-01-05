@@ -85,11 +85,16 @@ export const detectUserLocation = async (): Promise<CountryInfo> => {
       console.log('⚠️ ipapi.co failed, trying fallback...');
     }
 
-    // Fallback to ip-api.com
+    // Fallback to ip-api.com (use HTTPS to avoid mixed content issues)
     try {
-      const response = await fetch('http://ip-api.com/json/?fields=countryCode,country', {
-        signal: AbortSignal.timeout(5000),
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch('https://ip-api.com/json/?fields=countryCode,country', {
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
       if (response.ok) {
         const data = await response.json();
         const countryCode = data.countryCode || 'ZW';

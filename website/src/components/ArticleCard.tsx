@@ -14,13 +14,17 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
 
   // Fetch image URL on mount
   useEffect(() => {
+    let isMounted = true;
+
     const loadImageUrl = async () => {
       if (article.urlToImage) {
-        setImageUrl(article.urlToImage);
+        if (isMounted) {
+          setImageUrl(article.urlToImage);
+        }
         return;
       }
 
-      // Use Unsplash proxy
+      // Use Unsplash proxy with fallback
       try {
         const url = await getCachedUnsplashImageUrl(
           article.id,
@@ -29,15 +33,22 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
           800,
           600
         );
-        setImageUrl(url);
+        if (isMounted) {
+          setImageUrl(url);
+        }
       } catch (error) {
-        console.warn('Failed to load image:', error);
-        // Fallback to gradient placeholder
-        setImageUrl('');
+        // Silently fail - will use gradient placeholder
+        if (isMounted) {
+          setImageUrl('');
+        }
       }
     };
 
     loadImageUrl();
+
+    return () => {
+      isMounted = false;
+    };
   }, [article.id, article.urlToImage, article.category, article.headline]);
 
   const handleClick = () => {

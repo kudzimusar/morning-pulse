@@ -13,9 +13,13 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
 
   // Fetch image URL on mount
   useEffect(() => {
+    let isMounted = true;
+
     const loadImageUrl = async () => {
       if (article.urlToImage) {
-        setImageUrl(article.urlToImage);
+        if (isMounted) {
+          setImageUrl(article.urlToImage);
+        }
         return;
       }
 
@@ -28,15 +32,22 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
           800,
           600
         );
-        setImageUrl(url);
+        if (isMounted) {
+          setImageUrl(url);
+        }
       } catch (error) {
-        console.warn('Failed to load image:', error);
-        // Fallback to empty string (will use gradient)
-        setImageUrl('');
+        // Silently fail - will use gradient placeholder
+        if (isMounted) {
+          setImageUrl('');
+        }
       }
     };
 
     loadImageUrl();
+
+    return () => {
+      isMounted = false;
+    };
   }, [article.id, article.urlToImage, article.category, article.headline]);
 
   const handleClick = () => {

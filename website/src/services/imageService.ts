@@ -30,42 +30,62 @@ export const getUnsplashImageUrl = async (
   width: number = 800,
   height: number = 600
 ): Promise<string> => {
-  try {
-    const functionsUrl = getFunctionsUrl();
-    const proxyUrl = `${functionsUrl}/unsplashImage`;
-    
-    // Build query parameters
-    const params = new URLSearchParams({
-      category: category || 'news',
-      headline: headline || '',
-      width: width.toString(),
-      height: height.toString(),
-    });
+  // Immediate fallback - don't try proxy in production if it might not be deployed yet
+  // This prevents the site from hanging if the proxy endpoint doesn't exist
+  const useProxy = import.meta.env.VITE_FUNCTIONS_URL || import.meta.env.DEV;
+  
+  if (useProxy) {
+    try {
+      const functionsUrl = getFunctionsUrl();
+      const proxyUrl = `${functionsUrl}/unsplashImage`;
+      
+      // Build query parameters
+      const params = new URLSearchParams({
+        category: category || 'news',
+        headline: headline || '',
+        width: width.toString(),
+        height: height.toString(),
+      });
 
-    const response = await fetch(`${proxyUrl}?${params.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(3000), // 3 second timeout
-    });
+      // Create AbortController for timeout (more compatible than AbortSignal.timeout)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.url) {
-        return data.url;
+      try {
+        const response = await fetch(`${proxyUrl}?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.url) {
+            return data.url;
+          }
+          // If proxy returned fallback, use it
+          if (data.url) {
+            return data.url;
+          }
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name !== 'AbortError') {
+          throw fetchError;
+        }
+        // Timeout - fall through to fallback
       }
-      // If proxy returned fallback, use it
-      if (data.url) {
-        return data.url;
-      }
+    } catch (error) {
+      // Silently fall through to Picsum fallback
+      console.warn('⚠️ Unsplash proxy unavailable, using fallback');
     }
-  } catch (error) {
-    console.warn('⚠️ Unsplash proxy failed, using fallback:', error);
   }
 
-  // Fallback to Picsum Photos with seeded URL
+  // Fallback to Picsum Photos with seeded URL (always works)
   const seed = (category + headline).replace(/[^a-z0-9]/gi, '').substring(0, 20);
   return `https://picsum.photos/seed/${seed}/${width}/${height}`;
 };
