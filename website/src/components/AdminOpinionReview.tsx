@@ -5,8 +5,10 @@ import {
   approveOpinion, 
   rejectOpinion,
   getCurrentAuthUser,
-  ensureAuthenticated
+  ensureAuthenticated,
+  uploadOpinionImage
 } from '../services/opinionsService';
+import { getImageByTopic } from '../utils/imageGenerator';
 
 interface ToastMessage {
   id: string;
@@ -14,14 +16,18 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+
 const AdminOpinionReview: React.FC = () => {
   const [pendingOpinions, setPendingOpinions] = useState<Opinion[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isVisible, setIsVisible] = useState(true);
+  const [replacementUrls, setReplacementUrls] = useState<Record<string, string>>({});
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now().toString();
@@ -91,6 +97,25 @@ const AdminOpinionReview: React.FC = () => {
     };
   }, []);
 
+  const handleReplaceImage = async (opinion: Opinion, file: File) => {
+    if (file.size > MAX_IMAGE_BYTES) {
+      showToast('Image too large (max 5MB).', 'error');
+      return;
+    }
+
+    setUploadingId(opinion.id);
+    try {
+      const url = await uploadOpinionImage(file, 'published_images', opinion.id);
+      setReplacementUrls(prev => ({ ...prev, [opinion.id]: url }));
+      showToast('Replacement image uploaded.', 'success');
+    } catch (err: any) {
+      console.error('Replace image error:', err);
+      showToast(`Upload failed: ${err.message || 'Unknown error'}`, 'error');
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
   const handleApprove = async (opinionId: string) => {
     setProcessingId(opinionId);
     
@@ -98,7 +123,7 @@ const AdminOpinionReview: React.FC = () => {
     setPendingOpinions(prev => prev.filter(op => op.id !== opinionId));
     
     try {
-      await approveOpinion(opinionId, 'admin');
+      await approveOpinion(opinionId, 'admin', replacementUrls[opinionId]);
       showToast('Essay Published!', 'success');
       // Opinion will be removed from pending list automatically via subscription
     } catch (error: any) {
@@ -289,6 +314,12 @@ const AdminOpinionReview: React.FC = () => {
           {pendingOpinions.map((opinion) => {
             const isExpanded = expandedId === opinion.id;
             const isProcessing = processingId === opinion.id;
+            const isUploading = uploadingId === opinion.id;
+            const suggestedSrc =
+              opinion.suggestedImageUrl ||
+              opinion.imageUrl ||
+              getImageByTopic(opinion.headline || '', opinion.id);
+            const replacementSrc = replacementUrls[opinion.id];
             
             return (
               <div
@@ -345,6 +376,52 @@ const AdminOpinionReview: React.FC = () => {
                   </p>
                 )}
 
+                {/* Suggested / Replacement Image (Editorial Gate) */}
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#999', marginBottom: '6px' }}>
+                    Recommended: 2000×1125 (16:9). Max: 5MB.
+                  </div>
+
+                  <div style={{ aspectRatio: '16/9', overflow: 'hidden', background: '#111', border: '1px solid #333' }}>
+                    <img
+                      src={replacementSrc || suggestedSrc}
+                      alt="Suggested"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {replacementSrc && (
+                    <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '6px' }}>
+                      Replacement uploaded (will publish as final).
+                    </div>
+                  )}
+
+                  <label style={{ display: 'inline-block', marginTop: '10px', cursor: isProcessing ? 'not-allowed' : 'pointer' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      disabled={isUploading || isProcessing}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleReplaceImage(opinion, f);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                    <span style={{
+                      padding: '6px 12px',
+                      border: '2px solid #fff',
+                      color: '#fff',
+                      fontSize: '0.75rem',
+                      fontWeight: '900',
+                      opacity: (isUploading || isProcessing) ? 0.6 : 1
+                    }}>
+                      {isUploading ? 'UPLOADING...' : 'REPLACE IMAGE'}
+                    </span>
+                  </label>
+                </div>
+
                 {/* Expanded Body - High Contrast */}
                 {isExpanded && (
                   <div style={{
@@ -387,58 +464,58 @@ const AdminOpinionReview: React.FC = () => {
                 }}>
                   <button
                     onClick={() => toggleExpand(opinion.id)}
-                    disabled={isProcessing}
+                    disabled={isProcessing || isUploading}
                     style={{
                       padding: '6px 12px',
                       fontSize: '0.75rem',
                       border: '2px solid #fff',
                       backgroundColor: 'transparent',
                       color: '#fff',
-                      cursor: isProcessing ? 'not-allowed' : 'pointer',
+                      cursor: (isProcessing || isUploading) ? 'not-allowed' : 'pointer',
                       borderRadius: '0',
                       fontWeight: 'bold',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#fff') && (e.currentTarget.style.color = '#000')}
+                    onMouseEnter={(e) => !(isProcessing || isUploading) && (e.currentTarget.style.backgroundColor = '#fff') && (e.currentTarget.style.color = '#000')}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#fff'; }}
                   >
                     {isExpanded ? '▼ COLLAPSE' : '▶ EXPAND'}
                   </button>
                   <button
                     onClick={() => handleApprove(opinion.id)}
-                    disabled={isProcessing}
+                    disabled={isProcessing || isUploading}
                     style={{
                       padding: '6px 12px',
                       fontSize: '0.75rem',
                       border: '2px solid #fff',
-                      backgroundColor: isProcessing ? '#333' : '#fff',
-                      color: isProcessing ? '#999' : '#000',
-                      cursor: isProcessing ? 'not-allowed' : 'pointer',
+                      backgroundColor: (isProcessing || isUploading) ? '#333' : '#fff',
+                      color: (isProcessing || isUploading) ? '#999' : '#000',
+                      cursor: (isProcessing || isUploading) ? 'not-allowed' : 'pointer',
                       borderRadius: '0',
                       fontWeight: '900',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#10b981') && (e.currentTarget.style.color = '#fff')}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isProcessing ? '#333' : '#fff'; e.currentTarget.style.color = isProcessing ? '#999' : '#000'; }}
+                    onMouseEnter={(e) => !(isProcessing || isUploading) && (e.currentTarget.style.backgroundColor = '#10b981') && (e.currentTarget.style.color = '#fff')}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = (isProcessing || isUploading) ? '#333' : '#fff'; e.currentTarget.style.color = (isProcessing || isUploading) ? '#999' : '#000'; }}
                   >
                     ✓ APPROVE
                   </button>
                   <button
                     onClick={() => handleReject(opinion.id)}
-                    disabled={isProcessing}
+                    disabled={isProcessing || isUploading}
                     style={{
                       padding: '6px 12px',
                       fontSize: '0.75rem',
                       border: '2px solid #fff',
-                      backgroundColor: isProcessing ? '#333' : '#000',
+                      backgroundColor: (isProcessing || isUploading) ? '#333' : '#000',
                       color: '#fff',
-                      cursor: isProcessing ? 'not-allowed' : 'pointer',
+                      cursor: (isProcessing || isUploading) ? 'not-allowed' : 'pointer',
                       borderRadius: '0',
                       fontWeight: '900',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.backgroundColor = '#ef4444') && (e.currentTarget.style.color = '#fff')}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isProcessing ? '#333' : '#000'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseEnter={(e) => !(isProcessing || isUploading) && (e.currentTarget.style.backgroundColor = '#ef4444') && (e.currentTarget.style.color = '#fff')}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = (isProcessing || isUploading) ? '#333' : '#000'; e.currentTarget.style.color = '#fff'; }}
                   >
                     ✗ REJECT
                   </button>
