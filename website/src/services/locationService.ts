@@ -115,8 +115,11 @@ export const detectUserLocation = async (): Promise<CountryInfo> => {
         }
         return SUPPORTED_COUNTRIES[0];
       }
-    } catch (e) {
-      console.log('⚠️ ip-api.com also failed');
+    } catch (e: any) {
+      clearTimeout(timeoutId);
+      if (e.name !== 'AbortError') {
+        console.log('⚠️ ip-api.com also failed');
+      }
     }
 
     // Final fallback: Default to Zimbabwe
