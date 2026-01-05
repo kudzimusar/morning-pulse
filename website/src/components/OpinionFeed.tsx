@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../../types';
 import { subscribeToPublishedOpinions } from '../services/opinionsService';
-import { X, Mic2, Clock, Share2, ChevronRight, PenTool } from 'lucide-react';
-
-// Use a fallback if the environment variable is missing
-const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || 'hsg8ZqdAsnjzsxkq_uKUFH0-hbCFQzX0jOnzEkBAnko';
+import { X, PenTool } from 'lucide-react';
+import { getImageByTopic } from '../utils/imageGenerator';
 
 interface OpinionFeedProps {
   onNavigateToSubmit?: () => void;
@@ -30,12 +28,10 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
     return () => { if (unsubscribe) unsubscribe(); };
   }, []);
 
-  const getDynamicImage = (opinion: Opinion, width: number = 800) => {
-    if (opinion.imageUrl && opinion.imageUrl.startsWith('http')) return opinion.imageUrl;
-    
-    // Using the stable 'source' URL which is more reliable for quick builds
-    const query = encodeURIComponent(`${opinion.category} ${opinion.headline.split(' ')[0]}`);
-    return `https://source.unsplash.com/featured/${width}x${Math.round(width*0.6)}/?${query}&sig=${opinion.id}`;
+  const getDisplayImage = (opinion: Opinion) => {
+    const fromDoc = opinion.finalImageUrl || opinion.suggestedImageUrl || opinion.imageUrl;
+    if (typeof fromDoc === 'string' && /^https?:\/\//i.test(fromDoc)) return fromDoc;
+    return getImageByTopic(opinion.headline || '', opinion.id);
   };
 
   const categories = ['Latest', 'The Board', 'Guest Essays', 'Letters', 'Culture'];
@@ -97,7 +93,13 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
           <div className="main-col">
             {filtered[0] && (
               <article onClick={() => setSelectedOpinion(filtered[0])} style={{ cursor: 'pointer', marginBottom: '60px' }}>
-                <img src={getDynamicImage(filtered[0], 1200)} style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', marginBottom: '24px' }} />
+                <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '24px' }}>
+                  <img
+                    src={getDisplayImage(filtered[0])}
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </div>
                 <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: '900', lineHeight: '0.95', letterSpacing: '-0.04em' }}>{filtered[0].headline}</h1>
                 <p style={{ fontSize: '1.4rem', color: '#57534e', fontStyle: 'italic', margin: '16px 0' }}>{filtered[0].subHeadline}</p>
                 <div style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '12px' }}>By {filtered[0].authorName}</div>
@@ -107,7 +109,13 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', borderTop: '4px solid #000', paddingTop: '32px' }}>
               {filtered.slice(1, 5).map((op, i) => (
                 <article key={op.id} onClick={() => setSelectedOpinion(op)} style={{ cursor: 'pointer' }}>
-                  <img src={getDynamicImage(op, 600)} style={{ width: '100%', aspectRatio: '3/2', objectFit: 'cover', marginBottom: '12px' }} />
+                  <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '12px' }}>
+                    <img
+                      src={getDisplayImage(op)}
+                      loading="lazy"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  </div>
                   <h3 style={{ fontSize: '1.4rem', fontWeight: '900', lineHeight: '1.2' }}>{op.headline}</h3>
                   <div style={{ fontSize: '10px', color: '#a8a29e', textTransform: 'uppercase', marginTop: '8px' }}>{op.authorName}</div>
                 </article>
@@ -139,7 +147,13 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
               <h1 style={{ fontSize: 'clamp(2.5rem, 7vw, 4rem)', fontWeight: '900', lineHeight: '0.95' }}>{selectedOpinion.headline}</h1>
               <div style={{ marginTop: '20px', fontWeight: '900', fontSize: '14px' }}>By {selectedOpinion.authorName}</div>
             </header>
-            <img src={getDynamicImage(selectedOpinion, 1200)} style={{ width: '100%', marginBottom: '40px' }} />
+            <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '40px' }}>
+              <img
+                src={getDisplayImage(selectedOpinion)}
+                loading="lazy"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
             <div className="drop-cap" style={{ fontSize: '1.3rem', lineHeight: '1.8', whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
           </div>
         </div>
