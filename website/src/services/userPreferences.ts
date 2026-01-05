@@ -6,6 +6,43 @@
 const STORAGE_KEY_PREFIX = 'morning-pulse-';
 
 /**
+ * Clean up old category preference entries
+ */
+const cleanupCategoryPreferences = (): void => {
+  try {
+    const keys = Object.keys(localStorage);
+    const categoryKeys = keys.filter(key => key.startsWith(`${STORAGE_KEY_PREFIX}category-`));
+    
+    // Sort by timestamp and remove oldest entries
+    if (categoryKeys.length > 20) {
+      const entries = categoryKeys
+        .filter(key => key.includes('-time-'))
+        .map(key => ({
+          key,
+          time: parseInt(localStorage.getItem(key) || '0', 10),
+        }))
+        .sort((a, b) => b.time - a.time); // Newest first
+      
+      // Keep top 15 most recent, remove the rest
+      const toRemove = entries.slice(15).map(e => e.key);
+      
+      toRemove.forEach(key => {
+        localStorage.removeItem(key);
+        // Also remove the count key
+        const countKey = key.replace('-time-', '-');
+        if (countKey !== key) {
+          localStorage.removeItem(countKey);
+        }
+      });
+      
+      console.log(`🧹 Cleaned up ${toRemove.length} old category preference entries`);
+    }
+  } catch (e) {
+    console.warn('Failed to cleanup category preferences:', e);
+  }
+};
+
+/**
  * Track category click/interaction
  */
 export const trackCategoryInteraction = (category: string): void => {
@@ -18,7 +55,22 @@ export const trackCategoryInteraction = (category: string): void => {
     const timeKey = `${STORAGE_KEY_PREFIX}category-time-${category}`;
     localStorage.setItem(timeKey, String(Date.now()));
   } catch (e: any) {
-    if (e.name !== 'QuotaExceededError') {
+    if (e.name === 'QuotaExceededError') {
+      console.warn('⚠️ LocalStorage quota exceeded, attempting cleanup...');
+      // Try to cleanup old entries
+      try {
+        cleanupCategoryPreferences();
+        // Retry tracking
+        const key = `${STORAGE_KEY_PREFIX}category-${category}`;
+        const currentCount = parseInt(localStorage.getItem(key) || '0', 10);
+        localStorage.setItem(key, String(currentCount + 1));
+        const timeKey = `${STORAGE_KEY_PREFIX}category-time-${category}`;
+        localStorage.setItem(timeKey, String(Date.now()));
+        console.log(`✅ Tracked category interaction after cleanup: ${category}`);
+      } catch (retryError) {
+        console.error('❌ Failed to track category interaction even after cleanup:', retryError);
+      }
+    } else {
       console.error('Failed to track category interaction:', e);
     }
   }

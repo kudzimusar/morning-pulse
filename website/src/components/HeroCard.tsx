@@ -9,6 +9,36 @@ interface HeroCardProps {
 }
 
 const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
+  const [imageUrl, setImageUrl] = useState<string>('');
+
+  // Fetch image URL on mount
+  useEffect(() => {
+    const loadImageUrl = async () => {
+      if (article.urlToImage) {
+        setImageUrl(article.urlToImage);
+        return;
+      }
+
+      // Use Unsplash proxy with fallback
+      try {
+        const url = await getCachedUnsplashImageUrl(
+          article.id,
+          article.category,
+          article.headline,
+          800,
+          600
+        );
+        setImageUrl(url);
+      } catch (error) {
+        console.warn('Failed to load image:', error);
+        // Fallback to empty string (will use gradient)
+        setImageUrl('');
+      }
+    };
+
+    loadImageUrl();
+  }, [article.id, article.urlToImage, article.category, article.headline]);
+
   const handleClick = () => {
     if (article.url) {
       window.open(article.url, '_blank', 'noopener,noreferrer');
@@ -41,17 +71,6 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
       'General News': '📰',
     };
     return icons[category] || icons['General News'];
-  };
-
-  // Get image URL - use urlToImage if available, otherwise fallback
-  const getImageUrl = () => {
-    if (article.urlToImage) {
-      return article.urlToImage;
-    }
-    // Use placeholder service for images (Unsplash Source is blocked, API requires key)
-    // Use Picsum Photos as a reliable fallback
-    const seed = (article.headline + article.category).replace(/[^a-z0-9]/gi, '').substring(0, 20);
-    return `https://picsum.photos/seed/${seed}/800/600`;
   };
 
   // Generate tags for glassmorphism overlay

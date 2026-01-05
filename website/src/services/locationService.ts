@@ -130,6 +130,30 @@ export const getCountryByName = (name: string): CountryInfo | undefined => {
 };
 
 /**
+ * Clean up old localStorage entries to free up space
+ */
+const cleanupLocalStorage = (): void => {
+  try {
+    const keys = Object.keys(localStorage);
+    const morningPulseKeys = keys.filter(key => key.startsWith('morning-pulse-'));
+    
+    // Sort by key to identify old entries (keep most recent)
+    if (morningPulseKeys.length > 50) {
+      // Keep only the most recent 30 entries (country preference + category preferences)
+      const toRemove = morningPulseKeys.slice(30);
+      toRemove.forEach(key => {
+        if (key !== 'morning-pulse-country') { // Never remove country preference
+          localStorage.removeItem(key);
+        }
+      });
+      console.log(`🧹 Cleaned up ${toRemove.length} old localStorage entries`);
+    }
+  } catch (e) {
+    console.warn('Failed to cleanup localStorage:', e);
+  }
+};
+
+/**
  * Store user's selected country in localStorage
  * Marks it as a manual selection to override auto-detection
  */
@@ -143,7 +167,20 @@ export const saveUserCountry = (country: CountryInfo, isManualSelection: boolean
     console.log(`✅ Saved country preference: ${country.name} (${isManualSelection ? 'manual' : 'auto'})`);
   } catch (e: any) {
     if (e.name === 'QuotaExceededError') {
-      console.warn('LocalStorage quota exceeded, country preference not saved');
+      console.warn('⚠️ LocalStorage quota exceeded, attempting cleanup...');
+      // Try to cleanup old entries
+      try {
+        cleanupLocalStorage();
+        // Retry saving country preference
+        const countryData = {
+          ...country,
+          manualSelection: isManualSelection,
+        };
+        localStorage.setItem('morning-pulse-country', JSON.stringify(countryData));
+        console.log(`✅ Saved country preference after cleanup: ${country.name}`);
+      } catch (retryError) {
+        console.error('❌ Failed to save country preference even after cleanup:', retryError);
+      }
     } else {
       console.error('Failed to save country preference:', e);
     }

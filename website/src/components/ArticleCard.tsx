@@ -95,19 +95,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
     return tags;
   };
 
-  // Get image URL - use urlToImage if available, otherwise Unsplash API fallback
-  const getImageUrl = () => {
-    if (article.urlToImage) {
-      return article.urlToImage;
-    }
-    // Use Unsplash API with category and headline
-    const categoryQuery = article.category.toLowerCase().replace(/\s+/g, ',').replace(/\(zim\)/g, 'zimbabwe');
-    const headlineQuery = article.headline.substring(0, 50).toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ',');
-    // Use api.unsplash.com with search query - note: this requires API key in production
-    // For now, use a placeholder service that works without API key
-    return `https://picsum.photos/800/600?random=${article.id}`;
-  };
-
   return (
     <article 
       className={`premium-article-card ${variant} ${article.url ? 'clickable' : ''}`}
