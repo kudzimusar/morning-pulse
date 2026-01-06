@@ -24,7 +24,7 @@ interface HeaderProps {
   onSubscribeClick?: () => void;
   currentCountry?: CountryInfo;
   onCountryChange?: (country: CountryInfo) => void;
-  userRole?: 'super_admin' | 'editor' | null;
+  userRole?: string[] | null;
   onDashboardClick?: () => void;
 }
 
@@ -166,7 +166,7 @@ const Header: React.FC<HeaderProps> = ({
           </h1>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             {/* Dashboard button for editors */}
-            {userRole && (userRole === 'editor' || userRole === 'super_admin') && onDashboardClick && (
+            {userRole && Array.isArray(userRole) && (userRole.includes('editor') || userRole.includes('admin') || userRole.includes('super_admin')) && onDashboardClick && (
               <button 
                 onClick={onDashboardClick}
                 style={{

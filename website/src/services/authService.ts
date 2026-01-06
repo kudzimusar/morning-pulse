@@ -103,8 +103,9 @@ const getDbInstance = (): Firestore => {
   return dbInstance;
 };
 
-// Staff role types
-export type StaffRole = 'super_admin' | 'editor' | null;
+// Staff role types - now supports multiple roles per user
+// Backward compatible: can be array of roles or single role string
+export type StaffRole = string[] | null;
 
 const appId = 'morning-pulse-app';
 
@@ -157,8 +158,9 @@ export const signInEditor = async (email: string, password: string): Promise<Use
 };
 
 /**
- * Get staff role for a user UID
+ * Get staff roles for a user UID
  * Checks Firestore: staff/{uid} (top-level collection)
+ * Returns array of roles, with backward compatibility for single role string
  */
 export const getStaffRole = async (uid: string): Promise<StaffRole> => {
   try {
@@ -171,9 +173,26 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
       return null;
     }
     
-    const role = snap.data()?.role;
-    if (role === 'super_admin' || role === 'editor') {
-      return role;
+    const data = snap.data();
+    
+    // ✅ NEW: Check for roles array first (new format)
+    if (data?.roles && Array.isArray(data.roles)) {
+      // Filter to only valid roles
+      const validRoles = data.roles.filter((r: string) => 
+        typeof r === 'string' && ['editor', 'super_admin', 'admin'].includes(r)
+      );
+      if (validRoles.length > 0) {
+        return validRoles;
+      }
+    }
+    
+    // ✅ BACKWARD COMPATIBILITY: Check for single role string (old format)
+    if (data?.role && typeof data.role === 'string') {
+      const role = data.role;
+      if (role === 'super_admin' || role === 'editor' || role === 'admin') {
+        // Convert single role to array for consistency
+        return [role];
+      }
     }
     
     return null;
@@ -184,17 +203,27 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
 };
 
 /**
- * Check if user has editor or super_admin role
+ * Check if user has editor, admin, or super_admin role
+ * Supports roles array (new format) with backward compatibility
  */
-export const requireEditor = (role: StaffRole): boolean => {
-  return role === 'editor' || role === 'super_admin';
+export const requireEditor = (roles: StaffRole): boolean => {
+  if (!roles || !Array.isArray(roles)) {
+    return false;
+  }
+  // ✅ Check if roles array includes any editor-level permission
+  return roles.includes('editor') || roles.includes('admin') || roles.includes('super_admin');
 };
 
 /**
- * Check if user has super_admin role
+ * Check if user has super_admin or admin role
+ * Supports roles array (new format) with backward compatibility
  */
-export const requireSuperAdmin = (role: StaffRole): boolean => {
-  return role === 'super_admin';
+export const requireSuperAdmin = (roles: StaffRole): boolean => {
+  if (!roles || !Array.isArray(roles)) {
+    return false;
+  }
+  // ✅ Check if roles array includes admin or super_admin
+  return roles.includes('super_admin') || roles.includes('admin');
 };
 
 /**
