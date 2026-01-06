@@ -145,7 +145,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
     // Function to try fetching news for a specific date
     const tryFetchNewsForDate = async (dateString: string, country: CountryInfo): Promise<{ success: boolean; data?: any; timestamp?: Date }> => {
       try {
-        const appId = (window as any).__app_id || 'morning-pulse-app';
+        // ✅ FIX: Use 'morning-pulse' instead of 'morning-pulse-app' to match Firestore rules
+        const appId = 'morning-pulse';
         const newsPath = `artifacts/${appId}/public/data/news/${dateString}`;
         const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
         
@@ -213,6 +214,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         
         const country = userCountry || { code: 'ZW', name: 'Zimbabwe' };
         const targetDate = selectedDate || new Date().toISOString().split('T')[0];
+        // ✅ FIX: Define today at the top level so it's available for all strategies
+        const today = new Date();
         
         console.log(`📂 Fetching news (${isIntervalCheck ? 'interval check' : 'initial load'})...`);
         console.log(`   Country: ${country.name} (${country.code})`);
@@ -236,7 +239,6 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         
         // Strategy 2: Rolling date fallback - try today, then yesterday, then day before (up to 7 days back)
         if (!foundNews) {
-          const today = new Date();
           for (let i = 0; i < 7; i++) {
             const checkDate = new Date(today);
             checkDate.setDate(today.getDate() - i);
@@ -291,7 +293,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           
           // Set up real-time listener on the found date
           if (!unsubscribe) {
-            const appId = (window as any).__app_id || 'morning-pulse-app';
+            // ✅ FIX: Use 'morning-pulse' instead of 'morning-pulse-app' to match Firestore rules
+            const appId = 'morning-pulse';
             const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', foundDate);
             
             unsubscribe = onSnapshot(
