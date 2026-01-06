@@ -62,6 +62,15 @@ interface NewsData {
 }
 
 const App: React.FC = () => {
+  // ✅ FIX: Admin mode check MUST be declared first (used in useEffect dependency arrays)
+  const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
+  
+  // ✅ FIX: Admin authentication state MUST be declared before useEffects that reference them
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [userRole, setUserRole] = useState<StaffRole>(null);
+  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
+
+  // Regular state declarations
   const [newsData, setNewsData] = useState<NewsData>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -316,14 +325,6 @@ const App: React.FC = () => {
       .slice(0, 5)
       .map(article => article.headline);
   }, [newsData]);
-
-  // Check if admin mode is enabled
-  const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
-  
-  // Admin authentication state
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [userRole, setUserRole] = useState<StaffRole>(null);
-  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
 
   // CRITICAL: Sign in anonymously on app load for public access
   useEffect(() => {
