@@ -17,7 +17,28 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      await signInEditor(email, password);
+      // Sign in with email/password
+      const user = await signInEditor(email, password);
+      console.log('✅ Email/password login successful, user:', user.uid);
+
+      // ✅ FIX: Immediately verify role from staff collection
+      const { getStaffRole, requireEditor } = await import('../services/authService');
+      const role = await getStaffRole(user.uid);
+      
+      console.log('🔍 Role check result:', role);
+      
+      if (!requireEditor(role)) {
+        // ✅ FIX: Sign out if role check fails
+        console.error('❌ User does not have editor role, signing out...');
+        const { logoutEditor } = await import('../services/authService');
+        await logoutEditor();
+        setError('Access denied. You do not have editor permissions. Please contact an administrator.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Role verified as editor, redirecting to dashboard...');
+      
       if (onLoginSuccess) {
         onLoginSuccess();
       }

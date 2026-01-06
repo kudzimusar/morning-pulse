@@ -63,6 +63,14 @@ interface NewsData {
 }
 
 const App: React.FC = () => {
+  // ✅ FIX: Clear localStorage at app start to resolve quota issues
+  try {
+    localStorage.clear();
+    console.log('✅ Cleared localStorage at app initialization');
+  } catch (clearError) {
+    console.warn('⚠️ Could not clear localStorage:', clearError);
+  }
+
   // ✅ FIX: Admin mode check MUST be declared first (used in useEffect dependency arrays)
   const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
   
@@ -363,8 +371,21 @@ const App: React.FC = () => {
   }, [newsData]);
 
   // CRITICAL: Sign in anonymously on app load for public access
+  // BUT: ONLY on root path, NOT on admin routes
   useEffect(() => {
     const initializeAuth = async () => {
+      // ✅ FIX: Check if we're on root path and NOT on admin route
+      const hash = window.location.hash.replace('#', '');
+      const pathname = window.location.pathname;
+      const isRootPath = (hash === '' || hash === 'news') && (pathname === '/' || pathname === '/morning-pulse' || pathname === '/morning-pulse/');
+      const isAdminRoute = hash === 'admin' || pathname === '/admin' || pathname.includes('/admin') || hash === 'dashboard';
+      
+      // ✅ FIX: Only sign in anonymously if on root path AND not on admin route
+      if (!isRootPath || isAdminRoute) {
+        console.log('🔐 Skipping anonymous auth - not on root path or on admin route');
+        return;
+      }
+      
       try {
         const config = getFirebaseConfig();
         let app: FirebaseApp;
@@ -375,7 +396,8 @@ const App: React.FC = () => {
         }
         const auth = getAuth(app);
         
-        if (!auth.currentUser) {
+        // ✅ FIX: Only sign in anonymously if no user AND on root path
+        if (!auth.currentUser && isRootPath && !isAdminRoute) {
           console.log('🔐 App: Signing in anonymously for public access...');
           await signInAnonymously(auth);
           console.log('✅ App: Anonymous authentication successful');

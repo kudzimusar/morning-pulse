@@ -115,7 +115,17 @@ const appId = 'morning-pulse-app';
 export const signInEditor = async (email: string, password: string): Promise<User> => {
   try {
     const authInstance = getAuthInstance();
+    
+    // ✅ FIX: Sign out anonymous user if present before email/password login
+    if (authInstance.currentUser && authInstance.currentUser.isAnonymous) {
+      console.log('🔐 Signing out anonymous user before editor login...');
+      await signOut(authInstance);
+      // Wait a moment for sign out to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+    
     const userCredential = await signInWithEmailAndPassword(authInstance, email, password);
+    console.log('✅ Editor email/password login successful');
     return userCredential.user;
   } catch (error: any) {
     console.error('❌ Editor sign in failed:', error);
