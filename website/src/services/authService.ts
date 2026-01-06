@@ -113,9 +113,37 @@ const appId = 'morning-pulse-app';
  * This is separate from anonymous authentication used for public submissions
  */
 export const signInEditor = async (email: string, password: string): Promise<User> => {
-  const authInstance = getAuthInstance();
-  const userCredential = await signInWithEmailAndPassword(authInstance, email, password);
-  return userCredential.user;
+  try {
+    const authInstance = getAuthInstance();
+    const userCredential = await signInWithEmailAndPassword(authInstance, email, password);
+    return userCredential.user;
+  } catch (error: any) {
+    console.error('❌ Editor sign in failed:', error);
+    
+    // Provide user-friendly error messages
+    if (error.code === 'auth/operation-not-allowed') {
+      throw new Error(
+        'Email/Password authentication is not enabled. ' +
+        'Please enable it in Firebase Console > Authentication > Sign-in method > Email/Password. ' +
+        'Visit: https://console.firebase.google.com/project/gen-lang-client-0999441419/authentication/providers'
+      );
+    }
+    
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      throw new Error('Invalid email or password. Please check your credentials.');
+    }
+    
+    if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email address format.');
+    }
+    
+    if (error.code === 'auth/too-many-requests') {
+      throw new Error('Too many failed login attempts. Please try again later.');
+    }
+    
+    // Generic error
+    throw new Error(error.message || 'Failed to sign in. Please try again.');
+  }
 };
 
 /**

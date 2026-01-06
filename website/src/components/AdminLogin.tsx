@@ -73,6 +73,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="editor@morningpulse.com"
               required
+              autoComplete="email"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -100,6 +101,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
               required
+              autoComplete="current-password"
               style={{
                 width: '100%',
                 padding: '12px',

@@ -90,11 +90,11 @@ const App: React.FC = () => {
       
       if (manualSelection) {
         // User has manually selected a country, use it
-        const savedCountry = getUserCountry();
-        if (savedCountry) {
+      const savedCountry = getUserCountry();
+      if (savedCountry) {
           setCurrentCountry(savedCountry);
           console.log(`✅ Using saved country preference: ${savedCountry.name}`);
-          return;
+        return;
         }
       }
       
@@ -136,7 +136,9 @@ const App: React.FC = () => {
       } else if (hash === 'editorial') {
         setCurrentPage('editorial');
       } else if (hash === 'admin') {
-        setShowAdminLogin(true);
+        // ✅ FIX: Make admin a full page, not overlay
+        setCurrentPage('admin');
+        setShowAdminLogin(false); // Don't use overlay flag
       } else {
         setCurrentPage('news');
         setShowAdminLogin(false);
@@ -145,7 +147,8 @@ const App: React.FC = () => {
 
     // Check URL path for /admin
     if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
-      setShowAdminLogin(true);
+      setCurrentPage('admin');
+      setShowAdminLogin(false);
     }
 
     handleHashChange();
@@ -357,13 +360,27 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      <Header 
-        onCategorySelect={handleCategorySelect}
-        currentCountry={currentCountry}
-        onCountryChange={handleCountryChange}
-        topHeadlines={topHeadlines}
-        onSubscribeClick={handleSubscribeClick}
-      />
+      {/* Only show Header when NOT on admin page */}
+      {currentPage !== 'admin' && (
+        <Header 
+          onCategorySelect={handleCategorySelect}
+          currentCountry={currentCountry}
+          onCountryChange={handleCountryChange}
+          topHeadlines={topHeadlines}
+          onSubscribeClick={handleSubscribeClick}
+        />
+      )}
+      
+      {/* Admin Login - Full Page View (like other pages) */}
+      {currentPage === 'admin' && (
+        <AdminLogin 
+          onLoginSuccess={() => {
+            // Redirect to news page after successful login
+            window.location.hash = 'news';
+            setCurrentPage('news');
+          }}
+        />
+      )}
       
       {useFirestore && currentPage === 'news' && (
         <FirebaseConnector
@@ -449,23 +466,13 @@ const App: React.FC = () => {
         </>
       )}
 
-      {/* Admin Login Page */}
-      {showAdminLogin && userRole !== undefined && !requireEditor(userRole) && (
-        <AdminLogin 
-          onLoginSuccess={() => {
-            setShowAdminLogin(false);
-            // Role will be updated by auth state listener
-          }}
-        />
-      )}
-
-      {/* Admin Review Panel - only visible in admin mode on news and opinion pages */}
+      {/* Admin Review Panel - only visible when logged in on news/opinion pages */}
       {isAdminMode && requireEditor(userRole) && (currentPage === 'news' || currentPage === 'opinion') && (
         <AdminOpinionReview />
       )}
 
-      {/* Footer - always visible at bottom */}
-      <Footer />
+      {/* Footer - only show when NOT on admin page */}
+      {currentPage !== 'admin' && <Footer />}
     </div>
   );
 };
