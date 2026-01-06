@@ -158,12 +158,13 @@ export const signInEditor = async (email: string, password: string): Promise<Use
 
 /**
  * Get staff role for a user UID
- * Checks Firestore: artifacts/morning-pulse-app/staff/{uid}
+ * Checks Firestore: staff/{uid} (top-level collection)
  */
 export const getStaffRole = async (uid: string): Promise<StaffRole> => {
   try {
     const dbInstance = getDbInstance();
-    const staffRef = doc(dbInstance, 'artifacts', appId, 'staff', uid);
+    // ✅ FIX: Use top-level staff collection instead of nested path
+    const staffRef = doc(dbInstance, 'staff', uid);
     const snap = await getDoc(staffRef);
     
     if (!snap.exists()) {
