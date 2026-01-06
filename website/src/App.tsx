@@ -158,9 +158,16 @@ const App: React.FC = () => {
       } else {
         setCurrentPage('news');
         setShowAdminLogin(false);
+        // ✅ FIX: Don't reset view if editor is logged in - let them stay in admin view
         // Only switch to public view if not an editor
         if (!requireEditor(userRole)) {
           setView('public');
+        }
+        // If editor is logged in and view is already admin, keep it
+        // If editor is logged in but view is public, switch to admin
+        if (requireEditor(userRole) && view === 'public') {
+          setView('admin');
+          console.log('✅ Auto-switching to admin view for logged-in editor');
         }
       }
     };
@@ -175,6 +182,27 @@ const App: React.FC = () => {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // ✅ FIX: Auto-switch to admin view when userRole changes and has editor/admin role
+  useEffect(() => {
+    if (!isAdminMode) return;
+    
+    if (requireEditor(userRole)) {
+      // User has editor/admin role - ensure they're in admin view
+      if (view !== 'admin') {
+        console.log('✅ User has editor role, auto-switching to admin dashboard');
+        console.log('✅ Current roles:', userRole);
+        setView('admin');
+        window.location.hash = 'dashboard';
+      }
+    } else if (userRole === null || (Array.isArray(userRole) && userRole.length === 0)) {
+      // User doesn't have editor role - ensure they're in public view
+      if (view !== 'public') {
+        console.log('✅ User no longer has editor role, switching to public view');
+        setView('public');
+      }
+    }
+  }, [userRole, isAdminMode]); // Only depend on userRole, not view (to avoid loops)
 
   // Check editor role when admin mode is enabled
   useEffect(() => {
@@ -205,7 +233,9 @@ const App: React.FC = () => {
           // ✅ FIX: Switch to admin view when editor logs in
           if (requireEditor(role)) {
             setView('admin');
+            window.location.hash = 'dashboard';
             console.log('✅ Editor authenticated, switching to admin dashboard');
+            console.log('✅ Roles:', role);
           } else {
             setView('public');
           }
@@ -506,7 +536,8 @@ const App: React.FC = () => {
             />
           )}
       
-      {useFirestore && currentPage === 'news' && (
+      {/* ✅ FIX: Only load FirebaseConnector when NOT in admin view to stop infinite loop */}
+      {useFirestore && currentPage === 'news' && view === 'public' && (
         <FirebaseConnector
           onNewsUpdate={handleNewsUpdate}
           onError={handleError}
