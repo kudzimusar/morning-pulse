@@ -24,9 +24,19 @@ interface HeaderProps {
   onSubscribeClick?: () => void;
   currentCountry?: CountryInfo;
   onCountryChange?: (country: CountryInfo) => void;
+  userRole?: 'super_admin' | 'editor' | null;
+  onDashboardClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, onSubscribeClick, currentCountry, onCountryChange }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  topHeadlines = [], 
+  onCategorySelect, 
+  onSubscribeClick, 
+  currentCountry, 
+  onCountryChange,
+  userRole,
+  onDashboardClick
+}) => {
   const [harareTime, setHarareTime] = useState('');
   const [harareDate, setHarareDate] = useState('');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -154,14 +164,35 @@ const Header: React.FC<HeaderProps> = ({ topHeadlines = [], onCategorySelect, on
           <h1 className="premium-logo" onClick={() => handleCategoryClick(null)}>
             Morning Pulse
           </h1>
-          {onSubscribeClick && (
-            <button 
-              className="subscribe-button"
-              onClick={onSubscribeClick}
-            >
-              Subscribe
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {/* Dashboard button for editors */}
+            {userRole && (userRole === 'editor' || userRole === 'super_admin') && onDashboardClick && (
+              <button 
+                onClick={onDashboardClick}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Go to Dashboard
+              </button>
+            )}
+            {onSubscribeClick && (
+              <button 
+                className="subscribe-button"
+                onClick={onSubscribeClick}
+              >
+                Subscribe
+              </button>
+            )}
+          </div>
           {selectedCategory && (
             <div className="selected-category-badge">
               {selectedCategory}

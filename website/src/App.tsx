@@ -20,7 +20,8 @@ import {
   onEditorAuthStateChanged, 
   getStaffRole, 
   StaffRole,
-  requireEditor 
+  requireEditor,
+  logoutEditor
 } from './services/authService';
 import { NewsStory } from '../../types';
 import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
@@ -69,6 +70,7 @@ const App: React.FC = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [userRole, setUserRole] = useState<StaffRole>(null);
   const [adminAuthLoading, setAdminAuthLoading] = useState(false);
+  const [view, setView] = useState<'public' | 'admin'>('public');
 
   // Regular state declarations
   const [newsData, setNewsData] = useState<NewsData>({});
@@ -139,9 +141,19 @@ const App: React.FC = () => {
         // ✅ FIX: Make admin a full page, not overlay
         setCurrentPage('admin');
         setShowAdminLogin(false); // Don't use overlay flag
+      } else if (hash === 'dashboard') {
+        // ✅ NEW: Dashboard route for logged-in editors
+        if (requireEditor(userRole)) {
+          setView('admin');
+          setCurrentPage('news'); // Keep currentPage for context
+        }
       } else {
         setCurrentPage('news');
         setShowAdminLogin(false);
+        // Only switch to public view if not an editor
+        if (!requireEditor(userRole)) {
+          setView('public');
+        }
       }
     };
 
@@ -174,15 +186,25 @@ const App: React.FC = () => {
         if (!user) {
           setUserRole(null);
           setAdminAuthLoading(false);
+          setView('public'); // Reset to public view when no user
           return;
         }
 
         try {
           const role = await getStaffRole(user.uid);
           setUserRole(role);
+          
+          // ✅ FIX: Switch to admin view when editor logs in
+          if (requireEditor(role)) {
+            setView('admin');
+            console.log('✅ Editor authenticated, switching to admin dashboard');
+          } else {
+            setView('public');
+          }
         } catch (err) {
           console.error('Error checking role:', err);
           setUserRole(null);
+          setView('public');
         } finally {
           setAdminAuthLoading(false);
         }
@@ -301,6 +323,17 @@ const App: React.FC = () => {
     window.location.hash = 'subscribe';
   };
 
+  // Handler to switch between public and admin views
+  const handleViewSwitch = (newView: 'public' | 'admin') => {
+    setView(newView);
+    if (newView === 'admin') {
+      window.location.hash = 'dashboard';
+    } else {
+      window.location.hash = '';
+      setCurrentPage('news');
+    }
+  };
+
   // Format last updated timestamp
   const formatLastUpdated = (timestamp: Date): string => {
     const now = new Date();
@@ -360,27 +393,96 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      {/* Only show Header when NOT on admin page */}
-      {currentPage !== 'admin' && (
-        <Header 
-          onCategorySelect={handleCategorySelect}
-          currentCountry={currentCountry}
-          onCountryChange={handleCountryChange}
-          topHeadlines={topHeadlines}
-          onSubscribeClick={handleSubscribeClick}
-        />
-      )}
-      
-      {/* Admin Login - Full Page View (like other pages) */}
-      {currentPage === 'admin' && (
-        <AdminLogin 
-          onLoginSuccess={() => {
-            // Redirect to news page after successful login
-            window.location.hash = 'news';
-            setCurrentPage('news');
-          }}
-        />
-      )}
+      {/* Admin Dashboard View - Full Page */}
+      {view === 'admin' && requireEditor(userRole) ? (
+        <>
+          {/* Admin Dashboard Header */}
+          <div style={{
+            backgroundColor: '#000',
+            color: '#fff',
+            padding: '16px 24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '2px solid #fff'
+          }}>
+            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
+              Editorial Dashboard
+            </h1>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button
+                onClick={() => handleViewSwitch('public')}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  color: '#fff',
+                  border: '1px solid #fff',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                View Public Site
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await logoutEditor();
+                    setView('public');
+                    setUserRole(null);
+                    window.location.hash = '';
+                  } catch (err) {
+                    console.error('Logout error:', err);
+                  }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+          
+          {/* Full Admin Dashboard */}
+          <div style={{ minHeight: 'calc(100vh - 80px)' }}>
+            <AdminOpinionReview />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Public Site View */}
+          {/* Only show Header when NOT on admin page */}
+          {currentPage !== 'admin' && (
+            <Header 
+              onCategorySelect={handleCategorySelect}
+              currentCountry={currentCountry}
+              onCountryChange={handleCountryChange}
+              topHeadlines={topHeadlines}
+              onSubscribeClick={handleSubscribeClick}
+              userRole={userRole}
+              onDashboardClick={() => handleViewSwitch('admin')}
+            />
+          )}
+          
+          {/* Admin Login - Full Page View (like other pages) */}
+          {currentPage === 'admin' && (
+            <AdminLogin 
+              onLoginSuccess={() => {
+                // Role will be updated by auth state listener, which will switch view
+                // Redirect to dashboard after login
+                window.location.hash = 'dashboard';
+              }}
+            />
+          )}
       
       {useFirestore && currentPage === 'news' && (
         <FirebaseConnector
@@ -466,13 +568,10 @@ const App: React.FC = () => {
         </>
       )}
 
-      {/* Admin Review Panel - only visible when logged in on news/opinion pages */}
-      {isAdminMode && requireEditor(userRole) && (currentPage === 'news' || currentPage === 'opinion') && (
-        <AdminOpinionReview />
+          {/* Footer - only show when NOT on admin page */}
+          {currentPage !== 'admin' && <Footer />}
+        </>
       )}
-
-      {/* Footer - only show when NOT on admin page */}
-      {currentPage !== 'admin' && <Footer />}
     </div>
   );
 };
