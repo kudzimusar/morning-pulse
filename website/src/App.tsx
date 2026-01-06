@@ -363,12 +363,15 @@ const App: React.FC = () => {
 
   // Handler to switch between public and admin views
   const handleViewSwitch = (newView: 'public' | 'admin') => {
+    console.log('🔄 Switching view to:', newView);
     setView(newView);
     if (newView === 'admin') {
       window.location.hash = 'dashboard';
+      console.log('✅ Switched to admin dashboard');
     } else {
       window.location.hash = '';
       setCurrentPage('news');
+      console.log('✅ Switched to public view');
     }
   };
 
