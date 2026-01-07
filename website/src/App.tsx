@@ -282,23 +282,18 @@ const App: React.FC = () => {
       try {
         // Subscribe to auth state changes first (handles initial state)
         unsubscribe = onEditorAuthStateChanged((user) => {
+          console.log('🔄 Auth state changed, user:', user?.uid || 'null');
           checkRole(user);
         });
-
-        // Also check current editor after a short delay to ensure Firebase is initialized
-        setTimeout(() => {
-          try {
-            const currentEditor = getCurrentEditor();
-            if (currentEditor) {
-              checkRole(currentEditor);
-            } else {
-              setAdminAuthLoading(false);
-            }
-          } catch (error) {
-            console.error('Error checking current editor:', error);
-            setAdminAuthLoading(false);
-          }
-        }, 200);
+        
+        // ✅ FIX: Also check current user immediately (in case login already happened)
+        const currentUser = getCurrentEditor();
+        if (currentUser) {
+          console.log('🔍 Checking current user immediately...');
+          checkRole(currentUser);
+        } else {
+          setAdminAuthLoading(false);
+        }
       } catch (error) {
         console.error('Error initializing admin auth:', error);
         setAdminAuthLoading(false);
@@ -562,10 +557,38 @@ const App: React.FC = () => {
           {/* Admin Login - Full Page View (like other pages) */}
           {currentPage === 'admin' && (
             <AdminLogin 
-              onLoginSuccess={() => {
-                // Role will be updated by auth state listener, which will switch view
-                // Redirect to dashboard after login
-                window.location.hash = 'dashboard';
+              onLoginSuccess={async () => {
+                // ✅ FIX: Directly check role and update view state immediately
+                try {
+                  const { getCurrentEditor, getStaffRole, requireEditor } = await import('./services/authService');
+                  const currentUser = getCurrentEditor();
+                  
+                  if (currentUser) {
+                    console.log('🔍 Checking role immediately after login...');
+                    const role = await getStaffRole(currentUser.uid);
+                    console.log('✅ Role fetched immediately:', role);
+                    
+                    setUserRole(role);
+                    
+                    // ✅ FIX: Immediately switch to admin view if role is valid
+                    if (requireEditor(role)) {
+                      console.log('🚀 IMMEDIATE: Setting view to admin NOW');
+                      setView('admin');
+                      window.location.hash = 'dashboard';
+                    } else {
+                      console.warn('⚠️ User does not have editor role');
+                      setView('public');
+                    }
+                  } else {
+                    console.warn('⚠️ No current user after login');
+                    // Fallback: let auth state listener handle it
+                    window.location.hash = 'dashboard';
+                  }
+                } catch (error) {
+                  console.error('❌ Error in onLoginSuccess:', error);
+                  // Fallback: let auth state listener handle it
+                  window.location.hash = 'dashboard';
+                }
               }}
             />
           )}
