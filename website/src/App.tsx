@@ -184,6 +184,36 @@ const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  // ✅ FIX: Immediate dashboard switch when userRole contains 'admin'
+  useEffect(() => {
+    // Check if userRole exists and contains 'admin' or 'editor'
+    if (userRole && Array.isArray(userRole)) {
+      const hasAdminAccess = userRole.includes('admin') || 
+                            userRole.includes('editor') || 
+                            userRole.includes('super_admin');
+      
+      if (hasAdminAccess) {
+        // Immediately switch to admin view and stop news loop
+        if (view !== 'admin') {
+          console.log('🚀 IMMEDIATE: User has admin role, switching to dashboard NOW');
+          console.log('🚀 Roles:', userRole);
+          setView('admin');
+          window.location.hash = 'dashboard';
+        }
+      } else {
+        // User doesn't have admin access, ensure public view
+        if (view !== 'public') {
+          setView('public');
+        }
+      }
+    } else if (userRole === null) {
+      // No user role, ensure public view
+      if (view !== 'public') {
+        setView('public');
+      }
+    }
+  }, [userRole]); // Only depend on userRole for immediate response
+
   // ✅ FIX: Auto-switch to admin view when userRole changes and has editor/admin role
   useEffect(() => {
     if (!isAdminMode) return;
@@ -203,7 +233,7 @@ const App: React.FC = () => {
         setView('public');
       }
     }
-  }, [userRole, isAdminMode]); // Only depend on userRole, not view (to avoid loops)
+  }, [userRole, isAdminMode, view]); // Include view to ensure sync
 
   // Check editor role when admin mode is enabled
   useEffect(() => {
@@ -541,7 +571,8 @@ const App: React.FC = () => {
           )}
       
       {/* ✅ FIX: Only load FirebaseConnector when NOT in admin view to stop infinite loop */}
-      {useFirestore && currentPage === 'news' && view === 'public' && (
+      {/* ✅ PRIORITY: Check view FIRST to immediately stop news fetching when admin logs in */}
+      {useFirestore && currentPage === 'news' && view === 'public' && !requireEditor(userRole) && (
         <FirebaseConnector
           onNewsUpdate={handleNewsUpdate}
           onError={handleError}

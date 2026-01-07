@@ -38,20 +38,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       }
 
       console.log('✅ Role verified as editor, redirecting to dashboard...');
-      console.log('✅ Roles array:', role);
-      
-      // ✅ FIX: Force view switch by triggering hash change
-      window.location.hash = 'dashboard';
       
       if (onLoginSuccess) {
         onLoginSuccess();
       }
-      
-      // ✅ FIX: Small delay to ensure state updates, then reload if needed
-      setTimeout(() => {
-        // The auth state listener will pick up the role change and switch view
-        console.log('✅ Login complete, view should switch to admin dashboard');
-      }, 500);
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to sign in. Please check your credentials.');

@@ -170,18 +170,26 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
     const snap = await getDoc(staffRef);
     
     if (!snap.exists()) {
+      console.log('⚠️ Staff document not found for UID:', uid);
       return null;
     }
     
     const data = snap.data();
+    console.log('📋 Staff document data:', data);
     
-    // ✅ NEW: Check for roles array first (new format)
-    if (data?.roles && Array.isArray(data.roles)) {
+    // ✅ FIX: Check for roles array first (new format)
+    // Firestore arrays are already arrays, no conversion needed
+    if (data?.roles) {
+      // Handle both array and single value (Firestore might store as array even if single)
+      const rolesArray = Array.isArray(data.roles) ? data.roles : [data.roles];
+      
       // Filter to only valid roles
-      const validRoles = data.roles.filter((r: string) => 
+      const validRoles = rolesArray.filter((r: any) => 
         typeof r === 'string' && ['editor', 'super_admin', 'admin'].includes(r)
       );
+      
       if (validRoles.length > 0) {
+        console.log('✅ Found valid roles array:', validRoles);
         return validRoles;
       }
     }
@@ -190,14 +198,16 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
     if (data?.role && typeof data.role === 'string') {
       const role = data.role;
       if (role === 'super_admin' || role === 'editor' || role === 'admin') {
+        console.log('✅ Found single role (backward compat):', role);
         // Convert single role to array for consistency
         return [role];
       }
     }
     
+    console.log('⚠️ No valid roles found in staff document');
     return null;
   } catch (error) {
-    console.error('Error fetching staff role:', error);
+    console.error('❌ Error fetching staff role:', error);
     return null;
   }
 };
