@@ -1,3 +1,4 @@
+// Deployment fix attempt 2
 import React, { useState, useEffect } from 'react';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
