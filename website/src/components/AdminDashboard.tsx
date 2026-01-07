@@ -29,6 +29,7 @@ import StaffManagementTab from './admin/StaffManagementTab';
 import AnalyticsTab from './admin/AnalyticsTab';
 import ImageComplianceTab from './admin/ImageComplianceTab';
 import SettingsTab from './admin/SettingsTab';
+import WriterManagementTab from './admin/WriterManagementTab';
 
 // Constants
 const APP_ID = "morning-pulse-app";
@@ -58,7 +59,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'analytics' | 'image-compliance' | 'settings';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'analytics' | 'image-compliance' | 'settings';
 
 const AdminDashboard: React.FC = () => {
   // Auth state
@@ -399,6 +400,7 @@ const AdminDashboard: React.FC = () => {
     { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: '📝' },
     { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
     { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
+    { id: 'writer-management' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
     { id: 'analytics' as TabId, label: 'Analytics', icon: '📈' },
     { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️' },
     { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
@@ -583,6 +585,12 @@ const AdminDashboard: React.FC = () => {
               firebaseInstances={firebaseInstances}
               userRoles={userRoles}
               showToast={showToast}
+            />
+          )}
+
+          {activeTab === 'writer-management' && isAdmin && (
+            <WriterManagementTab
+              userRoles={userRoles}
             />
           )}
 

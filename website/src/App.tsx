@@ -15,6 +15,9 @@ import AboutPage from './components/AboutPage';
 import SubscriptionPage from './components/SubscriptionPage';
 import AdvertisePage from './components/AdvertisePage';
 import EditorialPage from './components/EditorialPage';
+import WriterRegistration from './components/WriterRegistration';
+import WriterLogin from './components/WriterLogin';
+import WriterDashboard from './components/WriterDashboard';
 // Import admin auth service (will only be used when admin mode is enabled)
 import { 
   getCurrentEditor, 
@@ -146,6 +149,12 @@ const App: React.FC = () => {
         setCurrentPage('advertise');
       } else if (hash === 'editorial') {
         setCurrentPage('editorial');
+      } else if (hash === 'writer/register' || hash.startsWith('writer/register')) {
+        setCurrentPage('writer-register');
+      } else if (hash === 'writer/login' || hash.startsWith('writer/login')) {
+        setCurrentPage('writer-login');
+      } else if (hash === 'writer/dashboard' || hash.startsWith('writer/dashboard')) {
+        setCurrentPage('writer-dashboard');
       } else if (hash === 'admin') {
         // ✅ FIX: Make admin a full page, not overlay
         setCurrentPage('admin');
@@ -638,6 +647,32 @@ const App: React.FC = () => {
 
       {currentPage === 'editorial' && (
         <EditorialPage onBack={handleBackToNews} />
+      )}
+
+      {currentPage === 'writer-register' && (
+        <WriterRegistration 
+          onSuccess={() => {
+            window.location.hash = 'writer/login';
+          }}
+          onBack={() => {
+            window.location.hash = 'news';
+          }}
+        />
+      )}
+
+      {currentPage === 'writer-login' && (
+        <WriterLogin 
+          onSuccess={() => {
+            window.location.hash = 'writer/dashboard';
+          }}
+          onBack={() => {
+            window.location.hash = 'news';
+          }}
+        />
+      )}
+
+      {currentPage === 'writer-dashboard' && (
+        <WriterDashboard />
       )}
       
       {currentPage === 'news' && (
