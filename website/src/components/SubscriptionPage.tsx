@@ -10,8 +10,8 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onBack }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle subscription logic here
-    alert('Subscription feature coming soon!');
+    // Redirect to registration page
+    window.location.hash = 'subscriber/register';
   };
 
   return (

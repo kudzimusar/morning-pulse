@@ -30,6 +30,8 @@ import AnalyticsTab from './admin/AnalyticsTab';
 import ImageComplianceTab from './admin/ImageComplianceTab';
 import SettingsTab from './admin/SettingsTab';
 import WriterManagementTab from './admin/WriterManagementTab';
+import SubscriberManagementTab from './admin/SubscriberManagementTab';
+import AdManagementTab from './admin/AdManagementTab';
 
 // Constants
 const APP_ID = "morning-pulse-app";
@@ -59,7 +61,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'analytics' | 'image-compliance' | 'settings';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'image-compliance' | 'settings';
 
 const AdminDashboard: React.FC = () => {
   // Auth state
@@ -401,6 +403,8 @@ const AdminDashboard: React.FC = () => {
     { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
     { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
     { id: 'writer-management' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
+    { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
+    { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
     { id: 'analytics' as TabId, label: 'Analytics', icon: '📈' },
     { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️' },
     { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
@@ -590,6 +594,18 @@ const AdminDashboard: React.FC = () => {
 
           {activeTab === 'writer-management' && isAdmin && (
             <WriterManagementTab
+              userRoles={userRoles}
+            />
+          )}
+
+          {activeTab === 'subscriber-management' && isAdmin && (
+            <SubscriberManagementTab
+              userRoles={userRoles}
+            />
+          )}
+
+          {activeTab === 'ad-management' && isAdmin && (
+            <AdManagementTab
               userRoles={userRoles}
             />
           )}

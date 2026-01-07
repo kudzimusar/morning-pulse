@@ -18,6 +18,13 @@ import EditorialPage from './components/EditorialPage';
 import WriterRegistration from './components/WriterRegistration';
 import WriterLogin from './components/WriterLogin';
 import WriterDashboard from './components/WriterDashboard';
+import SubscriberRegistration from './components/SubscriberRegistration';
+import SubscriberLogin from './components/SubscriberLogin';
+import SubscriberDashboard from './components/SubscriberDashboard';
+import AdvertiserRegistration from './components/AdvertiserRegistration';
+import AdvertiserLogin from './components/AdvertiserLogin';
+import AdvertiserDashboard from './components/AdvertiserDashboard';
+import AdSubmissionForm from './components/AdSubmissionForm';
 // Import admin auth service (will only be used when admin mode is enabled)
 import { 
   getCurrentEditor, 
@@ -155,6 +162,20 @@ const App: React.FC = () => {
         setCurrentPage('writer-login');
       } else if (hash === 'writer/dashboard' || hash.startsWith('writer/dashboard')) {
         setCurrentPage('writer-dashboard');
+      } else if (hash === 'subscriber/register' || hash.startsWith('subscriber/register')) {
+        setCurrentPage('subscriber-register');
+      } else if (hash === 'subscriber/login' || hash.startsWith('subscriber/login')) {
+        setCurrentPage('subscriber-login');
+      } else if (hash === 'subscriber/dashboard' || hash.startsWith('subscriber/dashboard')) {
+        setCurrentPage('subscriber-dashboard');
+      } else if (hash === 'advertiser/register' || hash.startsWith('advertiser/register')) {
+        setCurrentPage('advertiser-register');
+      } else if (hash === 'advertiser/login' || hash.startsWith('advertiser/login')) {
+        setCurrentPage('advertiser-login');
+      } else if (hash === 'advertiser/dashboard' || hash.startsWith('advertiser/dashboard')) {
+        setCurrentPage('advertiser-dashboard');
+      } else if (hash === 'advertiser/submit-ad' || hash.startsWith('advertiser/submit-ad')) {
+        setCurrentPage('advertiser-submit-ad');
       } else if (hash === 'admin') {
         // ✅ FIX: Make admin a full page, not overlay
         setCurrentPage('admin');
@@ -673,6 +694,69 @@ const App: React.FC = () => {
 
       {currentPage === 'writer-dashboard' && (
         <WriterDashboard />
+      )}
+
+      {currentPage === 'subscriber-register' && (
+        <SubscriberRegistration 
+          onSuccess={() => {
+            window.location.hash = 'subscriber/login';
+          }}
+          onBack={() => {
+            window.location.hash = 'news';
+          }}
+        />
+      )}
+
+      {currentPage === 'subscriber-login' && (
+        <SubscriberLogin 
+          onSuccess={() => {
+            window.location.hash = 'subscriber/dashboard';
+          }}
+          onBack={() => {
+            window.location.hash = 'news';
+          }}
+        />
+      )}
+
+      {currentPage === 'subscriber-dashboard' && (
+        <SubscriberDashboard />
+      )}
+
+      {currentPage === 'advertiser-register' && (
+        <AdvertiserRegistration 
+          onSuccess={() => {
+            window.location.hash = 'advertiser/login';
+          }}
+          onBack={() => {
+            window.location.hash = 'news';
+          }}
+        />
+      )}
+
+      {currentPage === 'advertiser-login' && (
+        <AdvertiserLogin 
+          onSuccess={() => {
+            window.location.hash = 'advertiser/dashboard';
+          }}
+          onBack={() => {
+            window.location.hash = 'news';
+          }}
+        />
+      )}
+
+      {currentPage === 'advertiser-dashboard' && (
+        <AdvertiserDashboard />
+      )}
+
+      {currentPage === 'advertiser-submit-ad' && (
+        <AdSubmissionForm 
+          onSuccess={() => {
+            window.location.hash = 'advertiser/dashboard';
+          }}
+          onBack={() => {
+            window.location.hash = 'advertiser/dashboard';
+          }}
+        />
       )}
       
       {currentPage === 'news' && (

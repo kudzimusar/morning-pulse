@@ -1,0 +1,584 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  getPendingAdvertisers, 
+  getApprovedAdvertisers, 
+  approveAdvertiser, 
+  rejectAdvertiser,
+  getPendingAds,
+  getActiveAds,
+  approveAd,
+  rejectAd,
+  activateAd,
+  Advertiser,
+  Ad
+} from '../../services/advertiserService';
+import { requireSuperAdmin } from '../../services/authService';
+
+interface AdManagementTabProps {
+  userRoles: string[] | null;
+}
+
+const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
+  const [pendingAdvertisers, setPendingAdvertisers] = useState<Advertiser[]>([]);
+  const [approvedAdvertisers, setApprovedAdvertisers] = useState<Advertiser[]>([]);
+  const [pendingAds, setPendingAds] = useState<Ad[]>([]);
+  const [activeAds, setActiveAds] = useState<Ad[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'advertisers' | 'ads'>('advertisers');
+  const [advertiserSubTab, setAdvertiserSubTab] = useState<'pending' | 'approved'>('pending');
+  const [rejectReason, setRejectReason] = useState<{ [key: string]: string }>({});
+  const [showRejectForm, setShowRejectForm] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    if (!requireSuperAdmin(userRoles)) {
+      return;
+    }
+    loadData();
+  }, [userRoles, activeTab, advertiserSubTab]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      if (activeTab === 'advertisers') {
+        const [pending, approved] = await Promise.all([
+          getPendingAdvertisers(),
+          getApprovedAdvertisers(),
+        ]);
+        setPendingAdvertisers(pending);
+        setApprovedAdvertisers(approved);
+      } else {
+        const [pending, active] = await Promise.all([
+          getPendingAds(),
+          getActiveAds(),
+        ]);
+        setPendingAds(pending);
+        setActiveAds(active);
+      }
+    } catch (error: any) {
+      console.error('Error loading data:', error);
+      alert(`Failed to load data: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveAdvertiser = async (uid: string) => {
+    if (!requireSuperAdmin(userRoles)) {
+      alert('You do not have permission to approve advertisers.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to approve this advertiser?')) {
+      return;
+    }
+
+    try {
+      await approveAdvertiser(uid);
+      alert('Advertiser approved successfully!');
+      await loadData();
+    } catch (error: any) {
+      alert(`Failed to approve advertiser: ${error.message}`);
+    }
+  };
+
+  const handleRejectAdvertiser = async (uid: string) => {
+    if (!requireSuperAdmin(userRoles)) {
+      alert('You do not have permission to reject advertisers.');
+      return;
+    }
+
+    const reason = rejectReason[uid]?.trim();
+    if (!reason) {
+      alert('Please provide a reason for rejection.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to reject this advertiser?')) {
+      return;
+    }
+
+    try {
+      await rejectAdvertiser(uid, reason);
+      alert('Advertiser rejected.');
+      setRejectReason({ ...rejectReason, [uid]: '' });
+      setShowRejectForm({ ...showRejectForm, [uid]: false });
+      await loadData();
+    } catch (error: any) {
+      alert(`Failed to reject advertiser: ${error.message}`);
+    }
+  };
+
+  const handleApproveAd = async (adId: string) => {
+    if (!requireSuperAdmin(userRoles)) {
+      alert('You do not have permission to approve ads.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to approve this ad?')) {
+      return;
+    }
+
+    try {
+      await approveAd(adId);
+      alert('Ad approved successfully!');
+      await loadData();
+    } catch (error: any) {
+      alert(`Failed to approve ad: ${error.message}`);
+    }
+  };
+
+  const handleRejectAd = async (adId: string) => {
+    if (!requireSuperAdmin(userRoles)) {
+      alert('You do not have permission to reject ads.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to reject this ad?')) {
+      return;
+    }
+
+    try {
+      await rejectAd(adId);
+      alert('Ad rejected.');
+      await loadData();
+    } catch (error: any) {
+      alert(`Failed to reject ad: ${error.message}`);
+    }
+  };
+
+  const handleActivateAd = async (adId: string) => {
+    if (!requireSuperAdmin(userRoles)) {
+      alert('You do not have permission to activate ads.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to activate this ad?')) {
+      return;
+    }
+
+    try {
+      await activateAd(adId);
+      alert('Ad activated successfully!');
+      await loadData();
+    } catch (error: any) {
+      alert(`Failed to activate ad: ${error.message}`);
+    }
+  };
+
+  if (!requireSuperAdmin(userRoles)) {
+    return (
+      <div style={{ padding: '32px', textAlign: 'center' }}>
+        <h2>Access Denied</h2>
+        <p>You do not have permission to manage ads. Super Admin access required.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: '32px', textAlign: 'center' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem' }}>Ad Management</h2>
+        
+        {/* Main Tabs */}
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e5e7eb', marginBottom: '16px' }}>
+          <button
+            onClick={() => setActiveTab('advertisers')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'advertisers' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'advertisers' ? '600' : '400',
+              color: activeTab === 'advertisers' ? '#000' : '#6b7280'
+            }}
+          >
+            Advertisers
+          </button>
+          <button
+            onClick={() => setActiveTab('ads')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'ads' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'ads' ? '600' : '400',
+              color: activeTab === 'ads' ? '#000' : '#6b7280'
+            }}
+          >
+            Ads ({pendingAds.length} pending, {activeAds.length} active)
+          </button>
+        </div>
+
+        {/* Advertiser Sub-tabs */}
+        {activeTab === 'advertisers' && (
+          <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e5e7eb' }}>
+            <button
+              onClick={() => setAdvertiserSubTab('pending')}
+              style={{
+                padding: '12px 24px',
+                border: 'none',
+                backgroundColor: 'transparent',
+                borderBottom: advertiserSubTab === 'pending' ? '2px solid #000' : '2px solid transparent',
+                cursor: 'pointer',
+                fontWeight: advertiserSubTab === 'pending' ? '600' : '400',
+                color: advertiserSubTab === 'pending' ? '#000' : '#6b7280'
+              }}
+            >
+              Pending Approval ({pendingAdvertisers.length})
+            </button>
+            <button
+              onClick={() => setAdvertiserSubTab('approved')}
+              style={{
+                padding: '12px 24px',
+                border: 'none',
+                backgroundColor: 'transparent',
+                borderBottom: advertiserSubTab === 'approved' ? '2px solid #000' : '2px solid transparent',
+                cursor: 'pointer',
+                fontWeight: advertiserSubTab === 'approved' ? '600' : '400',
+                color: advertiserSubTab === 'approved' ? '#000' : '#6b7280'
+              }}
+            >
+              Approved ({approvedAdvertisers.length})
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Advertisers Content */}
+      {activeTab === 'advertisers' && advertiserSubTab === 'pending' && (
+        <div>
+          {pendingAdvertisers.length === 0 ? (
+            <div style={{
+              padding: '48px',
+              textAlign: 'center',
+              backgroundColor: '#f9fafb',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <p style={{ color: '#6b7280', margin: 0 }}>No pending advertiser applications.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {pendingAdvertisers.map((advertiser) => (
+                <div
+                  key={advertiser.uid}
+                  style={{
+                    padding: '20px',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ margin: '0 0 8px 0', fontSize: '1.125rem' }}>{advertiser.companyName}</h3>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
+                        {advertiser.contactEmail} | {advertiser.contactPhone}
+                      </div>
+                      {advertiser.website && (
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
+                          <a href={advertiser.website} target="_blank" rel="noopener noreferrer" style={{ color: '#000' }}>
+                            {advertiser.website}
+                          </a>
+                        </div>
+                      )}
+                      <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
+                        Applied: {advertiser.createdAt.toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '16px' }}>
+                      <button
+                        onClick={() => handleApproveAdvertiser(advertiser.uid)}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#16a34a',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        Approve
+                      </button>
+                      
+                      {!showRejectForm[advertiser.uid] ? (
+                        <button
+                          onClick={() => setShowRejectForm({ ...showRejectForm, [advertiser.uid]: true })}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Reject
+                        </button>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
+                          <textarea
+                            value={rejectReason[advertiser.uid] || ''}
+                            onChange={(e) => setRejectReason({ ...rejectReason, [advertiser.uid]: e.target.value })}
+                            placeholder="Reason for rejection..."
+                            rows={3}
+                            style={{
+                              padding: '8px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              fontSize: '0.875rem',
+                              resize: 'vertical',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleRejectAdvertiser(advertiser.uid)}
+                              style={{
+                                flex: 1,
+                                padding: '6px 12px',
+                                backgroundColor: '#ef4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              Confirm Reject
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowRejectForm({ ...showRejectForm, [advertiser.uid]: false });
+                                setRejectReason({ ...rejectReason, [advertiser.uid]: '' });
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: '6px 12px',
+                                backgroundColor: '#6b7280',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'advertisers' && advertiserSubTab === 'approved' && (
+        <div>
+          {approvedAdvertisers.length === 0 ? (
+            <div style={{
+              padding: '48px',
+              textAlign: 'center',
+              backgroundColor: '#f9fafb',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <p style={{ color: '#6b7280', margin: 0 }}>No approved advertisers yet.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {approvedAdvertisers.map((advertiser) => (
+                <div
+                  key={advertiser.uid}
+                  style={{
+                    padding: '20px',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ margin: '0 0 8px 0', fontSize: '1.125rem' }}>{advertiser.companyName}</h3>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
+                        {advertiser.contactEmail} | {advertiser.contactPhone}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
+                        Approved: {advertiser.approvedAt?.toLocaleDateString() || 'N/A'}
+                      </div>
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          backgroundColor: '#d1fae5',
+                          color: '#065f46'
+                        }}
+                      >
+                        Approved
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Ads Content */}
+      {activeTab === 'ads' && (
+        <div>
+          <div style={{ marginBottom: '16px' }}>
+            <h3 style={{ marginBottom: '12px' }}>Pending Ads ({pendingAds.length})</h3>
+            {pendingAds.length === 0 ? (
+              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No pending ads.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                {pendingAds.map((ad) => (
+                  <div
+                    key={ad.id}
+                    style={{
+                      padding: '16px',
+                      backgroundColor: 'white',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e7eb'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 8px 0' }}>{ad.title}</h4>
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
+                          Placement: {ad.placement} | {ad.startDate.toLocaleDateString()} - {ad.endDate.toLocaleDateString()}
+                        </div>
+                        {ad.creativeUrl && (
+                          <img 
+                            src={ad.creativeUrl} 
+                            alt={ad.title}
+                            style={{
+                              maxWidth: '200px',
+                              maxHeight: '100px',
+                              objectFit: 'contain',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '4px',
+                              marginTop: '8px'
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
+                        <button
+                          onClick={() => handleApproveAd(ad.id)}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#16a34a',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRejectAd(ad.id)}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h3 style={{ marginBottom: '12px' }}>Active Ads ({activeAds.length})</h3>
+            {activeAds.length === 0 ? (
+              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No active ads.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {activeAds.map((ad) => (
+                  <div
+                    key={ad.id}
+                    style={{
+                      padding: '16px',
+                      backgroundColor: 'white',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e7eb'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 8px 0' }}>{ad.title}</h4>
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                          Placement: {ad.placement} | Views: {ad.views} | Clicks: {ad.clicks} | 
+                          {ad.endDate.toLocaleDateString()}
+                        </div>
+                      </div>
+                      {ad.status === 'approved' && (
+                        <button
+                          onClick={() => handleActivateAd(ad.id)}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#000',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          Activate
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdManagementTab;

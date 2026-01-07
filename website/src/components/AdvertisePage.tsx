@@ -39,7 +39,12 @@ const AdvertisePage: React.FC<AdvertisePageProps> = ({ onBack }) => {
               <li>✓ Weekly WhatsApp Channel Mention</li>
               <li>✓ Basic Analytics</li>
             </ul>
-            <button className="pricing-cta">Get Started</button>
+            <button 
+              className="pricing-cta"
+              onClick={() => window.location.hash = 'advertiser/register'}
+            >
+              Get Started
+            </button>
           </div>
 
           <div className="pricing-card featured">
@@ -59,7 +64,12 @@ const AdvertisePage: React.FC<AdvertisePageProps> = ({ onBack }) => {
               <li>✓ Advanced Analytics</li>
               <li>✓ Priority Support</li>
             </ul>
-            <button className="pricing-cta">Get Started</button>
+            <button 
+              className="pricing-cta"
+              onClick={() => window.location.hash = 'advertiser/register'}
+            >
+              Get Started
+            </button>
           </div>
 
           <div className="pricing-card">
@@ -76,7 +86,12 @@ const AdvertisePage: React.FC<AdvertisePageProps> = ({ onBack }) => {
               <li>✓ White-Label Solutions</li>
               <li>✓ Multi-Platform Campaign Management</li>
             </ul>
-            <button className="pricing-cta">Contact Sales</button>
+            <button 
+              className="pricing-cta"
+              onClick={() => window.location.hash = 'advertiser/register'}
+            >
+              Contact Sales
+            </button>
           </div>
         </div>
 
