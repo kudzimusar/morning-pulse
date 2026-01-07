@@ -7,7 +7,7 @@ import NewsGrid from './components/NewsGrid';
 import FirebaseConnector from './components/FirebaseConnector';
 import OpinionPage from './components/OpinionPage';
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
-import AdminOpinionReview from './components/AdminOpinionReview';
+import AdminPortal from './components/AdminPortal';
 import AdminLogin from './components/AdminLogin';
 import Footer from './components/Footer';
 import PrivacyPage from './components/PrivacyPage';
@@ -535,7 +535,7 @@ const App: React.FC = () => {
           
           {/* Full Admin Dashboard */}
           <div style={{ minHeight: 'calc(100vh - 80px)' }}>
-            <AdminOpinionReview />
+            <AdminPortal />
           </div>
         </>
       ) : (
