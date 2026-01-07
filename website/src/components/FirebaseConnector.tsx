@@ -145,8 +145,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
     // Function to try fetching news for a specific date
     const tryFetchNewsForDate = async (dateString: string, country: CountryInfo): Promise<{ success: boolean; data?: any; timestamp?: Date }> => {
       try {
-        // ✅ FIX: Use 'morning-pulse' instead of 'morning-pulse-app' to match Firestore rules
-        const appId = 'morning-pulse';
+        // ✅ FIX: Use 'morning-pulse-app' to match existing Firestore database
+        const appId = 'morning-pulse-app';
         const newsPath = `artifacts/${appId}/public/data/news/${dateString}`;
         const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
         
@@ -293,8 +293,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           
           // Set up real-time listener on the found date
           if (!unsubscribe) {
-            // ✅ FIX: Use 'morning-pulse' instead of 'morning-pulse-app' to match Firestore rules
-            const appId = 'morning-pulse';
+            // ✅ FIX: Use 'morning-pulse-app' to match existing Firestore database
+            const appId = 'morning-pulse-app';
             const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', foundDate);
             
             unsubscribe = onSnapshot(
