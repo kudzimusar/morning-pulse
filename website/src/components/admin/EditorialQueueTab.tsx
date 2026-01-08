@@ -151,6 +151,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
   // NEW: Handle Create New Article button
   const handleCreateNewArticle = () => {
+    console.log('✅ Create New Editorial clicked');
     setSelectedOpinionId(null);
     setIsNewArticle(true);
   };

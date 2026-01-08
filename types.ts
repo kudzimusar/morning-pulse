@@ -73,6 +73,7 @@ export interface Opinion {
   publishedAt?: Date | null;
   reviewedBy?: string;
   editorNotes?: string; // Internal notes visible only to editors
+  type?: 'editorial' | 'opinion'; // Flag to distinguish editorials from user submissions
 }
 
 export interface OpinionSubmissionData {

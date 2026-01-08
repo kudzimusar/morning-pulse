@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
-import { NewsStory } from '../../../types';
+import React, { useMemo, useState, useEffect } from 'react';
+import { NewsStory, Opinion } from '../../../types';
 import HeroCard from './HeroCard';
 import ArticleCard from './ArticleCard';
 import AdSlot from './AdSlot';
 import { CountryInfo } from '../services/locationService';
+import { subscribeToPublishedOpinions } from '../services/opinionsService';
 
 interface NewsGridProps {
   newsData: {
@@ -14,6 +15,34 @@ interface NewsGridProps {
 }
 
 const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCountry }) => {
+  // State for editorials
+  const [editorials, setEditorials] = useState<Opinion[]>([]);
+
+  // Subscribe to published editorials
+  useEffect(() => {
+    const unsubscribe = subscribeToPublishedOpinions(
+      (fetched) => {
+        // Filter for editorials only (type: 'editorial' and isPublished: true)
+        const editorialArticles = fetched.filter(
+          op => op.type === 'editorial' && op.isPublished === true
+        );
+        // Show top 3 most recent editorials
+        const sorted = editorialArticles.sort((a, b) => {
+          const dateA = a.publishedAt?.getTime() || a.submittedAt.getTime();
+          const dateB = b.publishedAt?.getTime() || b.submittedAt.getTime();
+          return dateB - dateA;
+        });
+        setEditorials(sorted.slice(0, 3));
+      },
+      (err) => {
+        console.error("Editorial fetch error:", err);
+      }
+    );
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
   // Define category order for display - Local category will be dynamic
   const baseCategoryOrder = [
     'Local', // Will be replaced with actual Local category name
@@ -117,6 +146,49 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
 
       {/* Advertising Slot */}
       <AdSlot userCountry={userCountry} />
+
+      {/* Featured Editorials Section */}
+      {editorials.length > 0 && (
+        <section className="editorials-section" style={{ marginTop: '32px', marginBottom: '32px' }}>
+          <div className="section-header">
+            <h2 className="section-title">Featured Editorials</h2>
+            <a 
+              href="#opinion" 
+              style={{ 
+                fontSize: '14px', 
+                color: '#666', 
+                textDecoration: 'none',
+                fontWeight: '500'
+              }}
+            >
+              View All →
+            </a>
+          </div>
+          <div className="news-grid-container">
+            {editorials.map((editorial) => {
+              // Convert Opinion to NewsStory format for ArticleCard
+              const editorialArticle: NewsStory = {
+                id: editorial.id,
+                headline: editorial.headline,
+                detail: editorial.subHeadline || (editorial.body?.substring(0, 150) + '...') || '',
+                category: 'Editorial',
+                source: editorial.authorName || 'Editorial Team',
+                timestamp: editorial.publishedAt?.getTime() || editorial.submittedAt.getTime() || Date.now(),
+                imageUrl: editorial.finalImageUrl || editorial.suggestedImageUrl || editorial.imageUrl
+              };
+              
+              return (
+                <ArticleCard 
+                  key={editorial.id}
+                  article={editorialArticle}
+                  variant="grid"
+                  userCountry={userCountry}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Grid Section */}
       <section className="news-grid-section">
