@@ -18,7 +18,7 @@ import {
   Auth
 } from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
 import { Opinion, OpinionSubmissionData } from '../../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
 
@@ -234,6 +234,110 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
   } catch (error: any) {
     console.error('❌ Error submitting opinion:', error);
     throw new Error(`Failed to submit opinion: ${error.message}`);
+  }
+};
+
+/**
+ * Create a new editorial article directly (bypasses submission queue)
+ * Used by editors to write and publish articles directly
+ * Saves to: artifacts/morning-pulse-app/public/data/opinions
+ */
+export const createEditorialArticle = async (
+  articleData: {
+    headline: string;
+    subHeadline: string;
+    body: string;
+    authorName: string;
+    category?: string;
+    country?: string;
+    finalImageUrl?: string;
+  }
+): Promise<string> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    console.log('📝 Creating editorial article directly...');
+    
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    
+    const imageUrl = articleData.finalImageUrl || getImageByTopic(articleData.headline || '');
+    
+    const docData = {
+      writerType: 'Editorial',
+      authorName: articleData.authorName,
+      authorTitle: '',
+      headline: articleData.headline,
+      subHeadline: articleData.subHeadline,
+      body: articleData.body,
+      category: articleData.category || 'General',
+      country: articleData.country || 'Global',
+      suggestedImageUrl: null,
+      finalImageUrl: articleData.finalImageUrl || null,
+      imageUrl,
+      imageGeneratedAt: new Date().toISOString(),
+      status: 'published',
+      isPublished: true,
+      type: 'editorial', // Flag to distinguish from user submissions
+      submittedAt: Timestamp.now(),
+      publishedAt: Timestamp.now(),
+      createdAt: Timestamp.now(),
+    };
+
+    const docRef = await addDoc(opinionsRef, docData);
+    console.log('✅ Editorial article created with ID:', docRef.id);
+    return docRef.id;
+  } catch (error: any) {
+    console.error('❌ Error creating editorial article:', error);
+    throw new Error(`Failed to create editorial article: ${error.message}`);
+  }
+};
+
+/**
+ * Replace article image and overwrite existing final.jpg
+ * Uploads to: published_images/{articleId}/final.jpg
+ * Deletes old image if it exists before uploading new one
+ */
+export const replaceArticleImage = async (
+  file: File,
+  articleId: string
+): Promise<string> => {
+  const s = getStorageInstance();
+  if (!s) {
+    throw new Error('Firebase not initialized');
+  }
+
+  await ensureAuthenticated();
+
+  try {
+    // Delete old final.jpg if it exists
+    const oldImageRef = storageRef(s, `published_images/${articleId}/final.jpg`);
+    try {
+      await deleteObject(oldImageRef);
+      console.log('🗑️ Deleted old image');
+    } catch (error: any) {
+      // Ignore if file doesn't exist
+      if (error.code !== 'storage/object-not-found') {
+        console.warn('Could not delete old image:', error);
+      }
+    }
+    
+    // Upload new image to final.jpg (overwrites)
+    const newImageRef = storageRef(s, `published_images/${articleId}/final.jpg`);
+    await uploadBytes(newImageRef, file, {
+      contentType: file.type || 'image/jpeg',
+    });
+    
+    const downloadURL = await getDownloadURL(newImageRef);
+    console.log('✅ Image replaced successfully:', downloadURL);
+    return downloadURL;
+  } catch (error: any) {
+    console.error('❌ Error replacing image:', error);
+    throw new Error(`Failed to replace image: ${error.message}`);
   }
 };
 

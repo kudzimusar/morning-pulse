@@ -1,6 +1,6 @@
 /**
- * Editorial Queue Tab
- * Split-screen editor for reviewing and publishing articles
+ * Editorial Queue Tab - Power Editor Edition
+ * Enhanced with Direct Publishing, Rich Text Editor, Image Replacement, and Drafting
  */
 
 import React, { useEffect, useState } from 'react';
@@ -10,6 +10,7 @@ import {
   onSnapshot, 
   doc, 
   updateDoc, 
+  addDoc,
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
@@ -17,12 +18,16 @@ import {
   ref, 
   uploadBytes, 
   getDownloadURL,
-  FirebaseStorage
+  deleteObject
 } from 'firebase/storage';
 import { getStorage } from 'firebase/storage';
 import { getApp } from 'firebase/app';
 import { Opinion } from '../../../types';
 import { getUIStatusLabel, getDbStatus, UIStatusLabel } from '../../utils/opinionStatus';
+import RichTextEditor from '../RichTextEditor';
+import ImagePreview from './ImagePreview';
+import { createEditorialArticle, replaceArticleImage } from '../../services/opinionsService';
+import { compressImage, validateImage } from '../../utils/imageCompression';
 
 const APP_ID = "morning-pulse-app";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -40,6 +45,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 }) => {
   const [pendingOpinions, setPendingOpinions] = useState<Opinion[]>([]);
   const [selectedOpinionId, setSelectedOpinionId] = useState<string | null>(null);
+  const [isNewArticle, setIsNewArticle] = useState(false); // NEW: Track if creating new article
   const [editedTitle, setEditedTitle] = useState('');
   const [editedSubHeadline, setEditedSubHeadline] = useState('');
   const [editedBody, setEditedBody] = useState('');
@@ -48,8 +54,11 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [status, setStatus] = useState<UIStatusLabel>('Submitted');
   const [suggestedImageUrl, setSuggestedImageUrl] = useState<string | null>(null);
   const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
+  const [newImagePreviewUrl, setNewImagePreviewUrl] = useState<string | null>(null); // NEW: Preview of new image
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [newImageFile, setNewImageFile] = useState<File | null>(null); // NEW: Track new image for replacement
+  const [compressing, setCompressing] = useState(false);
 
   // Subscribe to pending opinions
   useEffect(() => {
@@ -94,8 +103,23 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     return () => unsubscribe();
   }, [firebaseInstances, showToast]);
 
-  // Load selected opinion
+  // Load selected opinion OR reset for new article
   useEffect(() => {
+    if (isNewArticle) {
+      // Reset to blank state for new article
+      setEditedTitle('');
+      setEditedSubHeadline('');
+      setEditedBody('');
+      setEditedAuthorName('Editorial Team');
+      setEditorNotes('');
+      setStatus('Published');
+      setSuggestedImageUrl(null);
+      setFinalImageUrl(null);
+      setNewImagePreviewUrl(null);
+      setNewImageFile(null);
+      return;
+    }
+
     if (!selectedOpinionId) {
       setEditedTitle('');
       setEditedSubHeadline('');
@@ -105,6 +129,8 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setStatus('Submitted');
       setSuggestedImageUrl(null);
       setFinalImageUrl(null);
+      setNewImagePreviewUrl(null);
+      setNewImageFile(null);
       return;
     }
 
@@ -118,42 +144,174 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setStatus(getUIStatusLabel(opinion.status || 'pending') as UIStatusLabel);
       setSuggestedImageUrl(opinion.suggestedImageUrl || opinion.imageUrl || null);
       setFinalImageUrl(opinion.finalImageUrl || null);
+      setNewImagePreviewUrl(null);
+      setNewImageFile(null);
     }
-  }, [selectedOpinionId, pendingOpinions]);
+  }, [selectedOpinionId, pendingOpinions, isNewArticle]);
 
-  const handleImageUpload = async (file: File) => {
-    if (!selectedOpinionId || !firebaseInstances) return;
-    
-    if (file.size > MAX_IMAGE_BYTES) {
-      showToast('Image too large (max 5MB)', 'error');
+  // NEW: Handle Create New Article button
+  const handleCreateNewArticle = () => {
+    setSelectedOpinionId(null);
+    setIsNewArticle(true);
+  };
+
+  // NEW: Handle Cancel New Article
+  const handleCancelNewArticle = () => {
+    setIsNewArticle(false);
+    setSelectedOpinionId(null);
+    setNewImagePreviewUrl(null);
+    setNewImageFile(null);
+  };
+
+  // ENHANCED: Image replacement with compression and overwrite
+  const handleImageReplace = async (file: File) => {
+    // Validate image
+    const validation = await validateImage(file, 2000, MAX_IMAGE_BYTES);
+    if (!validation.valid) {
+      showToast(validation.error || 'Invalid image', 'error');
       return;
     }
 
+    setCompressing(true);
     setUploadingImage(true);
     
     try {
+      // Compress image to max 2000px width
+      const compressed = await compressImage(file, 2000, 0.9);
+      console.log(`📦 Compressed: ${(compressed.originalSize / 1024 / 1024).toFixed(2)}MB → ${(compressed.compressedSize / 1024 / 1024).toFixed(2)}MB`);
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(compressed.file);
+      setNewImagePreviewUrl(previewUrl);
+      setNewImageFile(compressed.file);
+      
+      // For new articles, just show preview (will upload on publish)
+      if (isNewArticle) {
+        setFinalImageUrl(previewUrl);
+        showToast('Image ready. Will upload when article is published.', 'success');
+        setUploadingImage(false);
+        setCompressing(false);
+        return;
+      }
+
+      // For existing articles, replace immediately
+      if (!selectedOpinionId) {
+        showToast('No article selected', 'error');
+        return;
+      }
+
       const app = getApp();
       const storage = getStorage(app);
-      const imageRef = ref(storage, `published_images/${selectedOpinionId}/${file.name}`);
       
-      await uploadBytes(imageRef, file);
-      const downloadURL = await getDownloadURL(imageRef);
+      // Delete old final.jpg if it exists
+      const oldImageRef = ref(storage, `published_images/${selectedOpinionId}/final.jpg`);
+      try {
+        await deleteObject(oldImageRef);
+        console.log('🗑️ Deleted old image');
+      } catch (error: any) {
+        // Ignore if file doesn't exist
+        if (error.code !== 'storage/object-not-found') {
+          console.warn('Could not delete old image:', error);
+        }
+      }
       
+      // Upload new compressed image to final.jpg (overwrites)
+      const newImageRef = ref(storage, `published_images/${selectedOpinionId}/final.jpg`);
+      await uploadBytes(newImageRef, compressed.file, {
+        contentType: compressed.file.type || 'image/jpeg',
+      });
+      
+      const downloadURL = await getDownloadURL(newImageRef);
       setFinalImageUrl(downloadURL);
-      showToast('Image uploaded successfully', 'success');
+      setNewImagePreviewUrl(null); // Clear preview after upload
+      setNewImageFile(null);
+      showToast('Image replaced successfully', 'success');
     } catch (error: any) {
-      console.error('Image upload error:', error);
-      showToast(`Upload failed: ${error.message}`, 'error');
+      console.error('Image replace error:', error);
+      showToast(`Image replace failed: ${error.message}`, 'error');
+      setNewImagePreviewUrl(null);
+      setNewImageFile(null);
     } finally {
       setUploadingImage(false);
+      setCompressing(false);
     }
   };
 
   const handleSaveDraft = async () => {
-    if (!selectedOpinionId || !firebaseInstances) return;
+    if (!firebaseInstances) return;
     
     if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
       showToast('Unauthorized: Editor role required', 'error');
+      return;
+    }
+
+    // For new articles, create as draft first
+    if (isNewArticle) {
+      if (!editedTitle.trim() || !editedSubHeadline.trim() || !editedBody.trim()) {
+        showToast('Please fill in headline, sub-headline, and body before saving draft', 'error');
+        return;
+      }
+
+      setSaving(true);
+      
+      try {
+        const { db } = firebaseInstances;
+        const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
+        
+        const docData = {
+          writerType: 'Editorial',
+          authorName: editedAuthorName || 'Editorial Team',
+          authorTitle: '',
+          headline: editedTitle,
+          subHeadline: editedSubHeadline,
+          body: editedBody,
+          category: 'General',
+          country: 'Global',
+          suggestedImageUrl: null,
+          finalImageUrl: finalImageUrl || null,
+          imageUrl: finalImageUrl || null,
+          imageGeneratedAt: new Date().toISOString(),
+          status: 'pending', // Save as draft (pending)
+          isPublished: false,
+          type: 'editorial',
+          editorNotes: editorNotes,
+          submittedAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+        };
+
+        const docRef = await addDoc(opinionsRef, docData);
+        const articleId = docRef.id;
+        
+        // Upload image if there's one
+        if (newImageFile) {
+          await replaceArticleImage(newImageFile, articleId);
+          const app = getApp();
+          const storage = getStorage(app);
+          const imageRef = ref(storage, `published_images/${articleId}/final.jpg`);
+          const finalUrl = await getDownloadURL(imageRef);
+          await updateDoc(docRef, {
+            finalImageUrl: finalUrl,
+            imageUrl: finalUrl,
+          });
+        }
+        
+        showToast('Draft saved successfully', 'success');
+        setIsNewArticle(false);
+        setSelectedOpinionId(articleId);
+        setNewImagePreviewUrl(null);
+        setNewImageFile(null);
+      } catch (error: any) {
+        console.error('Save draft error:', error);
+        showToast(`Save failed: ${error.message}`, 'error');
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // For existing articles, update draft
+    if (!selectedOpinionId) {
+      showToast('No article selected', 'error');
       return;
     }
 
@@ -179,6 +337,93 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     } catch (error: any) {
       console.error('Save draft error:', error);
       showToast(`Save failed: ${error.message}`, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // NEW: Handle direct publishing (for new articles)
+  const handlePublishDirectly = async () => {
+    if (!firebaseInstances) return;
+    
+    if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
+      showToast('Unauthorized: Editor role required', 'error');
+      return;
+    }
+
+    // Validation
+    if (!editedTitle.trim()) {
+      showToast('Please enter a headline', 'error');
+      return;
+    }
+    if (!editedSubHeadline.trim()) {
+      showToast('Please enter a sub-headline', 'error');
+      return;
+    }
+    if (!editedBody.trim()) {
+      showToast('Please enter article body', 'error');
+      return;
+    }
+    if (!editedAuthorName.trim()) {
+      showToast('Please enter author name', 'error');
+      return;
+    }
+
+    setSaving(true);
+    
+    try {
+      const { db } = firebaseInstances;
+      const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
+      
+      // Create article first to get ID
+      const docData = {
+        writerType: 'Editorial',
+        authorName: editedAuthorName,
+        authorTitle: '',
+        headline: editedTitle,
+        subHeadline: editedSubHeadline,
+        body: editedBody,
+        category: 'General',
+        country: 'Global',
+        suggestedImageUrl: null,
+        finalImageUrl: null, // Will update after image upload
+        imageUrl: null, // Will update after image upload
+        imageGeneratedAt: new Date().toISOString(),
+        status: 'published',
+        isPublished: true,
+        type: 'editorial', // Flag to distinguish from user submissions
+        submittedAt: serverTimestamp(),
+        publishedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(opinionsRef, docData);
+      const articleId = docRef.id;
+      
+      // Upload image if there's one
+      let finalImageUrlToUse = null;
+      if (newImageFile) {
+        await replaceArticleImage(newImageFile, articleId);
+        const app = getApp();
+        const storage = getStorage(app);
+        const imageRef = ref(storage, `published_images/${articleId}/final.jpg`);
+        finalImageUrlToUse = await getDownloadURL(imageRef);
+        
+        // Update article with image URL
+        await updateDoc(docRef, {
+          finalImageUrl: finalImageUrlToUse,
+          imageUrl: finalImageUrlToUse,
+        });
+      }
+      
+      showToast('Article published successfully!', 'success');
+      setIsNewArticle(false);
+      setSelectedOpinionId(null);
+      setNewImagePreviewUrl(null);
+      setNewImageFile(null);
+    } catch (error: any) {
+      console.error('Publish error:', error);
+      showToast(`Publish failed: ${error.message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -218,7 +463,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       });
       
       showToast('Article published successfully!', 'success');
-      setTimeout(() => setSelectedOpinionId(null), 1000);
+      setTimeout(() => {
+        setSelectedOpinionId(null);
+        setIsNewArticle(false);
+      }, 1000);
     } catch (error: any) {
       console.error('Publish error:', error);
       showToast(`Publish failed: ${error.message}`, 'error');
@@ -252,7 +500,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       });
       
       showToast('Article rejected', 'success');
-      setTimeout(() => setSelectedOpinionId(null), 1000);
+      setTimeout(() => {
+        setSelectedOpinionId(null);
+        setIsNewArticle(false);
+      }, 1000);
     } catch (error: any) {
       console.error('Reject error:', error);
       showToast(`Reject failed: ${error.message}`, 'error');
@@ -262,401 +513,537 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 200px)', gap: '16px' }}>
-      {/* Left Panel - Pending Queue */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', gap: '16px' }}>
+      {/* NEW: Header with Create New Article button */}
       <div style={{
-        width: '400px',
-        border: '1px solid #e5e5e5',
-        borderRadius: '8px',
         display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        backgroundColor: '#fff'
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '8px',
+        border: '1px solid #e5e5e5'
       }}>
-        <div style={{
-          padding: '16px',
-          borderBottom: '1px solid #e5e5e5',
-          backgroundColor: '#f9f9f9'
-        }}>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-            Pending Queue ({pendingOpinions.length})
-          </h3>
-        </div>
-        
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '8px'
-        }}>
-          {pendingOpinions.length === 0 ? (
-            <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              No pending submissions
-            </div>
-          ) : (
-            pendingOpinions.map((opinion) => (
-              <div
-                key={opinion.id}
-                onClick={() => setSelectedOpinionId(opinion.id)}
-                style={{
-                  padding: '12px',
-                  marginBottom: '8px',
-                  border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  marginBottom: '4px',
-                  color: '#000'
-                }}>
-                  {opinion.headline || 'Untitled'}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  marginBottom: '4px'
-                }}>
-                  {opinion.authorName}
-                </div>
-                <div style={{
-                  fontSize: '11px',
-                  color: '#999'
-                }}>
-                  {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
-                </div>
-                <div style={{
-                  display: 'inline-block',
-                  marginTop: '8px',
-                  padding: '2px 8px',
-                  backgroundColor: '#f0f0f0',
-                  borderRadius: '2px',
-                  fontSize: '11px',
-                  fontWeight: '500',
-                  color: '#666'
-                }}>
-                  {getUIStatusLabel(opinion.status || 'pending')}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+          Editorial Queue
+        </h3>
+        <button
+          onClick={handleCreateNewArticle}
+          disabled={saving}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#000',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: saving ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            fontWeight: '600',
+            opacity: saving ? 0.6 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          ✏️ Create New Editorial
+        </button>
       </div>
 
-      {/* Right Panel - Editor Suite */}
-      <div style={{
-        flex: 1,
-        border: '1px solid #e5e5e5',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        backgroundColor: '#fff'
-      }}>
-        {!selectedOpinionId ? (
+      <div style={{ display: 'flex', flex: 1, gap: '16px', overflow: 'hidden' }}>
+        {/* Left Panel - Pending Queue */}
+        <div style={{
+          width: '400px',
+          border: '1px solid #e5e5e5',
+          borderRadius: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          backgroundColor: '#fff'
+        }}>
           <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            color: '#999',
-            fontSize: '16px'
+            padding: '16px',
+            borderBottom: '1px solid #e5e5e5',
+            backgroundColor: '#f9f9f9'
           }}>
-            Select an article from the queue to begin editing
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+              Pending Queue ({pendingOpinions.length})
+            </h3>
           </div>
-        ) : (
+          
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '24px'
+            padding: '8px'
           }}>
-            {/* Status Dropdown */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontSize: '14px',
-                fontWeight: '500'
+            {pendingOpinions.length === 0 ? (
+              <div style={{
+                padding: '40px',
+                textAlign: 'center',
+                color: '#999'
               }}>
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as UIStatusLabel)}
+                No pending submissions
+              </div>
+            ) : (
+              pendingOpinions.map((opinion) => (
+                <div
+                  key={opinion.id}
+                  onClick={() => {
+                    setSelectedOpinionId(opinion.id);
+                    setIsNewArticle(false);
+                  }}
+                  style={{
+                    padding: '12px',
+                    marginBottom: '8px',
+                    border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    marginBottom: '4px',
+                    color: '#000'
+                  }}>
+                    {opinion.headline || 'Untitled'}
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: '#666',
+                    marginBottom: '4px'
+                  }}>
+                    {opinion.authorName}
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#999'
+                  }}>
+                    {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
+                  </div>
+                  <div style={{
+                    display: 'inline-block',
+                    marginTop: '8px',
+                    padding: '2px 8px',
+                    backgroundColor: '#f0f0f0',
+                    borderRadius: '2px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    color: '#666'
+                  }}>
+                    {getUIStatusLabel(opinion.status || 'pending')}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Right Panel - Editor Suite */}
+        <div style={{
+          flex: 1,
+          border: '1px solid #e5e5e5',
+          borderRadius: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          backgroundColor: '#fff'
+        }}>
+          {!selectedOpinionId && !isNewArticle ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
+              color: '#999',
+              fontSize: '16px',
+              gap: '12px'
+            }}>
+              <div>Select an article from the queue to begin editing</div>
+              <div style={{ fontSize: '14px', color: '#666' }}>or</div>
+              <button
+                onClick={handleCreateNewArticle}
                 style={{
-                  width: '100%',
-                  padding: '8px',
-                  fontSize: '14px',
-                  border: '1px solid #ddd',
+                  padding: '12px 24px',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  border: 'none',
                   borderRadius: '4px',
-                  fontFamily: 'monospace'
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}
               >
-                <option value="Submitted">Submitted</option>
-                <option value="Under Review">Under Review</option>
-                <option value="Published">Published</option>
-                <option value="Rejected">Rejected</option>
-              </select>
+                ✏️ Create New Editorial
+              </button>
             </div>
+          ) : (
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '24px'
+            }}>
+              {/* NEW: Header for new articles */}
+              {isNewArticle && (
+                <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '2px solid #000' }}>
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#000' }}>
+                    ✏️ New Editorial Article
+                  </h3>
+                  <button
+                    onClick={handleCancelNewArticle}
+                    disabled={saving}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#6b7280',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: saving ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      opacity: saving ? 0.6 : 1
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
 
-            {/* Title */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                Title
-              </label>
-              <input
-                type="text"
-                value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '16px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontFamily: 'monospace'
-                }}
-              />
-            </div>
-
-            {/* Sub-headline */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                Sub-headline
-              </label>
-              <input
-                type="text"
-                value={editedSubHeadline}
-                onChange={(e) => setEditedSubHeadline(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontFamily: 'monospace'
-                }}
-              />
-            </div>
-
-            {/* Author Name */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                Author Name
-              </label>
-              <input
-                type="text"
-                value={editedAuthorName}
-                onChange={(e) => setEditedAuthorName(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontFamily: 'monospace'
-                }}
-              />
-            </div>
-
-            {/* Image Management */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                Image
-              </label>
-              <div style={{
-                marginBottom: '8px',
-                fontSize: '12px',
-                color: '#666'
-              }}>
-                Images should not exceed 2000px width.
-              </div>
-              
-              {suggestedImageUrl && (
-                <div style={{ marginBottom: '12px' }}>
-                  <img
-                    src={finalImageUrl || suggestedImageUrl}
-                    alt="Article image"
+              {/* Status Dropdown (hidden for new articles) */}
+              {!isNewArticle && (
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as UIStatusLabel)}
                     style={{
                       width: '100%',
-                      maxWidth: '600px',
-                      height: 'auto',
+                      padding: '8px',
+                      fontSize: '14px',
+                      border: '1px solid #ddd',
                       borderRadius: '4px',
-                      border: '1px solid #ddd'
+                      fontFamily: 'monospace'
+                    }}
+                  >
+                    <option value="Submitted">Submitted</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Published">Published</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Title */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Title <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    fontSize: '16px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace'
+                  }}
+                  placeholder="Enter article headline"
+                />
+              </div>
+
+              {/* Sub-headline */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Sub-headline <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editedSubHeadline}
+                  onChange={(e) => setEditedSubHeadline(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    fontSize: '14px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace'
+                  }}
+                  placeholder="Enter sub-headline"
+                />
+              </div>
+
+              {/* Author Name */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Author Name <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editedAuthorName}
+                  onChange={(e) => setEditedAuthorName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    fontSize: '14px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace'
+                  }}
+                  placeholder={isNewArticle ? "Editorial Team" : "Author name"}
+                />
+              </div>
+
+              {/* ENHANCED: Image Management with Preview */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Image
+                </label>
+                <div style={{
+                  marginBottom: '8px',
+                  fontSize: '12px',
+                  color: '#666'
+                }}>
+                  Images will be automatically compressed to max 2000px width. Max 5MB. Replaces existing image.
+                </div>
+                
+                {/* ImagePreview Component - Shows current vs new */}
+                {(finalImageUrl || suggestedImageUrl || newImagePreviewUrl) && (
+                  <ImagePreview
+                    currentImageUrl={finalImageUrl || suggestedImageUrl}
+                    newImageUrl={newImagePreviewUrl}
+                    currentImageLabel={finalImageUrl ? "Current Final Image" : "Suggested Image"}
+                    newImageLabel="New Image (Preview)"
+                  />
+                )}
+                
+                <label style={{
+                  display: 'inline-block',
+                  padding: '8px 16px',
+                  backgroundColor: uploadingImage || compressing ? '#9ca3af' : '#000',
+                  color: '#fff',
+                  borderRadius: '4px',
+                  cursor: (uploadingImage || compressing) ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  opacity: (uploadingImage || compressing) ? 0.6 : 1
+                }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    disabled={uploadingImage || compressing}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageReplace(file);
+                      e.currentTarget.value = '';
+                    }}
+                  />
+                  {compressing ? 'Compressing...' : uploadingImage ? 'Uploading...' : finalImageUrl ? 'Replace Image' : 'Upload Image'}
+                </label>
+              </div>
+
+              {/* ENHANCED: Rich Text Editor for Body */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Body <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <RichTextEditor
+                  value={editedBody}
+                  onChange={setEditedBody}
+                  placeholder="Write your article content here. Use the toolbar to format text, add headings (H1, H2), blockquotes for pull-quotes, and links."
+                />
+              </div>
+
+              {/* Editor Notes (hidden for new articles) */}
+              {!isNewArticle && (
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    Editor Notes (Private)
+                  </label>
+                  <textarea
+                    value={editorNotes}
+                    onChange={(e) => setEditorNotes(e.target.value)}
+                    rows={4}
+                    placeholder="Internal notes (not published)"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      fontSize: '14px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'monospace',
+                      resize: 'vertical'
                     }}
                   />
                 </div>
               )}
-              
-              <label style={{
-                display: 'inline-block',
-                padding: '8px 16px',
-                backgroundColor: '#000',
-                color: '#fff',
-                borderRadius: '4px',
-                cursor: uploadingImage ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                opacity: uploadingImage ? 0.6 : 1
-              }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  disabled={uploadingImage}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImageUpload(file);
-                    e.currentTarget.value = '';
-                  }}
-                />
-                {uploadingImage ? 'Uploading...' : 'Replace Image'}
-              </label>
-            </div>
 
-            {/* Body */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontSize: '14px',
-                fontWeight: '500'
+              {/* Action Buttons */}
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                paddingTop: '16px',
+                borderTop: '1px solid #e5e5e5'
               }}>
-                Body (HTML)
-              </label>
-              <textarea
-                value={editedBody}
-                onChange={(e) => setEditedBody(e.target.value)}
-                rows={15}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontFamily: 'monospace',
-                  resize: 'vertical'
-                }}
-              />
+                {isNewArticle ? (
+                  <>
+                    <button
+                      onClick={handleCancelNewArticle}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#6b7280',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveDraft}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#666',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      {saving ? 'Saving...' : 'Save Progress'}
+                    </button>
+                    <button
+                      onClick={handlePublishDirectly}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#10b981',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1,
+                        marginLeft: 'auto'
+                      }}
+                    >
+                      {saving ? 'Publishing...' : '📝 Post to Website'}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleReject}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      Reject
+                    </button>
+                    
+                    <button
+                      onClick={handleSaveDraft}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#666',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      {saving ? 'Saving...' : 'Save Draft'}
+                    </button>
+                    
+                    <button
+                      onClick={handleApproveAndPublish}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#10b981',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1,
+                        marginLeft: 'auto'
+                      }}
+                    >
+                      {saving ? 'Publishing...' : 'Approve & Publish'}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-
-            {/* Editor Notes */}
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                Editor Notes (Private)
-              </label>
-              <textarea
-                value={editorNotes}
-                onChange={(e) => setEditorNotes(e.target.value)}
-                rows={4}
-                placeholder="Internal notes (not published)"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontFamily: 'monospace',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-              paddingTop: '16px',
-              borderTop: '1px solid #e5e5e5'
-            }}>
-              <button
-                onClick={handleReject}
-                disabled={saving}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#ef4444',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  opacity: saving ? 0.6 : 1
-                }}
-              >
-                Reject
-              </button>
-              
-              <button
-                onClick={handleSaveDraft}
-                disabled={saving}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#666',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  opacity: saving ? 0.6 : 1
-                }}
-              >
-                {saving ? 'Saving...' : 'Save Draft'}
-              </button>
-              
-              <button
-                onClick={handleApproveAndPublish}
-                disabled={saving}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#10b981',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  opacity: saving ? 0.6 : 1
-                }}
-              >
-                {saving ? 'Publishing...' : 'Approve & Publish'}
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
