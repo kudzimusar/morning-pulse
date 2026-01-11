@@ -74,8 +74,20 @@ interface NewsData {
 }
 
 const App: React.FC = () => {
-  // ✅ FIX: Admin mode check MUST be declared first (used in useEffect dependency arrays)
-  const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
+  // ✅ FIX: Admin authentication state MUST be declared before useEffects that reference them
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [userRole, setUserRole] = useState<StaffRole>(null);
+  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
+  const [view, setView] = useState<'public' | 'admin'>('public');
+  
+  // ✅ FIX: Admin mode check - make it dynamic based on hash and view
+  // This ensures isAdminMode reflects the current state, not just env var
+  const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true' || 
+                      (typeof window !== 'undefined' && (
+                        window.location.hash.includes('dashboard') || 
+                        window.location.hash.includes('admin') ||
+                        view === 'admin'
+                      ));
   
   // ✅ FIX: Clear localStorage ONCE on mount, not on every render
   useEffect(() => {
@@ -90,12 +102,6 @@ const App: React.FC = () => {
       console.warn('⚠️ Could not clear localStorage:', clearError);
     }
   }, []); // Empty deps = run only once per session
-  
-  // ✅ FIX: Admin authentication state MUST be declared before useEffects that reference them
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [userRole, setUserRole] = useState<StaffRole>(null);
-  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
-  const [view, setView] = useState<'public' | 'admin'>('public');
 
   // Regular state declarations
   const [newsData, setNewsData] = useState<NewsData>({});
@@ -226,25 +232,29 @@ const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [view, userRole]); // Add view and userRole to prevent stale closures
 
-  // ✅ EMERGENCY FIX: Single useEffect for admin view switching (prevents loops)
+  // ✅ EMERGENCY FIX: Single useEffect for admin view switching with STRICT GUARD
   useEffect(() => {
-    // 1. Determine the target view
     const hasEditorAccess = requireEditor(userRole);
-    const targetView = (isAdminMode && hasEditorAccess) ? 'admin' : 'public';
-    const targetHash = targetView === 'admin' ? 'dashboard' : '';
+    
+    // 🛡️ STRICT GUARD: If we KNOW the user is an editor, DO NOT let the view switch to public
+    if (hasEditorAccess) {
+      if (view !== 'admin') {
+        console.log('🛡️ Guard: Keeping user in Admin view');
+        setView('admin');
+      }
+      if (!window.location.hash.includes('dashboard')) {
+        window.location.hash = 'dashboard';
+      }
+      return; // Exit here - do not proceed to public logic
+    }
 
-    // 2. ONLY update if the current state is actually different
+    // Only allow public view if they are NOT an editor
+    const targetView = 'public';
     if (view !== targetView) {
       console.log(`🚀 Switching view to: ${targetView}`);
       setView(targetView);
     }
-
-    // 3. ONLY update hash if it's actually different
-    const currentHash = window.location.hash.replace('#', '');
-    if (targetHash && currentHash !== targetHash) {
-      window.location.hash = targetHash;
-    }
-  }, [userRole, isAdminMode]); // ❌ REMOVED 'view' from dependencies to kill the loop
+  }, [userRole, view]); // Watch both to ensure stability
 
   // Check editor role when admin mode is enabled
   useEffect(() => {
@@ -444,11 +454,15 @@ const App: React.FC = () => {
   // BUT: ONLY on root path, NOT on admin routes
   useEffect(() => {
     const initializeAuth = async () => {
-      // ✅ FIX: Check if we're on root path and NOT on admin route
+      // ✅ FIX: More robust admin route detection
       const hash = window.location.hash.replace('#', '');
       const pathname = window.location.pathname;
       const isRootPath = (hash === '' || hash === 'news') && (pathname === '/' || pathname === '/morning-pulse' || pathname === '/morning-pulse/');
-      const isAdminRoute = hash === 'admin' || pathname === '/admin' || pathname.includes('/admin') || hash === 'dashboard';
+      const isAdminRoute = hash === 'admin' || 
+                           hash === 'dashboard' || 
+                           hash.includes('dashboard') ||
+                           pathname === '/admin' || 
+                           pathname.includes('/admin');
       
       // ✅ FIX: Only sign in anonymously if on root path AND not on admin route
       if (!isRootPath || isAdminRoute) {
