@@ -74,16 +74,22 @@ interface NewsData {
 }
 
 const App: React.FC = () => {
-  // ✅ FIX: Clear localStorage at app start to resolve quota issues
-  try {
-    localStorage.clear();
-    console.log('✅ Cleared localStorage at app initialization');
-  } catch (clearError) {
-    console.warn('⚠️ Could not clear localStorage:', clearError);
-  }
-
   // ✅ FIX: Admin mode check MUST be declared first (used in useEffect dependency arrays)
   const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true';
+  
+  // ✅ FIX: Clear localStorage ONCE on mount, not on every render
+  useEffect(() => {
+    try {
+      const hasCleared = sessionStorage.getItem('localStorageCleared');
+      if (!hasCleared) {
+        localStorage.clear();
+        sessionStorage.setItem('localStorageCleared', 'true');
+        console.log('✅ Cleared localStorage at app initialization (once)');
+      }
+    } catch (clearError) {
+      console.warn('⚠️ Could not clear localStorage:', clearError);
+    }
+  }, []); // Empty deps = run only once per session
   
   // ✅ FIX: Admin authentication state MUST be declared before useEffects that reference them
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -140,6 +146,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
+      
+      // ✅ FIX: Guard clause - prevent processing if already on dashboard
+      if (hash === 'dashboard' && view === 'admin' && requireEditor(userRole)) {
+        return; // Already on dashboard, don't process again
+      }
+      
       if (hash === 'opinion' || hash.startsWith('opinion')) {
         if (hash === 'opinion/submit' || hash.startsWith('opinion/submit')) {
           setCurrentPage('opinion-submit');
@@ -212,58 +224,37 @@ const App: React.FC = () => {
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [view, userRole]); // Add view and userRole to prevent stale closures
 
-  // ✅ FIX: Immediate dashboard switch when userRole contains 'admin'
+  // ✅ CONSOLIDATED: Single useEffect for admin view switching (prevents loops)
   useEffect(() => {
-    // Check if userRole exists and contains 'admin' or 'editor'
-    if (userRole && Array.isArray(userRole)) {
-      const hasAdminAccess = userRole.includes('admin') || 
-                            userRole.includes('editor') || 
-                            userRole.includes('super_admin');
-      
-      if (hasAdminAccess) {
-        // Immediately switch to admin view and stop news loop
-        if (view !== 'admin') {
-          console.log('🚀 IMMEDIATE: User has admin role, switching to dashboard NOW');
-          console.log('🚀 Roles:', userRole);
-          setView('admin');
-          window.location.hash = 'dashboard';
-        }
-      } else {
-        // User doesn't have admin access, ensure public view
-        if (view !== 'public') {
-          setView('public');
-        }
-      }
-    } else if (userRole === null) {
-      // No user role, ensure public view
+    if (!isAdminMode) {
       if (view !== 'public') {
         setView('public');
       }
+      return;
     }
-  }, [userRole]); // Only depend on userRole for immediate response
 
-  // ✅ FIX: Auto-switch to admin view when userRole changes and has editor/admin role
-  useEffect(() => {
-    if (!isAdminMode) return;
+    // Check if user has editor/admin role
+    const hasEditorAccess = requireEditor(userRole);
     
-    if (requireEditor(userRole)) {
+    if (hasEditorAccess) {
       // User has editor/admin role - ensure they're in admin view
       if (view !== 'admin') {
-        console.log('✅ User has editor role, auto-switching to admin dashboard');
-        console.log('✅ Current roles:', userRole);
+        console.log('✅ User has editor role, switching to admin dashboard');
         setView('admin');
-        window.location.hash = 'dashboard';
+        // Only set hash if not already on dashboard to prevent loops
+        if (window.location.hash !== '#dashboard') {
+          window.location.hash = 'dashboard';
+        }
       }
-    } else if (userRole === null || (Array.isArray(userRole) && userRole.length === 0)) {
+    } else {
       // User doesn't have editor role - ensure they're in public view
       if (view !== 'public') {
-        console.log('✅ User no longer has editor role, switching to public view');
         setView('public');
       }
     }
-  }, [userRole, isAdminMode, view]); // Include view to ensure sync
+  }, [userRole, isAdminMode, view]); // Include view to prevent infinite loops
 
   // Check editor role when admin mode is enabled
   useEffect(() => {

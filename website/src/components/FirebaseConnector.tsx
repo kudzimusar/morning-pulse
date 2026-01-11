@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, getDoc, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
@@ -31,14 +31,20 @@ const getFirebaseConfig = (): any => {
   // Priority 1: Try to get from window (injected at runtime via firebase-config.js)
   if (typeof window !== 'undefined' && (window as any).__firebase_config) {
     const config = (window as any).__firebase_config;
-    if (typeof config === 'object' && config !== null && config.apiKey && config.apiKey !== 'YOUR_API_KEY') {
+    // ✅ FIX: Better validation - check if it's actually an object with required fields
+    if (typeof config === 'object' && config !== null && 
+        config.apiKey && 
+        config.apiKey !== 'YOUR_API_KEY' &&
+        config.projectId &&
+        config.projectId !== 'your-project-id') {
       console.log('✅ Using Firebase config from window.__firebase_config');
       return config;
     } else {
-      console.warn('⚠️ window.__firebase_config exists but is invalid or placeholder');
+      // Don't warn if it's just not ready yet - it might be loading
+      if (config && config.apiKey === 'YOUR_API_KEY') {
+        console.warn('⚠️ window.__firebase_config exists but is invalid or placeholder');
+      }
     }
-  } else {
-    console.warn('⚠️ window.__firebase_config is MISSING');
   }
   
   // Priority 2: Try to get from environment variable (build time)
@@ -120,15 +126,31 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
   const onGlobalDataUpdateRef = useRef(onGlobalDataUpdate);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastFetchedDateRef = useRef<string>('');
+  // ✅ FIX: Track country key to prevent re-initialization on country change
+  const countryKeyRef = useRef<string>(`${userCountry?.code || 'ZW'}-${userCountry?.name || 'Zimbabwe'}`);
+  const userCountryRef = useRef<CountryInfo | undefined>(userCountry);
 
   // Update refs when callbacks change
   useEffect(() => {
     onNewsUpdateRef.current = onNewsUpdate;
     onErrorRef.current = onError;
     onGlobalDataUpdateRef.current = onGlobalDataUpdate;
-  }, [onNewsUpdate, onError, onGlobalDataUpdate]);
+    userCountryRef.current = userCountry;
+  }, [onNewsUpdate, onError, onGlobalDataUpdate, userCountry]);
 
   useEffect(() => {
+    // ✅ FIX: Check if country actually changed before re-initializing
+    const currentCountryKey = `${userCountryRef.current?.code || 'ZW'}-${userCountryRef.current?.name || 'Zimbabwe'}`;
+    const previousCountryKey = countryKeyRef.current;
+    
+    // Only re-initialize if country actually changed or this is first mount
+    if (previousCountryKey === currentCountryKey && intervalRef.current && previousCountryKey !== 'ZW-Zimbabwe') {
+      // Country hasn't changed and we're already initialized, don't re-initialize
+      return;
+    }
+    
+    // Update country key
+    countryKeyRef.current = currentCountryKey;
     console.log('🔍 FirebaseConnector: Initializing...');
     const config = getFirebaseConfig();
     if (!config || Object.keys(config).length === 0) {
@@ -213,7 +235,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           db = getFirestore(app);
         }
         
-        const country = userCountry || { code: 'ZW', name: 'Zimbabwe' };
+        // ✅ FIX: Use ref to get current country without causing re-renders
+        const country = userCountryRef.current || { code: 'ZW', name: 'Zimbabwe' };
         const targetDate = selectedDate || new Date().toISOString().split('T')[0];
         // ✅ FIX: Define today at the top level so it's available for all strategies
         const today = new Date();
@@ -309,7 +332,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
                     onGlobalDataUpdateRef.current(realtimeData);
                   }
                   
-                  const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
+                  // ✅ FIX: Use ref to get current country
+                  const currentCountry = userCountryRef.current || { code: 'ZW', name: 'Zimbabwe' };
                   let realtimeCategories = realtimeData[currentCountry.code] || 
                                            realtimeData[currentCountry.name] || 
                                            realtimeData['Zimbabwe'] || 
@@ -368,7 +392,7 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         clearInterval(intervalRef.current);
       }
     };
-  }, [userCountry?.code, userCountry?.name, selectedDate]); // Only depend on primitive values, not functions
+  }, [selectedDate]); // ✅ FIX: Only depend on selectedDate, country is handled via ref
 
   return null; // This component doesn't render anything
 };
