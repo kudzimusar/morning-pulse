@@ -129,6 +129,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
   // ✅ FIX: Track country key to prevent re-initialization on country change
   const countryKeyRef = useRef<string>(`${userCountry?.code || 'ZW'}-${userCountry?.name || 'Zimbabwe'}`);
   const userCountryRef = useRef<CountryInfo | undefined>(userCountry);
+  // ✅ EMERGENCY FIX: Prevent rapid re-fetching (death loop protection)
+  const lastFetchTime = useRef<number>(0);
 
   // Update refs when callbacks change
   useEffect(() => {
@@ -139,6 +141,14 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
   }, [onNewsUpdate, onError, onGlobalDataUpdate, userCountry]);
 
   useEffect(() => {
+    // ✅ EMERGENCY FIX: Block if called within 2 seconds (death loop protection)
+    const now = Date.now();
+    if (now - lastFetchTime.current < 2000) {
+      console.warn('⚠️ FirebaseConnector: Blocked rapid re-initialization (death loop protection)');
+      return;
+    }
+    lastFetchTime.current = now;
+    
     // ✅ FIX: Check if country actually changed before re-initializing
     const currentCountryKey = `${userCountryRef.current?.code || 'ZW'}-${userCountryRef.current?.name || 'Zimbabwe'}`;
     const previousCountryKey = countryKeyRef.current;

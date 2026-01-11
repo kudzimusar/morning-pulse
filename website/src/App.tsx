@@ -226,35 +226,25 @@ const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [view, userRole]); // Add view and userRole to prevent stale closures
 
-  // ✅ CONSOLIDATED: Single useEffect for admin view switching (prevents loops)
+  // ✅ EMERGENCY FIX: Single useEffect for admin view switching (prevents loops)
   useEffect(() => {
-    if (!isAdminMode) {
-      if (view !== 'public') {
-        setView('public');
-      }
-      return;
+    // 1. Determine the target view
+    const hasEditorAccess = requireEditor(userRole);
+    const targetView = (isAdminMode && hasEditorAccess) ? 'admin' : 'public';
+    const targetHash = targetView === 'admin' ? 'dashboard' : '';
+
+    // 2. ONLY update if the current state is actually different
+    if (view !== targetView) {
+      console.log(`🚀 Switching view to: ${targetView}`);
+      setView(targetView);
     }
 
-    // Check if user has editor/admin role
-    const hasEditorAccess = requireEditor(userRole);
-    
-    if (hasEditorAccess) {
-      // User has editor/admin role - ensure they're in admin view
-      if (view !== 'admin') {
-        console.log('✅ User has editor role, switching to admin dashboard');
-        setView('admin');
-        // Only set hash if not already on dashboard to prevent loops
-        if (window.location.hash !== '#dashboard') {
-          window.location.hash = 'dashboard';
-        }
-      }
-    } else {
-      // User doesn't have editor role - ensure they're in public view
-      if (view !== 'public') {
-        setView('public');
-      }
+    // 3. ONLY update hash if it's actually different
+    const currentHash = window.location.hash.replace('#', '');
+    if (targetHash && currentHash !== targetHash) {
+      window.location.hash = targetHash;
     }
-  }, [userRole, isAdminMode, view]); // Include view to prevent infinite loops
+  }, [userRole, isAdminMode]); // ❌ REMOVED 'view' from dependencies to kill the loop
 
   // Check editor role when admin mode is enabled
   useEffect(() => {
