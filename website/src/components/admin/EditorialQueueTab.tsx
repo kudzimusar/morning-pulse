@@ -3,7 +3,7 @@
  * Enhanced with Direct Publishing, Rich Text Editor, Image Replacement, and Drafting
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   collection, 
   query, 
@@ -61,19 +61,24 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [compressing, setCompressing] = useState(false);
   const [loadingQueue, setLoadingQueue] = useState(true);
 
+  // ✅ FIX: Move Firestore service initialization out of render path using useMemo
+  const firestoreService = useMemo(() => {
+    if (!firebaseInstances?.db) return null;
+    return EnhancedFirestore.getInstance(firebaseInstances.db);
+  }, [firebaseInstances?.db]);
+
   // Subscribe to pending opinions with retry logic
   useEffect(() => {
-    if (!firebaseInstances) return;
+    if (!firebaseInstances || !firestoreService) return;
 
     const { db } = firebaseInstances;
-    const enhancedFirestore = EnhancedFirestore.getInstance(db);
     
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
     
     setLoadingQueue(true);
     
-    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
+    const unsubscribe = firestoreService.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
       q,
       (data) => {
         setLoadingQueue(false);
@@ -115,7 +120,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     return () => {
       unsubscribe();
     };
-  }, [firebaseInstances, showToast]);
+  }, [firebaseInstances, firestoreService, showToast]);
 
   // Load selected opinion OR reset for new article
   useEffect(() => {
@@ -163,8 +168,13 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
   }, [selectedOpinionId, pendingOpinions, isNewArticle]);
 
-  // NEW: Handle Create New Article button
-  const handleCreateNewArticle = () => {
+  // NEW: Handle Create New Article button with event isolation
+  const handleCreateNewArticle = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('🖱️ Create Button Clicked');
     setSelectedOpinionId(null);
     setIsNewArticle(true);
   };
@@ -542,18 +552,18 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           Editorial Queue
         </h3>
         <button
-          onClick={handleCreateNewArticle}
-          disabled={saving}
+          onClick={(e) => handleCreateNewArticle(e)}
+          disabled={false}
           style={{
             padding: '10px 20px',
             backgroundColor: '#000',
             color: '#fff',
             border: 'none',
             borderRadius: '4px',
-            cursor: saving ? 'not-allowed' : 'pointer',
+            cursor: 'pointer',
             fontSize: '14px',
             fontWeight: '600',
-            opacity: saving ? 0.6 : 1,
+            opacity: 1,
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
@@ -697,7 +707,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
               <div>Select an article from the queue to begin editing</div>
               <div style={{ fontSize: '14px', color: '#666' }}>or</div>
               <button
-                onClick={handleCreateNewArticle}
+                onClick={(e) => handleCreateNewArticle(e)}
                 style={{
                   padding: '12px 24px',
                   backgroundColor: '#000',

@@ -39,20 +39,34 @@ export class EnhancedFirestore {
   }
 
   private async enablePersistence(): Promise<void> {
-    if (this.persistenceStarted) return;
+    // ✅ FIX: Check if persistence is already enabled or db is terminated
+    if (this.persistenceStarted || (this.db as any)._terminated) return;
     this.persistenceStarted = true; // Set immediately to prevent multiple calls
     
     try {
+      // Check if already initialized to prevent the "Multiple Tabs" console spam
       await enableIndexedDbPersistence(this.db);
-      console.log('✅ Firestore persistence enabled');
-    } catch (err: any) {
-      if (err.code === 'failed-precondition') {
-        console.warn('⚠️ Multiple tabs open, persistence disabled');
-      } else if (err.code === 'unimplemented') {
-        console.warn('⚠️ Browser does not support persistence');
-      } else {
-        console.warn('⚠️ Persistence skipped:', err.code);
+      // Only log success if it's the first time (quietly handle subsequent calls)
+      if (!(this.db as any)._persistenceEnabled) {
+        console.log('✅ Firestore persistence enabled');
       }
+    } catch (err: any) {
+      // Quietly handle the error so it doesn't lock the UI thread
+      // Don't log warnings for expected errors (multiple tabs, etc.)
+      if (err.code === 'failed-precondition') {
+        // Multiple tabs - this is expected, don't spam console
+        // Silently handle
+      } else if (err.code === 'unimplemented') {
+        // Browser doesn't support - expected in some browsers
+        // Silently handle
+      } else {
+        // Other errors - only log if unexpected
+        if (err.code && !['failed-precondition', 'unimplemented'].includes(err.code)) {
+          console.warn('⚠️ Persistence skipped:', err.code);
+        }
+      }
+      // Mark as started even on error to prevent retry spam
+      this.persistenceStarted = true;
     }
   }
 
