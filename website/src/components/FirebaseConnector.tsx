@@ -4,6 +4,7 @@ import { getFirestore, doc, onSnapshot, getDoc, Firestore } from 'firebase/fires
 import { getAuth, Auth } from 'firebase/auth';
 import { NewsStory } from '../../../types';
 import { CountryInfo } from '../services/locationService';
+import EnhancedFirestore from '../services/enhancedFirestore';
 
 interface FirebaseConnectorProps {
   onNewsUpdate: (data: { [category: string]: NewsStory[] }, lastUpdated?: Date) => void;
@@ -291,25 +292,28 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
           // Update news with timestamp
           onNewsUpdateRef.current(transformedCategories, newsTimestamp || undefined);
           
-          // Set up real-time listener on the found date
+          // Set up real-time listener on the found date with retry logic
           if (!unsubscribe) {
             // ✅ FIX: Use 'morning-pulse-app' to match existing Firestore database
             const appId = 'morning-pulse-app';
             const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', foundDate);
             
-            unsubscribe = onSnapshot(
+            const enhancedFirestore = EnhancedFirestore.getInstance(db);
+            
+            unsubscribe = enhancedFirestore.subscribeWithRetry<{ [key: string]: any }>(
               newsRef,
-              (realtimeSnapshot) => {
-                if (realtimeSnapshot.exists()) {
-                  const realtimeData = realtimeSnapshot.data();
-                  
+              (realtimeData) => {
+                if (realtimeData) {
                   // Store entire document globally for admin tool
                   if (onGlobalDataUpdateRef.current) {
                     onGlobalDataUpdateRef.current(realtimeData);
                   }
                   
                   const currentCountry = userCountry || { code: 'ZW', name: 'Zimbabwe' };
-                  let realtimeCategories = realtimeData[currentCountry.code] || realtimeData[currentCountry.name] || realtimeData['Zimbabwe'] || realtimeData.categories || {};
+                  let realtimeCategories = realtimeData[currentCountry.code] || 
+                                           realtimeData[currentCountry.name] || 
+                                           realtimeData['Zimbabwe'] || 
+                                           realtimeData.categories || {};
                   
                   if (!realtimeCategories || Object.keys(realtimeCategories).length === 0) {
                     realtimeCategories = realtimeData.categories || realtimeData['Zimbabwe'] || {};
@@ -325,6 +329,12 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
               },
               (error: any) => {
                 console.error('❌ Firestore real-time error:', error);
+                // Don't show error to user as this is background sync
+              },
+              {
+                maxRetries: 3, // Fewer retries for news (less critical)
+                initialDelay: 2000,
+                backoffMultiplier: 2
               }
             );
           }

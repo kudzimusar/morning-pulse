@@ -21,6 +21,7 @@ import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
 import { Opinion, OpinionSubmissionData } from '../../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
+import EnhancedFirestore from './enhancedFirestore';
 
 // Get Firebase config (same pattern as FirebaseConnector)
 const getFirebaseConfig = (): any => {
@@ -409,19 +410,19 @@ export const subscribeToPublishedOpinions = (
   try {
     console.log('📰 Subscribing to published opinions in Firestore...');
     
-    // BYPASS INDEX: Fetch entire collection without where/orderBy to avoid index requirement
+    const enhancedFirestore = EnhancedFirestore.getInstance(db);
     const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     const q = query(opinionsRef);
 
-    const unsubscribe = onSnapshot(
+    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
       q,
-      (snapshot) => {
+      (data) => {
         // Filter and sort in JavaScript memory
-        const allData = snapshot.docs.map(doc => ({
+        const allData = data.map((doc: any) => ({
           id: doc.id,
-          ...doc.data(),
-          submittedAt: doc.data().submittedAt?.toDate?.() || new Date(),
-          publishedAt: doc.data().publishedAt?.toDate?.() || null,
+          ...doc,
+          submittedAt: doc.submittedAt?.toDate?.() || new Date(),
+          publishedAt: doc.publishedAt?.toDate?.() || null,
         })) as Opinion[];
         
         // Filter for published status and sort by publishedAt descending
@@ -436,12 +437,17 @@ export const subscribeToPublishedOpinions = (
         console.log(`✅ Found ${allData.length} total opinions, ${publishedOpinions.length} published`);
         callback(publishedOpinions);
       },
-      (error) => {
+      (error: any) => {
         console.error('❌ Error in published opinions subscription:', error);
         if (onError) {
-          onError(`Firestore error: ${error.message}`);
+          onError(`Firestore error: ${error.message || 'Connection failed'}`);
         }
         callback([]);
+      },
+      {
+        maxRetries: 5,
+        initialDelay: 1500,
+        backoffMultiplier: 2
       }
     );
 
@@ -523,19 +529,19 @@ export const subscribeToPendingOpinions = (
   try {
     console.log('📝 Subscribing to pending opinions in Firestore...');
     
-    // BYPASS INDEX: Fetch entire collection without where/orderBy to avoid index requirement
+    const enhancedFirestore = EnhancedFirestore.getInstance(db);
     const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
     const q = query(opinionsRef);
 
-    const unsubscribe = onSnapshot(
+    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
       q,
-      (snapshot) => {
+      (data) => {
         // Filter and sort in JavaScript memory
-        const allData = snapshot.docs.map(doc => ({
+        const allData = data.map((doc: any) => ({
           id: doc.id,
-          ...doc.data(),
-          submittedAt: doc.data().submittedAt?.toDate?.() || new Date(),
-          publishedAt: doc.data().publishedAt?.toDate?.() || null,
+          ...doc,
+          submittedAt: doc.submittedAt?.toDate?.() || new Date(),
+          publishedAt: doc.publishedAt?.toDate?.() || null,
         })) as Opinion[];
         
         // Filter for pending status and sort by submittedAt descending
@@ -550,12 +556,17 @@ export const subscribeToPendingOpinions = (
         console.log(`✅ Found ${allData.length} total opinions, ${pendingOpinions.length} pending`);
         callback(pendingOpinions);
       },
-      (error) => {
+      (error: any) => {
         console.error('❌ Error in pending opinions subscription:', error);
         if (onError) {
-          onError(`Firestore error: ${error.message}`);
+          onError(`Firestore error: ${error.message || 'Connection failed'}`);
         }
         callback([]);
+      },
+      {
+        maxRetries: 5,
+        initialDelay: 1500,
+        backoffMultiplier: 2
       }
     );
 

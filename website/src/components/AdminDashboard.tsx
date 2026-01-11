@@ -32,6 +32,7 @@ import SettingsTab from './admin/SettingsTab';
 import WriterManagementTab from './admin/WriterManagementTab';
 import SubscriberManagementTab from './admin/SubscriberManagementTab';
 import AdManagementTab from './admin/AdManagementTab';
+import EnhancedFirestore from '../services/enhancedFirestore';
 
 // Constants
 const APP_ID = "morning-pulse-app";
@@ -148,25 +149,26 @@ const AdminDashboard: React.FC = () => {
     return () => unsubscribe();
   }, [firebaseInstances]);
 
-  // Subscribe to all opinions for priority summary
+  // Subscribe to all opinions for priority summary with retry logic
   useEffect(() => {
     if (!isAuthorized || !firebaseInstances) return;
 
     const { db } = firebaseInstances;
+    const enhancedFirestore = EnhancedFirestore.getInstance(db);
+    
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
     
-    const unsubscribe = onSnapshot(
+    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
       q,
-      (snapshot) => {
+      (data) => {
         const opinions: Opinion[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
+        data.forEach((doc: any) => {
           opinions.push({
-            id: docSnap.id,
-            ...data,
-            submittedAt: data.submittedAt?.toDate?.() || new Date(),
-            publishedAt: data.publishedAt?.toDate?.() || null,
+            id: doc.id,
+            ...doc,
+            submittedAt: doc.submittedAt?.toDate?.() || new Date(),
+            publishedAt: doc.publishedAt?.toDate?.() || null,
           } as Opinion);
         });
         
@@ -176,6 +178,12 @@ const AdminDashboard: React.FC = () => {
       },
       (error) => {
         console.error('Error subscribing to opinions:', error);
+        // Don't show toast here as it's background data for summary
+      },
+      {
+        maxRetries: 5,
+        initialDelay: 1500,
+        backoffMultiplier: 2
       }
     );
 

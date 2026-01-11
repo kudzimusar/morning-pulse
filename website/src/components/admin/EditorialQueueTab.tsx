@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 import { 
   collection, 
   query, 
-  onSnapshot, 
   doc, 
   updateDoc, 
   addDoc,
@@ -28,6 +27,7 @@ import RichTextEditor from '../RichTextEditor';
 import ImagePreview from './ImagePreview';
 import { createEditorialArticle, replaceArticleImage } from '../../services/opinionsService';
 import { compressImage, validateImage } from '../../utils/imageCompression';
+import EnhancedFirestore from '../../services/enhancedFirestore';
 
 const APP_ID = "morning-pulse-app";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -59,26 +59,32 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [saving, setSaving] = useState(false);
   const [newImageFile, setNewImageFile] = useState<File | null>(null); // NEW: Track new image for replacement
   const [compressing, setCompressing] = useState(false);
+  const [loadingQueue, setLoadingQueue] = useState(true);
 
-  // Subscribe to pending opinions
+  // Subscribe to pending opinions with retry logic
   useEffect(() => {
     if (!firebaseInstances) return;
 
     const { db } = firebaseInstances;
+    const enhancedFirestore = EnhancedFirestore.getInstance(db);
+    
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
     
-    const unsubscribe = onSnapshot(
+    setLoadingQueue(true);
+    
+    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
       q,
-      (snapshot) => {
+      (data) => {
+        setLoadingQueue(false);
+        
         const opinions: Opinion[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
+        data.forEach((doc: any) => {
           const opinion = {
-            id: docSnap.id,
-            ...data,
-            submittedAt: data.submittedAt?.toDate?.() || new Date(),
-            publishedAt: data.publishedAt?.toDate?.() || null,
+            id: doc.id,
+            ...doc,
+            submittedAt: doc.submittedAt?.toDate?.() || new Date(),
+            publishedAt: doc.publishedAt?.toDate?.() || null,
           } as Opinion;
           
           if (opinion.status === 'pending') {
@@ -96,11 +102,19 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       },
       (error) => {
         console.error('Error subscribing to opinions:', error);
-        showToast('Failed to load pending opinions', 'error');
+        setLoadingQueue(false);
+        showToast('Failed to load pending opinions after retries', 'error');
+      },
+      {
+        maxRetries: 5,
+        initialDelay: 1500,
+        backoffMultiplier: 2
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, [firebaseInstances, showToast]);
 
   // Load selected opinion OR reset for new article
@@ -151,7 +165,6 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
   // NEW: Handle Create New Article button
   const handleCreateNewArticle = () => {
-    console.log('✅ Create New Editorial clicked');
     setSelectedOpinionId(null);
     setIsNewArticle(true);
   };
@@ -549,6 +562,25 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           ✏️ Create New Editorial
         </button>
       </div>
+
+      {/* Loading indicator */}
+      {loadingQueue && (
+        <div style={{
+          padding: '20px',
+          textAlign: 'center',
+          backgroundColor: '#f9fafb',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          border: '1px solid #e5e5e5'
+        }}>
+          <div style={{ marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+            ⏳ Connecting to Editorial Queue...
+          </div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            Retrying connection if needed...
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flex: 1, gap: '16px', overflow: 'hidden' }}>
         {/* Left Panel - Pending Queue */}
