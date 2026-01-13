@@ -1,0 +1,37 @@
+name: CI (Website Build)
+
+on:
+  push:
+    paths:
+      - "website/**"
+      - ".github/workflows/ci_website.yml"
+  pull_request:
+    paths:
+      - "website/**"
+      - ".github/workflows/ci_website.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+          cd website
+          npm ci
+
+      - name: Build
+        run: |
+          cd website
+          npm run build
+
