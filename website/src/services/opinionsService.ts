@@ -15,6 +15,8 @@ import {
 import { 
   getAuth, 
   signInAnonymously,
+  onAuthStateChanged,
+  User,
   Auth
 } from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
@@ -186,6 +188,22 @@ const OPINIONS_COLLECTION = 'artifacts/morning-pulse-app/public/data/opinions';
  */
 export const getCurrentAuthUser = () => {
   return auth?.currentUser || null;
+};
+
+/**
+ * Subscribe to PUBLIC auth state (anonymous is OK).
+ * This lets UI components wait until `auth.currentUser` exists before subscribing to Firestore.
+ */
+export const onPublicAuthStateChanged = (callback: (user: User | null) => void): (() => void) => {
+  // Ensure Firebase app/auth are initialized.
+  getDb();
+
+  if (!auth) {
+    callback(null);
+    return () => {};
+  }
+
+  return onAuthStateChanged(auth, callback);
 };
 
 /**
