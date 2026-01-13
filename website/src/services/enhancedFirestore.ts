@@ -122,18 +122,26 @@ export class EnhancedFirestore {
           console.error(`❌ Firestore Error (Attempt ${retryCount + 1}/${maxRetries}):`, error.code || error.message);
           
           // Retry logic for specific failure codes seen in logs
+          // NOTE: `permission-denied` can happen briefly if Firestore starts before Auth token is ready.
+          const isAuthLag = error.code === 'permission-denied' && retryCount < 2;
+
           if (
-            retryCount < maxRetries && 
-            (error.code === 'unavailable' || 
-             error.code === 'deadline-exceeded' || 
-             error.code === 'cancelled' ||
-             !error.code)
+            retryCount < maxRetries &&
+            (isAuthLag ||
+              error.code === 'unavailable' ||
+              error.code === 'deadline-exceeded' ||
+              error.code === 'cancelled' ||
+              !error.code)
           ) {
             retryCount++;
             const delay = currentDelay;
             currentDelay *= backoffMultiplier; // Increase delay for next retry
             
-            console.log(`🔄 Connection lost. Retrying in ${delay}ms... (Attempt ${retryCount}/${maxRetries})`);
+            if (isAuthLag) {
+              console.log(`🔄 Auth may still be initializing. Retrying in ${delay}ms... (Attempt ${retryCount}/${maxRetries})`);
+            } else {
+              console.log(`🔄 Connection lost. Retrying in ${delay}ms... (Attempt ${retryCount}/${maxRetries})`);
+            }
             
             setTimeout(() => {
               if (unsubscribe) {
