@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import type { User } from 'firebase/auth';
 import { NewsStory, Opinion } from '../../../types';
 import HeroCard from './HeroCard';
 import ArticleCard from './ArticleCard';
 import AdSlot from './AdSlot';
 import { CountryInfo } from '../services/locationService';
-import { subscribeToPublishedOpinions } from '../services/opinionsService';
+import { ensureAuthenticated, onPublicAuthStateChanged, subscribeToPublishedOpinions } from '../services/opinionsService';
 
 interface NewsGridProps {
   newsData: {
@@ -17,9 +18,28 @@ interface NewsGridProps {
 const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCountry }) => {
   // State for editorials
   const [editorials, setEditorials] = useState<Opinion[]>([]);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+
+  // Ensure anonymous auth is ready before subscribing to Firestore
+  useEffect(() => {
+    ensureAuthenticated().catch((err) => {
+      console.error('❌ Anonymous auth init failed:', err);
+    });
+
+    const unsubscribeAuth = onPublicAuthStateChanged((user) => {
+      setAuthUser(user);
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   // Subscribe to published editorials
   useEffect(() => {
+    if (!authUser) {
+      console.log('⏳ Waiting for auth before subscribing to editorials...');
+      return;
+    }
+
     const unsubscribe = subscribeToPublishedOpinions(
       (fetched) => {
         // Filter for editorials only (type: 'editorial' and isPublished: true)
@@ -41,7 +61,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [authUser?.uid]);
 
   // Define category order for display - Local category will be dynamic
   const baseCategoryOrder = [

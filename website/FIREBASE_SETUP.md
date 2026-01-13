@@ -53,3 +53,22 @@ The Firebase web config is safe to expose publicly. However, make sure to:
 1. Set up Firebase App Check (recommended)
 2. Configure Firestore security rules properly
 3. Restrict API key by domain in Google Cloud Console if needed
+
+## Firestore Security Rules (required for public pages)
+
+If the public site reads from Firestore under `artifacts/{APP_ID}/public/data/**`, the simplest safe baseline is:
+- **Allow reads for authenticated users** (`request.auth != null`) — this includes **anonymous auth**
+- **Keep writes locked down** (typically to staff/editor accounts)
+
+Example snippet to ensure public reads work (adjust as needed for your project):
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /artifacts/{appId}/public/data/{document=**} {
+      allow read: if request.auth != null;
+    }
+  }
+}
+```

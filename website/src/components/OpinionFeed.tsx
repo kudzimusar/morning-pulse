@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import type { User } from 'firebase/auth';
 import { Opinion } from '../../../types';
-import { subscribeToPublishedOpinions } from '../services/opinionsService';
+import { ensureAuthenticated, onPublicAuthStateChanged, subscribeToPublishedOpinions } from '../services/opinionsService';
 import { X, PenTool } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
 
@@ -13,8 +14,28 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('Latest');
   const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Kick off anonymous auth early (non-blocking) and track readiness.
+    ensureAuthenticated().catch((err) => {
+      console.error('❌ Anonymous auth init failed:', err);
+    });
+
+    const unsubscribeAuth = onPublicAuthStateChanged((user) => {
+      setAuthUser(user);
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    // 🛑 GUARD: Do not fetch if user is not logged in (even anonymously)
+    if (!authUser) {
+      console.log('⏳ Waiting for auth before subscribing to opinions...');
+      return;
+    }
+
     const unsubscribe = subscribeToPublishedOpinions(
       (fetched) => {
         setOpinions(fetched);
@@ -26,7 +47,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
       }
     );
     return () => { if (unsubscribe) unsubscribe(); };
-  }, []);
+  }, [authUser?.uid]);
 
   const getDisplayImage = (opinion: Opinion) => {
     const fromDoc = opinion.finalImageUrl || opinion.suggestedImageUrl || opinion.imageUrl;
