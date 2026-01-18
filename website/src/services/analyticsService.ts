@@ -56,6 +56,28 @@ export interface AnalyticsSummary {
     timestamp: Date;
     articleId?: string;
   }>;
+  // NEW: Opinion Performance
+  topOpinions?: Array<{
+    id: string;
+    headline: string;
+    authorName: string;
+    slug?: string;
+    views: number;
+    publishedAt: Date;
+  }>;
+  // NEW: Author Analytics
+  topAuthors?: Array<{
+    authorName: string;
+    publishedCount: number;
+    totalViews: number;
+    avgViewsPerArticle: number;
+  }>;
+  // NEW: Workflow Metrics
+  avgTimeToPublish?: number; // Average hours from submission to publish
+  totalDrafts?: number;
+  totalPending?: number;
+  totalInReview?: number;
+  totalScheduled?: number;
 }
 
 /**
@@ -120,6 +142,55 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       articleId: op.id,
     }));
   
+  // NEW: Calculate workflow metrics
+  const totalDrafts = opinions.filter(op => op.status === 'draft').length;
+  const totalPending = opinions.filter(op => op.status === 'pending').length;
+  const totalInReview = opinions.filter(op => op.status === 'in-review').length;
+  const totalScheduled = opinions.filter(op => op.status === 'scheduled').length;
+  
+  // NEW: Calculate avg time to publish
+  const publishedWithTimes = opinions.filter(op => op.publishedAt && op.submittedAt);
+  const avgTimeToPublish = publishedWithTimes.length > 0
+    ? publishedWithTimes.reduce((sum, op) => {
+        const diff = op.publishedAt!.getTime() - op.submittedAt.getTime();
+        return sum + diff;
+      }, 0) / publishedWithTimes.length / (1000 * 60 * 60) // Convert to hours
+    : 0;
+  
+  // NEW: Get article view stats for top opinions
+  const topOpinions = await getTopOpinions(5);
+  
+  // NEW: Calculate author analytics
+  const authorStats: Record<string, { publishedCount: number; totalViews: number }> = {};
+  const publishedOpinions = opinions.filter(op => op.status === 'published');
+  
+  publishedOpinions.forEach(op => {
+    const author = op.authorName || 'Unknown';
+    if (!authorStats[author]) {
+      authorStats[author] = { publishedCount: 0, totalViews: 0 };
+    }
+    authorStats[author].publishedCount++;
+  });
+  
+  // Get view counts for each author
+  for (const opinion of publishedOpinions) {
+    const author = opinion.authorName || 'Unknown';
+    const stats = await getArticleStats(opinion.id);
+    if (stats) {
+      authorStats[author].totalViews += stats.views;
+    }
+  }
+  
+  const topAuthors = Object.entries(authorStats)
+    .map(([authorName, stats]) => ({
+      authorName,
+      publishedCount: stats.publishedCount,
+      totalViews: stats.totalViews,
+      avgViewsPerArticle: stats.publishedCount > 0 ? Math.round(stats.totalViews / stats.publishedCount) : 0,
+    }))
+    .sort((a, b) => b.totalViews - a.totalViews)
+    .slice(0, 10);
+  
   return {
     totalPublished,
     totalSubmissions,
@@ -128,7 +199,60 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     viewsThisWeek,
     topCategories,
     recentActivity,
+    // NEW: Enhanced analytics
+    topOpinions,
+    topAuthors,
+    avgTimeToPublish: Math.round(avgTimeToPublish * 10) / 10, // Round to 1 decimal
+    totalDrafts,
+    totalPending,
+    totalInReview,
+    totalScheduled,
   };
+};
+
+/**
+ * NEW: Get top performing opinions by view count
+ */
+export const getTopOpinions = async (limit: number = 10): Promise<Array<{
+  id: string;
+  headline: string;
+  authorName: string;
+  slug?: string;
+  views: number;
+  publishedAt: Date;
+}>> => {
+  const db = getDb();
+  const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
+  const opinionsSnapshot = await getDocs(opinionsRef);
+  
+  const opinionStats: Array<{
+    id: string;
+    headline: string;
+    authorName: string;
+    slug?: string;
+    views: number;
+    publishedAt: Date;
+  }> = [];
+  
+  for (const docSnap of opinionsSnapshot.docs) {
+    const data = docSnap.data();
+    if (data.status === 'published') {
+      const stats = await getArticleStats(docSnap.id);
+      opinionStats.push({
+        id: docSnap.id,
+        headline: data.headline || 'Untitled',
+        authorName: data.authorName || 'Unknown',
+        slug: data.slug,
+        views: stats?.views || 0,
+        publishedAt: data.publishedAt?.toDate?.() || new Date(),
+      });
+    }
+  }
+  
+  // Sort by views descending
+  return opinionStats
+    .sort((a, b) => b.views - a.views)
+    .slice(0, limit);
 };
 
 /**

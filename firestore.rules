@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: Get staff document for current user
+    function getStaffDoc() {
+      return get(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
+    
+    // Helper function: Check if user has specific role
+    function hasRole(role) {
+      return isAuthenticated() && 
+             getStaffDoc().data.roles.hasAny([role]);
+    }
+    
+    // Helper function: Check if user is admin or super_admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             getStaffDoc().data.roles.hasAny(['admin', 'super_admin']);
+    }
+    
+    // Helper function: Check if user is editor, admin, or super_admin
+    function isEditor() {
+      return isAuthenticated() && 
+             getStaffDoc().data.roles.hasAny(['editor', 'admin', 'super_admin']);
+    }
+    
+    // Helper function: Check if staff account is active
+    function isActiveStaff() {
+      return isAuthenticated() && 
+             getStaffDoc().data.isActive == true;
+    }
+    
+    // ===========================================
+    // STAFF COLLECTION (Root Level)
+    // ===========================================
+    match /staff/{uid} {
+      // Anyone authenticated can read staff (for role checks, activity display)
+      allow read: if isAuthenticated();
+      
+      // Only admins can create new staff documents
+      allow create: if isAdmin();
+      
+      // Only admins can update staff documents
+      // Exception: Users can update their own lastActive timestamp
+      allow update: if isAdmin() || 
+                      (request.auth.uid == uid && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActive', 'updatedAt']));
+      
+      // Only admins can delete staff
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // INVITATIONS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/invites/{token} {
+      // Anyone can read (needed to validate token on join page)
+      allow read: if true;
+      
+      // Only admins can create invitations
+      allow create: if isAdmin();
+      
+      // Only admins can update invitations (revoke, mark as used)
+      // Exception: System can mark invite as 'used' during signup
+      allow update: if isAdmin() || 
+                      (isAuthenticated() && 
+                       request.resource.data.status == 'used' &&
+                       resource.data.status == 'pending');
+      
+      // Only admins can delete invitations
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // AUDIT LOGS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/audit_logs/{logId} {
+      // Only admins can read audit logs
+      allow read: if isAdmin();
+      
+      // Any authenticated user can create audit logs
+      // (Services log actions on behalf of users)
+      allow create: if isAuthenticated();
+      
+      // Audit logs cannot be updated or deleted (immutable)
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // ===========================================
+    // OPINIONS COLLECTION (Editorial Content)
+    // ===========================================
+    match /artifacts/{appId}/public/data/opinions/{opinionId} {
+      // Public can read published opinions
+      allow read: if resource.data.status == 'published' || isEditor();
+      
+      // Writers can create opinions (submissions)
+      allow create: if isAuthenticated();
+      
+      // Only editors can update opinions (review, edit, publish)
+      allow update: if isEditor();
+      
+      // Only admins can delete opinions
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // WRITERS COLLECTION
+    // ===========================================
+    match /writers/{uid} {
+      // Anyone can create writer applications
+      allow create: if true;
+      
+      // Writers can read their own document
+      // Admins can read all writer documents
+      allow read: if request.auth.uid == uid || isAdmin();
+      
+      // Writers can update their own profile
+      // Admins can update any writer (approve/reject)
+      allow update: if request.auth.uid == uid || isAdmin();
+      
+      // Only admins can delete writers
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // DEFAULT DENY
+    // ===========================================
+    // All other paths are denied by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

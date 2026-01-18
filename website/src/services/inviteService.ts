@@ -25,6 +25,7 @@ import {
 } from 'firebase/auth';
 import { getApp } from 'firebase/app';
 import { StaffInvite, StaffMember } from '../../../types';
+import { logStaffAction, AuditActions } from './auditService';
 
 const APP_ID = 'morning-pulse-app';
 
@@ -240,6 +241,27 @@ export const createStaffFromInvite = async (
     
     console.log(`✅ [INVITE] Invite marked as used: ${token}`);
     console.log(`🎉 [INVITE] ${invite.name} successfully joined as ${invite.roles.join(', ')}`);
+    
+    // 5. Log the action (new staff created from invite)
+    try {
+      await logStaffAction(
+        AuditActions.STAFF_CREATED,
+        invite.invitedBy,
+        invite.invitedByName,
+        user.uid,
+        invite.name,
+        undefined,
+        invite.roles,
+        { 
+          email: invite.email,
+          source: 'invitation',
+          inviteToken: token
+        }
+      );
+    } catch (error) {
+      // Don't fail the signup if audit logging fails
+      console.warn('Could not log staff creation:', error);
+    }
     
     return user;
     

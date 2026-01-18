@@ -41,6 +41,11 @@ import { compressImage, validateImage } from '../../utils/imageCompression';
 import EnhancedFirestore from '../../services/enhancedFirestore';
 import { getCurrentEditor } from '../../services/authService';
 import { generateUniqueSlug, sanitizeSlug, isValidSlug } from '../../utils/slugUtils';
+import { 
+  notifyWriterArticlePublished, 
+  notifyWriterArticleReturned, 
+  notifyWriterArticleClaimed 
+} from '../../services/notificationService';
 
 const APP_ID = "morning-pulse-app";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -642,6 +647,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         updatedAt: serverTimestamp(),
       });
       
+      // NEW: Send notification to writer
+      if (selectedOpinion?.authorId) {
+        notifyWriterArticlePublished(
+          selectedOpinion.authorId,
+          editedTitle,
+          finalSlug
+        ).catch(err => {
+          console.warn('Failed to send notification:', err);
+        });
+      }
+      
       showToast('Article published successfully!', 'success');
       setTimeout(() => {
         setSelectedOpinionId(null);
@@ -707,9 +723,20 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     setClaiming(true);
     
     try {
+      // Find the story to get author info
+      const allOpinions = [...draftOpinions, ...pendingOpinions, ...inReviewOpinions];
+      const story = allOpinions.find(op => op.id === storyId);
+      
       await claimStory(storyId, currentEditorId, currentEditorName);
       showToast('Story claimed successfully', 'success');
       setSelectedOpinionId(storyId);
+      
+      // NEW: Send notification to writer
+      if (story?.authorId) {
+        notifyWriterArticleClaimed(story.authorId, story.headline, currentEditorName).catch(err => {
+          console.warn('Failed to send notification:', err);
+        });
+      }
     } catch (error: any) {
       console.error('Claim error:', error);
       showToast(error.message || 'Failed to claim story', 'error');
@@ -758,6 +785,18 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     try {
       await returnToWriter(selectedOpinionId, editorNotes, currentEditorId);
       showToast('Story returned to writer with feedback', 'success');
+      
+      // NEW: Send notification to writer
+      if (selectedOpinion?.authorId) {
+        notifyWriterArticleReturned(
+          selectedOpinion.authorId,
+          selectedOpinion.headline,
+          editorNotes
+        ).catch(err => {
+          console.warn('Failed to send notification:', err);
+        });
+      }
+      
       setTimeout(() => {
         setSelectedOpinionId(null);
       }, 1000);

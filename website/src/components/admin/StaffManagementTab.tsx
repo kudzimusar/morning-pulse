@@ -21,7 +21,14 @@ import {
   getInviteJoinUrl,
   hasPendingInvite
 } from '../../services/inviteService';
-import { StaffMember, StaffInvite } from '../../../types';
+import { 
+  logStaffAction, 
+  AuditActions,
+  getRecentAuditLogs,
+  formatAuditAction,
+  formatAuditDetails
+} from '../../services/auditService';
+import { StaffMember, StaffInvite, AuditLog } from '../../../types';
 
 interface StaffManagementTabProps {
   firebaseInstances: { auth: any; db: Firestore } | null;
@@ -48,6 +55,11 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // Audit log modal state
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [loadingAuditLogs, setLoadingAuditLogs] = useState(false);
 
   useEffect(() => {
     loadStaff();
@@ -120,6 +132,18 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
         invitedByName
       );
 
+      // Log the action
+      await logStaffAction(
+        AuditActions.INVITE_CREATED,
+        currentUser.uid,
+        invitedByName,
+        undefined,
+        newStaffEmail,
+        undefined,
+        newStaffRoles,
+        { token: invite.id }
+      );
+
       showToast('Invitation created successfully!', 'success');
       setCreatedInviteToken(invite.id);
       
@@ -170,7 +194,23 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
 
     try {
       const currentUser = firebaseInstances.auth.currentUser as User;
+      const currentStaffMember = staff.find(s => s.uid === currentUser.uid);
+      const adminName = currentStaffMember?.name || currentUser.email || 'Admin';
+      
       await revokeInvite(token, currentUser.uid);
+      
+      // Log the action
+      await logStaffAction(
+        AuditActions.INVITE_REVOKED,
+        currentUser.uid,
+        adminName,
+        undefined,
+        email,
+        undefined,
+        undefined,
+        { token }
+      );
+      
       showToast('Invitation revoked', 'success');
       await loadPendingInvites();
     } catch (error: any) {
@@ -182,6 +222,21 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
   const handleCloseInviteSuccess = () => {
     setCreatedInviteToken(null);
     setShowAddForm(false);
+  };
+
+  const handleShowAuditLogs = async () => {
+    setShowAuditModal(true);
+    setLoadingAuditLogs(true);
+    
+    try {
+      const logs = await getRecentAuditLogs(20);
+      setAuditLogs(logs);
+    } catch (error) {
+      console.error('Error loading audit logs:', error);
+      showToast('Failed to load audit logs', 'error');
+    } finally {
+      setLoadingAuditLogs(false);
+    }
   };
 
   /**
@@ -221,8 +276,32 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
   });
 
   const handleUpdateRoles = async (uid: string, roles: string[]) => {
+    if (!firebaseInstances?.auth?.currentUser) {
+      showToast('You must be logged in', 'error');
+      return;
+    }
+
     try {
+      const currentUser = firebaseInstances.auth.currentUser as User;
+      const currentStaffMember = staff.find(s => s.uid === currentUser.uid);
+      const targetMember = staff.find(s => s.uid === uid);
+      const adminName = currentStaffMember?.name || currentUser.email || 'Admin';
+      
+      const oldRoles = targetMember?.roles || [];
+      
       await updateStaffRoles(uid, roles);
+      
+      // Log the action
+      await logStaffAction(
+        AuditActions.ROLE_CHANGED,
+        currentUser.uid,
+        adminName,
+        uid,
+        targetMember?.name,
+        oldRoles,
+        roles
+      );
+      
       showToast('Roles updated successfully', 'success');
       loadStaff();
     } catch (error: any) {
@@ -236,8 +315,27 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
       return;
     }
 
+    if (!firebaseInstances?.auth?.currentUser) {
+      showToast('You must be logged in', 'error');
+      return;
+    }
+
     try {
+      const currentUser = firebaseInstances.auth.currentUser as User;
+      const currentStaffMember = staff.find(s => s.uid === currentUser.uid);
+      const adminName = currentStaffMember?.name || currentUser.email || 'Admin';
+      
       await deleteStaffMember(uid);
+      
+      // Log the action
+      await logStaffAction(
+        AuditActions.STAFF_DELETED,
+        currentUser.uid,
+        adminName,
+        uid,
+        name
+      );
+      
       showToast('Staff member removed', 'success');
       loadStaff();
     } catch (error: any) {
@@ -262,8 +360,19 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
       const adminName = currentStaffMember?.name || currentUser.email || 'Admin';
 
       await suspendStaffMember(uid, currentUser.uid, adminName);
+      
+      // Log the action
+      await logStaffAction(
+        AuditActions.STAFF_SUSPENDED,
+        currentUser.uid,
+        adminName,
+        uid,
+        name,
+        { isActive: true },
+        { isActive: false }
+      );
+      
       showToast(`${name} has been suspended`, 'success');
-      console.log(`[AUDIT] ${adminName} (${currentUser.uid}) suspended ${name} (${uid})`);
       loadStaff();
     } catch (error: any) {
       console.error('Error suspending staff:', error);
@@ -276,10 +385,30 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
       return;
     }
 
+    if (!firebaseInstances?.auth?.currentUser) {
+      showToast('You must be logged in', 'error');
+      return;
+    }
+
     try {
+      const currentUser = firebaseInstances.auth.currentUser as User;
+      const currentStaffMember = staff.find(s => s.uid === currentUser.uid);
+      const adminName = currentStaffMember?.name || currentUser.email || 'Admin';
+      
       await activateStaffMember(uid);
+      
+      // Log the action
+      await logStaffAction(
+        AuditActions.STAFF_ACTIVATED,
+        currentUser.uid,
+        adminName,
+        uid,
+        name,
+        { isActive: false },
+        { isActive: true }
+      );
+      
       showToast(`${name} has been reactivated`, 'success');
-      console.log(`[AUDIT] Staff member ${name} (${uid}) reactivated`);
       loadStaff();
     } catch (error: any) {
       console.error('Error activating staff:', error);
@@ -311,21 +440,38 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
         <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>
           Staff Management ({filteredStaff.length} / {staff.length})
         </h2>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#000',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}
-        >
-          {showAddForm ? 'Cancel' : '+ Add Staff'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={handleShowAuditLogs}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#6366f1',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            📋 Recent Activity
+          </button>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#000',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            {showAddForm ? 'Cancel' : '+ Add Staff'}
+          </button>
+        </div>
       </div>
 
       {/* Search & Filters */}
@@ -877,6 +1023,123 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
           );
         })}
       </div>
+
+      {/* Audit Log Modal */}
+      {showAuditModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '8px',
+            padding: '24px',
+            width: '90%',
+            maxWidth: '800px',
+            maxHeight: '80vh',
+            overflow: 'auto',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+                📋 Recent Activity
+              </h3>
+              <button
+                onClick={() => setShowAuditModal(false)}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#f3f4f6',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            {loadingAuditLogs ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
+                Loading audit logs...
+              </div>
+            ) : auditLogs.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
+                No audit logs yet
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {auditLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    style={{
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      padding: '12px',
+                      backgroundColor: '#f9fafb'
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'start',
+                      marginBottom: '8px'
+                    }}>
+                      <div style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#111827'
+                      }}>
+                        {formatAuditAction(log.action)}
+                      </div>
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#6b7280'
+                      }}>
+                        {log.timestamp.toLocaleString()}
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '13px',
+                      color: '#4b5563',
+                      marginBottom: '4px'
+                    }}>
+                      By: {log.performedByName}
+                    </div>
+                    {formatAuditDetails(log) && (
+                      <div style={{
+                        fontSize: '12px',
+                        color: '#6b7280',
+                        fontFamily: 'monospace',
+                        backgroundColor: '#fff',
+                        padding: '6px 8px',
+                        borderRadius: '3px',
+                        marginTop: '6px'
+                      }}>
+                        {formatAuditDetails(log)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

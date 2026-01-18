@@ -83,14 +83,17 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
             color: '#666',
             marginBottom: '8px'
           }}>
-            Total Submissions
+            In Pipeline
           </div>
           <div style={{
             fontSize: '32px',
             fontWeight: '700',
             color: '#3b82f6'
           }}>
-            {analytics.totalSubmissions}
+            {(analytics.totalDrafts || 0) + (analytics.totalPending || 0) + (analytics.totalInReview || 0)}
+          </div>
+          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+            {analytics.totalDrafts || 0} drafts • {analytics.totalPending || 0} pending • {analytics.totalInReview || 0} in-review
           </div>
         </div>
 
@@ -105,14 +108,17 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
             color: '#666',
             marginBottom: '8px'
           }}>
-            Rejected
+            Scheduled
           </div>
           <div style={{
             fontSize: '32px',
             fontWeight: '700',
-            color: '#ef4444'
+            color: '#4338ca'
           }}>
-            {analytics.totalRejected}
+            {analytics.totalScheduled || 0}
+          </div>
+          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+            Awaiting auto-publish
           </div>
         </div>
 
@@ -127,14 +133,151 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
             color: '#666',
             marginBottom: '8px'
           }}>
-            Views Today
+            Avg Time to Publish
           </div>
           <div style={{
             fontSize: '32px',
             fontWeight: '700',
             color: '#f59e0b'
           }}>
-            {analytics.viewsToday}
+            {analytics.avgTimeToPublish ? `${analytics.avgTimeToPublish}h` : 'N/A'}
+          </div>
+          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+            From submission
+          </div>
+        </div>
+      </div>
+
+      {/* Two Column Layout for Analytics */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+        gap: '24px',
+        marginBottom: '32px'
+      }}>
+        {/* Top Opinions by Views */}
+        <div style={{
+          border: '1px solid #e5e5e5',
+          borderRadius: '8px',
+          padding: '24px',
+          backgroundColor: '#fff'
+        }}>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+            🏆 Top Performing Opinions
+          </h3>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            {!analytics.topOpinions || analytics.topOpinions.length === 0 ? (
+              <div style={{ color: '#999', fontSize: '13px', padding: '20px', textAlign: 'center' }}>
+                No view data available yet. Views will be tracked when readers open opinions.
+              </div>
+            ) : (
+              analytics.topOpinions.map((op, index) => (
+                <div
+                  key={op.id}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: index === 0 ? '#f0fdf4' : '#f9fafb',
+                    borderRadius: '4px',
+                    border: index === 0 ? '1px solid #86efac' : '1px solid #e5e5e5'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '6px'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+                        {index + 1}. {op.headline}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        By {op.authorName}
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '20px',
+                      fontWeight: '700',
+                      color: index === 0 ? '#10b981' : '#3b82f6'
+                    }}>
+                      {op.views}
+                    </div>
+                  </div>
+                  {op.slug && (
+                    <div style={{
+                      fontSize: '10px',
+                      color: '#999',
+                      fontFamily: 'monospace',
+                      marginTop: '4px'
+                    }}>
+                      /opinion/{op.slug}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Top Authors */}
+        <div style={{
+          border: '1px solid #e5e5e5',
+          borderRadius: '8px',
+          padding: '24px',
+          backgroundColor: '#fff'
+        }}>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+            ✍️ Top Contributors
+          </h3>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            {!analytics.topAuthors || analytics.topAuthors.length === 0 ? (
+              <div style={{ color: '#999', fontSize: '13px', padding: '20px', textAlign: 'center' }}>
+                No author data available yet.
+              </div>
+            ) : (
+              analytics.topAuthors.map((author, index) => (
+                <div
+                  key={author.authorName}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: index === 0 ? '#fef3c7' : '#f9fafb',
+                    borderRadius: '4px',
+                    border: index === 0 ? '1px solid #fde68a' : '1px solid #e5e5e5'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '4px' }}>
+                        {index + 1}. {author.authorName}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>
+                        {author.publishedCount} article{author.publishedCount !== 1 ? 's' : ''} • 
+                        {' '}{author.avgViewsPerArticle} avg views
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      color: index === 0 ? '#f59e0b' : '#6b7280'
+                    }}>
+                      {author.totalViews}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

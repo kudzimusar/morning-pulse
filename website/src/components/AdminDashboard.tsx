@@ -27,6 +27,7 @@ import EditorialQueueTab from './admin/EditorialQueueTab';
 import PublishedContentTab from './admin/PublishedContentTab';
 import StaffManagementTab from './admin/StaffManagementTab';
 import AnalyticsTab from './admin/AnalyticsTab';
+import NewsletterTab from './admin/NewsletterTab';
 import ImageComplianceTab from './admin/ImageComplianceTab';
 import SettingsTab from './admin/SettingsTab';
 import WriterManagementTab from './admin/WriterManagementTab';
@@ -62,7 +63,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'image-compliance' | 'settings';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter' | 'image-compliance' | 'settings';
 
 const AdminDashboard: React.FC = () => {
   // Auth state
@@ -426,6 +427,7 @@ const AdminDashboard: React.FC = () => {
     { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
     { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
     { id: 'analytics' as TabId, label: 'Analytics', icon: '📈' },
+    { id: 'newsletter' as TabId, label: 'Newsletter Generator', icon: '📧' },
     { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️' },
     { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
   ].filter(tab => !tab.adminOnly || isAdmin);
@@ -634,6 +636,10 @@ const AdminDashboard: React.FC = () => {
             <AnalyticsTab
               firebaseInstances={firebaseInstances}
             />
+          )}
+
+          {activeTab === 'newsletter' && (
+            <NewsletterTab />
           )}
 
           {activeTab === 'image-compliance' && (

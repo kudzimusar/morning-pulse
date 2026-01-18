@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../../types';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
+import { incrementArticleView } from '../services/analyticsService';
 import { X, PenTool } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
 
@@ -74,6 +75,16 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   const filtered = activeCategory === 'Latest' 
     ? opinions 
     : opinions.filter(o => o.category === activeCategory || (activeCategory === 'Guest Essays' && o.writerType === 'Guest Essay'));
+
+  // NEW: Track view when opinion is opened
+  useEffect(() => {
+    if (selectedOpinion) {
+      // Increment view count (async, don't wait)
+      incrementArticleView(selectedOpinion.id).catch(err => {
+        console.warn('Failed to track view:', err);
+      });
+    }
+  }, [selectedOpinion]);
 
   // NEW: Handle slug not found
   if (slugNotFound) {

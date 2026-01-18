@@ -259,9 +259,41 @@ submitForReview(storyId: string) // Changes draft → pending
   - [... other existing fields]
 
 /staff/{uid}
-  - roles: ['editor'] | ['admin'] | ['super_admin']
+  - roles: ['editor', 'admin', 'super_admin', 'writer']
   - name: string
   - email: string
+  - isActive: boolean
+  - suspendedAt: timestamp | null
+  - suspendedBy: string | null
+  - suspendedByName: string | null
+  - invitedBy: string
+  - invitedByName: string
+  - lastActive: timestamp
+  - createdAt: timestamp
+  - updatedAt: timestamp
+
+/artifacts/{appId}/public/data/invites/{token}
+  - email: string
+  - name: string
+  - roles: string[]
+  - invitedBy: string
+  - invitedByName: string
+  - createdAt: timestamp
+  - expiresAt: timestamp (7 days)
+  - status: 'pending' | 'used' | 'revoked' | 'expired'
+  - usedBy: string | null
+  - usedAt: timestamp | null
+
+/artifacts/{appId}/public/data/audit_logs/{logId}
+  - action: string
+  - performedBy: string
+  - performedByName: string
+  - targetUid: string | null
+  - targetName: string | null
+  - oldValue: any
+  - newValue: any
+  - timestamp: timestamp
+  - metadata: object
 
 /writers/{uid}
   - status: 'pending' | 'approved' | 'rejected'
@@ -288,6 +320,7 @@ fix: Claim lock logic preventing duplicate claims - PLAN.md Phase 2
 - ~~Slug Management~~ - SEO-friendly slugs with auto-generation & validation
 - ~~Scheduled Publishing~~ - Auto-publish at specified times (30s interval)
 - ~~Version History~~ - Full edit history with rollback protection
+- ~~Staff Management System~~ - Complete invitation, suspend/activate, audit logging (January 2026)
 
 🔄 **IN PROGRESS**:
 1. **Public Slug Routing**: Display opinions at `/opinion/{slug}` URLs (backend API ready, frontend integration pending)
