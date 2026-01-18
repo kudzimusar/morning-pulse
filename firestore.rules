@@ -130,6 +130,21 @@ service cloud.firestore {
     }
     
     // ===========================================
+    // NEWS COLLECTION (Public News Data)
+    // ===========================================
+    match /artifacts/{appId}/public/data/news/{dateString} {
+      // Public can read all news data (news website)
+      allow read: if true;
+
+      // Only service account can write news (via Cloud Function)
+      allow create, update: if isAuthenticated() &&
+                             request.auth.token.email == 'firebase-adminsdk@gen-lang-client-0999441419.iam.gserviceaccount.com';
+
+      // News documents cannot be deleted
+      allow delete: if false;
+    }
+
+    // ===========================================
     // DEFAULT DENY
     // ===========================================
     // All other paths are denied by default
