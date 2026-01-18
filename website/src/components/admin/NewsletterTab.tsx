@@ -4,17 +4,20 @@
  */
 
 import React, { useState } from 'react';
-import { generateNewsletter, downloadNewsletter, previewNewsletter, NewsletterOptions } from '../../services/newsletterService';
+import { generateNewsletter, downloadNewsletter, previewNewsletter, sendNewsletter, sendScheduledNewsletter, NewsletterOptions } from '../../services/newsletterService';
 
 const NewsletterTab: React.FC = () => {
   const [generating, setGenerating] = useState(false);
+  const [sending, setSending] = useState(false);
   const [generatedHTML, setGeneratedHTML] = useState<string | null>(null);
+  const [sendResult, setSendResult] = useState<{ success: boolean; message: string; stats?: any } | null>(null);
   const [options, setOptions] = useState<NewsletterOptions>({
     title: 'Weekly Opinion Digest',
     dateRange: 'week',
     maxArticles: 10,
     includeImages: true,
   });
+  const [interests, setInterests] = useState<string>('');
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -31,9 +34,51 @@ const NewsletterTab: React.FC = () => {
 
   const handleDownload = () => {
     if (!generatedHTML) return;
-    
+
     const filename = `morning-pulse-${options.dateRange}-${new Date().toISOString().split('T')[0]}.html`;
     downloadNewsletter(generatedHTML, filename);
+  };
+
+  const handleSendNewsletter = async () => {
+    if (!generatedHTML) return;
+
+    setSending(true);
+    setSendResult(null);
+
+    try {
+      const interestsArray = interests.trim() ? interests.split(',').map(i => i.trim()) : undefined;
+
+      const result = await sendNewsletter({
+        subject: options.title,
+        html: generatedHTML
+      }, interestsArray);
+
+      setSendResult(result);
+    } catch (error: any) {
+      setSendResult({
+        success: false,
+        message: error.message || 'Failed to send newsletter'
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSendScheduledNewsletter = async (type: 'daily' | 'weekly') => {
+    setSending(true);
+    setSendResult(null);
+
+    try {
+      const result = await sendScheduledNewsletter(type);
+      setSendResult(result);
+    } catch (error: any) {
+      setSendResult({
+        success: false,
+        message: error.message || 'Failed to send scheduled newsletter'
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   const handlePreview = () => {
@@ -179,6 +224,34 @@ const NewsletterTab: React.FC = () => {
           </label>
         </div>
 
+        {/* Interests Segmentation */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>
+            Target Interests (Optional)
+          </label>
+          <input
+            type="text"
+            value={interests}
+            onChange={(e) => setInterests(e.target.value)}
+            placeholder="politics, business, tech (comma-separated)"
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+            Leave empty to send to all subscribers. Use interests to segment your audience.
+          </div>
+        </div>
+
         {/* Generate Button */}
         <button
           onClick={handleGenerate}
@@ -226,7 +299,7 @@ const NewsletterTab: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <button
               onClick={handlePreview}
               style={{
@@ -242,7 +315,7 @@ const NewsletterTab: React.FC = () => {
             >
               👁️ Preview in Browser
             </button>
-            
+
             <button
               onClick={handleDownload}
               style={{
@@ -258,7 +331,62 @@ const NewsletterTab: React.FC = () => {
             >
               ⬇️ Download HTML
             </button>
+
+            <button
+              onClick={handleSendNewsletter}
+              disabled={sending}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#8b5cf6',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: sending ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '600',
+                opacity: sending ? 0.6 : 1
+              }}
+            >
+              {sending ? '📧 Sending...' : '📧 Send Newsletter'}
+            </button>
           </div>
+
+          {/* Send Result */}
+          {sendResult && (
+            <div style={{
+              padding: '16px',
+              borderRadius: '6px',
+              marginBottom: '20px',
+              backgroundColor: sendResult.success ? '#f0fdf4' : '#fef2f2',
+              border: `1px solid ${sendResult.success ? '#86efac' : '#fecaca'}`
+            }}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: sendResult.success ? '#166534' : '#991b1b',
+                marginBottom: '4px'
+              }}>
+                {sendResult.success ? '✅ Send Successful' : '❌ Send Failed'}
+              </div>
+              <div style={{
+                fontSize: '13px',
+                color: sendResult.success ? '#16a34a' : '#dc2626'
+              }}>
+                {sendResult.message}
+              </div>
+              {sendResult.stats && (
+                <div style={{
+                  fontSize: '12px',
+                  color: '#666',
+                  marginTop: '8px'
+                }}>
+                  Sent to {sendResult.stats.successfulSends || 0} subscribers
+                  {sendResult.stats.targetedSubscribers && sendResult.stats.totalSubscribers &&
+                    ` (targeted ${sendResult.stats.targetedSubscribers} of ${sendResult.stats.totalSubscribers})`}
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{
             padding: '16px',
@@ -298,6 +426,89 @@ const NewsletterTab: React.FC = () => {
           <li><strong>Subject Line:</strong> Keep it under 50 characters for mobile</li>
           <li><strong>Testing:</strong> Always preview before sending to subscribers</li>
         </ul>
+      </div>
+
+      {/* Scheduled Newsletters */}
+      <div style={{
+        border: '1px solid #e5e5e5',
+        borderRadius: '8px',
+        padding: '24px',
+        backgroundColor: '#f8fafc',
+        marginTop: '32px'
+      }}>
+        <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+          ⏰ Scheduled Newsletters
+        </h3>
+
+        <div style={{
+          backgroundColor: '#e0f2fe',
+          border: '1px solid #bae6fd',
+          borderRadius: '6px',
+          padding: '16px',
+          marginBottom: '20px'
+        }}>
+          <div style={{ fontSize: '14px', color: '#0c4a6e', fontWeight: '600', marginBottom: '8px' }}>
+            ⚡ Automated Delivery
+          </div>
+          <div style={{ fontSize: '13px', color: '#0369a1', lineHeight: '1.6' }}>
+            These buttons send automated newsletters based on recently published content.
+            Daily newsletters include articles from the last 24 hours.
+            Weekly newsletters include articles from the last 7 days.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+          <button
+            onClick={() => handleSendScheduledNewsletter('daily')}
+            disabled={sending}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#f59e0b',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: sending ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              opacity: sending ? 0.6 : 1
+            }}
+          >
+            {sending ? '⏳ Sending...' : '📅 Send Daily Digest'}
+          </button>
+
+          <button
+            onClick={() => handleSendScheduledNewsletter('weekly')}
+            disabled={sending}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#7c3aed',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: sending ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              opacity: sending ? 0.6 : 1
+            }}
+          >
+            {sending ? '⏳ Sending...' : '📊 Send Weekly Digest'}
+          </button>
+        </div>
+
+        <div style={{
+          fontSize: '12px',
+          color: '#666',
+          lineHeight: '1.6',
+          padding: '12px',
+          backgroundColor: '#f9fafb',
+          borderRadius: '4px'
+        }}>
+          <strong>💡 Pro Tip:</strong> Set up Google Cloud Scheduler to call these endpoints automatically:
+          <br />• Daily: Every day at 6:00 AM
+          <br />• Weekly: Every Monday at 8:00 AM
+          <br />
+          <br />This creates a professional newsletter cadence that keeps readers engaged.
+        </div>
       </div>
     </div>
   );

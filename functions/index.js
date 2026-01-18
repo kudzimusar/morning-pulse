@@ -10,6 +10,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 const axios = require('axios');
+const sgMail = require('@sendgrid/mail');
 
 // --- CONFIGURATION ---
 
@@ -19,6 +20,11 @@ const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const APP_ID = process.env.APP_ID || 'morning-pulse-app';
+
+// Email Configuration
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const NEWSLETTER_FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'news@morningpulse.net';
+const NEWSLETTER_FROM_NAME = 'Morning Pulse News';
 
 // Expected news categories from newsAggregator
 const NEWS_CATEGORIES = [
@@ -147,6 +153,14 @@ try {
 } catch (error) {
   console.error('❌ Firebase initialization error:', error.message);
   console.warn('⚠️ Continuing without Firebase. Premium features will be unavailable.');
+}
+
+// Initialize SendGrid
+if (SENDGRID_API_KEY) {
+  sgMail.setApiKey(SENDGRID_API_KEY);
+  console.log('✅ SendGrid initialized successfully');
+} else {
+  console.warn('⚠️ SENDGRID_API_KEY not set. Email features will be unavailable.');
 }
 
 // Initialize Gemini AI
@@ -769,4 +783,524 @@ try {
 } catch (error) {
   console.warn('unsplashProxy module not available:', error.message);
   console.warn('Unsplash image proxy features will be unavailable.');
+}
+
+// --- EMAIL NEWSLETTER FUNCTIONS ---
+
+/**
+ * Send email newsletter via SendGrid
+ * @param {Object} newsletter - Newsletter data
+ * @param {string[]} recipients - List of email addresses
+ */
+async function sendNewsletterEmail(newsletter, recipients) {
+  if (!SENDGRID_API_KEY) {
+    throw new Error('SendGrid not configured');
+  }
+
+  const { subject, html, text } = newsletter;
+
+  // SendGrid has a limit of 1000 recipients per request, so batch if needed
+  const batchSize = 1000;
+  const batches = [];
+
+  for (let i = 0; i < recipients.length; i += batchSize) {
+    batches.push(recipients.slice(i, i + batchSize));
+  }
+
+  const results = [];
+  for (const batch of batches) {
+    const msg = {
+      to: batch,
+      from: {
+        email: NEWSLETTER_FROM_EMAIL,
+        name: NEWSLETTER_FROM_NAME
+      },
+      subject: subject,
+      html: html,
+      text: text || html.replace(/<[^>]*>/g, ''), // Basic HTML to text conversion
+      tracking_settings: {
+        click_tracking: { enable: true },
+        open_tracking: { enable: true },
+        subscription_tracking: {
+          enable: true,
+          html: `<p>Unsubscribe: <%unsubscribe_url%></p>`
+        }
+      }
+    };
+
+    try {
+      const result = await sgMail.send(msg);
+      results.push({ success: true, count: batch.length, result });
+      console.log(`✅ Sent newsletter batch to ${batch.length} recipients`);
+    } catch (error) {
+      console.error('❌ SendGrid error:', error);
+      results.push({ success: false, count: batch.length, error: error.message });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Get active newsletter subscribers from Firestore
+ */
+async function getNewsletterSubscribers() {
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  const subscribersRef = db.collection('artifacts')
+    .doc(APP_ID)
+    .collection('public')
+    .doc('data')
+    .collection('subscribers');
+
+  const snapshot = await subscribersRef
+    .where('status', '==', 'active')
+    .where('emailNewsletter', '==', true)
+    .get();
+
+  const subscribers = [];
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.email && data.email.trim()) {
+      subscribers.push({
+        id: doc.id,
+        email: data.email,
+        name: data.name || null,
+        interests: data.interests || [],
+        subscribedAt: data.subscribedAt?.toDate?.() || new Date()
+      });
+    }
+  });
+
+  console.log(`📧 Found ${subscribers.length} active newsletter subscribers`);
+  return subscribers;
+}
+
+/**
+ * Segment subscribers by interests
+ * @param {Array} subscribers - All subscribers
+ * @param {string[]} interests - Filter by these interests (optional)
+ */
+function segmentSubscribers(subscribers, interests = null) {
+  if (!interests || interests.length === 0) {
+    return subscribers; // Return all if no interests specified
+  }
+
+  return subscribers.filter(sub => {
+    if (!sub.interests || sub.interests.length === 0) {
+      return false; // Skip if no interests set
+    }
+    return interests.some(interest => sub.interests.includes(interest));
+  });
+}
+
+/**
+ * Cloud Function: Send newsletter to all subscribers
+ * Trigger: HTTP POST with newsletter content
+ */
+exports.sendNewsletter = async (req, res) => {
+  // CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+    return;
+  }
+
+  try {
+    const { newsletter, interests } = req.body;
+
+    if (!newsletter || !newsletter.subject || !newsletter.html) {
+      res.status(400).json({ error: 'Missing required fields: newsletter.subject, newsletter.html' });
+      return;
+    }
+
+    // Get subscribers
+    const allSubscribers = await getNewsletterSubscribers();
+
+    if (allSubscribers.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: 'No active subscribers found',
+        sent: 0
+      });
+      return;
+    }
+
+    // Segment subscribers if interests specified
+    const targetSubscribers = segmentSubscribers(allSubscribers, interests);
+    const recipientEmails = targetSubscribers.map(sub => sub.email);
+
+    if (recipientEmails.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: 'No subscribers match the specified interests',
+        sent: 0
+      });
+      return;
+    }
+
+    console.log(`📧 Sending newsletter "${newsletter.subject}" to ${recipientEmails.length} subscribers`);
+
+    // Send the newsletter
+    const results = await sendNewsletterEmail(newsletter, recipientEmails);
+
+    // Calculate success stats
+    const successful = results.filter(r => r.success).reduce((sum, r) => sum + r.count, 0);
+    const failed = results.filter(r => !r.success).reduce((sum, r) => sum + r.count, 0);
+
+    // Log the newsletter send
+    await db.collection('artifacts').doc(APP_ID).collection('analytics').doc('newsletters').collection('sends').add({
+      subject: newsletter.subject,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      totalSubscribers: allSubscribers.length,
+      targetedSubscribers: targetSubscribers.length,
+      successfulSends: successful,
+      failedSends: failed,
+      interests: interests || null
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Newsletter sent successfully to ${successful} subscribers`,
+      stats: {
+        totalSubscribers: allSubscribers.length,
+        targetedSubscribers: targetSubscribers.length,
+        successfulSends: successful,
+        failedSends: failed
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Newsletter send error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Cloud Function: Manage newsletter subscriptions
+ * Supports subscribe, unsubscribe, and update preferences
+ */
+exports.manageSubscription = async (req, res) => {
+  // CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+    return;
+  }
+
+  try {
+    const { action, email, name, interests } = req.body;
+
+    if (!email || !action) {
+      res.status(400).json({ error: 'Missing required fields: email, action' });
+      return;
+    }
+
+    const subscriberRef = db.collection('artifacts')
+      .doc(APP_ID)
+      .collection('public')
+      .doc('data')
+      .collection('subscribers')
+      .doc(email.toLowerCase());
+
+    if (action === 'subscribe') {
+      await subscriberRef.set({
+        email: email.toLowerCase(),
+        name: name || null,
+        interests: interests || [],
+        status: 'active',
+        emailNewsletter: true,
+        subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      res.status(200).json({
+        success: true,
+        message: 'Successfully subscribed to newsletter',
+        subscriber: { email, name, interests }
+      });
+
+    } else if (action === 'unsubscribe') {
+      await subscriberRef.update({
+        status: 'inactive',
+        emailNewsletter: false,
+        unsubscribedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Successfully unsubscribed from newsletter'
+      });
+
+    } else if (action === 'update') {
+      await subscriberRef.update({
+        name: name || null,
+        interests: interests || [],
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Subscription preferences updated',
+        subscriber: { email, name, interests }
+      });
+
+    } else {
+      res.status(400).json({ error: 'Invalid action. Use: subscribe, unsubscribe, update' });
+    }
+
+  } catch (error) {
+    console.error('❌ Subscription management error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Cloud Function: Scheduled newsletter sender
+ * Automatically sends newsletters on schedule (can be triggered by Cloud Scheduler)
+ */
+exports.sendScheduledNewsletter = async (req, res) => {
+  // CORS headers (for testing) - in production this might be called by Cloud Scheduler
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  try {
+    const { newsletterType = 'weekly' } = req.body || {};
+
+    // Get recent published opinions (last 7 days for weekly, 1 day for daily)
+    const cutoffDate = new Date();
+    if (newsletterType === 'weekly') {
+      cutoffDate.setDate(cutoffDate.getDate() - 7);
+    } else if (newsletterType === 'daily') {
+      cutoffDate.setDate(cutoffDate.getDate() - 1);
+    }
+
+    const opinionsRef = db.collection('artifacts')
+      .doc(APP_ID)
+      .collection('public')
+      .doc('data')
+      .collection('opinions');
+
+    const snapshot = await opinionsRef
+      .where('status', '==', 'published')
+      .where('publishedAt', '>=', cutoffDate)
+      .orderBy('publishedAt', 'desc')
+      .limit(15)
+      .get();
+
+    const articles = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      articles.push({
+        id: doc.id,
+        headline: data.headline,
+        subHeadline: data.subHeadline,
+        authorName: data.authorName,
+        slug: data.slug,
+        publishedAt: data.publishedAt?.toDate?.() || new Date(),
+        imageUrl: data.finalImageUrl || data.imageUrl
+      });
+    });
+
+    if (articles.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: 'No new articles for newsletter period',
+        articlesCount: 0
+      });
+      return;
+    }
+
+    // Generate newsletter HTML
+    const newsletterHTML = generateNewsletterHTML(articles, newsletterType);
+
+    // Get subscribers
+    const subscribers = await getNewsletterSubscribers();
+    const emails = subscribers.map(sub => sub.email);
+
+    if (emails.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: 'No subscribers found',
+        articlesCount: articles.length
+      });
+      return;
+    }
+
+    // Send newsletter
+    const results = await sendNewsletterEmail({
+      subject: `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`,
+      html: newsletterHTML
+    }, emails);
+
+    const successful = results.filter(r => r.success).reduce((sum, r) => sum + r.count, 0);
+
+    res.status(200).json({
+      success: true,
+      message: `Scheduled ${newsletterType} newsletter sent to ${successful} subscribers`,
+      stats: {
+        articlesCount: articles.length,
+        subscribersCount: emails.length,
+        successfulSends: successful
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Scheduled newsletter error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate newsletter HTML from articles array
+ */
+function generateNewsletterHTML(articles, type = 'weekly') {
+  const title = `Morning Pulse ${type === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  const articleHTML = articles.map((article, index) => {
+    const url = `https://kudzimusar.github.io/morning-pulse/#opinion/${article.slug || article.id}`;
+    const pubDate = article.publishedAt.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+
+    return `
+      <tr>
+        <td style="padding: 20px 0; border-bottom: 1px solid #e5e5e5;">
+          ${article.imageUrl ? `
+            <a href="${url}" style="display: block; margin-bottom: 16px;">
+              <img src="${article.imageUrl}" alt="${article.headline}" style="width: 100%; max-width: 600px; height: auto; border-radius: 8px;" />
+            </a>
+          ` : ''}
+
+          <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; line-height: 1.3;">
+            <a href="${url}" style="color: #000; text-decoration: none;">${article.headline}</a>
+          </h2>
+
+          <p style="margin: 0 0 12px 0; font-size: 16px; color: #666; font-style: italic;">
+            ${article.subHeadline}
+          </p>
+
+          <p style="margin: 0 0 12px 0; font-size: 14px; color: #444; line-height: 1.6;">
+            ${article.subHeadline.substring(0, 150)}...
+          </p>
+
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 12px; color: #999;">
+              By <strong style="color: #666;">${article.authorName}</strong> • ${pubDate}
+            </span>
+          </div>
+
+          <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 600;">
+            Read Full Article →
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Georgia, serif; background-color: #f9fafb;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 30px; background-color: #000; text-align: center;">
+              <h1 style="margin: 0; color: #fff; font-size: 32px; font-weight: 900; letter-spacing: 0.05em;">
+                MORNING PULSE
+              </h1>
+              <p style="margin: 12px 0 0 0; color: #fff; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;">
+                ${title}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Date -->
+          <tr>
+            <td style="padding: 20px 30px; background-color: #f9fafb; border-bottom: 2px solid #000;">
+              <p style="margin: 0; font-size: 14px; color: #666; text-align: center;">
+                ${currentDate}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Articles -->
+          <tr>
+            <td style="padding: 0 30px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                ${articleHTML}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 12px 0; font-size: 12px; color: #999;">
+                You're receiving this because you subscribed to Morning Pulse newsletters.
+              </p>
+              <p style="margin: 0; font-size: 12px;">
+                <a href="https://kudzimusar.github.io/morning-pulse/#subscribe" style="color: #000; text-decoration: underline;">Manage Subscription</a>
+                •
+                <a href="https://kudzimusar.github.io/morning-pulse/" style="color: #000; text-decoration: underline;">Visit Website</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
 }

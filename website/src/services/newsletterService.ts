@@ -2,6 +2,7 @@
  * Newsletter Service
  * Auto-generates HTML email newsletters from published content
  * Perfect for sending weekly/daily digest to subscribers
+ * Integrates with SendGrid for automated email delivery
  */
 
 import { Opinion } from '../../../types';
@@ -240,5 +241,180 @@ export const previewNewsletter = (html: string): void => {
   if (previewWindow) {
     previewWindow.document.write(html);
     previewWindow.document.close();
+  }
+};
+
+// --- BACKEND INTEGRATION FUNCTIONS ---
+
+/**
+ * NEW: Send newsletter via backend (SendGrid)
+ * @param newsletter - Newsletter content
+ * @param interests - Optional subscriber segmentation by interests
+ */
+export const sendNewsletter = async (
+  newsletter: { subject: string; html: string; text?: string },
+  interests?: string[]
+): Promise<{ success: boolean; message: string; stats?: any }> => {
+  try {
+    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendNewsletter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        newsletter,
+        interests
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to send newsletter');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('Newsletter send error:', error);
+    throw new Error(error.message || 'Failed to send newsletter');
+  }
+};
+
+/**
+ * NEW: Subscribe to newsletter
+ * @param email - Subscriber email
+ * @param name - Optional subscriber name
+ * @param interests - Optional interests array
+ */
+export const subscribeToNewsletter = async (
+  email: string,
+  name?: string,
+  interests?: string[]
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'subscribe',
+        email,
+        name,
+        interests
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to subscribe');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('Newsletter subscription error:', error);
+    throw new Error(error.message || 'Failed to subscribe to newsletter');
+  }
+};
+
+/**
+ * NEW: Unsubscribe from newsletter
+ * @param email - Subscriber email
+ */
+export const unsubscribeFromNewsletter = async (
+  email: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'unsubscribe',
+        email
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to unsubscribe');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('Newsletter unsubscribe error:', error);
+    throw new Error(error.message || 'Failed to unsubscribe from newsletter');
+  }
+};
+
+/**
+ * NEW: Update newsletter subscription preferences
+ * @param email - Subscriber email
+ * @param name - Updated name
+ * @param interests - Updated interests array
+ */
+export const updateNewsletterPreferences = async (
+  email: string,
+  name?: string,
+  interests?: string[]
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'update',
+        email,
+        name,
+        interests
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to update preferences');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('Newsletter preferences update error:', error);
+    throw new Error(error.message || 'Failed to update newsletter preferences');
+  }
+};
+
+/**
+ * NEW: Send scheduled newsletter (daily/weekly)
+ * @param newsletterType - 'daily' or 'weekly'
+ */
+export const sendScheduledNewsletter = async (
+  newsletterType: 'daily' | 'weekly' = 'weekly'
+): Promise<{ success: boolean; message: string; stats?: any }> => {
+  try {
+    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendScheduledNewsletter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        newsletterType
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to send scheduled newsletter');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('Scheduled newsletter send error:', error);
+    throw new Error(error.message || 'Failed to send scheduled newsletter');
   }
 };
