@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getCurrentWriter, updateWriterProfile, Writer } from '../services/writerService';
-import { getPublishedOpinions, Opinion } from '../services/opinionsService';
+import { getPublishedOpinions, Opinion, submitForReview } from '../services/opinionsService';
 import { collection, query, where, getDocs, getFirestore } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 
@@ -10,7 +10,9 @@ const WriterDashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [drafts, setDrafts] = useState<any[]>([]); // NEW: Separate list for drafts
   const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'profile'>('overview');
+  const [submittingForReview, setSubmittingForReview] = useState<string | null>(null); // NEW: Track submission in progress
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
     name: '',
@@ -67,19 +69,32 @@ const WriterDashboard: React.FC = () => {
       
       const snapshot = await getDocs(q);
       const submissionsList: any[] = [];
+      const draftsList: any[] = [];
       
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        submissionsList.push({
+        const item = {
           id: docSnap.id,
           headline: data.headline,
           status: data.status || 'pending',
           isPublished: data.isPublished || false,
           submittedAt: data.submittedAt?.toDate?.() || new Date(),
           publishedAt: data.publishedAt?.toDate?.() || undefined,
-        });
+          editorNotes: data.editorNotes || null, // NEW: Include editor feedback
+          returnedAt: data.returnedAt?.toDate?.() || undefined, // NEW: When returned
+        };
+        
+        // NEW: Separate drafts from other submissions
+        if (data.status === 'draft') {
+          draftsList.push(item);
+        } else {
+          submissionsList.push(item);
+        }
       });
       
+      setDrafts(draftsList.sort((a, b) => 
+        b.submittedAt.getTime() - a.submittedAt.getTime()
+      ));
       setSubmissions(submissionsList.sort((a, b) => 
         b.submittedAt.getTime() - a.submittedAt.getTime()
       ));
@@ -117,6 +132,29 @@ const WriterDashboard: React.FC = () => {
       alert('Profile updated successfully!');
     } catch (error: any) {
       alert(`Failed to update profile: ${error.message}`);
+    }
+  };
+
+  // NEW: Submit draft for editorial review
+  const handleSubmitForReview = async (draftId: string) => {
+    if (!window.confirm('Submit this draft for editorial review?')) {
+      return;
+    }
+
+    setSubmittingForReview(draftId);
+    
+    try {
+      await submitForReview(draftId);
+      alert('Draft submitted for review! Editors will review it shortly.');
+      
+      // Reload submissions
+      if (user) {
+        loadSubmissions(user.uid);
+      }
+    } catch (error: any) {
+      alert(`Failed to submit for review: ${error.message}`);
+    } finally {
+      setSubmittingForReview(null);
     }
   };
 
@@ -173,7 +211,9 @@ const WriterDashboard: React.FC = () => {
   }
 
   const publishedCount = submissions.filter(s => s.isPublished).length;
-  const pendingCount = submissions.filter(s => s.status === 'pending' && !s.isPublished).length;
+  const pendingCount = submissions.filter(s => (s.status === 'pending' || s.status === 'in-review') && !s.isPublished).length;
+  const draftCount = drafts.length; // NEW: Count drafts separately
+  const hasEditorFeedback = submissions.some(s => s.editorNotes); // NEW: Check if any story has feedback
 
   return (
     <div style={{
@@ -295,9 +335,21 @@ const WriterDashboard: React.FC = () => {
                 border: '1px solid #e5e7eb'
               }}>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px' }}>
-                  {submissions.length}
+                  {draftCount}
                 </div>
-                <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Total Submissions</div>
+                <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Drafts</div>
+              </div>
+              
+              <div style={{
+                padding: '20px',
+                backgroundColor: '#fef3c7',
+                borderRadius: '6px',
+                border: '1px solid #fde68a'
+              }}>
+                <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px', color: '#d97706' }}>
+                  {pendingCount}
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Under Review</div>
               </div>
               
               <div style={{
@@ -312,17 +364,17 @@ const WriterDashboard: React.FC = () => {
                 <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Published</div>
               </div>
               
-              <div style={{
-                padding: '20px',
-                backgroundColor: '#fef3c7',
-                borderRadius: '6px',
-                border: '1px solid #fde68a'
-              }}>
-                <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px', color: '#d97706' }}>
-                  {pendingCount}
+              {hasEditorFeedback && (
+                <div style={{
+                  padding: '20px',
+                  backgroundColor: '#dbeafe',
+                  borderRadius: '6px',
+                  border: '1px solid #93c5fd'
+                }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💬</div>
+                  <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Editor Feedback</div>
                 </div>
-                <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Pending Review</div>
-              </div>
+              )}
             </div>
 
             <div>
@@ -352,61 +404,171 @@ const WriterDashboard: React.FC = () => {
             borderRadius: '8px',
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
           }}>
-            <h2 style={{ marginTop: 0, marginBottom: '24px' }}>My Submissions</h2>
+            <h2 style={{ marginTop: 0, marginBottom: '24px' }}>My Work</h2>
             
-            {submissions.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>You haven't submitted any articles yet.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {submissions.map((submission) => (
-                  <div
-                    key={submission.id}
-                    style={{
-                      padding: '16px',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>{submission.headline}</h3>
-                      <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: '#6b7280' }}>
-                        <span>Submitted: {submission.submittedAt.toLocaleDateString()}</span>
-                        {submission.publishedAt && (
-                          <span>Published: {submission.publishedAt.toLocaleDateString()}</span>
-                        )}
+            {/* NEW: Drafts Section */}
+            {drafts.length > 0 && (
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  marginBottom: '16px',
+                  color: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  📝 Drafts ({drafts.length})
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {drafts.map((draft) => (
+                    <div
+                      key={draft.id}
+                      style={{
+                        padding: '16px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        backgroundColor: '#fafafa'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>{draft.headline}</h3>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            Last saved: {draft.submittedAt.toLocaleDateString()}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleSubmitForReview(draft.id)}
+                          disabled={submittingForReview === draft.id}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#1e40af',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: submittingForReview === draft.id ? 'not-allowed' : 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            opacity: submittingForReview === draft.id ? 0.6 : 1
+                          }}
+                        >
+                          {submittingForReview === draft.id ? 'Submitting...' : 'Submit for Review'}
+                        </button>
                       </div>
                     </div>
-                    <div>
-                      <span
-                        style={{
-                          padding: '4px 12px',
-                          borderRadius: '12px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          backgroundColor:
-                            submission.isPublished
-                              ? '#d1fae5'
-                              : submission.status === 'pending'
-                              ? '#fef3c7'
-                              : '#fee2e2',
-                          color:
-                            submission.isPublished
-                              ? '#065f46'
-                              : submission.status === 'pending'
-                              ? '#92400e'
-                              : '#991b1b'
-                        }}
-                      >
-                        {submission.isPublished ? 'Published' : submission.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
+            
+            {/* Submitted/Published Articles Section */}
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                marginBottom: '16px',
+                color: '#374151'
+              }}>
+                Submissions ({submissions.length})
+              </h3>
+              
+              {submissions.length === 0 ? (
+                <p style={{ color: '#6b7280' }}>You haven't submitted any articles yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {submissions.map((submission) => (
+                    <div
+                      key={submission.id}
+                      style={{
+                        padding: '16px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>{submission.headline}</h3>
+                          <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: '#6b7280' }}>
+                            <span>Submitted: {submission.submittedAt.toLocaleDateString()}</span>
+                            {submission.publishedAt && (
+                              <span>Published: {submission.publishedAt.toLocaleDateString()}</span>
+                            )}
+                            {submission.returnedAt && (
+                              <span>Returned: {submission.returnedAt.toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '500',
+                              backgroundColor:
+                                submission.isPublished
+                                  ? '#d1fae5'
+                                  : submission.status === 'in-review'
+                                  ? '#dbeafe'
+                                  : submission.status === 'pending'
+                                  ? '#fef3c7'
+                                  : submission.status === 'rejected'
+                                  ? '#fee2e2'
+                                  : '#f3f4f6',
+                              color:
+                                submission.isPublished
+                                  ? '#065f46'
+                                  : submission.status === 'in-review'
+                                  ? '#1e40af'
+                                  : submission.status === 'pending'
+                                  ? '#92400e'
+                                  : submission.status === 'rejected'
+                                  ? '#991b1b'
+                                  : '#6b7280'
+                            }}
+                          >
+                            {submission.isPublished ? 'Published' : 
+                             submission.status === 'in-review' ? 'In Edit' :
+                             submission.status === 'pending' ? 'Pending Review' : 
+                             submission.status}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* NEW: Display Editor Feedback */}
+                      {submission.editorNotes && (
+                        <div style={{
+                          marginTop: '12px',
+                          padding: '12px',
+                          backgroundColor: '#fef3c7',
+                          borderLeft: '3px solid #f59e0b',
+                          borderRadius: '4px'
+                        }}>
+                          <div style={{
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: '#92400e',
+                            marginBottom: '4px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>
+                            💬 Editor Feedback
+                          </div>
+                          <div style={{
+                            fontSize: '0.875rem',
+                            color: '#78350f',
+                            lineHeight: '1.5'
+                          }}>
+                            {submission.editorNotes}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

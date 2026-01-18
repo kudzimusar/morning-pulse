@@ -21,13 +21,20 @@ import {
 } from 'firebase/storage';
 import { getStorage } from 'firebase/storage';
 import { getApp } from 'firebase/app';
-import { Opinion } from '../../../types';
-import { getUIStatusLabel, getDbStatus, UIStatusLabel } from '../../utils/opinionStatus';
+import { Opinion } from '../../../../types';
+import { getUIStatusLabel, getDbStatus, UIStatusLabel, getStatusColor } from '../../utils/opinionStatus';
 import RichTextEditor from '../RichTextEditor';
 import ImagePreview from './ImagePreview';
-import { createEditorialArticle, replaceArticleImage } from '../../services/opinionsService';
+import { 
+  createEditorialArticle, 
+  replaceArticleImage,
+  claimStory,
+  releaseStory,
+  returnToWriter
+} from '../../services/opinionsService';
 import { compressImage, validateImage } from '../../utils/imageCompression';
 import EnhancedFirestore from '../../services/enhancedFirestore';
+import { getCurrentEditor } from '../../services/authService';
 
 const APP_ID = "morning-pulse-app";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -43,23 +50,36 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   userRoles,
   showToast,
 }) => {
+  // NEW: Separate lists for different workflow stages
+  const [draftOpinions, setDraftOpinions] = useState<Opinion[]>([]);
   const [pendingOpinions, setPendingOpinions] = useState<Opinion[]>([]);
+  const [inReviewOpinions, setInReviewOpinions] = useState<Opinion[]>([]);
+  
   const [selectedOpinionId, setSelectedOpinionId] = useState<string | null>(null);
-  const [isNewArticle, setIsNewArticle] = useState(false); // NEW: Track if creating new article
+  const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null); // NEW: Full opinion object
+  const [isNewArticle, setIsNewArticle] = useState(false);
+  const [showOriginalText, setShowOriginalText] = useState(false); // NEW: Toggle for split-pane view
+  
   const [editedTitle, setEditedTitle] = useState('');
   const [editedSubHeadline, setEditedSubHeadline] = useState('');
   const [editedBody, setEditedBody] = useState('');
   const [editedAuthorName, setEditedAuthorName] = useState('');
   const [editorNotes, setEditorNotes] = useState('');
-  const [status, setStatus] = useState<UIStatusLabel>('Submitted');
+  const [status, setStatus] = useState<UIStatusLabel>('Pending Review');
   const [suggestedImageUrl, setSuggestedImageUrl] = useState<string | null>(null);
   const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
-  const [newImagePreviewUrl, setNewImagePreviewUrl] = useState<string | null>(null); // NEW: Preview of new image
+  const [newImagePreviewUrl, setNewImagePreviewUrl] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [newImageFile, setNewImageFile] = useState<File | null>(null); // NEW: Track new image for replacement
+  const [claiming, setClaiming] = useState(false); // NEW: Track claiming operation
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [compressing, setCompressing] = useState(false);
   const [loadingQueue, setLoadingQueue] = useState(true);
+  
+  // NEW: Current editor info
+  const currentEditor = getCurrentEditor();
+  const currentEditorId = currentEditor?.uid || '';
+  const currentEditorName = currentEditor?.email?.split('@')[0] || 'Editor';
 
   // ✅ FIX: Move Firestore service initialization out of render path using useMemo
   const firestoreService = useMemo(() => {
@@ -67,7 +87,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     return EnhancedFirestore.getInstance(firebaseInstances.db);
   }, [firebaseInstances?.db]);
 
-  // Subscribe to pending opinions with retry logic
+  // Subscribe to all editorial opinions (draft, pending, in-review) with retry logic
   useEffect(() => {
     if (!firebaseInstances || !firestoreService) return;
 
@@ -83,32 +103,49 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       (data) => {
         setLoadingQueue(false);
         
-        const opinions: Opinion[] = [];
+        const drafts: Opinion[] = [];
+        const pending: Opinion[] = [];
+        const inReview: Opinion[] = [];
+        
         data.forEach((doc: any) => {
           const opinion = {
             id: doc.id,
             ...doc,
             submittedAt: doc.submittedAt?.toDate?.() || new Date(),
             publishedAt: doc.publishedAt?.toDate?.() || null,
+            claimedAt: doc.claimedAt?.toDate?.() || null,
+            scheduledFor: doc.scheduledFor?.toDate?.() || null,
           } as Opinion;
           
-          if (opinion.status === 'pending') {
-            opinions.push(opinion);
+          // NEW: Separate into three queues based on status
+          if (opinion.status === 'draft') {
+            drafts.push(opinion);
+          } else if (opinion.status === 'pending') {
+            pending.push(opinion);
+          } else if (opinion.status === 'in-review') {
+            inReview.push(opinion);
           }
         });
         
-        opinions.sort((a, b) => {
+        // Sort each list by submission time (newest first)
+        const sortByTime = (a: Opinion, b: Opinion) => {
           const timeA = a.submittedAt?.getTime() || 0;
           const timeB = b.submittedAt?.getTime() || 0;
           return timeB - timeA;
-        });
+        };
         
-        setPendingOpinions(opinions);
+        drafts.sort(sortByTime);
+        pending.sort(sortByTime);
+        inReview.sort(sortByTime);
+        
+        setDraftOpinions(drafts);
+        setPendingOpinions(pending);
+        setInReviewOpinions(inReview);
       },
       (error) => {
         console.error('Error subscribing to opinions:', error);
         setLoadingQueue(false);
-        showToast('Failed to load pending opinions after retries', 'error');
+        showToast('Failed to load editorial queue after retries', 'error');
       },
       {
         maxRetries: 5,
@@ -126,6 +163,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   useEffect(() => {
     if (isNewArticle) {
       // Reset to blank state for new article
+      setSelectedOpinion(null);
       setEditedTitle('');
       setEditedSubHeadline('');
       setEditedBody('');
@@ -136,25 +174,32 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setFinalImageUrl(null);
       setNewImagePreviewUrl(null);
       setNewImageFile(null);
+      setShowOriginalText(false);
       return;
     }
 
     if (!selectedOpinionId) {
+      setSelectedOpinion(null);
       setEditedTitle('');
       setEditedSubHeadline('');
       setEditedBody('');
       setEditedAuthorName('');
       setEditorNotes('');
-      setStatus('Submitted');
+      setStatus('Pending Review');
       setSuggestedImageUrl(null);
       setFinalImageUrl(null);
       setNewImagePreviewUrl(null);
       setNewImageFile(null);
+      setShowOriginalText(false);
       return;
     }
 
-    const opinion = pendingOpinions.find(op => op.id === selectedOpinionId);
+    // NEW: Search across all three lists
+    const allOpinions = [...draftOpinions, ...pendingOpinions, ...inReviewOpinions];
+    const opinion = allOpinions.find(op => op.id === selectedOpinionId);
+    
     if (opinion) {
+      setSelectedOpinion(opinion);
       setEditedTitle(opinion.headline || '');
       setEditedSubHeadline(opinion.subHeadline || '');
       setEditedBody(opinion.body || '');
@@ -165,8 +210,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setFinalImageUrl(opinion.finalImageUrl || null);
       setNewImagePreviewUrl(null);
       setNewImageFile(null);
+      // NEW: Enable split-pane view if there's original text
+      setShowOriginalText(!!opinion.originalBody);
     }
-  }, [selectedOpinionId, pendingOpinions, isNewArticle]);
+  }, [selectedOpinionId, draftOpinions, pendingOpinions, inReviewOpinions, isNewArticle]);
 
   // NEW: Handle Create New Article button with event isolation
   const handleCreateNewArticle = (e?: React.MouseEvent) => {
@@ -536,6 +583,83 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
   };
 
+  // NEW: Claim story for editing
+  const handleClaimStory = async (storyId: string) => {
+    if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
+      showToast('Unauthorized: Editor role required', 'error');
+      return;
+    }
+
+    if (!currentEditorId) {
+      showToast('Unable to identify current editor', 'error');
+      return;
+    }
+
+    setClaiming(true);
+    
+    try {
+      await claimStory(storyId, currentEditorId, currentEditorName);
+      showToast('Story claimed successfully', 'success');
+      setSelectedOpinionId(storyId);
+    } catch (error: any) {
+      console.error('Claim error:', error);
+      showToast(error.message || 'Failed to claim story', 'error');
+    } finally {
+      setClaiming(false);
+    }
+  };
+
+  // NEW: Release story back to pending queue
+  const handleReleaseStory = async () => {
+    if (!selectedOpinionId) return;
+    
+    if (!window.confirm('Release this story back to the pending queue?')) {
+      return;
+    }
+
+    setSaving(true);
+    
+    try {
+      await releaseStory(selectedOpinionId, currentEditorId);
+      showToast('Story released to pending queue', 'success');
+      setSelectedOpinionId(null);
+    } catch (error: any) {
+      console.error('Release error:', error);
+      showToast(error.message || 'Failed to release story', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // NEW: Return story to writer with feedback
+  const handleReturnToWriter = async () => {
+    if (!selectedOpinionId) return;
+    
+    if (!editorNotes.trim()) {
+      showToast('Please add feedback notes before returning to writer', 'error');
+      return;
+    }
+
+    if (!window.confirm('Return this story to the writer with your feedback?')) {
+      return;
+    }
+
+    setSaving(true);
+    
+    try {
+      await returnToWriter(selectedOpinionId, editorNotes, currentEditorId);
+      showToast('Story returned to writer with feedback', 'success');
+      setTimeout(() => {
+        setSelectedOpinionId(null);
+      }, 1000);
+    } catch (error: any) {
+      console.error('Return to writer error:', error);
+      showToast(error.message || 'Failed to return story', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', gap: '16px' }}>
       {/* NEW: Header with Create New Article button */}
@@ -593,7 +717,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       )}
 
       <div style={{ display: 'flex', flex: 1, gap: '16px', overflow: 'hidden' }}>
-        {/* Left Panel - Pending Queue */}
+        {/* Left Panel - Editorial Queue with 3 Sections */}
         <div style={{
           width: '400px',
           border: '1px solid #e5e5e5',
@@ -609,8 +733,11 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             backgroundColor: '#f9f9f9'
           }}>
             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-              Pending Queue ({pendingOpinions.length})
+              Editorial Queue
             </h3>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              {draftOpinions.length + pendingOpinions.length + inReviewOpinions.length} total stories
+            </div>
           </div>
           
           <div style={{
@@ -618,68 +745,279 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             overflowY: 'auto',
             padding: '8px'
           }}>
-            {pendingOpinions.length === 0 ? (
+            {/* Section 1: Drafts */}
+            <div style={{ marginBottom: '16px' }}>
               <div style={{
-                padding: '40px',
-                textAlign: 'center',
-                color: '#999'
+                padding: '8px 12px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '4px',
+                marginBottom: '8px',
+                fontWeight: '600',
+                fontSize: '13px',
+                color: '#374151',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
               }}>
-                No pending submissions
+                <span>📝 Drafts</span>
+                <span style={{
+                  backgroundColor: '#e5e7eb',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '11px'
+                }}>
+                  {draftOpinions.length}
+                </span>
               </div>
-            ) : (
-              pendingOpinions.map((opinion) => (
-                <div
-                  key={opinion.id}
-                  onClick={() => {
-                    setSelectedOpinionId(opinion.id);
-                    setIsNewArticle(false);
-                  }}
-                  style={{
-                    padding: '12px',
-                    marginBottom: '8px',
-                    border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    marginBottom: '4px',
-                    color: '#000'
-                  }}>
-                    {opinion.headline || 'Untitled'}
-                  </div>
-                  <div style={{
-                    fontSize: '12px',
-                    color: '#666',
-                    marginBottom: '4px'
-                  }}>
-                    {opinion.authorName}
-                  </div>
-                  <div style={{
-                    fontSize: '11px',
-                    color: '#999'
-                  }}>
-                    {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
-                  </div>
-                  <div style={{
-                    display: 'inline-block',
-                    marginTop: '8px',
-                    padding: '2px 8px',
-                    backgroundColor: '#f0f0f0',
-                    borderRadius: '2px',
-                    fontSize: '11px',
-                    fontWeight: '500',
-                    color: '#666'
-                  }}>
-                    {getUIStatusLabel(opinion.status || 'pending')}
-                  </div>
+              
+              {draftOpinions.length === 0 ? (
+                <div style={{
+                  padding: '16px',
+                  textAlign: 'center',
+                  color: '#9ca3af',
+                  fontSize: '12px'
+                }}>
+                  No drafts
                 </div>
-              ))
-            )}
+              ) : (
+                draftOpinions.map((opinion) => {
+                  const statusColors = getStatusColor(opinion.status);
+                  return (
+                    <div
+                      key={opinion.id}
+                      onClick={() => {
+                        setSelectedOpinionId(opinion.id);
+                        setIsNewArticle(false);
+                      }}
+                      style={{
+                        padding: '12px',
+                        marginBottom: '8px',
+                        border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        marginBottom: '4px',
+                        color: '#000'
+                      }}>
+                        {opinion.headline || 'Untitled'}
+                      </div>
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#666',
+                        marginBottom: '4px'
+                      }}>
+                        {opinion.authorName}
+                      </div>
+                      <div style={{
+                        fontSize: '10px',
+                        color: '#999'
+                      }}>
+                        {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Section 2: Pending Review (Awaiting Claim) */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{
+                padding: '8px 12px',
+                backgroundColor: '#fef3c7',
+                borderRadius: '4px',
+                marginBottom: '8px',
+                fontWeight: '600',
+                fontSize: '13px',
+                color: '#92400e',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>⏳ Pending Review</span>
+                <span style={{
+                  backgroundColor: '#fde68a',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '11px'
+                }}>
+                  {pendingOpinions.length}
+                </span>
+              </div>
+              
+              {pendingOpinions.length === 0 ? (
+                <div style={{
+                  padding: '16px',
+                  textAlign: 'center',
+                  color: '#9ca3af',
+                  fontSize: '12px'
+                }}>
+                  No pending submissions
+                </div>
+              ) : (
+                pendingOpinions.map((opinion) => (
+                  <div
+                    key={opinion.id}
+                    onClick={() => {
+                      setSelectedOpinionId(opinion.id);
+                      setIsNewArticle(false);
+                    }}
+                    style={{
+                      padding: '12px',
+                      marginBottom: '8px',
+                      border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      marginBottom: '4px',
+                      color: '#000'
+                    }}>
+                      {opinion.headline || 'Untitled'}
+                    </div>
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#666',
+                      marginBottom: '4px'
+                    }}>
+                      {opinion.authorName}
+                    </div>
+                    <div style={{
+                      fontSize: '10px',
+                      color: '#999'
+                    }}>
+                      {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
+                    </div>
+                    {opinion.editorNotes && (
+                      <div style={{
+                        marginTop: '6px',
+                        padding: '4px 6px',
+                        backgroundColor: '#fef3c7',
+                        borderRadius: '2px',
+                        fontSize: '10px',
+                        color: '#92400e'
+                      }}>
+                        💬 Has feedback
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Section 3: In Review (Claimed by Editor) */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{
+                padding: '8px 12px',
+                backgroundColor: '#dbeafe',
+                borderRadius: '4px',
+                marginBottom: '8px',
+                fontWeight: '600',
+                fontSize: '13px',
+                color: '#1e40af',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>✍️ In Edit</span>
+                <span style={{
+                  backgroundColor: '#93c5fd',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '11px'
+                }}>
+                  {inReviewOpinions.length}
+                </span>
+              </div>
+              
+              {inReviewOpinions.length === 0 ? (
+                <div style={{
+                  padding: '16px',
+                  textAlign: 'center',
+                  color: '#9ca3af',
+                  fontSize: '12px'
+                }}>
+                  No stories in edit
+                </div>
+              ) : (
+                inReviewOpinions.map((opinion) => {
+                  const isClaimedByMe = opinion.claimedBy === currentEditorId;
+                  return (
+                    <div
+                      key={opinion.id}
+                      onClick={() => {
+                        if (isClaimedByMe || userRoles.includes('super_admin') || userRoles.includes('admin')) {
+                          setSelectedOpinionId(opinion.id);
+                          setIsNewArticle(false);
+                        } else {
+                          showToast(`Story is claimed by ${opinion.claimedByName || 'another editor'}`, 'error');
+                        }
+                      }}
+                      style={{
+                        padding: '12px',
+                        marginBottom: '8px',
+                        border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
+                        borderRadius: '4px',
+                        cursor: isClaimedByMe || userRoles.includes('super_admin') || userRoles.includes('admin') ? 'pointer' : 'not-allowed',
+                        backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
+                        transition: 'all 0.2s',
+                        opacity: isClaimedByMe || userRoles.includes('super_admin') || userRoles.includes('admin') ? 1 : 0.6
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        marginBottom: '4px',
+                        color: '#000'
+                      }}>
+                        {opinion.headline || 'Untitled'}
+                      </div>
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#666',
+                        marginBottom: '4px'
+                      }}>
+                        {opinion.authorName}
+                      </div>
+                      <div style={{
+                        fontSize: '10px',
+                        color: '#999',
+                        marginBottom: '6px'
+                      }}>
+                        {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginTop: '6px'
+                      }}>
+                        <span style={{
+                          fontSize: '10px',
+                          padding: '2px 6px',
+                          backgroundColor: isClaimedByMe ? '#86efac' : '#dbeafe',
+                          borderRadius: '2px',
+                          color: isClaimedByMe ? '#065f46' : '#1e40af'
+                        }}>
+                          {isClaimedByMe ? '✓ You' : `🔒 ${opinion.claimedByName || 'Claimed'}`}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
 
@@ -728,8 +1066,8 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
               overflowY: 'auto',
               padding: '24px'
             }}>
-              {/* NEW: Header for new articles */}
-              {isNewArticle && (
+              {/* NEW: Header for new articles OR selected article status */}
+              {isNewArticle ? (
                 <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '2px solid #000' }}>
                   <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#000' }}>
                     ✏️ New Editorial Article
@@ -751,6 +1089,92 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   >
                     Cancel
                   </button>
+                </div>
+              ) : selectedOpinion && (
+                <div style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #e5e5e5' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                        Editing Story
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          ...getStatusColor(selectedOpinion.status)
+                        }}>
+                          {getUIStatusLabel(selectedOpinion.status)}
+                        </span>
+                        {selectedOpinion.claimedBy && selectedOpinion.claimedBy === currentEditorId && (
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            backgroundColor: '#86efac',
+                            color: '#065f46'
+                          }}>
+                            ✓ Claimed by you
+                          </span>
+                        )}
+                        {selectedOpinion.claimedBy && selectedOpinion.claimedBy !== currentEditorId && (
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            backgroundColor: '#fde68a',
+                            color: '#92400e'
+                          }}>
+                            🔒 Claimed by {selectedOpinion.claimedByName}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* NEW: Claim button for pending stories */}
+                    {selectedOpinion.status === 'pending' && (
+                      <button
+                        onClick={() => handleClaimStory(selectedOpinion.id)}
+                        disabled={claiming}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#1e40af',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: claiming ? 'not-allowed' : 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          opacity: claiming ? 0.6 : 1
+                        }}
+                      >
+                        {claiming ? 'Claiming...' : '✓ Claim Story'}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* NEW: Toggle for split-pane view (if original text exists) */}
+                  {selectedOpinion.originalBody && (
+                    <div style={{ marginTop: '12px' }}>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        color: '#374151'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={showOriginalText}
+                          onChange={(e) => setShowOriginalText(e.target.checked)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        Show original journalist text (side-by-side)
+                      </label>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -917,7 +1341,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 </label>
               </div>
 
-              {/* ENHANCED: Rich Text Editor for Body */}
+              {/* ENHANCED: Rich Text Editor for Body with Split-Pane Option */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{
                   display: 'block',
@@ -927,11 +1351,72 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 }}>
                   Body <span style={{ color: '#ef4444' }}>*</span>
                 </label>
-                <RichTextEditor
-                  value={editedBody}
-                  onChange={setEditedBody}
-                  placeholder="Write your article content here. Use the toolbar to format text, add headings (H1, H2), blockquotes for pull-quotes, and links."
-                />
+                
+                {/* NEW: Split-pane view showing original text */}
+                {showOriginalText && selectedOpinion?.originalBody ? (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '16px',
+                    marginBottom: '16px'
+                  }}>
+                    {/* Left pane: Original text (read-only) */}
+                    <div style={{
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '4px',
+                      padding: '12px',
+                      backgroundColor: '#f9fafb'
+                    }}>
+                      <div style={{
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: '#6b7280',
+                        marginBottom: '8px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        📄 Original Text (Reference)
+                      </div>
+                      <div style={{
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        color: '#374151',
+                        maxHeight: '400px',
+                        overflowY: 'auto',
+                        fontFamily: 'monospace',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                      }}
+                      dangerouslySetInnerHTML={{ __html: selectedOpinion.originalBody }}
+                      />
+                    </div>
+                    
+                    {/* Right pane: Editor's version (editable) */}
+                    <div>
+                      <div style={{
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: '#1e40af',
+                        marginBottom: '8px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        ✍️ Your Edit
+                      </div>
+                      <RichTextEditor
+                        value={editedBody}
+                        onChange={setEditedBody}
+                        placeholder="Edit the article content here..."
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <RichTextEditor
+                    value={editedBody}
+                    onChange={setEditedBody}
+                    placeholder="Write your article content here. Use the toolbar to format text, add headings (H1, H2), blockquotes for pull-quotes, and links."
+                  />
+                )}
               </div>
 
               {/* Editor Notes (hidden for new articles) */}
@@ -963,7 +1448,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 </div>
               )}
 
-              {/* Action Buttons */}
+              {/* Action Buttons - Context-aware based on status */}
               <div style={{
                 display: 'flex',
                 gap: '12px',
@@ -971,6 +1456,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 borderTop: '1px solid #e5e5e5'
               }}>
                 {isNewArticle ? (
+                  // NEW ARTICLE BUTTONS
                   <>
                     <button
                       onClick={handleCancelNewArticle}
@@ -1025,7 +1511,125 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       {saving ? 'Publishing...' : '📝 Post to Website'}
                     </button>
                   </>
-                ) : (
+                ) : selectedOpinion?.status === 'pending' ? (
+                  // PENDING STORY BUTTONS (Not yet claimed)
+                  <>
+                    <button
+                      onClick={handleReject}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      Reject
+                    </button>
+                    
+                    <button
+                      onClick={() => selectedOpinion && handleClaimStory(selectedOpinion.id)}
+                      disabled={claiming}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#1e40af',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: claiming ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: claiming ? 0.6 : 1,
+                        marginLeft: 'auto'
+                      }}
+                    >
+                      {claiming ? 'Claiming...' : '✓ Claim & Edit'}
+                    </button>
+                  </>
+                ) : selectedOpinion?.status === 'in-review' && selectedOpinion?.claimedBy === currentEditorId ? (
+                  // IN-REVIEW BUTTONS (Claimed by current editor)
+                  <>
+                    <button
+                      onClick={handleReleaseStory}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#6b7280',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      Release
+                    </button>
+                    
+                    <button
+                      onClick={handleReturnToWriter}
+                      disabled={saving || !editorNotes.trim()}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#f59e0b',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: (saving || !editorNotes.trim()) ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: (saving || !editorNotes.trim()) ? 0.6 : 1
+                      }}
+                      title={!editorNotes.trim() ? 'Add feedback notes first' : ''}
+                    >
+                      Return to Writer
+                    </button>
+                    
+                    <button
+                      onClick={handleSaveDraft}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#666',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      {saving ? 'Saving...' : 'Save Progress'}
+                    </button>
+                    
+                    <button
+                      onClick={handleApproveAndPublish}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#10b981',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1,
+                        marginLeft: 'auto'
+                      }}
+                    >
+                      {saving ? 'Publishing...' : '✓ Publish'}
+                    </button>
+                  </>
+                ) : selectedOpinion?.status === 'draft' ? (
+                  // DRAFT BUTTONS (Editor editing a draft)
                   <>
                     <button
                       onClick={handleReject}
@@ -1079,7 +1683,65 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         marginLeft: 'auto'
                       }}
                     >
-                      {saving ? 'Publishing...' : 'Approve & Publish'}
+                      {saving ? 'Publishing...' : 'Publish'}
+                    </button>
+                  </>
+                ) : (
+                  // DEFAULT FALLBACK BUTTONS
+                  <>
+                    <button
+                      onClick={handleReject}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      Reject
+                    </button>
+                    
+                    <button
+                      onClick={handleSaveDraft}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#666',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1
+                      }}
+                    >
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    
+                    <button
+                      onClick={handleApproveAndPublish}
+                      disabled={saving}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#10b981',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        opacity: saving ? 0.6 : 1,
+                        marginLeft: 'auto'
+                      }}
+                    >
+                      {saving ? 'Publishing...' : 'Publish'}
                     </button>
                   </>
                 )}

@@ -58,9 +58,11 @@ export interface Opinion {
   writerType: string;
   authorName: string;
   authorTitle?: string;
+  authorId?: string; // NEW: Firebase UID of the journalist/writer
   headline: string;
   subHeadline: string;
   body: string;
+  originalBody?: string; // NEW: Store original text when claimed for reference
   category?: string;
   country?: string;
   imageUrl?: string;
@@ -68,12 +70,16 @@ export interface Opinion {
   suggestedImageUrl?: string;
   finalImageUrl?: string;
   isPublished?: boolean;
-  status: 'pending' | 'published' | 'rejected';
+  status: 'draft' | 'pending' | 'in-review' | 'published' | 'rejected' | 'archived'; // NEW: 5-stage workflow
   submittedAt: Date;
   publishedAt?: Date | null;
   reviewedBy?: string;
   editorNotes?: string; // Internal notes visible only to editors
   type?: 'editorial' | 'opinion'; // Flag to distinguish editorials from user submissions
+  scheduledFor?: Date | null; // NEW: Future publish timestamp
+  claimedBy?: string | null; // NEW: Editor UID who claimed the story
+  claimedAt?: Date | null; // NEW: When the story was claimed
+  claimedByName?: string; // NEW: Editor name for display
 }
 
 export interface OpinionSubmissionData {

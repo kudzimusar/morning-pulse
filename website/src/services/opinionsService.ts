@@ -670,3 +670,217 @@ export const rejectOpinion = async (opinionId: string, reviewedBy?: string): Pro
     throw new Error(`Failed to reject opinion: ${error.message}`);
   }
 };
+
+/**
+ * NEW: Claim a story for editing (Editor takes ownership)
+ * Changes status from 'pending' to 'in-review'
+ * Stores original body for reference
+ */
+export const claimStory = async (
+  storyId: string,
+  editorId: string,
+  editorName: string
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    // Get current story to save original body
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      throw new Error('Story not found');
+    }
+    
+    const currentData = snap.data();
+    
+    // Check if already claimed by someone else
+    if (currentData.claimedBy && currentData.claimedBy !== editorId) {
+      throw new Error(`Story is already claimed by ${currentData.claimedByName || 'another editor'}`);
+    }
+    
+    // Claim the story
+    await setDoc(docRef, {
+      status: 'in-review',
+      claimedBy: editorId,
+      claimedByName: editorName,
+      claimedAt: Timestamp.now(),
+      originalBody: currentData.originalBody || currentData.body, // Preserve original if not already saved
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Story claimed by editor:', editorName);
+  } catch (error: any) {
+    console.error('❌ Error claiming story:', error);
+    throw new Error(`Failed to claim story: ${error.message}`);
+  }
+};
+
+/**
+ * NEW: Release a claimed story (return to pending queue)
+ * Editor releases ownership, story returns to 'pending'
+ */
+export const releaseStory = async (storyId: string, editorId: string): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    // Verify the editor is the one who claimed it
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      throw new Error('Story not found');
+    }
+    
+    const currentData = snap.data();
+    if (currentData.claimedBy !== editorId) {
+      throw new Error('You can only release stories you have claimed');
+    }
+    
+    // Release the story
+    await setDoc(docRef, {
+      status: 'pending',
+      claimedBy: null,
+      claimedByName: null,
+      claimedAt: null,
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Story released back to pending queue');
+  } catch (error: any) {
+    console.error('❌ Error releasing story:', error);
+    throw new Error(`Failed to release story: ${error.message}`);
+  }
+};
+
+/**
+ * NEW: Return story to writer with feedback
+ * Changes status back to 'pending' and adds editor notes
+ */
+export const returnToWriter = async (
+  storyId: string,
+  editorNotes: string,
+  editorId: string
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    await setDoc(docRef, {
+      status: 'pending',
+      editorNotes: editorNotes,
+      claimedBy: null,
+      claimedByName: null,
+      claimedAt: null,
+      returnedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Story returned to writer with feedback');
+  } catch (error: any) {
+    console.error('❌ Error returning story to writer:', error);
+    throw new Error(`Failed to return story: ${error.message}`);
+  }
+};
+
+/**
+ * NEW: Submit draft for review (Writer action)
+ * Changes status from 'draft' to 'pending'
+ */
+export const submitForReview = async (storyId: string): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    await setDoc(docRef, {
+      status: 'pending',
+      submittedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Draft submitted for review');
+  } catch (error: any) {
+    console.error('❌ Error submitting for review:', error);
+    throw new Error(`Failed to submit for review: ${error.message}`);
+  }
+};
+
+/**
+ * NEW: Schedule story for future publication
+ * Sets scheduledFor timestamp
+ */
+export const schedulePublication = async (
+  storyId: string,
+  scheduledFor: Date
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    await setDoc(docRef, {
+      scheduledFor: Timestamp.fromDate(scheduledFor),
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Publication scheduled for:', scheduledFor);
+  } catch (error: any) {
+    console.error('❌ Error scheduling publication:', error);
+    throw new Error(`Failed to schedule publication: ${error.message}`);
+  }
+};
+
+/**
+ * NEW: Archive a published story
+ * Changes status to 'archived'
+ */
+export const archiveStory = async (storyId: string): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    await setDoc(docRef, {
+      status: 'archived',
+      archivedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Story archived');
+  } catch (error: any) {
+    console.error('❌ Error archiving story:', error);
+    throw new Error(`Failed to archive story: ${error.message}`);
+  }
+};
