@@ -63,6 +63,7 @@ export interface Opinion {
   subHeadline: string;
   body: string;
   originalBody?: string; // NEW: Store original text when claimed for reference
+  slug?: string; // NEW: SEO-friendly URL slug (e.g., "big-news-in-zimbabwe")
   category?: string;
   country?: string;
   imageUrl?: string;
@@ -70,7 +71,7 @@ export interface Opinion {
   suggestedImageUrl?: string;
   finalImageUrl?: string;
   isPublished?: boolean;
-  status: 'draft' | 'pending' | 'in-review' | 'published' | 'rejected' | 'archived'; // NEW: 5-stage workflow
+  status: 'draft' | 'pending' | 'in-review' | 'scheduled' | 'published' | 'rejected' | 'archived'; // NEW: Added 'scheduled'
   submittedAt: Date;
   publishedAt?: Date | null;
   reviewedBy?: string;

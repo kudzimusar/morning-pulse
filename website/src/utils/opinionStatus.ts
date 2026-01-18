@@ -10,13 +10,14 @@ export const UI_STATUS_LABELS = {
   'draft': 'Draft',
   'pending': 'Pending Review',
   'in-review': 'In Edit',
+  'scheduled': 'Scheduled',
   'published': 'Published',
   'rejected': 'Rejected',
   'archived': 'Archived',
 } as const;
 
-export type DbStatus = 'draft' | 'pending' | 'in-review' | 'published' | 'rejected' | 'archived';
-export type UIStatusLabel = 'Draft' | 'Pending Review' | 'In Edit' | 'Published' | 'Rejected' | 'Archived';
+export type DbStatus = 'draft' | 'pending' | 'in-review' | 'scheduled' | 'published' | 'rejected' | 'archived';
+export type UIStatusLabel = 'Draft' | 'Pending Review' | 'In Edit' | 'Scheduled' | 'Published' | 'Rejected' | 'Archived';
 
 /**
  * Convert database status to UI-friendly label
@@ -33,6 +34,7 @@ export const UI_TO_DB_STATUS: Record<UIStatusLabel, DbStatus> = {
   'Draft': 'draft',
   'Pending Review': 'pending',
   'In Edit': 'in-review',
+  'Scheduled': 'scheduled',
   'Published': 'published',
   'Rejected': 'rejected',
   'Archived': 'archived',
@@ -67,6 +69,13 @@ export const isInReviewStatus = (status: string): boolean => {
 };
 
 /**
+ * Check if status is scheduled
+ */
+export const isScheduledStatus = (status: string): boolean => {
+  return status === 'scheduled';
+};
+
+/**
  * Check if status is published
  */
 export const isPublishedStatus = (status: string): boolean => {
@@ -98,6 +107,8 @@ export const getStatusColor = (status: string): { bg: string; text: string; bord
       return { bg: '#fef3c7', text: '#92400e', border: '#fde68a' };
     case 'in-review':
       return { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' };
+    case 'scheduled':
+      return { bg: '#e0e7ff', text: '#4338ca', border: '#a5b4fc' };
     case 'published':
       return { bg: '#d1fae5', text: '#065f46', border: '#86efac' };
     case 'rejected':

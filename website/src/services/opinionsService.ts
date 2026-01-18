@@ -829,7 +829,7 @@ export const submitForReview = async (storyId: string): Promise<void> => {
 
 /**
  * NEW: Schedule story for future publication
- * Sets scheduledFor timestamp
+ * Sets scheduledFor timestamp and status to 'scheduled'
  */
 export const schedulePublication = async (
   storyId: string,
@@ -846,6 +846,7 @@ export const schedulePublication = async (
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
     
     await setDoc(docRef, {
+      status: 'scheduled',
       scheduledFor: Timestamp.fromDate(scheduledFor),
       updatedAt: Timestamp.now(),
     }, { merge: true });
@@ -882,5 +883,64 @@ export const archiveStory = async (storyId: string): Promise<void> => {
   } catch (error: any) {
     console.error('❌ Error archiving story:', error);
     throw new Error(`Failed to archive story: ${error.message}`);
+  }
+};
+
+/**
+ * NEW: Auto-publish scheduled stories
+ * Called by background listener to check and publish stories whose scheduled time has arrived
+ */
+export const checkAndPublishScheduledStories = async (): Promise<number> => {
+  const db = getDb();
+  if (!db) {
+    console.warn('Firebase not initialized for auto-publisher');
+    return 0;
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const q = query(opinionsRef, where('status', '==', 'scheduled'));
+    const snapshot = await getDocs(q);
+    
+    const now = new Date();
+    let publishedCount = 0;
+    
+    const publishPromises = snapshot.docs.map(async (docSnap) => {
+      const data = docSnap.data();
+      const scheduledFor = data.scheduledFor?.toDate();
+      
+      if (!scheduledFor) {
+        console.warn(`Story ${docSnap.id} is scheduled but has no scheduledFor timestamp`);
+        return;
+      }
+      
+      // Check if scheduled time has passed
+      if (scheduledFor <= now) {
+        console.log(`📰 Auto-publishing story: ${data.headline} (scheduled for ${scheduledFor})`);
+        
+        const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', docSnap.id);
+        await setDoc(docRef, {
+          status: 'published',
+          isPublished: true,
+          publishedAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        }, { merge: true });
+        
+        publishedCount++;
+      }
+    });
+    
+    await Promise.all(publishPromises);
+    
+    if (publishedCount > 0) {
+      console.log(`✅ Auto-published ${publishedCount} scheduled stor${publishedCount === 1 ? 'y' : 'ies'}`);
+    }
+    
+    return publishedCount;
+  } catch (error: any) {
+    console.error('❌ Error in auto-publisher:', error);
+    return 0;
   }
 };

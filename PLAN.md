@@ -160,27 +160,40 @@ submitForReview(storyId: string) // Changes draft → pending
 - [x] Update types.ts
 - [x] Update opinionStatus.ts
 
-### 🔄 Phase 2: Editorial Queue Enhancement (IN PROGRESS)
-- [ ] Add Drafts section
-- [ ] Add Submissions section with Claim button
-- [ ] Add In-Review section
-- [ ] Implement claim/lock logic
-- [ ] Add Return to Writer functionality
+### ✅ Phase 2: Editorial Queue Enhancement (COMPLETE)
+- [x] Add Drafts section
+- [x] Add Submissions section with Claim button
+- [x] Add In-Review section
+- [x] Implement claim/lock logic
+- [x] Add Return to Writer functionality
 
-### ⏳ Phase 3: Live Editor View
-- [ ] Build split-pane layout
-- [ ] Add change tracking
-- [ ] Implement reference/editable panes
+### ✅ Phase 3: Live Editor View (COMPLETE)
+- [x] Build split-pane layout
+- [x] Add change tracking
+- [x] Implement reference/editable panes
 
-### ⏳ Phase 4: Writer Dashboard Updates
-- [ ] Add draft management
-- [ ] Show editor feedback
-- [ ] Add Submit for Review button
+### ✅ Phase 4: Writer Dashboard Updates (COMPLETE)
+- [x] Add draft management
+- [x] Show editor feedback
+- [x] Add Submit for Review button
 
-### ⏳ Phase 5: Scheduled Publishing
-- [ ] Add date/time picker
-- [ ] Cloud Function for auto-publish
-- [ ] Status indicators
+### ✅ Phase 5: Scheduled Publishing (COMPLETE)
+- [x] Add date/time picker
+- [x] Background auto-publisher (30s interval)
+- [x] Status indicators (calendar icons)
+
+### ✅ Phase 6: SEO Slug Management (COMPLETE)
+- [x] Add slug field to Opinion interface
+- [x] Auto-generate slugs from headlines
+- [x] Validate uniqueness (append 3-digit number if duplicate)
+- [x] Manual slug override with validation
+- [x] Display slug in editor metadata section
+
+### ⏳ Phase 7: Public Slug Routing (PENDING)
+- [ ] Update OpinionPage to support `/opinion/{slug}` URLs
+- [ ] Fetch opinion by slug in OpinionFeed
+- [ ] Fallback to ID-based routing if slug not found
+- [ ] Add canonical URLs for SEO
 
 ---
 
@@ -251,13 +264,22 @@ fix: Claim lock logic preventing duplicate claims - PLAN.md Phase 2
 
 ## Future Enhancements (Post-MVP)
 
-1. **Multimedia Integration**: Upload videos, audio clips alongside articles
-2. **Slug Management**: SEO-friendly URLs (e.g., `/zimbabwe-election-update`)
-3. **Version History**: Full edit history with rollback
-4. **Collaborative Comments**: Inline comments like Google Docs
-5. **Fact-Check Stage**: Optional stage for investigative pieces
-6. **Push Notifications**: Real-time alerts for writers and editors
-7. **Analytics Dashboard**: Track article performance
+✅ **COMPLETED**:
+- ~~Slug Management~~ - SEO-friendly slugs with auto-generation
+- ~~Scheduled Publishing~~ - Auto-publish at specified times
+
+🔄 **IN PROGRESS**:
+1. **Public Slug Routing**: Display opinions at `/opinion/{slug}` URLs (backend ready)
+
+⏳ **UPCOMING**:
+1. **Version History**: Full edit history with rollback
+2. **Collaborative Comments**: Inline comments like Google Docs  
+3. **Fact-Check Stage**: Optional stage for investigative pieces
+4. **Push Notifications**: Real-time alerts for writers and editors
+5. **Multimedia Integration**: Upload videos, audio clips alongside articles
+6. **Analytics Dashboard**: Track article performance
+7. **Image Alt Text**: Accessibility compliance for all images
+8. **Social Media Preview**: Auto-generate OG tags from slug URLs
 
 ---
 

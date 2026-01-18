@@ -30,11 +30,14 @@ import {
   replaceArticleImage,
   claimStory,
   releaseStory,
-  returnToWriter
+  returnToWriter,
+  schedulePublication,
+  checkAndPublishScheduledStories
 } from '../../services/opinionsService';
 import { compressImage, validateImage } from '../../utils/imageCompression';
 import EnhancedFirestore from '../../services/enhancedFirestore';
 import { getCurrentEditor } from '../../services/authService';
+import { generateUniqueSlug, sanitizeSlug, isValidSlug } from '../../utils/slugUtils';
 
 const APP_ID = "morning-pulse-app";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -64,6 +67,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [editedSubHeadline, setEditedSubHeadline] = useState('');
   const [editedBody, setEditedBody] = useState('');
   const [editedAuthorName, setEditedAuthorName] = useState('');
+  const [editedSlug, setEditedSlug] = useState(''); // NEW: SEO slug
   const [editorNotes, setEditorNotes] = useState('');
   const [status, setStatus] = useState<UIStatusLabel>('Pending Review');
   const [suggestedImageUrl, setSuggestedImageUrl] = useState<string | null>(null);
@@ -71,10 +75,14 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [newImagePreviewUrl, setNewImagePreviewUrl] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [claiming, setClaiming] = useState(false); // NEW: Track claiming operation
+  const [claiming, setClaiming] = useState(false);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [compressing, setCompressing] = useState(false);
   const [loadingQueue, setLoadingQueue] = useState(true);
+  const [showSchedulePicker, setShowSchedulePicker] = useState(false); // NEW: Schedule picker visibility
+  const [scheduleDate, setScheduleDate] = useState(''); // NEW: Schedule date input
+  const [scheduleTime, setScheduleTime] = useState(''); // NEW: Schedule time input
+  const [scheduling, setScheduling] = useState(false); // NEW: Scheduling operation
   
   // NEW: Current editor info
   const currentEditor = getCurrentEditor();
@@ -86,6 +94,45 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     if (!firebaseInstances?.db) return null;
     return EnhancedFirestore.getInstance(firebaseInstances.db);
   }, [firebaseInstances?.db]);
+
+  // NEW: Auto-publisher - Check for scheduled stories every 30 seconds
+  useEffect(() => {
+    if (!firebaseInstances) return;
+
+    // Initial check
+    checkAndPublishScheduledStories();
+
+    // Set up interval to check every 30 seconds
+    const intervalId = setInterval(() => {
+      checkAndPublishScheduledStories().then(count => {
+        if (count > 0) {
+          showToast(`Auto-published ${count} scheduled stor${count === 1 ? 'y' : 'ies'}`, 'success');
+        }
+      });
+    }, 30000); // 30 seconds
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [firebaseInstances, showToast]);
+
+  // NEW: Auto-generate slug from headline
+  useEffect(() => {
+    if (!editedTitle.trim()) {
+      return;
+    }
+
+    // Only auto-generate if slug is empty (don't override manual edits)
+    if (!editedSlug && firebaseInstances?.db) {
+      generateUniqueSlug(firebaseInstances.db, editedTitle, selectedOpinionId || undefined)
+        .then(slug => {
+          setEditedSlug(slug);
+        })
+        .catch(err => {
+          console.error('Error generating slug:', err);
+        });
+    }
+  }, [editedTitle, firebaseInstances?.db, selectedOpinionId, editedSlug]);
 
   // Subscribe to all editorial opinions (draft, pending, in-review) with retry logic
   useEffect(() => {
@@ -117,12 +164,12 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             scheduledFor: doc.scheduledFor?.toDate?.() || null,
           } as Opinion;
           
-          // NEW: Separate into three queues based on status
+          // NEW: Separate into three queues based on status (include scheduled in inReview)
           if (opinion.status === 'draft') {
             drafts.push(opinion);
           } else if (opinion.status === 'pending') {
             pending.push(opinion);
-          } else if (opinion.status === 'in-review') {
+          } else if (opinion.status === 'in-review' || opinion.status === 'scheduled') {
             inReview.push(opinion);
           }
         });
@@ -168,6 +215,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setEditedSubHeadline('');
       setEditedBody('');
       setEditedAuthorName('Editorial Team');
+      setEditedSlug(''); // NEW: Reset slug
       setEditorNotes('');
       setStatus('Published');
       setSuggestedImageUrl(null);
@@ -175,6 +223,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setNewImagePreviewUrl(null);
       setNewImageFile(null);
       setShowOriginalText(false);
+      setShowSchedulePicker(false); // NEW: Reset schedule picker
+      setScheduleDate('');
+      setScheduleTime('');
       return;
     }
 
@@ -184,6 +235,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setEditedSubHeadline('');
       setEditedBody('');
       setEditedAuthorName('');
+      setEditedSlug(''); // NEW: Reset slug
       setEditorNotes('');
       setStatus('Pending Review');
       setSuggestedImageUrl(null);
@@ -191,6 +243,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setNewImagePreviewUrl(null);
       setNewImageFile(null);
       setShowOriginalText(false);
+      setShowSchedulePicker(false); // NEW: Reset schedule picker
+      setScheduleDate('');
+      setScheduleTime('');
       return;
     }
 
@@ -204,14 +259,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setEditedSubHeadline(opinion.subHeadline || '');
       setEditedBody(opinion.body || '');
       setEditedAuthorName(opinion.authorName || '');
+      setEditedSlug(opinion.slug || ''); // NEW: Load existing slug
       setEditorNotes(opinion.editorNotes || '');
       setStatus(getUIStatusLabel(opinion.status || 'pending') as UIStatusLabel);
       setSuggestedImageUrl(opinion.suggestedImageUrl || opinion.imageUrl || null);
       setFinalImageUrl(opinion.finalImageUrl || null);
       setNewImagePreviewUrl(null);
       setNewImageFile(null);
-      // NEW: Enable split-pane view if there's original text
       setShowOriginalText(!!opinion.originalBody);
+      setShowSchedulePicker(false);
+      setScheduleDate('');
+      setScheduleTime('');
     }
   }, [selectedOpinionId, draftOpinions, pendingOpinions, inReviewOpinions, isNewArticle]);
 
@@ -393,11 +451,19 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
       const dbStatus = getDbStatus(status);
       
+      // NEW: Generate slug if empty
+      let finalSlug = editedSlug;
+      if (!finalSlug && editedTitle.trim()) {
+        finalSlug = await generateUniqueSlug(db, editedTitle, selectedOpinionId);
+        setEditedSlug(finalSlug);
+      }
+      
       await updateDoc(opinionRef, {
         headline: editedTitle,
         subHeadline: editedSubHeadline,
         body: editedBody,
         authorName: editedAuthorName,
+        slug: finalSlug || null, // NEW: Save slug
         editorNotes: editorNotes,
         status: dbStatus,
         finalImageUrl: finalImageUrl || suggestedImageUrl,
@@ -440,11 +506,23 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       return;
     }
 
+    // NEW: Validate slug if provided
+    if (editedSlug && !isValidSlug(editedSlug)) {
+      showToast('Invalid slug format. Use lowercase letters, numbers, and hyphens only.', 'error');
+      return;
+    }
+
     setSaving(true);
     
     try {
       const { db } = firebaseInstances;
       const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
+      
+      // NEW: Generate slug if not provided
+      let finalSlug = editedSlug;
+      if (!finalSlug) {
+        finalSlug = await generateUniqueSlug(db, editedTitle);
+      }
       
       // Create article first to get ID
       const docData = {
@@ -454,6 +532,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         headline: editedTitle,
         subHeadline: editedSubHeadline,
         body: editedBody,
+        slug: finalSlug, // NEW: Include slug
         category: 'General',
         country: 'Global',
         suggestedImageUrl: null,
@@ -514,17 +593,30 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       return;
     }
 
+    // NEW: Validate slug
+    if (editedSlug && !isValidSlug(editedSlug)) {
+      showToast('Invalid slug format. Use lowercase letters, numbers, and hyphens only.', 'error');
+      return;
+    }
+
     setSaving(true);
     
     try {
       const { db } = firebaseInstances;
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
       
+      // NEW: Generate slug if empty
+      let finalSlug = editedSlug;
+      if (!finalSlug) {
+        finalSlug = await generateUniqueSlug(db, editedTitle, selectedOpinionId);
+      }
+      
       await updateDoc(opinionRef, {
         headline: editedTitle,
         subHeadline: editedSubHeadline,
         body: editedBody,
         authorName: editedAuthorName,
+        slug: finalSlug, // NEW: Save slug
         editorNotes: editorNotes,
         status: 'published',
         isPublished: true,
@@ -657,6 +749,63 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       showToast(error.message || 'Failed to return story', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // NEW: Handle scheduling publication
+  const handleSchedulePublication = async () => {
+    if (!selectedOpinionId || !firebaseInstances) return;
+    
+    if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
+      showToast('Unauthorized: Editor role required', 'error');
+      return;
+    }
+
+    if (!scheduleDate || !scheduleTime) {
+      showToast('Please select both date and time', 'error');
+      return;
+    }
+
+    // Combine date and time
+    const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+    
+    // Validate future date
+    if (scheduledDateTime <= new Date()) {
+      showToast('Scheduled time must be in the future', 'error');
+      return;
+    }
+
+    setScheduling(true);
+    
+    try {
+      // First save any changes
+      const { db } = firebaseInstances;
+      const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
+      
+      await updateDoc(opinionRef, {
+        headline: editedTitle,
+        subHeadline: editedSubHeadline,
+        body: editedBody,
+        authorName: editedAuthorName,
+        slug: editedSlug || null,
+        editorNotes: editorNotes,
+        finalImageUrl: finalImageUrl || suggestedImageUrl,
+        updatedAt: serverTimestamp(),
+      });
+      
+      // Then schedule
+      await schedulePublication(selectedOpinionId, scheduledDateTime);
+      
+      showToast(`Story scheduled for ${scheduledDateTime.toLocaleString()}`, 'success');
+      setShowSchedulePicker(false);
+      setTimeout(() => {
+        setSelectedOpinionId(null);
+      }, 1000);
+    } catch (error: any) {
+      console.error('Schedule error:', error);
+      showToast(error.message || 'Failed to schedule publication', 'error');
+    } finally {
+      setScheduling(false);
     }
   };
 
@@ -916,7 +1065,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
               )}
             </div>
 
-            {/* Section 3: In Review (Claimed by Editor) */}
+            {/* Section 3: In Review (Claimed by Editor) + Scheduled */}
             <div style={{ marginBottom: '16px' }}>
               <div style={{
                 padding: '8px 12px',
@@ -953,6 +1102,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
               ) : (
                 inReviewOpinions.map((opinion) => {
                   const isClaimedByMe = opinion.claimedBy === currentEditorId;
+                  const isScheduled = opinion.status === 'scheduled';
                   return (
                     <div
                       key={opinion.id}
@@ -967,10 +1117,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       style={{
                         padding: '12px',
                         marginBottom: '8px',
-                        border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
+                        border: selectedOpinionId === opinion.id ? '2px solid #000' : isScheduled ? '2px solid #4338ca' : '1px solid #e5e5e5',
                         borderRadius: '4px',
                         cursor: isClaimedByMe || userRoles.includes('super_admin') || userRoles.includes('admin') ? 'pointer' : 'not-allowed',
-                        backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
+                        backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : isScheduled ? '#e0e7ff' : 'white',
                         transition: 'all 0.2s',
                         opacity: isClaimedByMe || userRoles.includes('super_admin') || userRoles.includes('admin') ? 1 : 0.6
                       }}
@@ -979,8 +1129,12 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         fontSize: '13px',
                         fontWeight: '600',
                         marginBottom: '4px',
-                        color: '#000'
+                        color: '#000',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
                       }}>
+                        {isScheduled && <span style={{ fontSize: '14px' }}>📅</span>}
                         {opinion.headline || 'Untitled'}
                       </div>
                       <div style={{
@@ -997,11 +1151,22 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       }}>
                         {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
                       </div>
+                      {isScheduled && opinion.scheduledFor && (
+                        <div style={{
+                          fontSize: '10px',
+                          color: '#4338ca',
+                          marginBottom: '6px',
+                          fontWeight: '600'
+                        }}>
+                          📅 Goes live: {opinion.scheduledFor.toLocaleString()}
+                        </div>
+                      )}
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
-                        marginTop: '6px'
+                        marginTop: '6px',
+                        flexWrap: 'wrap'
                       }}>
                         <span style={{
                           fontSize: '10px',
@@ -1012,6 +1177,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         }}>
                           {isClaimedByMe ? '✓ You' : `🔒 ${opinion.claimedByName || 'Claimed'}`}
                         </span>
+                        {isScheduled && (
+                          <span style={{
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            backgroundColor: '#e0e7ff',
+                            borderRadius: '2px',
+                            color: '#4338ca'
+                          }}>
+                            ⏰ Scheduled
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -1287,6 +1463,63 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 />
               </div>
 
+              {/* NEW: SEO Slug */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  SEO Slug
+                  <span style={{
+                    fontSize: '11px',
+                    color: '#6b7280',
+                    fontWeight: '400',
+                    backgroundColor: '#f3f4f6',
+                    padding: '2px 6px',
+                    borderRadius: '2px'
+                  }}>
+                    URL-friendly
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={editedSlug}
+                  onChange={(e) => setEditedSlug(sanitizeSlug(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    fontSize: '14px',
+                    border: editedSlug && !isValidSlug(editedSlug) ? '1px solid #ef4444' : '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace',
+                    backgroundColor: editedSlug ? '#fff' : '#f9fafb'
+                  }}
+                  placeholder="auto-generated-from-headline"
+                />
+                {editedSlug && (
+                  <div style={{
+                    fontSize: '11px',
+                    marginTop: '4px',
+                    color: isValidSlug(editedSlug) ? '#10b981' : '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    {isValidSlug(editedSlug) ? (
+                      <>
+                        ✓ URL: <span style={{ fontFamily: 'monospace' }}>morningpulse.com/opinion/{editedSlug}</span>
+                      </>
+                    ) : (
+                      '✗ Invalid format. Use lowercase, numbers, and hyphens only.'
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* ENHANCED: Image Management with Preview */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{
@@ -1554,79 +1787,183 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 ) : selectedOpinion?.status === 'in-review' && selectedOpinion?.claimedBy === currentEditorId ? (
                   // IN-REVIEW BUTTONS (Claimed by current editor)
                   <>
-                    <button
-                      onClick={handleReleaseStory}
-                      disabled={saving}
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#6b7280',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        opacity: saving ? 0.6 : 1
-                      }}
-                    >
-                      Release
-                    </button>
-                    
-                    <button
-                      onClick={handleReturnToWriter}
-                      disabled={saving || !editorNotes.trim()}
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#f59e0b',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: (saving || !editorNotes.trim()) ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        opacity: (saving || !editorNotes.trim()) ? 0.6 : 1
-                      }}
-                      title={!editorNotes.trim() ? 'Add feedback notes first' : ''}
-                    >
-                      Return to Writer
-                    </button>
-                    
-                    <button
-                      onClick={handleSaveDraft}
-                      disabled={saving}
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#666',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        opacity: saving ? 0.6 : 1
-                      }}
-                    >
-                      {saving ? 'Saving...' : 'Save Progress'}
-                    </button>
-                    
-                    <button
-                      onClick={handleApproveAndPublish}
-                      disabled={saving}
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#10b981',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        opacity: saving ? 0.6 : 1,
-                        marginLeft: 'auto'
-                      }}
-                    >
-                      {saving ? 'Publishing...' : '✓ Publish'}
-                    </button>
+                    {!showSchedulePicker ? (
+                      <>
+                        <button
+                          onClick={handleReleaseStory}
+                          disabled={saving}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#6b7280',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: saving ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: saving ? 0.6 : 1
+                          }}
+                        >
+                          Release
+                        </button>
+                        
+                        <button
+                          onClick={handleReturnToWriter}
+                          disabled={saving || !editorNotes.trim()}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#f59e0b',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: (saving || !editorNotes.trim()) ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: (saving || !editorNotes.trim()) ? 0.6 : 1
+                          }}
+                          title={!editorNotes.trim() ? 'Add feedback notes first' : ''}
+                        >
+                          Return to Writer
+                        </button>
+                        
+                        <button
+                          onClick={handleSaveDraft}
+                          disabled={saving}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#666',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: saving ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: saving ? 0.6 : 1
+                          }}
+                        >
+                          {saving ? 'Saving...' : 'Save Progress'}
+                        </button>
+                        
+                        {/* NEW: Schedule Button */}
+                        <button
+                          onClick={() => {
+                            const now = new Date();
+                            const tomorrow = new Date(now);
+                            tomorrow.setDate(tomorrow.getDate() + 1);
+                            setScheduleDate(tomorrow.toISOString().split('T')[0]);
+                            setScheduleTime('09:00');
+                            setShowSchedulePicker(true);
+                          }}
+                          disabled={saving}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#4338ca',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: saving ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: saving ? 0.6 : 1,
+                            marginLeft: 'auto'
+                          }}
+                        >
+                          📅 Schedule
+                        </button>
+                        
+                        <button
+                          onClick={handleApproveAndPublish}
+                          disabled={saving}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#10b981',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: saving ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: saving ? 0.6 : 1
+                          }}
+                        >
+                          {saving ? 'Publishing...' : '✓ Publish Now'}
+                        </button>
+                      </>
+                    ) : (
+                      // NEW: Schedule Picker
+                      <>
+                        <div style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '8px 12px',
+                          backgroundColor: '#e0e7ff',
+                          borderRadius: '4px'
+                        }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#4338ca' }}>
+                            📅 Schedule for:
+                          </span>
+                          <input
+                            type="date"
+                            value={scheduleDate}
+                            onChange={(e) => setScheduleDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            style={{
+                              padding: '6px 10px',
+                              border: '1px solid #a5b4fc',
+                              borderRadius: '4px',
+                              fontSize: '13px'
+                            }}
+                          />
+                          <input
+                            type="time"
+                            value={scheduleTime}
+                            onChange={(e) => setScheduleTime(e.target.value)}
+                            style={{
+                              padding: '6px 10px',
+                              border: '1px solid #a5b4fc',
+                              borderRadius: '4px',
+                              fontSize: '13px'
+                            }}
+                          />
+                        </div>
+                        <button
+                          onClick={() => setShowSchedulePicker(false)}
+                          disabled={scheduling}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#6b7280',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: scheduling ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: scheduling ? 0.6 : 1
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSchedulePublication}
+                          disabled={scheduling || !scheduleDate || !scheduleTime}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#4338ca',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: (scheduling || !scheduleDate || !scheduleTime) ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: (scheduling || !scheduleDate || !scheduleTime) ? 0.6 : 1
+                          }}
+                        >
+                          {scheduling ? 'Scheduling...' : '✓ Confirm Schedule'}
+                        </button>
+                      </>
+                    )}
                   </>
                 ) : selectedOpinion?.status === 'draft' ? (
                   // DRAFT BUTTONS (Editor editing a draft)
