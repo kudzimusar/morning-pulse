@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { subscribeToNewsletter } from '../services/newsletterService';
+import { trackNewsletterSubscription } from '../services/analyticsService';
 
 const SubscriptionPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -40,6 +41,8 @@ const SubscriptionPage: React.FC = () => {
       );
 
       if (result.success) {
+        // Track newsletter subscription in Google Analytics
+        trackNewsletterSubscription(selectedInterests, 'subscription_page');
         setSubmitted(true);
       } else {
         setError(result.message || 'Failed to subscribe');

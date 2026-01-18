@@ -1,308 +1,264 @@
 /**
- * Analytics Service
- * Tracks and aggregates statistics for the editorial platform
+ * Google Analytics 4 Integration Service
+ * Advanced analytics tracking for user engagement and business metrics
  */
 
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  increment,
-  serverTimestamp,
-  Firestore
-} from 'firebase/firestore';
-import { getApp } from 'firebase/app';
+// Google Analytics Measurement ID (replace with your actual GA4 ID)
+const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // TODO: Replace with actual GA4 ID
 
-const APP_ID = "morning-pulse-app";
+// Initialize Google Analytics
+export const initializeGA = (): void => {
+  // Load Google Analytics script
+  const script1 = document.createElement('script');
+  script1.async = true;
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  document.head.appendChild(script1);
 
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
-
-export interface ArticleStats {
-  articleId: string;
-  views: number;
-  lastViewed?: Date;
-}
-
-export interface DailyStats {
-  date: string; // YYYY-MM-DD
-  totalViews: number;
-  publishedCount: number;
-  submittedCount: number;
-  rejectedCount: number;
-}
-
-export interface AnalyticsSummary {
-  totalPublished: number;
-  totalSubmissions: number;
-  totalRejected: number;
-  viewsToday: number;
-  viewsThisWeek: number;
-  topCategories: Array<{ category: string; count: number }>;
-  recentActivity: Array<{
-    action: string;
-    timestamp: Date;
-    articleId?: string;
-  }>;
-  // NEW: Opinion Performance
-  topOpinions?: Array<{
-    id: string;
-    headline: string;
-    authorName: string;
-    slug?: string;
-    views: number;
-    publishedAt: Date;
-  }>;
-  // NEW: Author Analytics
-  topAuthors?: Array<{
-    authorName: string;
-    publishedCount: number;
-    totalViews: number;
-    avgViewsPerArticle: number;
-  }>;
-  // NEW: Workflow Metrics
-  avgTimeToPublish?: number; // Average hours from submission to publish
-  totalDrafts?: number;
-  totalPending?: number;
-  totalInReview?: number;
-  totalScheduled?: number;
-}
-
-/**
- * Get analytics summary
- */
-export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
-  const db = getDb();
-  const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-  
-  const snapshot = await getDocs(opinionsRef);
-  const opinions: any[] = [];
-  
-  snapshot.forEach((docSnap) => {
-    opinions.push({
-      id: docSnap.id,
-      ...docSnap.data(),
-      submittedAt: docSnap.data().submittedAt?.toDate?.() || null,
-      publishedAt: docSnap.data().publishedAt?.toDate?.() || null,
+  const script2 = document.createElement('script');
+  script2.innerHTML = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${GA_MEASUREMENT_ID}', {
+      page_title: document.title,
+      page_location: window.location.href,
+      send_page_view: true
     });
-  });
-  
-  // Calculate statistics
-  const totalPublished = opinions.filter(op => op.status === 'published').length;
-  const totalSubmissions = opinions.length;
-  const totalRejected = opinions.filter(op => op.status === 'rejected').length;
-  
-  // Category counts
-  const categoryCounts: Record<string, number> = {};
-  opinions.forEach(op => {
-    if (op.category) {
-      categoryCounts[op.category] = (categoryCounts[op.category] || 0) + 1;
-    }
-  });
-  
-  const topCategories = Object.entries(categoryCounts)
-    .map(([category, count]) => ({ category, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-  
-  // Get today's date range
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const weekAgo = new Date(today);
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  
-  // For now, views are simulated (would need view tracking in production)
-  const viewsToday = 0; // TODO: Implement view tracking
-  const viewsThisWeek = 0; // TODO: Implement view tracking
-  
-  // Recent activity (from published articles)
-  const recentActivity = opinions
-    .filter(op => op.publishedAt)
-    .sort((a, b) => {
-      const timeA = a.publishedAt?.getTime() || 0;
-      const timeB = b.publishedAt?.getTime() || 0;
-      return timeB - timeA;
-    })
-    .slice(0, 10)
-    .map(op => ({
-      action: 'Published',
-      timestamp: op.publishedAt || new Date(),
-      articleId: op.id,
-    }));
-  
-  // NEW: Calculate workflow metrics
-  const totalDrafts = opinions.filter(op => op.status === 'draft').length;
-  const totalPending = opinions.filter(op => op.status === 'pending').length;
-  const totalInReview = opinions.filter(op => op.status === 'in-review').length;
-  const totalScheduled = opinions.filter(op => op.status === 'scheduled').length;
-  
-  // NEW: Calculate avg time to publish
-  const publishedWithTimes = opinions.filter(op => op.publishedAt && op.submittedAt);
-  const avgTimeToPublish = publishedWithTimes.length > 0
-    ? publishedWithTimes.reduce((sum, op) => {
-        const diff = op.publishedAt!.getTime() - op.submittedAt.getTime();
-        return sum + diff;
-      }, 0) / publishedWithTimes.length / (1000 * 60 * 60) // Convert to hours
-    : 0;
-  
-  // NEW: Get article view stats for top opinions
-  const topOpinions = await getTopOpinions(5);
-  
-  // NEW: Calculate author analytics
-  const authorStats: Record<string, { publishedCount: number; totalViews: number }> = {};
-  const publishedOpinions = opinions.filter(op => op.status === 'published');
-  
-  publishedOpinions.forEach(op => {
-    const author = op.authorName || 'Unknown';
-    if (!authorStats[author]) {
-      authorStats[author] = { publishedCount: 0, totalViews: 0 };
-    }
-    authorStats[author].publishedCount++;
-  });
-  
-  // Get view counts for each author
-  for (const opinion of publishedOpinions) {
-    const author = opinion.authorName || 'Unknown';
-    const stats = await getArticleStats(opinion.id);
-    if (stats) {
-      authorStats[author].totalViews += stats.views;
-    }
+  `;
+  document.head.appendChild(script2);
+
+  console.log('✅ Google Analytics 4 initialized');
+};
+
+// Track page views
+export const trackPageView = (pageTitle: string, pagePath: string): void => {
+  if (typeof gtag !== 'undefined') {
+    gtag('config', GA_MEASUREMENT_ID, {
+      page_title: pageTitle,
+      page_path: pagePath,
+    });
   }
-  
-  const topAuthors = Object.entries(authorStats)
-    .map(([authorName, stats]) => ({
-      authorName,
-      publishedCount: stats.publishedCount,
-      totalViews: stats.totalViews,
-      avgViewsPerArticle: stats.publishedCount > 0 ? Math.round(stats.totalViews / stats.publishedCount) : 0,
-    }))
-    .sort((a, b) => b.totalViews - a.totalViews)
-    .slice(0, 10);
-  
-  return {
-    totalPublished,
-    totalSubmissions,
-    totalRejected,
-    viewsToday,
-    viewsThisWeek,
-    topCategories,
-    recentActivity,
-    // NEW: Enhanced analytics
-    topOpinions,
-    topAuthors,
-    avgTimeToPublish: Math.round(avgTimeToPublish * 10) / 10, // Round to 1 decimal
-    totalDrafts,
-    totalPending,
-    totalInReview,
-    totalScheduled,
+};
+
+// Track custom events
+export const trackEvent = (
+  eventName: string,
+  parameters: Record<string, any> = {}
+): void => {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', eventName, {
+      ...parameters,
+      timestamp: new Date().toISOString(),
+    });
+  }
+};
+
+// Track article views
+export const trackArticleView = (
+  articleId: string,
+  articleTitle: string,
+  authorName?: string,
+  category?: string
+): void => {
+  trackEvent('article_view', {
+    article_id: articleId,
+    article_title: articleTitle,
+    author_name: authorName || 'Unknown',
+    category: category || 'Uncategorized',
+    content_type: 'opinion',
+  });
+};
+
+// Track scroll depth
+export const trackScrollDepth = (depth: number): void => {
+  // Only track significant scroll milestones (25%, 50%, 75%, 90%, 100%)
+  const milestones = [25, 50, 75, 90, 100];
+  const milestone = milestones.find(m => depth >= m && depth < m + 5);
+
+  if (milestone) {
+    trackEvent('scroll_depth', {
+      scroll_depth: milestone,
+      page_location: window.location.href,
+    });
+  }
+};
+
+// Track time on page
+let pageStartTime: number = Date.now();
+let scrollDepthTracked: Set<number> = new Set();
+
+export const initializePageTracking = (): void => {
+  pageStartTime = Date.now();
+  scrollDepthTracked = new Set();
+
+  // Track scroll depth
+  const handleScroll = (): void => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercent = Math.round((scrollTop / docHeight) * 100);
+
+    trackScrollDepth(scrollPercent);
   };
+
+  // Throttle scroll events
+  let scrollTimer: NodeJS.Timeout;
+  window.addEventListener('scroll', () => {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(handleScroll, 100);
+  });
 };
 
-/**
- * NEW: Get top performing opinions by view count
- */
-export const getTopOpinions = async (limit: number = 10): Promise<Array<{
-  id: string;
-  headline: string;
-  authorName: string;
-  slug?: string;
-  views: number;
-  publishedAt: Date;
-}>> => {
-  const db = getDb();
-  const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-  const opinionsSnapshot = await getDocs(opinionsRef);
-  
-  const opinionStats: Array<{
-    id: string;
-    headline: string;
-    authorName: string;
-    slug?: string;
-    views: number;
-    publishedAt: Date;
-  }> = [];
-  
-  for (const docSnap of opinionsSnapshot.docs) {
-    const data = docSnap.data();
-    if (data.status === 'published') {
-      const stats = await getArticleStats(docSnap.id);
-      opinionStats.push({
-        id: docSnap.id,
-        headline: data.headline || 'Untitled',
-        authorName: data.authorName || 'Unknown',
-        slug: data.slug,
-        views: stats?.views || 0,
-        publishedAt: data.publishedAt?.toDate?.() || new Date(),
-      });
-    }
-  }
-  
-  // Sort by views descending
-  return opinionStats
-    .sort((a, b) => b.views - a.views)
-    .slice(0, limit);
+export const trackTimeOnPage = (): void => {
+  const timeSpent = Math.round((Date.now() - pageStartTime) / 1000); // seconds
+
+  trackEvent('time_on_page', {
+    time_spent_seconds: timeSpent,
+    time_spent_minutes: Math.round(timeSpent / 60 * 100) / 100,
+    page_location: window.location.href,
+  });
 };
 
-/**
- * Increment article view count
- */
-export const incrementArticleView = async (articleId: string): Promise<void> => {
-  const db = getDb();
-  const statsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'analytics', 'articles', articleId);
-  
-  try {
-    const snap = await getDoc(statsRef);
-    if (snap.exists()) {
-      await updateDoc(statsRef, {
-        views: increment(1),
-        lastViewed: serverTimestamp(),
-      });
-    } else {
-      // Create new stats document
-      await updateDoc(statsRef, {
-        views: 1,
-        lastViewed: serverTimestamp(),
-        createdAt: serverTimestamp(),
-      });
-    }
-  } catch (error) {
-    console.error('Error incrementing article view:', error);
-    // Fail silently - analytics shouldn't break the app
+// Track newsletter subscriptions
+export const trackNewsletterSubscription = (
+  interests?: string[],
+  source?: string
+): void => {
+  trackEvent('newsletter_signup', {
+    interests: interests?.join(', ') || 'none',
+    signup_source: source || 'website',
+    user_type: 'reader',
+  });
+};
+
+// Track writer actions
+export const trackWriterAction = (
+  action: string,
+  articleId?: string,
+  additionalData?: Record<string, any>
+): void => {
+  trackEvent('writer_action', {
+    action_type: action,
+    article_id: articleId,
+    ...additionalData,
+  });
+};
+
+// Track editor actions
+export const trackEditorAction = (
+  action: string,
+  articleId?: string,
+  additionalData?: Record<string, any>
+): void => {
+  trackEvent('editor_action', {
+    action_type: action,
+    article_id: articleId,
+    ...additionalData,
+  });
+};
+
+// Track search queries
+export const trackSearch = (
+  searchTerm: string,
+  category?: string,
+  resultsCount?: number
+): void => {
+  trackEvent('search', {
+    search_term: searchTerm,
+    category: category || 'all',
+    results_count: resultsCount || 0,
+  });
+};
+
+// Track user engagement
+export const trackEngagement = (
+  engagementType: 'click' | 'hover' | 'share' | 'bookmark',
+  element: string,
+  details?: Record<string, any>
+): void => {
+  trackEvent('user_engagement', {
+    engagement_type: engagementType,
+    element_name: element,
+    ...details,
+  });
+};
+
+// Track traffic sources (when users arrive)
+export const trackTrafficSource = (): void => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const referrer = document.referrer;
+  const source = urlParams.get('utm_source') || urlParams.get('source');
+  const medium = urlParams.get('utm_medium') || urlParams.get('medium');
+  const campaign = urlParams.get('utm_campaign') || urlParams.get('campaign');
+
+  if (source || medium || campaign || referrer) {
+    trackEvent('traffic_source', {
+      utm_source: source,
+      utm_medium: medium,
+      utm_campaign: campaign,
+      referrer: referrer,
+      page_location: window.location.href,
+    });
   }
 };
 
-/**
- * Get article statistics
- */
-export const getArticleStats = async (articleId: string): Promise<ArticleStats | null> => {
-  const db = getDb();
-  const statsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'analytics', 'articles', articleId);
-  
-  try {
-    const snap = await getDoc(statsRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      return {
-        articleId,
-        views: data.views || 0,
-        lastViewed: data.lastViewed?.toDate?.() || undefined,
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting article stats:', error);
-    return null;
+// Track reader-to-subscriber conversion
+export const trackReaderToSubscriberConversion = (
+  timeToConvert?: number,
+  articlesRead?: number
+): void => {
+  trackEvent('reader_to_subscriber', {
+    time_to_convert_days: timeToConvert,
+    articles_read_before_subscribe: articlesRead,
+    conversion_source: 'newsletter_signup',
+  });
+};
+
+// Enhanced article view tracking with engagement metrics
+export const trackArticleEngagement = (
+  articleId: string,
+  engagementType: 'start_reading' | 'finish_reading' | 'share' | 'bookmark',
+  details?: Record<string, any>
+): void => {
+  trackEvent('article_engagement', {
+    article_id: articleId,
+    engagement_type: engagementType,
+    ...details,
+  });
+};
+
+// Track admin dashboard usage
+export const trackAdminAction = (
+  action: string,
+  section: string,
+  details?: Record<string, any>
+): void => {
+  trackEvent('admin_action', {
+    action_type: action,
+    admin_section: section,
+    ...details,
+  });
+};
+
+// Initialize analytics on page load
+export const initAnalytics = (): void => {
+  // Only initialize if GA_MEASUREMENT_ID is configured
+  if (GA_MEASUREMENT_ID && GA_MEASUREMENT_ID !== 'G-XXXXXXXXXX') {
+    initializeGA();
+    initializePageTracking();
+    trackTrafficSource();
+
+    // Track when users leave the page
+    window.addEventListener('beforeunload', trackTimeOnPage);
+
+    console.log('📊 Advanced Analytics initialized with Google Analytics 4');
+  } else {
+    console.warn('⚠️ Google Analytics not configured. Set GA_MEASUREMENT_ID in analyticsService.ts');
   }
 };
+
+// Export gtag for direct usage if needed
+declare global {
+  function gtag(...args: any[]): void;
+}
+
+export { gtag };

@@ -37,6 +37,36 @@ import {
 } from './services/authService';
 import { NewsStory } from '../../types';
 import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
+import { initAnalytics, trackPageView, trackArticleView } from './services/analyticsService';
+
+// Helper function to get page title for analytics
+const getPageTitle = (hash: string): string => {
+  const pageTitles: Record<string, string> = {
+    'news': 'Morning Pulse - Latest News',
+    'opinion': 'Morning Pulse - Opinions',
+    'opinion-submit': 'Morning Pulse - Submit Opinion',
+    'subscription': 'Morning Pulse - Newsletter Signup',
+    'about': 'Morning Pulse - About Us',
+    'privacy': 'Morning Pulse - Privacy Policy',
+    'advertise': 'Morning Pulse - Advertise With Us',
+    'editorial': 'Morning Pulse - Editorial Standards',
+    'join': 'Morning Pulse - Join Our Team',
+    'writer-register': 'Morning Pulse - Writer Registration',
+    'writer-login': 'Morning Pulse - Writer Login',
+    'writer-dashboard': 'Morning Pulse - Writer Dashboard',
+    'subscriber-register': 'Morning Pulse - Subscriber Registration',
+    'subscriber-login': 'Morning Pulse - Subscriber Login',
+    'subscriber-dashboard': 'Morning Pulse - Subscriber Dashboard',
+    'advertiser-register': 'Morning Pulse - Advertiser Registration',
+    'advertiser-login': 'Morning Pulse - Advertiser Login',
+    'advertiser-dashboard': 'Morning Pulse - Advertiser Dashboard',
+    'advertiser-submit-ad': 'Morning Pulse - Submit Advertisement',
+    'admin': 'Morning Pulse - Admin Login',
+    'dashboard': 'Morning Pulse - Admin Dashboard',
+  };
+
+  return pageTitles[hash] || 'Morning Pulse';
+};
 
 // Get Firebase config (same pattern as FirebaseConnector)
 const getFirebaseConfig = (): any => {
@@ -102,6 +132,9 @@ const App: React.FC = () => {
     } catch (clearError) {
       console.warn('⚠️ Could not clear localStorage:', clearError);
     }
+
+    // Initialize Google Analytics 4
+    initAnalytics();
   }, []); // Empty deps = run only once per session
 
   // Regular state declarations
@@ -154,11 +187,15 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      
+
       // ✅ FIX: Guard clause - prevent processing if already on dashboard
       if (hash === 'dashboard' && view === 'admin' && requireEditor(userRole)) {
         return; // Already on dashboard, don't process again
       }
+
+      // Track page view in Google Analytics
+      const pageTitle = getPageTitle(hash);
+      trackPageView(pageTitle, `/${hash || 'news'}`);
       
       if (hash === 'opinion' || hash.startsWith('opinion')) {
         if (hash === 'opinion/submit' || hash.startsWith('opinion/submit')) {
