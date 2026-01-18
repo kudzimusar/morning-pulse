@@ -112,10 +112,12 @@ const appId = 'morning-pulse-app';
 /**
  * Sign in editor with email and password
  * This is separate from anonymous authentication used for public submissions
+ * Checks if account is active before allowing login
  */
 export const signInEditor = async (email: string, password: string): Promise<User> => {
   try {
     const authInstance = getAuthInstance();
+    const dbInstance = getDbInstance();
     
     // ✅ FIX: Sign out anonymous user if present before email/password login
     if (authInstance.currentUser && authInstance.currentUser.isAnonymous) {
@@ -126,10 +128,47 @@ export const signInEditor = async (email: string, password: string): Promise<Use
     }
     
     const userCredential = await signInWithEmailAndPassword(authInstance, email, password);
+    const user = userCredential.user;
     console.log('✅ Editor email/password login successful');
-    return userCredential.user;
+    
+    // ✅ NEW: Check if account is active
+    try {
+      const staffRef = doc(dbInstance, 'staff', user.uid);
+      const staffSnap = await getDoc(staffRef);
+      
+      if (staffSnap.exists()) {
+        const staffData = staffSnap.data();
+        const isActive = staffData.isActive !== undefined ? staffData.isActive : true;
+        
+        if (!isActive) {
+          // Account is suspended - sign them out immediately
+          console.warn(`🚫 [AUTH] Suspended account attempted login: ${user.uid}`);
+          await signOut(authInstance);
+          
+          throw new Error(
+            'Your account has been suspended. Please contact the administrator for assistance.'
+          );
+        }
+        
+        console.log(`✅ [AUTH] Active account verified: ${user.uid}`);
+      }
+    } catch (error: any) {
+      // If it's our suspension error, re-throw it
+      if (error.message && error.message.includes('suspended')) {
+        throw error;
+      }
+      // Otherwise, log but allow login (staff doc might not exist yet)
+      console.warn('Could not verify account status:', error);
+    }
+    
+    return user;
   } catch (error: any) {
     console.error('❌ Editor sign in failed:', error);
+    
+    // Check if it's our custom suspension error
+    if (error.message && error.message.includes('suspended')) {
+      throw error;
+    }
     
     // Provide user-friendly error messages
     if (error.code === 'auth/operation-not-allowed') {

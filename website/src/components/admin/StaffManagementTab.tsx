@@ -7,7 +7,13 @@
 import React, { useEffect, useState } from 'react';
 import { Firestore } from 'firebase/firestore';
 import { User } from 'firebase/auth';
-import { getAllStaff, updateStaffRoles, deleteStaffMember } from '../../services/staffService';
+import { 
+  getAllStaff, 
+  updateStaffRoles, 
+  deleteStaffMember,
+  suspendStaffMember,
+  activateStaffMember
+} from '../../services/staffService';
 import { 
   createStaffInvite, 
   getPendingInvites, 
@@ -237,6 +243,47 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
     } catch (error: any) {
       console.error('Error deleting staff:', error);
       showToast(`Failed to remove staff: ${error.message}`, 'error');
+    }
+  };
+
+  const handleSuspendStaff = async (uid: string, name: string) => {
+    if (!window.confirm(`Suspend ${name}? They will not be able to log in until reactivated.`)) {
+      return;
+    }
+
+    if (!firebaseInstances?.auth?.currentUser) {
+      showToast('You must be logged in', 'error');
+      return;
+    }
+
+    try {
+      const currentUser = firebaseInstances.auth.currentUser as User;
+      const currentStaffMember = staff.find(s => s.uid === currentUser.uid);
+      const adminName = currentStaffMember?.name || currentUser.email || 'Admin';
+
+      await suspendStaffMember(uid, currentUser.uid, adminName);
+      showToast(`${name} has been suspended`, 'success');
+      console.log(`[AUDIT] ${adminName} (${currentUser.uid}) suspended ${name} (${uid})`);
+      loadStaff();
+    } catch (error: any) {
+      console.error('Error suspending staff:', error);
+      showToast(`Failed to suspend: ${error.message}`, 'error');
+    }
+  };
+
+  const handleActivateStaff = async (uid: string, name: string) => {
+    if (!window.confirm(`Reactivate ${name}? They will be able to log in again.`)) {
+      return;
+    }
+
+    try {
+      await activateStaffMember(uid);
+      showToast(`${name} has been reactivated`, 'success');
+      console.log(`[AUDIT] Staff member ${name} (${uid}) reactivated`);
+      loadStaff();
+    } catch (error: any) {
+      console.error('Error activating staff:', error);
+      showToast(`Failed to reactivate: ${error.message}`, 'error');
     }
   };
 
@@ -758,11 +805,14 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
                     const roles = e.target.value ? e.target.value.split(',') : [];
                     handleUpdateRoles(member.uid, roles);
                   }}
+                  disabled={!member.isActive}
                   style={{
                     padding: '6px 8px',
                     border: '1px solid #ddd',
                     borderRadius: '4px',
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    backgroundColor: member.isActive ? '#fff' : '#f3f4f6',
+                    cursor: member.isActive ? 'pointer' : 'not-allowed'
                   }}
                 >
                   <option value="writer">Writer</option>
@@ -771,6 +821,41 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
                   <option value="writer,editor">Writer + Editor</option>
                   <option value="editor,admin">Editor + Admin</option>
                 </select>
+                
+                {member.isActive ? (
+                  <button
+                    onClick={() => handleSuspendStaff(member.uid, member.name)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#f59e0b',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Suspend
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleActivateStaff(member.uid, member.name)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#10b981',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Activate
+                  </button>
+                )}
+                
                 <button
                   onClick={() => handleDeleteStaff(member.uid, member.name)}
                   style={{

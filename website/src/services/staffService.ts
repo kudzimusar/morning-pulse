@@ -62,8 +62,15 @@ export const getAllStaff = async (): Promise<StaffMember[]> => {
       email: data.email || '',
       name: data.name || '',
       roles: data.roles || [],
+      isActive: data.isActive !== undefined ? data.isActive : true,
       createdAt: data.createdAt?.toDate?.() || undefined,
       lastActive: data.lastActive?.toDate?.() || undefined,
+      updatedAt: data.updatedAt?.toDate?.() || undefined,
+      suspendedAt: data.suspendedAt?.toDate?.() || null,
+      suspendedBy: data.suspendedBy || null,
+      suspendedByName: data.suspendedByName || null,
+      invitedBy: data.invitedBy,
+      invitedByName: data.invitedByName,
     });
   });
   
@@ -90,8 +97,15 @@ export const getStaffMember = async (uid: string): Promise<StaffMember | null> =
         email: data.email || '',
         name: data.name || '',
         roles: data.roles || [],
+        isActive: data.isActive !== undefined ? data.isActive : true,
         createdAt: data.createdAt?.toDate?.() || undefined,
         lastActive: data.lastActive?.toDate?.() || undefined,
+        updatedAt: data.updatedAt?.toDate?.() || undefined,
+        suspendedAt: data.suspendedAt?.toDate?.() || null,
+        suspendedBy: data.suspendedBy || null,
+        suspendedByName: data.suspendedByName || null,
+        invitedBy: data.invitedBy,
+        invitedByName: data.invitedByName,
       };
     }
     return null;
@@ -157,6 +171,50 @@ export const updateLastActive = async (uid: string): Promise<void> => {
     // Fail silently - last active is not critical
     console.warn('Could not update last active:', error);
   }
+};
+
+/**
+ * Suspend a staff member
+ * @param uid - Staff member UID
+ * @param suspendedBy - Admin UID performing suspension
+ * @param suspendedByName - Admin name performing suspension
+ */
+export const suspendStaffMember = async (
+  uid: string,
+  suspendedBy: string,
+  suspendedByName: string
+): Promise<void> => {
+  const db = getDb();
+  const staffRef = doc(db, 'staff', uid);
+  
+  await updateDoc(staffRef, {
+    isActive: false,
+    suspendedAt: serverTimestamp(),
+    suspendedBy,
+    suspendedByName,
+    updatedAt: serverTimestamp(),
+  });
+  
+  console.log(`🚫 [STAFF] ${suspendedByName} suspended staff member: ${uid}`);
+};
+
+/**
+ * Activate (unsuspend) a staff member
+ * @param uid - Staff member UID
+ */
+export const activateStaffMember = async (uid: string): Promise<void> => {
+  const db = getDb();
+  const staffRef = doc(db, 'staff', uid);
+  
+  await updateDoc(staffRef, {
+    isActive: true,
+    suspendedAt: null,
+    suspendedBy: null,
+    suspendedByName: null,
+    updatedAt: serverTimestamp(),
+  });
+  
+  console.log(`✅ [STAFF] Staff member reactivated: ${uid}`);
 };
 
 /**

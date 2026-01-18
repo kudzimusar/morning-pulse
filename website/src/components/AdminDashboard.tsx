@@ -32,6 +32,7 @@ import SettingsTab from './admin/SettingsTab';
 import WriterManagementTab from './admin/WriterManagementTab';
 import SubscriberManagementTab from './admin/SubscriberManagementTab';
 import AdManagementTab from './admin/AdManagementTab';
+import { updateLastActive } from '../../services/staffService';
 
 // Constants
 const APP_ID = "morning-pulse-app";
@@ -147,6 +148,25 @@ const AdminDashboard: React.FC = () => {
 
     return () => unsubscribe();
   }, [firebaseInstances]);
+
+  // Activity heartbeat - update lastActive every 5 minutes
+  useEffect(() => {
+    if (!user || !isAuthorized) return;
+
+    // Update immediately on mount
+    updateLastActive(user.uid).catch(err => 
+      console.warn('Could not update lastActive:', err)
+    );
+
+    // Then update every 5 minutes
+    const intervalId = setInterval(() => {
+      updateLastActive(user.uid).catch(err => 
+        console.warn('Could not update lastActive:', err)
+      );
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(intervalId);
+  }, [user, isAuthorized]);
 
   // Subscribe to all opinions for priority summary
   useEffect(() => {
