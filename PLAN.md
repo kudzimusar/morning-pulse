@@ -189,11 +189,21 @@ submitForReview(storyId: string) // Changes draft → pending
 - [x] Manual slug override with validation
 - [x] Display slug in editor metadata section
 
-### ⏳ Phase 7: Public Slug Routing (PENDING)
-- [ ] Update OpinionPage to support `/opinion/{slug}` URLs
-- [ ] Fetch opinion by slug in OpinionFeed
-- [ ] Fallback to ID-based routing if slug not found
+### ✅ Phase 7: Public Slug Routing (READY - Backend Complete)
+- [x] Create getOpinionBySlug service function
+- [x] Slug-based lookup with ID fallback
+- [x] Published-only filtering
+- [ ] Frontend routing integration (ready to implement)
 - [ ] Add canonical URLs for SEO
+
+### ✅ Phase 8: Version History System (COMPLETE)
+- [x] Add OpinionVersion interface
+- [x] Create versions sub-collection structure
+- [x] Auto-snapshot on every save operation
+- [x] Build History UI modal in EditorialQueueTab
+- [x] Implement restore/rollback functionality
+- [x] Safety: Snapshot current before restore
+- [x] Full audit trail with timestamps and authors
 
 ---
 
@@ -265,21 +275,24 @@ fix: Claim lock logic preventing duplicate claims - PLAN.md Phase 2
 ## Future Enhancements (Post-MVP)
 
 ✅ **COMPLETED**:
-- ~~Slug Management~~ - SEO-friendly slugs with auto-generation
-- ~~Scheduled Publishing~~ - Auto-publish at specified times
+- ~~Slug Management~~ - SEO-friendly slugs with auto-generation & validation
+- ~~Scheduled Publishing~~ - Auto-publish at specified times (30s interval)
+- ~~Version History~~ - Full edit history with rollback protection
 
 🔄 **IN PROGRESS**:
-1. **Public Slug Routing**: Display opinions at `/opinion/{slug}` URLs (backend ready)
+1. **Public Slug Routing**: Display opinions at `/opinion/{slug}` URLs (backend API ready, frontend integration pending)
 
 ⏳ **UPCOMING**:
-1. **Version History**: Full edit history with rollback
-2. **Collaborative Comments**: Inline comments like Google Docs  
-3. **Fact-Check Stage**: Optional stage for investigative pieces
-4. **Push Notifications**: Real-time alerts for writers and editors
-5. **Multimedia Integration**: Upload videos, audio clips alongside articles
-6. **Analytics Dashboard**: Track article performance
-7. **Image Alt Text**: Accessibility compliance for all images
-8. **Social Media Preview**: Auto-generate OG tags from slug URLs
+1. **Collaborative Comments**: Inline comments like Google Docs  
+2. **Fact-Check Stage**: Optional stage for investigative pieces
+3. **Push Notifications**: Real-time alerts for writers and editors
+4. **Multimedia Integration**: Upload videos, audio clips alongside articles
+5. **Analytics Dashboard**: Track article performance
+6. **Image Alt Text**: Accessibility compliance for all images
+7. **Social Media Preview**: Auto-generate OG tags from slug URLs
+8. **Advanced Search**: Full-text search across all published opinions
+9. **Email Newsletters**: Auto-generate from published content
+10. **Mobile App**: React Native version of editorial dashboard
 
 ---
 
