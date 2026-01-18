@@ -348,4 +348,103 @@ fix: Claim lock logic preventing duplicate claims - PLAN.md Phase 2
 
 ---
 
+## Staff Management System (Completed January 2026)
+
+### Overview
+Professional staff management with invitation system, activity tracking, suspend/activate controls, and comprehensive audit logging.
+
+### ✅ Phase 1: Data Models & Core Services (COMPLETE)
+- [x] Updated types.ts with StaffMember, StaffInvite, AuditLog interfaces
+- [x] Created inviteService.ts with token generation (crypto.randomUUID)
+- [x] Implemented secure 7-day expiring invitation tokens
+- [x] Added isActive, suspendedAt, invitedBy fields to StaffMember
+
+### ✅ Phase 2: Invitation System (COMPLETE)
+- [x] Enhanced StaffManagementTab with invitation form
+- [x] "Copy Join Link" functionality with shareable URLs
+- [x] Pending invitations display with revoke capability
+- [x] Created JoinPage component for token-based signup
+- [x] Auto-creates /staff/{uid} on successful signup
+- [x] Integrated routing in App.tsx (#join?token=XYZ)
+
+### ✅ Phase 3: Search & Filters (COMPLETE)
+- [x] Search bar (filter by name or email)
+- [x] Role filter dropdown (All, Admin, Editor, Writer)
+- [x] Status filter dropdown (All, Active, Suspended)
+- [x] Activity status badges:
+  - 🟢 Online (< 15 minutes)
+  - ⚪ Away (< 24 hours)
+  - ⚫ Offline (> 24 hours)
+- [x] Real-time filtering with count display
+
+### ✅ Phase 4: Suspend/Activate System (COMPLETE)
+- [x] Suspend/Activate buttons in staff cards
+- [x] Suspension metadata tracking (who, when)
+- [x] Auth guard blocks suspended users from logging in
+- [x] Visual indicators (yellow border, suspension badge)
+- [x] Activity heartbeat (updates lastActive every 5 minutes)
+
+### ✅ Phase 5: Audit Logging (COMPLETE)
+- [x] Created auditService.ts with comprehensive logging
+- [x] Firestore collection: /artifacts/{appId}/public/data/audit_logs
+- [x] Integrated logging into all staff operations:
+  - Role changes
+  - Staff creation/deletion
+  - Suspend/activate actions
+  - Invitation creation/revocation
+- [x] "Recent Activity" modal in StaffManagementTab
+- [x] Console logs for immediate visibility
+
+### ✅ Phase 6: Security & Documentation (COMPLETE)
+- [x] Created firestore.rules with comprehensive security:
+  - /staff: Admin-write only (users can update own lastActive)
+  - /invites: Admin-write, public-read (for token validation)
+  - /audit_logs: Admin-read, authenticated-create, immutable
+- [x] Updated PLAN.md with complete documentation
+- [x] All 12 tasks completed
+
+### Key Features
+1. **Invitation System**: Secure token-based invites with 7-day expiry
+2. **Search & Filters**: Real-time filtering by name, email, role, status
+3. **Activity Tracking**: Online/Away/Offline indicators with auto-updating heartbeat
+4. **Suspend/Activate**: One-click suspension with login blocking
+5. **Audit Logging**: Complete action history with before/after values
+6. **Security Rules**: Firestore rules enforce admin-only writes
+7. **Recent Activity**: Modal showing last 20 audit log entries
+
+### Audit Actions Tracked
+- STAFF_CREATED - New staff member added
+- ROLE_CHANGED - Staff roles modified
+- STAFF_SUSPENDED - Account suspended
+- STAFF_ACTIVATED - Account reactivated
+- STAFF_DELETED - Staff member removed
+- INVITE_CREATED - Invitation generated
+- INVITE_USED - Invitation accepted
+- INVITE_REVOKED - Invitation cancelled
+
+### Security Implementation
+- ✅ Client-side role checks
+- ✅ Firestore security rules
+- ✅ Suspended user login blocking
+- ✅ Audit trail for all actions
+- ✅ Token-based invitation system
+- ✅ Activity monitoring
+
+### Files Created/Modified
+**New Files:**
+- website/src/services/inviteService.ts (370 lines)
+- website/src/services/auditService.ts (230 lines)
+- website/src/components/JoinPage.tsx (450 lines)
+- firestore.rules (150 lines)
+
+**Modified Files:**
+- types.ts - Added 3 new interfaces
+- website/src/components/admin/StaffManagementTab.tsx - Enhanced with all features
+- website/src/services/staffService.ts - Added suspend/activate functions
+- website/src/services/authService.ts - Added suspension check
+- website/src/components/AdminDashboard.tsx - Added activity heartbeat
+- website/src/App.tsx - Added JoinPage routing
+
+---
+
 **End of PLAN.md**
