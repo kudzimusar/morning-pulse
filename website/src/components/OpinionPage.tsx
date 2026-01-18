@@ -4,9 +4,10 @@ import OpinionFeed from './OpinionFeed';
 interface OpinionPageProps {
   onBack?: () => void;
   onNavigateToSubmit?: () => void;
+  slug?: string | null; // NEW: Slug for single opinion view
 }
 
-const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit }) => {
+const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit, slug }) => {
   return (
     <div className="opinion-page">
       <div className="opinion-page-header" style={{
@@ -48,7 +49,7 @@ const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit })
         <div style={{ width: onBack ? '100px' : '0' }}></div>
       </div>
       <div className="opinion-page-content">
-        <OpinionFeed onNavigateToSubmit={onNavigateToSubmit} />
+        <OpinionFeed onNavigateToSubmit={onNavigateToSubmit} slug={slug} />
       </div>
     </div>
   );

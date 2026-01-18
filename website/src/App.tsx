@@ -116,6 +116,7 @@ const App: React.FC = () => {
     return getUserCountry() || { code: 'ZW', name: 'Zimbabwe' };
   });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [opinionSlug, setOpinionSlug] = useState<string | null>(null); // NEW: Current opinion slug for routing
 
   // Initialize country: check for manual selection first, then auto-detect
   useEffect(() => {
@@ -162,7 +163,20 @@ const App: React.FC = () => {
       if (hash === 'opinion' || hash.startsWith('opinion')) {
         if (hash === 'opinion/submit' || hash.startsWith('opinion/submit')) {
           setCurrentPage('opinion-submit');
+          setOpinionSlug(null);
+        } else if (hash.startsWith('opinion/')) {
+          // NEW: Extract slug from hash (e.g., #opinion/zimbabwe-economic-crisis)
+          const slug = hash.substring('opinion/'.length);
+          if (slug && slug !== 'submit') {
+            setOpinionSlug(slug);
+            setCurrentPage('opinion');
+          } else {
+            setOpinionSlug(null);
+            setCurrentPage('opinion');
+          }
         } else {
+          // Just #opinion (list view)
+          setOpinionSlug(null);
           setCurrentPage('opinion');
         }
       } else if (hash === 'privacy') {
@@ -638,6 +652,7 @@ const App: React.FC = () => {
         <OpinionPage 
           onBack={handleBackToNews}
           onNavigateToSubmit={handleNavigateToSubmit}
+          slug={opinionSlug} // NEW: Pass slug for single opinion view
         />
       )}
 

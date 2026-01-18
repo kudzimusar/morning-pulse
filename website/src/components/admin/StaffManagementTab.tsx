@@ -37,6 +37,11 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
   const [newStaffRoles, setNewStaffRoles] = useState<string[]>([]);
   const [createdInviteToken, setCreatedInviteToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     loadStaff();
@@ -173,6 +178,42 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
     setShowAddForm(false);
   };
 
+  /**
+   * Get activity status based on lastActive timestamp
+   * Returns: 'online' | 'away' | 'offline'
+   */
+  const getActivityStatus = (lastActive?: Date): 'online' | 'away' | 'offline' => {
+    if (!lastActive) return 'offline';
+    
+    const now = new Date();
+    const diffMinutes = (now.getTime() - lastActive.getTime()) / (1000 * 60);
+    
+    if (diffMinutes < 15) return 'online';  // < 15 minutes = online
+    if (diffMinutes < 1440) return 'away';   // < 24 hours = away
+    return 'offline';                         // > 24 hours = offline
+  };
+
+  /**
+   * Filter staff based on search query and filters
+   */
+  const filteredStaff = staff.filter(member => {
+    // Search filter (name or email)
+    const matchesSearch = searchQuery.trim() === '' || 
+      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Role filter
+    const matchesRole = roleFilter === 'all' || 
+      member.roles.some(role => role.toLowerCase() === roleFilter.toLowerCase());
+    
+    // Status filter (active/suspended)
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && member.isActive) ||
+      (statusFilter === 'suspended' && !member.isActive);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
   const handleUpdateRoles = async (uid: string, roles: string[]) => {
     try {
       await updateStaffRoles(uid, roles);
@@ -213,6 +254,7 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
 
   return (
     <div>
+      {/* Header */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -220,7 +262,7 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
         marginBottom: '24px'
       }}>
         <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>
-          Staff Management ({staff.length})
+          Staff Management ({filteredStaff.length} / {staff.length})
         </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -237,6 +279,106 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
         >
           {showAddForm ? 'Cancel' : '+ Add Staff'}
         </button>
+      </div>
+
+      {/* Search & Filters */}
+      <div style={{
+        backgroundColor: '#f9fafb',
+        border: '1px solid #e5e5e5',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '24px',
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr 1fr',
+        gap: '12px'
+      }}>
+        {/* Search Input */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '12px',
+            fontWeight: '500',
+            color: '#374151'
+          }}>
+            🔍 Search
+          </label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name or email..."
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+
+        {/* Role Filter */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '12px',
+            fontWeight: '500',
+            color: '#374151'
+          }}>
+            👤 Role
+          </label>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '14px',
+              boxSizing: 'border-box',
+              backgroundColor: '#fff'
+            }}
+          >
+            <option value="all">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="writer">Writer</option>
+          </select>
+        </div>
+
+        {/* Status Filter */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '12px',
+            fontWeight: '500',
+            color: '#374151'
+          }}>
+            ⚡ Status
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '14px',
+              boxSizing: 'border-box',
+              backgroundColor: '#fff'
+            }}
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
       </div>
 
       {showAddForm && (
@@ -480,36 +622,90 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
         display: 'grid',
         gap: '16px'
       }}>
-        {staff.map((member) => (
-          <div
-            key={member.uid}
-            style={{
-              border: '1px solid #e5e5e5',
-              borderRadius: '8px',
-              padding: '16px',
-              backgroundColor: '#fff'
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'start'
-            }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '16px',
-                  fontWeight: '600'
-                }}>
-                  {member.name}
-                </h3>
-                <div style={{
-                  fontSize: '14px',
-                  color: '#666',
-                  marginBottom: '12px'
-                }}>
-                  {member.email}
-                </div>
+        {filteredStaff.length === 0 && (
+          <div style={{
+            textAlign: 'center',
+            padding: '40px',
+            color: '#9ca3af',
+            fontSize: '14px'
+          }}>
+            {searchQuery || roleFilter !== 'all' || statusFilter !== 'all' 
+              ? 'No staff members match your filters' 
+              : 'No staff members yet'}
+          </div>
+        )}
+        
+        {filteredStaff.map((member) => {
+          const activityStatus = getActivityStatus(member.lastActive);
+          const statusDotColor = 
+            activityStatus === 'online' ? '#10b981' :  // Green
+            activityStatus === 'away' ? '#d1d5db' :    // Gray
+            '#6b7280';                                   // Dark gray
+          const statusLabel = 
+            activityStatus === 'online' ? 'Online' :
+            activityStatus === 'away' ? 'Away' :
+            'Offline';
+          
+          return (
+            <div
+              key={member.uid}
+              style={{
+                border: member.isActive ? '1px solid #e5e5e5' : '2px solid #fbbf24',
+                borderRadius: '8px',
+                padding: '16px',
+                backgroundColor: member.isActive ? '#fff' : '#fffbeb'
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'start'
+              }}>
+                <div style={{ flex: 1 }}>
+                  {/* Name with Activity Dot */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: statusDotColor,
+                      flexShrink: 0
+                    }} />
+                    <h3 style={{
+                      margin: 0,
+                      fontSize: '16px',
+                      fontWeight: '600'
+                    }}>
+                      {member.name}
+                    </h3>
+                    <span style={{
+                      fontSize: '11px',
+                      color: '#6b7280',
+                      fontWeight: '500'
+                    }}>
+                      {statusLabel}
+                    </span>
+                    {!member.isActive && (
+                      <span style={{
+                        padding: '2px 6px',
+                        backgroundColor: '#fbbf24',
+                        color: '#78350f',
+                        borderRadius: '3px',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        textTransform: 'uppercase'
+                      }}>
+                        Suspended
+                      </span>
+                    )}
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    color: '#666',
+                    marginBottom: '12px'
+                  }}>
+                    {member.email}
+                  </div>
                 <div style={{
                   display: 'flex',
                   gap: '8px',
@@ -537,7 +733,17 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
                     fontSize: '12px',
                     color: '#999'
                   }}>
-                    Last active: {member.lastActive.toLocaleDateString()}
+                    Last active: {member.lastActive.toLocaleString()}
+                  </div>
+                )}
+                {!member.isActive && member.suspendedAt && (
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#92400e',
+                    marginTop: '4px'
+                  }}>
+                    Suspended: {member.suspendedAt.toLocaleDateString()}
+                    {member.suspendedByName && ` by ${member.suspendedByName}`}
                   </div>
                 )}
               </div>
@@ -583,7 +789,8 @@ const StaffManagementTab: React.FC<StaffManagementTabProps> = ({
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

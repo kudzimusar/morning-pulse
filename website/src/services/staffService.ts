@@ -36,6 +36,13 @@ export interface StaffMember {
   roles: string[];
   createdAt?: Date;
   lastActive?: Date;
+  updatedAt?: Date;
+  isActive: boolean;
+  suspendedAt?: Date | null;
+  suspendedBy?: string | null;
+  suspendedByName?: string | null;
+  invitedBy?: string;
+  invitedByName?: string;
 }
 
 /**

@@ -189,12 +189,14 @@ submitForReview(storyId: string) // Changes draft → pending
 - [x] Manual slug override with validation
 - [x] Display slug in editor metadata section
 
-### ✅ Phase 7: Public Slug Routing (READY - Backend Complete)
+### ✅ Phase 7: Public Slug Routing (COMPLETE)
 - [x] Create getOpinionBySlug service function
 - [x] Slug-based lookup with ID fallback
 - [x] Published-only filtering
-- [ ] Frontend routing integration (ready to implement)
-- [ ] Add canonical URLs for SEO
+- [x] Frontend routing integration in App.tsx
+- [x] URL updates when clicking opinions
+- [x] Canonical slug URLs in browser address bar
+- [x] 404 handling for invalid slugs
 
 ### ✅ Phase 8: Version History System (COMPLETE)
 - [x] Add OpinionVersion interface
@@ -204,6 +206,14 @@ submitForReview(storyId: string) // Changes draft → pending
 - [x] Implement restore/rollback functionality
 - [x] Safety: Snapshot current before restore
 - [x] Full audit trail with timestamps and authors
+
+### ✅ Phase 9: Metadata Polish for SEO (COMPLETE)
+- [x] Add author names to all opinion cards
+- [x] Display publishedAt dates on cards
+- [x] "By [Author] • [Date]" byline format
+- [x] Enhanced modal header with full date
+- [x] Canonical URL display in modal footer
+- [x] E-E-A-T compliance (Expertise, Authoritativeness, Trustworthiness)
 
 ---
 

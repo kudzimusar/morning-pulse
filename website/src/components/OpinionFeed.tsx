@@ -1,18 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../../types';
-import { subscribeToPublishedOpinions } from '../services/opinionsService';
+import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
 import { X, PenTool } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
 
 interface OpinionFeedProps {
   onNavigateToSubmit?: () => void;
+  slug?: string | null; // NEW: Slug for single opinion view
 }
 
-const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
+const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) => {
   const [opinions, setOpinions] = useState<Opinion[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('Latest');
   const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null);
+  const [slugOpinion, setSlugOpinion] = useState<Opinion | null>(null); // NEW: Opinion loaded by slug
+  const [slugNotFound, setSlugNotFound] = useState(false); // NEW: Track if slug lookup failed
+
+  // NEW: Fetch single opinion by slug if provided
+  useEffect(() => {
+    if (!slug) {
+      setSlugOpinion(null);
+      setSlugNotFound(false);
+      return;
+    }
+
+    setLoading(true);
+    setSlugNotFound(false);
+    
+    getOpinionBySlug(slug)
+      .then((opinion) => {
+        if (opinion) {
+          setSlugOpinion(opinion);
+          setSelectedOpinion(opinion); // Auto-open the opinion
+          // NEW: Update URL to canonical slug if needed
+          if (opinion.slug && window.location.hash !== `#opinion/${opinion.slug}`) {
+            window.history.replaceState(null, '', `#opinion/${opinion.slug}`);
+          }
+        } else {
+          setSlugNotFound(true);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching opinion by slug:', err);
+        setSlugNotFound(true);
+        setLoading(false);
+      });
+  }, [slug]);
 
   useEffect(() => {
     const unsubscribe = subscribeToPublishedOpinions(
@@ -40,7 +75,37 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
     ? opinions 
     : opinions.filter(o => o.category === activeCategory || (activeCategory === 'Guest Essays' && o.writerType === 'Guest Essay'));
 
-  if (loading && opinions.length === 0) {
+  // NEW: Handle slug not found
+  if (slugNotFound) {
+    return (
+      <div style={{ padding: '100px 20px', textAlign: 'center', fontFamily: 'serif' }}>
+        <h2 style={{ fontSize: '2rem', marginBottom: '16px', color: '#991b1b' }}>Opinion Not Found</h2>
+        <p style={{ fontSize: '1.2rem', color: '#78716c', marginBottom: '24px' }}>
+          The opinion you're looking for doesn't exist or has been removed.
+        </p>
+        <button
+          onClick={() => {
+            window.location.hash = 'opinion';
+            setSlugNotFound(false);
+          }}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#000',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Opinions
+        </button>
+      </div>
+    );
+  }
+
+  if (loading && opinions.length === 0 && !slugOpinion) {
     return <div style={{ padding: '100px 20px', textAlign: 'center', fontFamily: 'serif', color: '#78716c' }}>Journalism in progress...</div>;
   }
 
@@ -92,7 +157,16 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
         <div className="mag-grid">
           <div className="main-col">
             {filtered[0] && (
-              <article onClick={() => setSelectedOpinion(filtered[0])} style={{ cursor: 'pointer', marginBottom: '60px' }}>
+              <article 
+                onClick={() => {
+                  setSelectedOpinion(filtered[0]);
+                  // NEW: Update URL with slug
+                  if (filtered[0].slug) {
+                    window.history.pushState(null, '', `#opinion/${filtered[0].slug}`);
+                  }
+                }} 
+                style={{ cursor: 'pointer', marginBottom: '60px' }}
+              >
                 <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '24px' }}>
                   <img
                     src={getDisplayImage(filtered[0])}
@@ -102,13 +176,46 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
                 </div>
                 <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: '900', lineHeight: '0.95', letterSpacing: '-0.04em' }}>{filtered[0].headline}</h1>
                 <p style={{ fontSize: '1.4rem', color: '#57534e', fontStyle: 'italic', margin: '16px 0' }}>{filtered[0].subHeadline}</p>
-                <div style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '12px' }}>By {filtered[0].authorName}</div>
+                {/* NEW: Enhanced byline with date for E-E-A-T */}
+                <div style={{ 
+                  fontWeight: '600', 
+                  fontSize: '13px',
+                  color: '#44403c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginTop: '12px'
+                }}>
+                  <span>By {filtered[0].authorName}</span>
+                  {filtered[0].publishedAt && (
+                    <>
+                      <span style={{ color: '#a8a29e' }}>•</span>
+                      <span style={{ color: '#78716c' }}>
+                        {filtered[0].publishedAt.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
+                      </span>
+                    </>
+                  )}
+                </div>
               </article>
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', borderTop: '4px solid #000', paddingTop: '32px' }}>
               {filtered.slice(1, 5).map((op, i) => (
-                <article key={op.id} onClick={() => setSelectedOpinion(op)} style={{ cursor: 'pointer' }}>
+                <article 
+                  key={op.id} 
+                  onClick={() => {
+                    setSelectedOpinion(op);
+                    // NEW: Update URL with slug
+                    if (op.slug) {
+                      window.history.pushState(null, '', `#opinion/${op.slug}`);
+                    }
+                  }} 
+                  style={{ cursor: 'pointer' }}
+                >
                   <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '12px' }}>
                     <img
                       src={getDisplayImage(op)}
@@ -117,7 +224,28 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
                     />
                   </div>
                   <h3 style={{ fontSize: '1.4rem', fontWeight: '900', lineHeight: '1.2' }}>{op.headline}</h3>
-                  <div style={{ fontSize: '10px', color: '#a8a29e', textTransform: 'uppercase', marginTop: '8px' }}>{op.authorName}</div>
+                  {/* NEW: Enhanced metadata with author and date */}
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: '#78716c', 
+                    marginTop: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span style={{ fontWeight: '600', color: '#44403c' }}>{op.authorName}</span>
+                    {op.publishedAt && (
+                      <>
+                        <span style={{ color: '#d6d3d1' }}>•</span>
+                        <span>
+                          {op.publishedAt.toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </article>
               ))}
             </div>
@@ -126,9 +254,39 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
           <aside className="side-col">
             <h2 style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '24px' }}>The Board</h2>
             {filtered.slice(5).map(op => (
-              <div key={op.id} onClick={() => setSelectedOpinion(op)} style={{ cursor: 'pointer', borderBottom: '1px solid #f5f5f4', paddingBottom: '16px', marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{op.headline}</h4>
-                <div style={{ fontSize: '10px', color: '#a8a29e', textTransform: 'uppercase' }}>{op.authorName}</div>
+              <div 
+                key={op.id} 
+                onClick={() => {
+                  setSelectedOpinion(op);
+                  // NEW: Update URL with slug
+                  if (op.slug) {
+                    window.history.pushState(null, '', `#opinion/${op.slug}`);
+                  }
+                }} 
+                style={{ cursor: 'pointer', borderBottom: '1px solid #f5f5f4', paddingBottom: '16px', marginBottom: '16px' }}
+              >
+                <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '6px' }}>{op.headline}</h4>
+                {/* NEW: Enhanced metadata */}
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: '#78716c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span style={{ fontWeight: '600', color: '#44403c' }}>{op.authorName}</span>
+                  {op.publishedAt && (
+                    <>
+                      <span style={{ color: '#d6d3d1' }}>•</span>
+                      <span>
+                        {op.publishedAt.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </aside>
@@ -139,13 +297,54 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit }) => {
       {selectedOpinion && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, backgroundColor: '#fffdfa', overflowY: 'auto' }}>
           <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-            <button onClick={() => setSelectedOpinion(null)} style={{ position: 'fixed', top: '20px', right: '20px', background: '#000', color: '#fff', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer' }}>
+            <button 
+              onClick={() => {
+                setSelectedOpinion(null);
+                // NEW: Clear slug from URL when closing
+                window.history.pushState(null, '', '#opinion');
+              }} 
+              style={{ position: 'fixed', top: '20px', right: '20px', background: '#000', color: '#fff', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer' }}
+            >
               <X size={24} />
             </button>
             <header style={{ textAlign: 'center', marginBottom: '40px' }}>
               <div style={{ color: '#991b1b', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', marginBottom: '20px' }}>{selectedOpinion.category}</div>
-              <h1 style={{ fontSize: 'clamp(2.5rem, 7vw, 4rem)', fontWeight: '900', lineHeight: '0.95' }}>{selectedOpinion.headline}</h1>
-              <div style={{ marginTop: '20px', fontWeight: '900', fontSize: '14px' }}>By {selectedOpinion.authorName}</div>
+              <h1 style={{ fontSize: 'clamp(2.5rem, 7vw, 4rem)', fontWeight: '900', lineHeight: '0.95', marginBottom: '24px' }}>{selectedOpinion.headline}</h1>
+              {/* NEW: Enhanced byline with date and title for E-E-A-T */}
+              <div style={{ 
+                fontSize: '14px',
+                color: '#44403c',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                marginTop: '16px'
+              }}>
+                <span style={{ fontWeight: '700' }}>By {selectedOpinion.authorName}</span>
+                {selectedOpinion.publishedAt && (
+                  <>
+                    <span style={{ color: '#d6d3d1' }}>•</span>
+                    <span style={{ color: '#78716c' }}>
+                      {selectedOpinion.publishedAt.toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </span>
+                  </>
+                )}
+              </div>
+              {/* NEW: Canonical URL display for SEO */}
+              {selectedOpinion.slug && (
+                <div style={{
+                  marginTop: '12px',
+                  fontSize: '11px',
+                  color: '#a8a29e',
+                  fontFamily: 'monospace'
+                }}>
+                  morningpulse.com/opinion/{selectedOpinion.slug}
+                </div>
+              )}
             </header>
             <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '40px' }}>
               <img
