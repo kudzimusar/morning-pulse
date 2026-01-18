@@ -25,6 +25,7 @@ import AdvertiserRegistration from './components/AdvertiserRegistration';
 import AdvertiserLogin from './components/AdvertiserLogin';
 import AdvertiserDashboard from './components/AdvertiserDashboard';
 import AdSubmissionForm from './components/AdSubmissionForm';
+import JoinPage from './components/JoinPage';
 // Import admin auth service (will only be used when admin mode is enabled)
 import { 
   getCurrentEditor, 
@@ -204,6 +205,11 @@ const App: React.FC = () => {
           setView('admin');
           setCurrentPage('news'); // Keep currentPage for context
         }
+      } else if (hash.startsWith('join')) {
+        // ✅ NEW: Staff invitation join page
+        setCurrentPage('join');
+        setView('public');
+        setShowAdminLogin(false);
       } else {
         setCurrentPage('news');
         setShowAdminLogin(false);
@@ -663,6 +669,10 @@ const App: React.FC = () => {
 
       {currentPage === 'editorial' && (
         <EditorialPage onBack={handleBackToNews} />
+      )}
+
+      {currentPage === 'join' && (
+        <JoinPage />
       )}
 
       {currentPage === 'writer-register' && (

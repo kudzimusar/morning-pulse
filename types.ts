@@ -107,3 +107,54 @@ export interface OpinionVersion {
   savedAt: Date;
   versionNumber: number; // Incremental version counter
 }
+
+// Staff Management Types
+export interface StaffMember {
+  uid: string;
+  email: string;
+  name: string;
+  roles: string[]; // ['writer', 'editor', 'admin', 'super_admin']
+  createdAt?: Date;
+  lastActive?: Date;
+  updatedAt?: Date;
+  // NEW: Enhanced fields
+  isActive: boolean; // true = active, false = suspended
+  suspendedAt?: Date | null;
+  suspendedBy?: string | null; // Admin UID who suspended
+  suspendedByName?: string | null; // Admin name for display
+  invitedBy?: string; // Admin UID who created invite
+  invitedByName?: string; // Admin name who invited
+  profilePicture?: string; // Future: Avatar URL
+}
+
+// Staff Invitation System
+export interface StaffInvite {
+  id: string; // Unique token (UUID)
+  email: string;
+  name: string;
+  roles: string[];
+  invitedBy: string; // Admin UID
+  invitedByName: string; // Admin display name
+  createdAt: Date;
+  expiresAt: Date; // 7 days from creation
+  status: 'pending' | 'used' | 'revoked' | 'expired';
+  usedBy?: string; // UID of staff member who used the invite
+  usedAt?: Date; // When the invite was used
+  revokedBy?: string; // Admin UID who revoked
+  revokedAt?: Date; // When revoked
+}
+
+// Audit Log System
+export interface AuditLog {
+  id: string;
+  action: string; // 'staff_created', 'role_changed', 'staff_suspended', etc.
+  performedBy: string; // Admin UID
+  performedByName: string; // Admin display name
+  targetUid?: string; // Staff member affected
+  targetName?: string; // Staff member name
+  oldValue?: any; // Previous value (for changes)
+  newValue?: any; // New value (for changes)
+  timestamp: Date;
+  metadata?: Record<string, any>; // Additional context
+  ipAddress?: string; // Future: Track IP for security
+}
