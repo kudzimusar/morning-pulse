@@ -94,3 +94,16 @@ export interface OpinionSubmissionData {
   country?: string;
   suggestedImageUrl?: string;
 }
+
+// NEW: Version History for Opinion Snapshots
+export interface OpinionVersion {
+  id: string;
+  opinionId: string; // Parent opinion document ID
+  headline: string;
+  subHeadline: string;
+  body: string;
+  savedBy: string; // UID or name of editor/writer who saved
+  savedByName: string; // Display name
+  savedAt: Date;
+  versionNumber: number; // Incremental version counter
+}

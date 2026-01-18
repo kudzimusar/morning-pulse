@@ -21,7 +21,7 @@ import {
 } from 'firebase/storage';
 import { getStorage } from 'firebase/storage';
 import { getApp } from 'firebase/app';
-import { Opinion } from '../../../../types';
+import { Opinion, OpinionVersion } from '../../../../types';
 import { getUIStatusLabel, getDbStatus, UIStatusLabel, getStatusColor } from '../../utils/opinionStatus';
 import RichTextEditor from '../RichTextEditor';
 import ImagePreview from './ImagePreview';
@@ -32,7 +32,10 @@ import {
   releaseStory,
   returnToWriter,
   schedulePublication,
-  checkAndPublishScheduledStories
+  checkAndPublishScheduledStories,
+  createVersionSnapshot,
+  getVersionHistory,
+  restoreVersion
 } from '../../services/opinionsService';
 import { compressImage, validateImage } from '../../utils/imageCompression';
 import EnhancedFirestore from '../../services/enhancedFirestore';
@@ -83,6 +86,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [scheduleDate, setScheduleDate] = useState(''); // NEW: Schedule date input
   const [scheduleTime, setScheduleTime] = useState(''); // NEW: Schedule time input
   const [scheduling, setScheduling] = useState(false); // NEW: Scheduling operation
+  const [showHistoryModal, setShowHistoryModal] = useState(false); // NEW: Version history modal
+  const [versionHistory, setVersionHistory] = useState<OpinionVersion[]>([]); // NEW: List of versions
+  const [loadingHistory, setLoadingHistory] = useState(false); // NEW: Loading history
+  const [restoringVersion, setRestoringVersion] = useState<string | null>(null); // NEW: Version being restored
   
   // NEW: Current editor info
   const currentEditor = getCurrentEditor();
@@ -470,6 +477,16 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         updatedAt: serverTimestamp(),
       });
       
+      // NEW: Create version snapshot after successful save
+      await createVersionSnapshot(
+        selectedOpinionId,
+        editedTitle,
+        editedSubHeadline,
+        editedBody,
+        currentEditorId,
+        currentEditorName
+      );
+      
       showToast('Draft saved', 'success');
     } catch (error: any) {
       console.error('Save draft error:', error);
@@ -793,6 +810,16 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         updatedAt: serverTimestamp(),
       });
       
+      // NEW: Create version snapshot before scheduling
+      await createVersionSnapshot(
+        selectedOpinionId,
+        editedTitle,
+        editedSubHeadline,
+        editedBody,
+        currentEditorId,
+        currentEditorName
+      );
+      
       // Then schedule
       await schedulePublication(selectedOpinionId, scheduledDateTime);
       
@@ -806,6 +833,60 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       showToast(error.message || 'Failed to schedule publication', 'error');
     } finally {
       setScheduling(false);
+    }
+  };
+
+  // NEW: Load version history
+  const handleLoadHistory = async () => {
+    if (!selectedOpinionId) return;
+    
+    setLoadingHistory(true);
+    setShowHistoryModal(true);
+    
+    try {
+      const versions = await getVersionHistory(selectedOpinionId);
+      setVersionHistory(versions);
+      if (versions.length === 0) {
+        showToast('No version history available yet', 'error');
+      }
+    } catch (error: any) {
+      console.error('Load history error:', error);
+      showToast('Failed to load version history', 'error');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // NEW: Restore to previous version
+  const handleRestoreVersion = async (version: OpinionVersion) => {
+    if (!selectedOpinionId) return;
+    
+    if (!window.confirm(`Restore to version ${version.versionNumber} (${version.savedAt.toLocaleString()})?\n\nCurrent content will be saved as a new version before restoring.`)) {
+      return;
+    }
+
+    setRestoringVersion(version.id);
+    
+    try {
+      await restoreVersion(selectedOpinionId, version, currentEditorId, currentEditorName);
+      
+      // Update editor state with restored content
+      setEditedTitle(version.headline);
+      setEditedSubHeadline(version.subHeadline);
+      setEditedBody(version.body);
+      
+      showToast(`Restored to version ${version.versionNumber}`, 'success');
+      setShowHistoryModal(false);
+      
+      // Reload history to show the new snapshot
+      setTimeout(() => {
+        handleLoadHistory();
+      }, 500);
+    } catch (error: any) {
+      console.error('Restore version error:', error);
+      showToast(error.message || 'Failed to restore version', 'error');
+    } finally {
+      setRestoringVersion(null);
     }
   };
 
@@ -1308,26 +1389,47 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       </div>
                     </div>
                     
-                    {/* NEW: Claim button for pending stories */}
-                    {selectedOpinion.status === 'pending' && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {/* NEW: History button */}
                       <button
-                        onClick={() => handleClaimStory(selectedOpinion.id)}
-                        disabled={claiming}
+                        onClick={handleLoadHistory}
+                        disabled={loadingHistory}
                         style={{
                           padding: '8px 16px',
-                          backgroundColor: '#1e40af',
+                          backgroundColor: '#6b7280',
                           color: '#fff',
                           border: 'none',
                           borderRadius: '4px',
-                          cursor: claiming ? 'not-allowed' : 'pointer',
+                          cursor: loadingHistory ? 'not-allowed' : 'pointer',
                           fontSize: '14px',
                           fontWeight: '600',
-                          opacity: claiming ? 0.6 : 1
+                          opacity: loadingHistory ? 0.6 : 1
                         }}
                       >
-                        {claiming ? 'Claiming...' : '✓ Claim Story'}
+                        {loadingHistory ? 'Loading...' : '📜 History'}
                       </button>
-                    )}
+                      
+                      {/* NEW: Claim button for pending stories */}
+                      {selectedOpinion.status === 'pending' && (
+                        <button
+                          onClick={() => handleClaimStory(selectedOpinion.id)}
+                          disabled={claiming}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#1e40af',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: claiming ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            opacity: claiming ? 0.6 : 1
+                          }}
+                        >
+                          {claiming ? 'Claiming...' : '✓ Claim Story'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   
                   {/* NEW: Toggle for split-pane view (if original text exists) */}
@@ -2087,6 +2189,157 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           )}
         </div>
       </div>
+
+      {/* NEW: Version History Modal */}
+      {showHistoryModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '8px',
+            width: '90%',
+            maxWidth: '800px',
+            maxHeight: '80vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '20px',
+              borderBottom: '1px solid #e5e5e5',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                📜 Version History
+              </h3>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#6b7280',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600'
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Version List */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '20px'
+            }}>
+              {loadingHistory ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                  Loading version history...
+                </div>
+              ) : versionHistory.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                  No version history available yet. Versions will be created automatically when you save.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {versionHistory.map((version, index) => (
+                    <div
+                      key={version.id}
+                      style={{
+                        padding: '16px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '6px',
+                        backgroundColor: index === 0 ? '#f0fdf4' : '#fff'
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '12px'
+                      }}>
+                        <div>
+                          <div style={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            color: '#000',
+                            marginBottom: '4px'
+                          }}>
+                            Version {version.versionNumber} {index === 0 && '(Latest)'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            Saved by {version.savedByName} on {version.savedAt.toLocaleString()}
+                          </div>
+                        </div>
+                        {index > 0 && (
+                          <button
+                            onClick={() => handleRestoreVersion(version)}
+                            disabled={restoringVersion === version.id}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: '#1e40af',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: restoringVersion === version.id ? 'not-allowed' : 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              opacity: restoringVersion === version.id ? 0.6 : 1
+                            }}
+                          >
+                            {restoringVersion === version.id ? 'Restoring...' : '↺ Restore'}
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div style={{
+                        fontSize: '13px',
+                        color: '#374151',
+                        borderTop: '1px solid #e5e5e5',
+                        paddingTop: '12px'
+                      }}>
+                        <div style={{ marginBottom: '8px' }}>
+                          <strong>Title:</strong> {version.headline}
+                        </div>
+                        <div style={{ marginBottom: '8px' }}>
+                          <strong>Sub-headline:</strong> {version.subHeadline}
+                        </div>
+                        <div>
+                          <strong>Body preview:</strong>{' '}
+                          <span style={{
+                            display: 'inline-block',
+                            maxHeight: '60px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {version.body.replace(/<[^>]*>/g, '').substring(0, 150)}...
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

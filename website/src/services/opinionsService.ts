@@ -19,7 +19,7 @@ import {
 } from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
-import { Opinion, OpinionSubmissionData } from '../../../types';
+import { Opinion, OpinionSubmissionData, OpinionVersion } from '../../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
 import EnhancedFirestore from './enhancedFirestore';
 
@@ -942,5 +942,202 @@ export const checkAndPublishScheduledStories = async (): Promise<number> => {
   } catch (error: any) {
     console.error('❌ Error in auto-publisher:', error);
     return 0;
+  }
+};
+
+/**
+ * NEW: Get opinion by slug (with fallback to ID)
+ * Used for public routing: /opinion/{slug}
+ */
+export const getOpinionBySlug = async (slugOrId: string): Promise<Opinion | null> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    
+    // Try to find by slug first
+    const slugQuery = query(opinionsRef, where('slug', '==', slugOrId), where('status', '==', 'published'));
+    const slugSnapshot = await getDocs(slugQuery);
+    
+    if (!slugSnapshot.empty) {
+      const docSnap = slugSnapshot.docs[0];
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        ...data,
+        submittedAt: data.submittedAt?.toDate?.() || new Date(),
+        publishedAt: data.publishedAt?.toDate?.() || null,
+      } as Opinion;
+    }
+    
+    // Fallback: Try as document ID
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', slugOrId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Only return if published
+      if (data.status === 'published') {
+        return {
+          id: docSnap.id,
+          ...data,
+          submittedAt: data.submittedAt?.toDate?.() || new Date(),
+          publishedAt: data.publishedAt?.toDate?.() || null,
+        } as Opinion;
+      }
+    }
+    
+    console.log(`❌ Opinion not found for slug/ID: ${slugOrId}`);
+    return null;
+  } catch (error: any) {
+    console.error('❌ Error fetching opinion by slug:', error);
+    throw new Error(`Failed to fetch opinion: ${error.message}`);
+  }
+};
+
+/**
+ * NEW: Create a version snapshot of an opinion
+ * Called automatically on every save operation
+ * Stores in sub-collection: opinions/{opinionId}/versions/{versionId}
+ */
+export const createVersionSnapshot = async (
+  opinionId: string,
+  headline: string,
+  subHeadline: string,
+  body: string,
+  savedBy: string,
+  savedByName: string
+): Promise<string> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    // Get current version count
+    const versionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId, 'versions');
+    const versionsSnapshot = await getDocs(versionsRef);
+    const versionNumber = versionsSnapshot.size + 1;
+    
+    const versionData = {
+      opinionId,
+      headline,
+      subHeadline,
+      body,
+      savedBy,
+      savedByName,
+      savedAt: Timestamp.now(),
+      versionNumber,
+    };
+    
+    const versionDocRef = await addDoc(versionsRef, versionData);
+    console.log(`✅ Version snapshot created: v${versionNumber} for opinion ${opinionId}`);
+    return versionDocRef.id;
+  } catch (error: any) {
+    console.error('❌ Error creating version snapshot:', error);
+    // Don't throw - snapshots are optional, don't block main save operation
+    return '';
+  }
+};
+
+/**
+ * NEW: Get all version history for an opinion
+ * Returns versions sorted by versionNumber descending (newest first)
+ */
+export const getVersionHistory = async (opinionId: string): Promise<OpinionVersion[]> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const versionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId, 'versions');
+    const versionsSnapshot = await getDocs(versionsRef);
+    
+    const versions: OpinionVersion[] = [];
+    versionsSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      versions.push({
+        id: docSnap.id,
+        opinionId,
+        headline: data.headline,
+        subHeadline: data.subHeadline,
+        body: data.body,
+        savedBy: data.savedBy,
+        savedByName: data.savedByName,
+        savedAt: data.savedAt?.toDate?.() || new Date(),
+        versionNumber: data.versionNumber || 0,
+      });
+    });
+    
+    // Sort by version number descending (newest first)
+    versions.sort((a, b) => b.versionNumber - a.versionNumber);
+    
+    console.log(`✅ Loaded ${versions.length} versions for opinion ${opinionId}`);
+    return versions;
+  } catch (error: any) {
+    console.error('❌ Error fetching version history:', error);
+    return [];
+  }
+};
+
+/**
+ * NEW: Restore opinion to a previous version
+ * Updates the main opinion document with historical data
+ */
+export const restoreVersion = async (
+  opinionId: string,
+  version: OpinionVersion,
+  restoredBy: string,
+  restoredByName: string
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const opinionRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
+    
+    // Create a snapshot of current state before restoring (for rollback safety)
+    const currentSnap = await getDoc(opinionRef);
+    if (currentSnap.exists()) {
+      const currentData = currentSnap.data();
+      await createVersionSnapshot(
+        opinionId,
+        currentData.headline || '',
+        currentData.subHeadline || '',
+        currentData.body || '',
+        restoredBy,
+        `${restoredByName} (before restore)`
+      );
+    }
+    
+    // Restore the version data
+    await setDoc(opinionRef, {
+      headline: version.headline,
+      subHeadline: version.subHeadline,
+      body: version.body,
+      restoredFrom: `v${version.versionNumber}`,
+      restoredAt: Timestamp.now(),
+      restoredBy,
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log(`✅ Restored opinion ${opinionId} to version ${version.versionNumber}`);
+  } catch (error: any) {
+    console.error('❌ Error restoring version:', error);
+    throw new Error(`Failed to restore version: ${error.message}`);
   }
 };
