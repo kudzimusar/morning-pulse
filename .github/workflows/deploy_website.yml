@@ -74,6 +74,7 @@ jobs:
           npm install
       
       # Generate static news data from Firestore BEFORE building website
+      # This writes to website/public/data/ which will be copied to dist during build
       - name: Generate Static News Data
         env:
           FIREBASE_ADMIN_CONFIG: ${{ secrets.GCP_SA_KEY }}
@@ -93,7 +94,7 @@ jobs:
           cd website
           npm ci
       
-      # Build website (this will copy public/data to dist/data)
+      # Build website (this will copy public/data to dist/data via Vite)
       - name: Build Website
         env:
           VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
@@ -119,6 +120,8 @@ jobs:
           if [ -f website/dist/data/news-latest.json ]; then
             echo "✅ news-latest.json exists"
             echo "File size: $(wc -c < website/dist/data/news-latest.json) bytes"
+            echo "Preview:"
+            head -20 website/dist/data/news-latest.json
           else
             echo "⚠️  news-latest.json not found - site will fall back to Firestore"
           fi
