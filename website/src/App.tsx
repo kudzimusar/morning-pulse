@@ -4,6 +4,7 @@ import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
 import Header from './components/Header';
 import NewsGrid from './components/NewsGrid';
+import LoadingSkeleton from './components/LoadingSkeleton';
 import FirebaseConnector from './components/FirebaseConnector';
 import OpinionPage from './components/OpinionPage';
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
@@ -819,9 +820,7 @@ const App: React.FC = () => {
       {currentPage === 'news' && (
         <>
           {loading && (
-            <div className="loading-container">
-              <p>Loading today's news...</p>
-            </div>
+            <LoadingSkeleton />
           )}
 
           {error && Object.keys(newsData).length === 0 && (
@@ -831,8 +830,36 @@ const App: React.FC = () => {
           )}
 
           {!loading && !error && Object.keys(newsData).length === 0 && (
-            <div className="no-news-container">
-              <p>No news available for today. Please check back later.</p>
+            <div className="no-news-container" style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              margin: '40px auto',
+              maxWidth: '600px'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📰</div>
+              <h2 style={{ marginBottom: '12px', color: '#333' }}>No News Available</h2>
+              <p style={{ color: '#666', marginBottom: '24px' }}>
+                We're currently updating our news feed. Please check back in a few minutes.
+              </p>
+              <button 
+                onClick={() => window.location.reload()} 
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007bff'}
+              >
+                Refresh Page
+              </button>
             </div>
           )}
 

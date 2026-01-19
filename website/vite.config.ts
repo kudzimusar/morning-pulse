@@ -28,9 +28,12 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     base: '/morning-pulse/',
+    publicDir: 'public', // Explicitly set public directory
     build: {
       outDir: 'dist',
-      emptyOutDir: true
+      emptyOutDir: true,
+      // Copy public directory contents to dist during build
+      copyPublicDir: true
     },
     resolve: {
       alias: {
@@ -50,4 +53,3 @@ export default defineConfig(({ mode }) => {
     }
   };
 });
-
