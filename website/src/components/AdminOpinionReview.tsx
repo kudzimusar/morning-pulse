@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Opinion } from '../../../types';
+import { Opinion } from '../../types';
 import { 
   subscribeToPendingOpinions, 
   approveOpinion, 

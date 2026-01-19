@@ -20,7 +20,7 @@ import {
 } from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
-import { Opinion, OpinionSubmissionData, OpinionVersion } from '../../../types';
+import { Opinion, OpinionSubmissionData, OpinionVersion } from '../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
 import EnhancedFirestore from './enhancedFirestore';
 

@@ -5,7 +5,7 @@
  * Integrates with SendGrid for automated email delivery
  */
 
-import { Opinion } from '../../../types';
+import { Opinion } from '../../types';
 import { getPublishedOpinions } from './opinionsService';
 
 export interface NewsletterOptions {

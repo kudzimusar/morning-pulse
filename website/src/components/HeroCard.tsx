@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NewsStory } from '../../../types';
+import { NewsStory } from '../../types';
 import { CountryInfo } from '../services/locationService';
 import { getCachedUnsplashImageUrl } from '../services/imageService';
 

@@ -25,7 +25,7 @@ import {
   FirebaseStorage
 } from 'firebase/storage';
 import { getApp } from 'firebase/app';
-import { Opinion } from '../../../types';
+import { Opinion } from '../../types';
 import { getUIStatusLabel, getDbStatus, UIStatusLabel } from '../utils/opinionStatus';
 
 // Constants

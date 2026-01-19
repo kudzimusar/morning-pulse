@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, getDoc, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
-import { NewsStory } from '../../../types';
+import { NewsStory } from '../../types';
 import { CountryInfo } from '../services/locationService';
 import EnhancedFirestore from '../services/enhancedFirestore';
 

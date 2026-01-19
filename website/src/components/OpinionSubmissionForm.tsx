@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { OpinionSubmissionData } from '../../../types';
+import { OpinionSubmissionData } from '../../types';
 import { submitOpinion, uploadOpinionImage } from '../services/opinionsService';
 import RichTextEditor from './RichTextEditor';
 

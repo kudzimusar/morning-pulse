@@ -1,5 +1,5 @@
 import React from 'react';
-import { NewsStory } from '../../../types';
+import { NewsStory } from '../../types';
 import ArticleCard from './ArticleCard';
 
 interface NewsSectionProps {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Opinion } from '../../../types';
+import { Opinion } from '../../types';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
 import { incrementArticleView, trackArticleView, trackArticleEngagement } from '../services/analyticsService';
 import { X, PenTool } from 'lucide-react';

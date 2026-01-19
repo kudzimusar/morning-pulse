@@ -21,7 +21,7 @@ import {
 } from 'firebase/storage';
 import { getStorage } from 'firebase/storage';
 import { getApp } from 'firebase/app';
-import { Opinion, OpinionVersion } from '../../../../types';
+import { Opinion, OpinionVersion } from '../../../types';
 import { getUIStatusLabel, getDbStatus, UIStatusLabel, getStatusColor } from '../../utils/opinionStatus';
 import RichTextEditor from '../RichTextEditor';
 import ImagePreview from './ImagePreview';

@@ -36,7 +36,7 @@ import {
   requireEditor,
   logoutEditor
 } from './services/authService';
-import { NewsStory } from '../../types';
+import { NewsStory } from '../types';
 import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
 import { initAnalytics, trackPageView, trackArticleView } from './services/analyticsService';
 

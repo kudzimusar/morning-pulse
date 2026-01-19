@@ -15,7 +15,7 @@ import {
   Firestore
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
-import { AuditLog } from '../../../types';
+import { AuditLog } from '../../types';
 
 const APP_ID = 'morning-pulse-app';
 

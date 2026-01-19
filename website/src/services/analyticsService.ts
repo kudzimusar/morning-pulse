@@ -69,6 +69,9 @@ export const trackArticleView = (
   });
 };
 
+// Alias for trackArticleView to maintain compatibility
+export const incrementArticleView = trackArticleView;
+
 // Track scroll depth
 export const trackScrollDepth = (depth: number): void => {
   // Only track significant scroll milestones (25%, 50%, 75%, 90%, 100%)
@@ -262,3 +265,54 @@ declare global {
 }
 
 export { gtag };
+// Types for analytics summary
+export interface AnalyticsSummary {
+  totalViews: number;
+  uniqueVisitors: number;
+  avgTimeOnPage: number;
+  bounceRate: number;
+  topArticles: Array<{
+    id: string;
+    title: string;
+    views: number;
+    engagement: number;
+  }>;
+  categoryDistribution: Record<string, number>;
+  dailyTraffic: Array<{
+    date: string;
+    views: number;
+  }>;
+}
+
+// Mock function to get analytics summary (in a real app, this would fetch from GA4 API or a custom backend)
+export const getAnalyticsSummary = async (db: any, period: 'day' | 'week' | 'month' = 'week'): Promise<AnalyticsSummary> => {
+  console.log(`Fetching analytics summary for ${period}...`);
+  
+  // Return mock data for now
+  return {
+    totalViews: 1250,
+    uniqueVisitors: 850,
+    avgTimeOnPage: 145, // seconds
+    bounceRate: 35.5, // percentage
+    topArticles: [
+      { id: '1', title: 'Global Tech Trends 2026', views: 450, engagement: 85 },
+      { id: '2', title: 'African Economic Outlook', views: 320, engagement: 72 },
+      { id: '3', title: 'Local Sports Highlights', views: 210, engagement: 64 }
+    ],
+    categoryDistribution: {
+      'Tech': 35,
+      'Business': 25,
+      'Sports': 20,
+      'General': 20
+    },
+    dailyTraffic: [
+      { date: '2026-01-13', views: 150 },
+      { date: '2026-01-14', views: 180 },
+      { date: '2026-01-15', views: 210 },
+      { date: '2026-01-16', views: 190 },
+      { date: '2026-01-17', views: 230 },
+      { date: '2026-01-18', views: 250 },
+      { date: '2026-01-19', views: 280 }
+    ]
+  };
+};

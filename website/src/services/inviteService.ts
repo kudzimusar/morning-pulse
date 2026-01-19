@@ -24,7 +24,7 @@ import {
   User
 } from 'firebase/auth';
 import { getApp } from 'firebase/app';
-import { StaffInvite, StaffMember } from '../../../types';
+import { StaffInvite, StaffMember } from '../../types';
 import { logStaffAction, AuditActions } from './auditService';
 
 const APP_ID = 'morning-pulse-app';

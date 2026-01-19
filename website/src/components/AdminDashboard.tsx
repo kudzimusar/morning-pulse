@@ -21,7 +21,7 @@ import {
   Firestore
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
-import { Opinion } from '../../../types';
+import { Opinion } from '../../types';
 import PrioritySummary from './admin/PrioritySummary';
 import EditorialQueueTab from './admin/EditorialQueueTab';
 import PublishedContentTab from './admin/PublishedContentTab';
@@ -34,7 +34,7 @@ import SettingsTab from './admin/SettingsTab';
 import WriterManagementTab from './admin/WriterManagementTab';
 import SubscriberManagementTab from './admin/SubscriberManagementTab';
 import AdManagementTab from './admin/AdManagementTab';
-import { updateLastActive } from '../../services/staffService';
+import { updateLastActive } from '../services/staffService';
 
 // Constants
 const APP_ID = "morning-pulse-app";

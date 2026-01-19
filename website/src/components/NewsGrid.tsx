@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { NewsStory, Opinion } from '../../../types';
+import { NewsStory, Opinion } from '../../types';
 import HeroCard from './HeroCard';
 import ArticleCard from './ArticleCard';
 import AdSlot from './AdSlot';

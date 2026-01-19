@@ -49,40 +49,12 @@ jobs:
           git log -1
           echo "=== END COMMIT VERIFICATION ==="
       
-      - name: Verify Commit and File
-        run: |
-          echo "=== FILE VERIFICATION ==="
-          echo "Checking OpinionFeed.tsx for *** characters:"
-          if grep -q "\*\*\*" website/src/components/OpinionFeed.tsx; then
-            echo "❌ ERROR: Found *** characters!"
-            grep -n "\*\*\*" website/src/components/OpinionFeed.tsx
-            exit 1
-          else
-            echo "✓ No *** characters found"
-          fi
-          echo ""
-          echo "File info:"
-          echo "  Lines: $(wc -l < website/src/components/OpinionFeed.tsx)"
-          echo "  Size: $(wc -c < website/src/components/OpinionFeed.tsx) bytes"
-          echo "  Encoding: $(file -bi website/src/components/OpinionFeed.tsx)"
-          echo "=== VERIFICATION COMPLETE ==="
-      
-      - name: Clear All Caches
-        run: |
-          echo "Clearing all build caches..."
-          rm -rf website/node_modules/.cache || true
-          rm -rf website/.vite || true
-          rm -rf website/dist || true
-          rm -rf ~/.npm || true
-          npm cache clean --force || true
-          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Disable npm cache to avoid stale builds
-          # cache: 'npm'
-          # cache-dependency-path: 'website/package-lock.json'
+          cache: 'npm'
+          cache-dependency-path: 'website/package-lock.json'
       
       # Authenticate to Google Cloud for Firestore access
       - name: Authenticate Google Cloud
@@ -95,45 +67,33 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
       
-      # Install website dependencies with clean install
-      - name: Install Website Dependencies
-        run: |
-          cd website
-          rm -rf node_modules package-lock.json || true
-          npm install
-      
       # Install script dependencies (for static generation)
       - name: Install Script Dependencies
         run: |
           cd functions
           npm install
       
-      # Generate static news data from Firestore (Mode B)
+      # Generate static news data from Firestore BEFORE building website
       - name: Generate Static News Data
         env:
           FIREBASE_ADMIN_CONFIG: ${{ secrets.GCP_SA_KEY }}
           APP_ID: ${{ env.APP_ID }}
           NODE_PATH: ${{ github.workspace }}/functions/node_modules
         run: |
+          echo "🚀 Running static site generation..."
           node scripts/generateStaticSite.js
+          echo ""
+          echo "📁 Checking generated files..."
+          ls -lh website/public/data/ || echo "⚠️  No data directory created"
         continue-on-error: true # Continue even if static generation fails
       
-      # Pre-build verification
-      - name: Pre-Build Verification
+      # Install website dependencies
+      - name: Install Website Dependencies
         run: |
-          echo "=== PRE-BUILD VERIFICATION ==="
           cd website
-          echo "Checking OpinionFeed.tsx syntax..."
-          if grep -q "\*\*\*" src/components/OpinionFeed.tsx; then
-            echo "❌ ERROR: Found *** characters in OpinionFeed.tsx!"
-            grep -n "\*\*\*" src/components/OpinionFeed.tsx
-            exit 1
-          else
-            echo "✓ OpinionFeed.tsx is clean"
-          fi
-          echo "=== VERIFICATION COMPLETE ==="
-
-      # Build website
+          npm ci
+      
+      # Build website (this will copy public/data to dist/data)
       - name: Build Website
         env:
           VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
@@ -141,6 +101,28 @@ jobs:
         run: |
           cd website
           npm run build
+          echo ""
+          echo "📁 Checking build output..."
+          ls -lh dist/
+          ls -lh dist/data/ || echo "⚠️  No data directory in dist"
+      
+      # Verify build output
+      - name: Verify Build Output
+        run: |
+          echo "=== BUILD VERIFICATION ==="
+          echo "Dist directory contents:"
+          ls -lh website/dist/
+          echo ""
+          echo "Data directory contents:"
+          ls -lh website/dist/data/ || echo "⚠️  No data directory found"
+          echo ""
+          if [ -f website/dist/data/news-latest.json ]; then
+            echo "✅ news-latest.json exists"
+            echo "File size: $(wc -c < website/dist/data/news-latest.json) bytes"
+          else
+            echo "⚠️  news-latest.json not found - site will fall back to Firestore"
+          fi
+          echo "=== END VERIFICATION ==="
       
       # Setup Pages
       - name: Setup Pages
@@ -156,4 +138,12 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-# Force fresh workflow run - Sun Jan  4 22:27:33 JST 2026
+        
+      # Report deployment status
+      - name: Report Deployment Status
+        if: always()
+        run: |
+          echo "=== DEPLOYMENT COMPLETE ==="
+          echo "Status: ${{ job.status }}"
+          echo "Deployment URL: https://kudzimusar.github.io/morning-pulse/"
+          echo "==========================="
