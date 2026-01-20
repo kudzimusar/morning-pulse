@@ -4,8 +4,21 @@
  * Supports @mentions, threaded conversations, and real-time updates
  */
 
-import { collection, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, serverTimestamp, Firestore } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+  Firestore
+} from 'firebase/firestore';
+import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 
 export interface Comment {
   id: string;
@@ -37,14 +50,71 @@ export interface CommentThread {
   totalCount: number;
 }
 
-// Get Firestore instance
-const getDb = (): Firestore => {
+// Get Firebase config (same pattern as opinionsService)
+const getFirebaseConfig = (): any => {
+  // Priority 1: Try to get from window (injected at runtime via firebase-config.js)
+  if (typeof window !== 'undefined' && (window as any).__firebase_config) {
+    return (window as any).__firebase_config;
+  }
+
+  // Priority 2: Try from environment variables (for SSR/server-side)
+  if (typeof process !== 'undefined' && process.env) {
+    const config = {
+      apiKey: process.env.REACT_APP_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
+      authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+      storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.REACT_APP_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
+    };
+
+    // Only return config if all required fields are present
+    if (config.apiKey && config.authDomain && config.projectId) {
+      return config;
+    }
+  }
+
+  // Fallback: Try to get existing app
   try {
     const app = getApp();
-    return getDb();
+    return app.options;
   } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
+    console.warn('Firebase config not found. Make sure firebase-config.js is loaded or environment variables are set.');
+    return null;
+  }
+};
+
+// Initialize Firebase if needed
+const initializeFirebaseIfNeeded = (): FirebaseApp | null => {
+  try {
+    // Try to get existing app first
+    return getApp();
+  } catch (error) {
+    // App doesn't exist, try to initialize
+    const config = getFirebaseConfig();
+    if (config) {
+      try {
+        return initializeApp(config, 'morning-pulse-app');
+      } catch (initError) {
+        console.error('Failed to initialize Firebase:', initError);
+        return null;
+      }
+    }
+    return null;
+  }
+};
+
+// Get Firestore instance with proper initialization
+const getDb = (): Firestore | null => {
+  try {
+    const app = initializeFirebaseIfNeeded();
+    if (app) {
+      return getFirestore(app);
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to get Firestore instance:', error);
+    return null;
   }
 };
 
@@ -62,6 +132,9 @@ export const addComment = async (
   parentId?: string
 ): Promise<string> => {
   const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
 
   // Parse mentions from content (@username format)
   const mentions = extractMentions(content);
@@ -109,6 +182,9 @@ export const updateComment = async (
   position?: Comment['position']
 ): Promise<void> => {
   const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
   const commentRef = doc(db, 'comments', commentId);
 
   const updates: any = {
@@ -131,6 +207,9 @@ export const updateComment = async (
  */
 export const resolveComment = async (commentId: string): Promise<void> => {
   const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
   const commentRef = doc(db, 'comments', commentId);
 
   await updateDoc(commentRef, {
@@ -144,6 +223,9 @@ export const resolveComment = async (commentId: string): Promise<void> => {
  */
 export const deleteComment = async (commentId: string): Promise<void> => {
   const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
   const commentRef = doc(db, 'comments', commentId);
 
   await updateDoc(commentRef, {
@@ -157,6 +239,10 @@ export const deleteComment = async (commentId: string): Promise<void> => {
  */
 export const getArticleComments = async (articleId: string): Promise<Comment[]> => {
   const db = getDb();
+  if (!db) {
+    console.warn('Firebase not initialized, returning empty comments');
+    return [];
+  }
 
   const q = query(
     collection(db, 'comments'),
@@ -189,6 +275,10 @@ export const subscribeToArticleComments = (
   callback: (comments: Comment[]) => void
 ): (() => void) => {
   const db = getDb();
+  if (!db) {
+    console.warn('Firebase not initialized, returning no-op unsubscribe');
+    return () => {};
+  }
 
   const q = query(
     collection(db, 'comments'),
@@ -288,6 +378,10 @@ export const getUnreadCommentCount = async (
  */
 export const getAllUserComments = async (userId: string): Promise<Comment[]> => {
   const db = getDb();
+  if (!db) {
+    console.warn('Firebase not initialized, returning empty comments');
+    return [];
+  }
 
   const q = query(
     collection(db, 'comments'),
