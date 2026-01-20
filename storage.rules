@@ -1,0 +1,76 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function: Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: Check if user is editor, admin, or super_admin
+    function isEditor() {
+      return isAuthenticated() && 
+             firestore.exists(/databases/(default)/documents/staff/$(request.auth.uid)) &&
+             firestore.get(/databases/(default)/documents/staff/$(request.auth.uid)).data.roles.hasAny(['editor', 'admin', 'super_admin']);
+    }
+    
+    // Helper function: Check if user is admin or super_admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.exists(/databases/(default)/documents/staff/$(request.auth.uid)) &&
+             firestore.get(/databases/(default)/documents/staff/$(request.auth.uid)).data.roles.hasAny(['admin', 'super_admin']);
+    }
+    
+    // Published images - accessible to editors for upload, public for read
+    match /published_images/{imageId}/{fileName} {
+      // Public can read published images (for website display)
+      allow read: if true;
+      
+      // Only editors can upload/update published images
+      allow create, update: if isEditor() && 
+                               request.resource.size < 10 * 1024 * 1024 &&  // 10MB limit
+                               request.resource.contentType.matches('image/.*');  // Only images
+      
+      // Only admins can delete published images
+      allow delete: if isAdmin();
+    }
+    
+    // Temporary images for processing (auto-cleanup)
+    match /temp_images/{userId}/{fileName} {
+      // Users can only access their own temp files
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Guest submission images
+    match /guest_submissions/{submissionId}/{fileName} {
+      // Public can read guest submission images
+      allow read: if true;
+      
+      // Anyone can upload (for guest submissions)
+      allow create: if request.resource.size < 10 * 1024 * 1024 &&  // 10MB limit
+                       request.resource.contentType.matches('image/.*');  // Only images
+      
+      // Only editors can update/delete guest submissions
+      allow update, delete: if isEditor();
+    }
+    
+    // Ad images
+    match /ad_images/{adId}/{fileName} {
+      // Public can read ad images
+      allow read: if true;
+      
+      // Only editors/admins can upload/update ad images
+      allow create, update: if isEditor() && 
+                               request.resource.size < 10 * 1024 * 1024 &&  // 10MB limit
+                               request.resource.contentType.matches('image/.*');  // Only images
+      
+      // Only admins can delete ad images
+      allow delete: if isAdmin();
+    }
+    
+    // Default deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
