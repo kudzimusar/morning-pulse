@@ -18,7 +18,29 @@ export function getImageByTopic(headline: string, id?: string): string {
     searchTerm = 'sports,competition,athlete';
   }
   
-  // Unsplash Source (no API key). Note: this URL 302-redirects to images.unsplash.com.
-  const sig = id ? `&sig=${encodeURIComponent(id)}` : '';
-  return `https://source.unsplash.com/1200x800/?${searchTerm}${sig}`;
+  // Use a reliable placeholder service instead of deprecated source.unsplash.com
+  // Using picsum.photos with a seed based on ID for consistent images
+  const width = 1200;
+  const height = 800;
+  
+  // Create a seed from the ID or use a hash of the search term
+  let seed = 0;
+  if (id) {
+    // Convert ID to a number seed
+    for (let i = 0; i < id.length; i++) {
+      seed = ((seed << 5) - seed) + id.charCodeAt(i);
+      seed = seed & seed; // Convert to 32-bit integer
+    }
+    seed = Math.abs(seed) % 1000;
+  } else {
+    // Use search term as seed
+    for (let i = 0; i < searchTerm.length; i++) {
+      seed = ((seed << 5) - seed) + searchTerm.charCodeAt(i);
+      seed = seed & seed;
+    }
+    seed = Math.abs(seed) % 1000;
+  }
+  
+  // Use picsum.photos with seed for consistent, reliable placeholder images
+  return `https://picsum.photos/seed/${seed}/${width}/${height}`;
 }
