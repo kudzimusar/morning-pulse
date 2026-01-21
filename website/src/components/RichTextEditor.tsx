@@ -29,15 +29,37 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [value]);
 
+  // Use a ref to store the timeout ID for debouncing
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-      // Calculate word count (strip HTML tags and count words)
+      const html = editorRef.current.innerHTML;
+      
+      // Calculate word count immediately for UI responsiveness
       const text = editorRef.current.innerText || editorRef.current.textContent || '';
       const words = text.trim().split(/\s+/).filter(word => word.length > 0);
       setWordCount(words.length);
+
+      // Debounce the onChange callback to prevent parent re-renders on every keystroke
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      debounceTimerRef.current = setTimeout(() => {
+        onChange(html);
+      }, 500); // 500ms debounce
     }
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Handle paste events - allow default browser behavior to preserve HTML formatting
   const handlePaste = (e: React.ClipboardEvent) => {

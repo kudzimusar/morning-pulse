@@ -151,7 +151,13 @@ export const ensureAuthenticated = async (): Promise<void> => {
       // #endregion
       
       try {
-        const userCredential = await signInAnonymously(auth);
+        // Add a timeout to prevent hanging on slow connections
+        const authPromise = signInAnonymously(auth);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Authentication timed out. Please check your connection.')), 10000)
+        );
+        
+        const userCredential = await Promise.race([authPromise, timeoutPromise]) as any;
         console.log('✅ Anonymous authentication successful');
         
         // #region agent log
@@ -322,9 +328,11 @@ export const replaceArticleImage = async (
       await deleteObject(oldImageRef);
       console.log('🗑️ Deleted old image');
     } catch (error: any) {
-      // Ignore if file doesn't exist
-      if (error.code !== 'storage/object-not-found') {
+      // Ignore if file doesn't exist or if we don't have permission to delete
+      if (error.code !== 'storage/object-not-found' && error.code !== 'storage/unauthorized') {
         console.warn('Could not delete old image:', error);
+      } else {
+        console.log('ℹ️ Skipping old image deletion:', error.code);
       }
     }
     

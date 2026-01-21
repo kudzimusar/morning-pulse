@@ -351,9 +351,11 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         await deleteObject(oldImageRef);
         console.log('🗑️ Deleted old image');
       } catch (error: any) {
-        // Ignore if file doesn't exist
-        if (error.code !== 'storage/object-not-found') {
+        // Ignore if file doesn't exist or if we don't have permission to delete (it shouldn't block upload)
+        if (error.code !== 'storage/object-not-found' && error.code !== 'storage/unauthorized') {
           console.warn('Could not delete old image:', error);
+        } else {
+          console.log('ℹ️ Skipping old image deletion:', error.code);
         }
       }
       

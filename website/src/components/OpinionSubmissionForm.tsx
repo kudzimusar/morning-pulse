@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { OpinionSubmissionData } from '../../types';
-import { submitOpinion, uploadOpinionImage } from '../services/opinionsService';
+import { submitOpinion, uploadOpinionImage, ensureAuthenticated } from '../services/opinionsService';
 import RichTextEditor from './RichTextEditor';
 
 interface OpinionSubmissionFormProps {
@@ -55,10 +55,18 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
     setSubmitStatus({ type: null, message: '' });
 
     try {
+      // 🔐 Ensure authenticated before starting upload/submission
+      await ensureAuthenticated();
+
       // Upload suggested image (optional) to Storage pending_uploads/
       let suggestedImageUrl: string | undefined;
       if (suggestedImage) {
-        suggestedImageUrl = await uploadOpinionImage(suggestedImage, 'pending_uploads');
+        try {
+          suggestedImageUrl = await uploadOpinionImage(suggestedImage, 'pending_uploads');
+        } catch (uploadErr: any) {
+          console.error('Image upload failed, continuing without image:', uploadErr);
+          // Don't fail the whole submission if just the image fails
+        }
       }
 
       await submitOpinion({
