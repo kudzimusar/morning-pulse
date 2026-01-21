@@ -1150,3 +1150,53 @@ export const restoreVersion = async (
     throw new Error(`Failed to restore version: ${error.message}`);
   }
 };
+
+/**
+ * Part D: CMS Integration - URL Shortener
+ * Generates a 6-character short code and saves it to /short_links.
+ */
+export const createShortLink = async (
+  storyId: string,
+  title: string,
+  summary: string,
+  coverImage: string
+): Promise<string> => {
+  const db = getDb();
+  if (!db) throw new Error('Firebase not initialized');
+
+  await ensureAuthenticated();
+
+  // Generate a 6-character short code
+  const generateId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const shortId = generateId();
+  const siteUrl = "https://kudzimusar.github.io/morning-pulse";
+  const originalUrl = `${siteUrl}/#opinion/${storyId}`;
+
+  const shortLinkData = {
+    id: shortId,
+    originalUrl,
+    title,
+    summary,
+    coverImage,
+    createdAt: serverTimestamp(),
+    clicks: 0,
+    storyId // Reference back to the story
+  };
+
+  try {
+    await setDoc(doc(db, 'short_links', shortId), shortLinkData);
+    console.log(`✅ Short link created: ${shortId} for story ${storyId}`);
+    return shortId;
+  } catch (error: any) {
+    console.error('❌ Error creating short link:', error);
+    throw new Error(`Failed to create short link: ${error.message}`);
+  }
+};

@@ -28,6 +28,7 @@ import ImagePreview from './ImagePreview';
 import { 
   createEditorialArticle, 
   replaceArticleImage,
+  createShortLink,
   claimStory,
   releaseStory,
   returnToWriter,
@@ -592,7 +593,20 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         });
       }
       
-      showToast('Article published successfully!', 'success');
+      // Part D: CMS Integration - Generate short link for the new article
+      try {
+        const shortId = await createShortLink(
+          articleId,
+          editedTitle,
+          editedSubHeadline,
+          finalImageUrlToUse || getImageByTopic(editedTitle, articleId)
+        );
+        showToast(`Article published! Short link: /s/${shortId}`, 'success');
+      } catch (shortLinkErr) {
+        console.warn('Failed to generate short link:', shortLinkErr);
+        showToast('Article published successfully!', 'success');
+      }
+
       setIsNewArticle(false);
       setSelectedOpinionId(null);
       setNewImagePreviewUrl(null);
@@ -662,7 +676,20 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         });
       }
       
-      showToast('Article published successfully!', 'success');
+      // Part D: CMS Integration - Generate short link for the approved article
+      try {
+        const shortId = await createShortLink(
+          selectedOpinionId,
+          editedTitle,
+          editedSubHeadline,
+          imageToUse
+        );
+        showToast(`Article published! Short link: /s/${shortId}`, 'success');
+      } catch (shortLinkErr) {
+        console.warn('Failed to generate short link:', shortLinkErr);
+        showToast('Article published successfully!', 'success');
+      }
+
       setTimeout(() => {
         setSelectedOpinionId(null);
         setIsNewArticle(false);

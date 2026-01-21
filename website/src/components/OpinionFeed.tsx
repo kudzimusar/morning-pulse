@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../types';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
+import SEOHeader from './SEOHeader';
 import { trackArticleView, trackArticleEngagement } from '../services/analyticsService';
 import { X, PenTool } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
@@ -136,6 +137,16 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
 
   return (
     <div style={{ fontFamily: 'Georgia, serif', backgroundColor: '#fffdfa', minHeight: '100vh', color: '#1a1a1a' }}>
+      {selectedOpinion && (
+        <SEOHeader 
+          story={{
+            id: selectedOpinion.id,
+            title: selectedOpinion.headline,
+            summary: selectedOpinion.subHeadline,
+            coverImage: getDisplayImage(selectedOpinion)
+          }} 
+        />
+      )}
       
       {/* RESTORED NAVIGATION BAR */}
       <nav style={{ position: 'sticky', top: '56px', zIndex: 30, backgroundColor: '#fff', borderBottom: '1px solid #e7e5e4' }}>

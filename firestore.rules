@@ -177,6 +177,21 @@ service cloud.firestore {
     }
 
     // ===========================================
+    // SHORT LINKS COLLECTION
+    // ===========================================
+    match /short_links/{shortId} {
+      // Public can read short links (needed for redirects if done client-side, 
+      // but here Cloud Function handles it with admin privileges)
+      allow read: if true;
+      
+      // Only editors can create or update short links
+      allow create, update: if isEditor();
+      
+      // Only admins can delete short links
+      allow delete: if isAdmin();
+    }
+
+    // ===========================================
     // DEFAULT DENY
     // ===========================================
     // All other paths are denied by default

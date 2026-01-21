@@ -1304,3 +1304,87 @@ function generateNewsletterHTML(articles, type = 'weekly') {
 </html>
   `.trim();
 }
+
+/**
+ * Part A: The Redirect Cloud Function (handleShortLink)
+ * Handles requests from /s/** for social media unfurling and user redirection.
+ */
+exports.handleShortLink = async (req, res) => {
+  // Extract the ID from the URL (e.g., /s/Abc123 -> Abc123)
+  const pathParts = req.path.split('/');
+  const shortId = pathParts[pathParts.length - 1];
+
+  if (!shortId) {
+    return res.status(404).send('Short link ID missing');
+  }
+
+  try {
+    if (!db) {
+      console.error('❌ Firestore not initialized in handleShortLink');
+      return res.status(500).send('Internal Server Error');
+    }
+
+    // 2. Lookup the originalUrl and metadata from Firestore
+    const shortLinkDoc = await db.collection('short_links').doc(shortId).get();
+
+    if (!shortLinkDoc.exists) {
+      console.warn(`⚠️ Short link not found: ${shortId}`);
+      return res.status(404).send('Short link not found');
+    }
+
+    const data = shortLinkDoc.data();
+    const { originalUrl, title, summary, coverImage } = data;
+
+    // Increment click count asynchronously
+    db.collection('short_links').doc(shortId).update({
+      clicks: admin.firestore.FieldValue.increment(1)
+    }).catch(err => console.error('Error incrementing clicks:', err));
+
+    // 3. Unfurling Logic: Detect Social Media Bots
+    const userAgent = req.headers['user-agent'] || '';
+    const isBot = /Twitterbot|facebookexternalhit|WhatsApp|TelegramBot|Slackbot|LinkedInBot|Embedly/i.test(userAgent);
+
+    if (isBot) {
+      console.log(`🤖 Bot detected: ${userAgent}. Serving metadata for ${shortId}`);
+      // Return static HTML with Open Graph tags
+      const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <meta name="description" content="${summary}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="${originalUrl}">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${summary}">
+    <meta property="og:image" content="${coverImage}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="${originalUrl}">
+    <meta property="twitter:title" content="${title}">
+    <meta property="twitter:description" content="${summary}">
+    <meta property="twitter:image" content="${coverImage}">
+</head>
+<body>
+    <p>Redirecting to <a href="${originalUrl}">${title}</a>...</p>
+    <script>window.location.href = "${originalUrl}";</script>
+</body>
+</html>`;
+      res.set('Content-Type', 'text/html');
+      return res.status(200).send(html);
+    }
+
+    // 4. User Logic: Redirect human users
+    console.log(`👤 Human user detected. Redirecting ${shortId} to ${originalUrl}`);
+    return res.redirect(301, originalUrl);
+
+  } catch (error) {
+    console.error('❌ Error in handleShortLink:', error);
+    return res.status(500).send('Internal Server Error');
+  }
+};
