@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../types';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
-import { incrementArticleView, trackArticleView, trackArticleEngagement } from '../services/analyticsService';
+import { trackArticleView, trackArticleEngagement } from '../services/analyticsService';
 import { X, PenTool } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
 
@@ -79,24 +79,24 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   // NEW: Track view when opinion is opened
   useEffect(() => {
     if (selectedOpinion) {
-      // Increment view count (async, don't wait)
-      incrementArticleView(selectedOpinion.id).catch(err => {
+      try {
+        // Track detailed article view in Google Analytics
+        trackArticleView(
+          selectedOpinion.id,
+          selectedOpinion.headline,
+          selectedOpinion.authorName,
+          selectedOpinion.category
+        );
+
+        // Track engagement start
+        trackArticleEngagement(selectedOpinion.id, 'start_reading', {
+          source: 'opinion_feed',
+          category: selectedOpinion.category
+        });
+      } catch (err) {
+        // Silently fail analytics - don't block UI
         console.warn('Failed to track view:', err);
-      });
-
-      // Track detailed article view in Google Analytics
-      trackArticleView(
-        selectedOpinion.id,
-        selectedOpinion.headline,
-        selectedOpinion.authorName,
-        selectedOpinion.category
-      );
-
-      // Track engagement start
-      trackArticleEngagement(selectedOpinion.id, 'start_reading', {
-        source: 'opinion_feed',
-        category: selectedOpinion.category
-      });
+      }
     }
   }, [selectedOpinion]);
 

@@ -46,7 +46,8 @@ import {
   notifyWriterArticleReturned,
   notifyWriterArticleClaimed
 } from '../../services/notificationService';
-import InlineComments from '../InlineComments';
+// Temporarily disabled due to Firebase initialization issues
+// import InlineComments from '../InlineComments';
 
 const APP_ID = "morning-pulse-app";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -1780,53 +1781,19 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       }}>
                         ✍️ Your Edit
                       </div>
-                      <div style={{ position: 'relative' }}>
-                        <InlineComments
-                          articleId={selectedOpinionId || 'new-article'}
-                          currentUser={{
-                            id: currentEditorId || 'unknown',
-                            name: currentEditorName || 'Unknown Editor',
-                            role: userRoles.includes('admin') ? 'admin' : 'editor'
-                          }}
-                          users={[
-                            // Mock users for demonstration - in production, fetch from Firestore
-                            { id: '1', name: 'John Editor', role: 'editor', email: 'john@morningpulse.net' },
-                            { id: '2', name: 'Jane Writer', role: 'writer', email: 'jane@morningpulse.net' },
-                            { id: '3', name: 'Admin User', role: 'admin', email: 'admin@morningpulse.net' }
-                          ]}
-                          isReadOnly={false}
-                        />
-                        <RichTextEditor
-                          value={editedBody}
-                          onChange={setEditedBody}
-                          placeholder="Edit the article content here..."
-                        />
-                      </div>
+                      <RichTextEditor
+                        value={editedBody}
+                        onChange={setEditedBody}
+                        placeholder="Edit the article content here..."
+                      />
                     </div>
                   </div>
                 ) : (
-                  <div style={{ position: 'relative' }}>
-                    <InlineComments
-                      articleId={selectedOpinionId || 'new-article'}
-                      currentUser={{
-                        id: currentEditorId || 'unknown',
-                        name: currentEditorName || 'Unknown Editor',
-                        role: userRoles.includes('admin') ? 'admin' : 'editor'
-                      }}
-                      users={[
-                        // Mock users for demonstration - in production, fetch from Firestore
-                        { id: '1', name: 'John Editor', role: 'editor', email: 'john@morningpulse.net' },
-                        { id: '2', name: 'Jane Writer', role: 'writer', email: 'jane@morningpulse.net' },
-                        { id: '3', name: 'Admin User', role: 'admin', email: 'admin@morningpulse.net' }
-                      ]}
-                      isReadOnly={false}
-                    />
-                    <RichTextEditor
-                      value={editedBody}
-                      onChange={setEditedBody}
-                      placeholder="Write your article content here. Use the toolbar to format text, add headings (H1, H2), blockquotes for pull-quotes, and links."
-                    />
-                  </div>
+                  <RichTextEditor
+                    value={editedBody}
+                    onChange={setEditedBody}
+                    placeholder="Write your article content here. Use the toolbar to format text, add headings (H1, H2), blockquotes for pull-quotes, and links."
+                  />
                 )}
               </div>
 

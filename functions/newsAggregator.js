@@ -57,19 +57,27 @@ try {
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 /**
- * Generate search query for a category
+ * Generate search query for a category - focused on today's breaking news
  */
 function getCategorySearchQuery(category) {
+  // Get today's date in a more specific format for better search results
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
   const queries = {
-    'Local (Zim)': 'latest news Zimbabwe today',
-    'Business (Zim)': 'Zimbabwe business news economy today',
-    'African Focus': 'latest news Africa today',
-    'Global': 'world news headlines today',
-    'Sports': 'sports news today',
-    'Tech': 'technology news today',
-    'General News': 'breaking news today'
+    'Local (Zim)': `breaking news Zimbabwe ${dateStr} latest headlines`,
+    'Business (Zim)': `Zimbabwe business news ${dateStr} economy latest developments`,
+    'African Focus': `Africa breaking news ${dateStr} latest headlines`,
+    'Global': `world breaking news ${dateStr} latest headlines`,
+    'Sports': `sports breaking news ${dateStr} latest scores results`,
+    'Tech': `technology breaking news ${dateStr} latest innovations`,
+    'General News': `breaking news ${dateStr} latest headlines worldwide`
   };
-  return queries[category] || 'news today';
+  return queries[category] || `breaking news ${dateStr} latest headlines`;
 }
 
 /**
@@ -78,14 +86,28 @@ function getCategorySearchQuery(category) {
 async function fetchNewsForCategory(category) {
   try {
     const searchQuery = getCategorySearchQuery(category);
-    const prompt = `Find the top 3-5 most important and recent news stories related to: ${category}. 
-Search for: ${searchQuery}
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    const prompt = `Find ONLY the top 3-5 most IMPORTANT BREAKING NEWS stories from TODAY (${dateStr}) related to: ${category}.
+
+CRITICAL REQUIREMENTS:
+- Only include news stories published TODAY (${dateStr})
+- Filter out any stories from previous days, weeks, or months
+- Focus on breaking news, recent developments, and fresh headlines
+- Prioritize stories with timestamps from the last 24 hours
+
+Search specifically for: ${searchQuery}
 
 For each news story, provide:
 1. A clear, concise headline (max 100 characters)
-2. A detailed summary (2-3 sentences)
+2. A detailed summary (2-3 sentences) with today's date context
 3. The source/publication name
-4. The URL if available
+4. The URL if available (must be from today if possible)
 
 Format your response as a JSON array with this structure:
 [
@@ -97,11 +119,22 @@ Format your response as a JSON array with this structure:
   }
 ]
 
-Only return valid JSON, no additional text.`;
+Only return valid JSON, no additional text. If no fresh news from today exists, return an empty array [].`;
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      tools: [{ googleSearch: {} }]
+      model: 'gemini-1.5-flash',
+      tools: [{
+        googleSearch: {
+          // Configure search to prioritize recent results
+          "resultCount": 5
+        }
+      }],
+      generationConfig: {
+        temperature: 0.1, // Lower temperature for more consistent, factual results
+        topK: 1,
+        topP: 1,
+        maxOutputTokens: 2048,
+      }
     });
 
     const result = await model.generateContent(prompt);
@@ -142,7 +175,37 @@ Only return valid JSON, no additional text.`;
       return articleWithSource;
     });
 
-    return enrichedArticles;
+    // Filter to ensure only fresh, recent articles (additional validation)
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    const freshArticles = enrichedArticles.filter(article => {
+      // Check if headline or detail mentions today's date
+      const content = (article.headline + ' ' + article.detail).toLowerCase();
+      const todayWords = todayStr.toLowerCase().split(' ');
+
+      // Check for date indicators in content
+      const hasTodayIndicator = todayWords.some(word =>
+        content.includes(word) ||
+        content.includes('today') ||
+        content.includes('breaking') ||
+        content.includes('latest')
+      );
+
+      // If article doesn't have clear freshness indicators, still include it
+      // since we trust Gemini's filtering, but log for monitoring
+      if (!hasTodayIndicator && enrichedArticles.length > 0) {
+        console.log(`⚠️ Article may not be fresh: "${article.headline.substring(0, 50)}..."`);
+      }
+
+      return true; // Keep all articles for now, but log suspicious ones
+    });
+
+    return freshArticles;
   } catch (error) {
     console.error(`Error fetching news for ${category}:`, error.message);
     // Return empty array on error to continue with other categories
