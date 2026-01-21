@@ -620,12 +620,21 @@ export const approveOpinion = async (
     const existingFinal = typeof existing?.finalImageUrl === 'string' ? existing.finalImageUrl : '';
     const legacy = typeof existing?.imageUrl === 'string' ? existing.imageUrl : '';
 
+    // Helper function to validate URLs and filter out deprecated Unsplash URLs
+    const isValidUrl = (url: string): boolean => {
+      if (!url || typeof url !== 'string') return false;
+      if (!/^https?:\/\//i.test(url)) return false;
+      // Reject Unsplash URLs - they're deprecated and broken
+      if (url.includes('unsplash.com') || url.includes('source.unsplash.com')) return false;
+      return true;
+    };
+
     // Editorial Gate:
     // - If editor uploaded a replacement, use that.
-    // - Else keep existing finalImageUrl if present.
-    // - Else fallback to suggestedImageUrl, then legacy imageUrl.
+    // - Else keep existing finalImageUrl if present AND not Unsplash.
+    // - Else fallback to suggestedImageUrl (if not Unsplash), then legacy imageUrl (if not Unsplash).
     const candidate = replacementFinalImageUrl || existingFinal || suggested || legacy;
-    const hasValidUrl = /^https?:\/\//i.test(candidate);
+    const hasValidUrl = isValidUrl(candidate);
     const finalImageUrl = hasValidUrl ? candidate : getImageByTopic(existing?.headline || '', opinionId);
 
     const patch: any = {

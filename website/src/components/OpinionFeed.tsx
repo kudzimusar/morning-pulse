@@ -66,7 +66,17 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
 
   const getDisplayImage = (opinion: Opinion) => {
     const fromDoc = opinion.finalImageUrl || opinion.suggestedImageUrl || opinion.imageUrl;
-    if (typeof fromDoc === 'string' && /^https?:\/\//i.test(fromDoc)) return fromDoc;
+    
+    // Filter out deprecated Unsplash URLs
+    if (typeof fromDoc === 'string' && /^https?:\/\//i.test(fromDoc)) {
+      // If it's an Unsplash URL (deprecated), use fallback
+      if (fromDoc.includes('unsplash.com') || fromDoc.includes('source.unsplash.com')) {
+        // Use a reliable placeholder instead
+        return getImageByTopic(opinion.headline || '', opinion.id);
+      }
+      return fromDoc;
+    }
+    
     return getImageByTopic(opinion.headline || '', opinion.id);
   };
 

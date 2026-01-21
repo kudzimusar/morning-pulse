@@ -515,16 +515,19 @@ const App: React.FC = () => {
       // ✅ FIX: More robust admin route detection
       const hash = window.location.hash.replace('#', '');
       const pathname = window.location.pathname;
-      const isRootPath = (hash === '' || hash === 'news') && (pathname === '/' || pathname === '/morning-pulse' || pathname === '/morning-pulse/');
+      
+      // Allow anonymous auth on root, news, AND opinion pages (but not admin)
+      const isPublicRoute = (hash === '' || hash === 'news' || hash === 'opinion' || hash.startsWith('opinion/')) && 
+                          (pathname === '/' || pathname === '/morning-pulse' || pathname === '/morning-pulse/');
       const isAdminRoute = hash === 'admin' || 
                            hash === 'dashboard' || 
                            hash.includes('dashboard') ||
                            pathname === '/admin' || 
                            pathname.includes('/admin');
       
-      // ✅ FIX: Only sign in anonymously if on root path AND not on admin route
-      if (!isRootPath || isAdminRoute) {
-        console.log('🔐 Skipping anonymous auth - not on root path or on admin route');
+      // ✅ FIX: Sign in anonymously on public routes (not just root)
+      if (!isPublicRoute || isAdminRoute) {
+        console.log('🔐 Skipping anonymous auth - not on public route or on admin route');
         return;
       }
       
@@ -538,8 +541,8 @@ const App: React.FC = () => {
         }
         const auth = getAuth(app);
         
-        // ✅ FIX: Only sign in anonymously if no user AND on root path
-        if (!auth.currentUser && isRootPath && !isAdminRoute) {
+        // ✅ FIX: Sign in anonymously on public routes (not just root)
+        if (!auth.currentUser && isPublicRoute && !isAdminRoute) {
           console.log('🔐 App: Signing in anonymously for public access...');
           await signInAnonymously(auth);
           console.log('✅ App: Anonymous authentication successful');
