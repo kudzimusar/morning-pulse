@@ -81,6 +81,14 @@ export interface Opinion {
   claimedBy?: string | null; // NEW: Editor UID who claimed the story
   claimedAt?: Date | null; // NEW: When the story was claimed
   claimedByName?: string; // NEW: Editor name for display
+  // Super Admin Media Override audit trail
+  lastMediaOverride?: {
+    timestamp: Date;
+    performedBy: string; // Super Admin UID
+    performedByName: string; // Super Admin display name
+    previousImageUrl?: string;
+    newImageUrl: string;
+  };
 }
 
 export interface OpinionSubmissionData {

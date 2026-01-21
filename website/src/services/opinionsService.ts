@@ -352,6 +352,90 @@ export const replaceArticleImage = async (
 };
 
 /**
+ * Super Admin Media Override
+ * Allows super_admin to replace images on published articles instantly
+ * Includes audit trail and cleanup of old Firebase Storage files
+ */
+export const superAdminMediaOverride = async (
+  articleId: string,
+  file: File,
+  superAdminUid: string,
+  superAdminName: string
+): Promise<void> => {
+  const db = getDb();
+  const s = getStorageInstance();
+  
+  if (!db || !s) {
+    throw new Error('Firebase not initialized');
+  }
+
+  await ensureAuthenticated();
+
+  try {
+    // Step 1: Get current article to find old image URL
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', articleId);
+    const snap = await getDoc(docRef);
+    
+    if (!snap.exists()) {
+      throw new Error('Article not found');
+    }
+
+    const existing = snap.data() as any;
+    const oldImageUrl = existing.finalImageUrl || existing.imageUrl || '';
+
+    // Step 2: Try to delete old Firebase Storage file if it exists
+    if (oldImageUrl && oldImageUrl.includes('firebasestorage.googleapis.com')) {
+      try {
+        // Extract the file path from Firebase Storage URL
+        // URL format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media
+        const urlMatch = oldImageUrl.match(/\/o\/([^?]+)/);
+        if (urlMatch) {
+          const decodedPath = decodeURIComponent(urlMatch[1].replace(/%2F/g, '/'));
+          const oldImageRef = storageRef(s, decodedPath);
+          await deleteObject(oldImageRef);
+          console.log('🗑️ Deleted old Firebase Storage image:', decodedPath);
+        }
+      } catch (deleteError: any) {
+        // Don't fail the whole operation if deletion fails
+        if (deleteError.code !== 'storage/object-not-found' && deleteError.code !== 'storage/unauthorized') {
+          console.warn('⚠️ Could not delete old image (non-critical):', deleteError);
+        } else {
+          console.log('ℹ️ Skipping old image deletion:', deleteError.code);
+        }
+      }
+    }
+
+    // Step 3: Upload new image to Storage
+    const newImageRef = storageRef(s, `published_images/${articleId}/final.jpg`);
+    await uploadBytes(newImageRef, file, {
+      contentType: file.type || 'image/jpeg',
+    });
+    
+    const newImageUrl = await getDownloadURL(newImageRef);
+    console.log('✅ New image uploaded:', newImageUrl);
+
+    // Step 4: Update Firestore with new image URL and audit trail
+    await setDoc(docRef, {
+      finalImageUrl: newImageUrl,
+      imageUrl: newImageUrl, // Keep legacy field aligned
+      lastMediaOverride: {
+        timestamp: Timestamp.now(),
+        performedBy: superAdminUid,
+        performedByName: superAdminName,
+        previousImageUrl: oldImageUrl,
+        newImageUrl: newImageUrl,
+      },
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+
+    console.log('✅ Super Admin media override completed for article:', articleId);
+  } catch (error: any) {
+    console.error('❌ Error in super admin media override:', error);
+    throw new Error(`Failed to override media: ${error.message}`);
+  }
+};
+
+/**
  * Get all published opinions, ordered by publishedAt (newest first)
  * FIX: Fetch entire collection, filter in JavaScript to avoid permission/index issues
  */
