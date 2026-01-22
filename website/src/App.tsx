@@ -184,6 +184,22 @@ const App: React.FC = () => {
     initializeCountry();
   }, []);
 
+  // Handle ?story=slug URL parameter (from share page redirects)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const storySlug = urlParams.get('story');
+    
+    if (storySlug) {
+      console.log(`📰 Share redirect detected: story=${storySlug}`);
+      // Navigate to opinion page with slug
+      // Clear the query parameter to avoid re-triggering
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+      // Set hash to opinion page with slug
+      window.location.hash = `opinion/${storySlug}`;
+      // The hash change will be handled by the hash-based routing useEffect
+    }
+  }, []); // Run only once on mount
+
   // Handle hash-based routing
   useEffect(() => {
     const handleHashChange = () => {

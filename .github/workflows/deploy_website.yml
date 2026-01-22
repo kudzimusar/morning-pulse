@@ -127,6 +127,27 @@ jobs:
           fi
           echo "=== END VERIFICATION ==="
       
+      # Pre-render share pages with OG tags (AFTER build, writes to dist/shares/)
+      - name: Generate Share Pages
+        env:
+          FIREBASE_ADMIN_CONFIG: ${{ secrets.GCP_SA_KEY }}
+          APP_ID: ${{ env.APP_ID }}
+          GITHUB_PAGES_URL: https://kudzimusar.github.io
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          NODE_PATH: ${{ github.workspace }}/functions/node_modules
+        run: |
+          echo "🚀 Generating share pages with OG tags..."
+          cd website
+          node scripts/generate-shares.js
+          echo ""
+          echo "📁 Checking generated share pages..."
+          ls -lh dist/shares/ || echo "⚠️  No shares directory created"
+          if [ -d dist/shares ]; then
+            echo "Share pages generated:"
+            find dist/shares -name "index.html" | head -5
+          fi
+        continue-on-error: true # Continue even if share generation fails
+      
       # Setup Pages
       - name: Setup Pages
         uses: actions/configure-pages@v4
