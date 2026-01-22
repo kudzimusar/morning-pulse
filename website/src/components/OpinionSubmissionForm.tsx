@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { OpinionSubmissionData } from '../../types';
 import { submitOpinion, uploadOpinionImage, ensureAuthenticated } from '../services/opinionsService';
+import { generateSlug } from '../utils/slugUtils';
 import RichTextEditor from './RichTextEditor';
 
 interface OpinionSubmissionFormProps {
@@ -10,6 +11,15 @@ interface OpinionSubmissionFormProps {
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 
+// The 5 categories for opinion submissions
+const OPINION_CATEGORIES = [
+  { value: 'the-board', label: 'The Board' },
+  { value: 'guest-essays', label: 'Guest Essays' },
+  { value: 'letters', label: 'Letters' },
+  { value: 'culture', label: 'Culture' },
+  { value: 'general', label: 'General' }
+] as const;
+
 const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, onSuccess }) => {
   const [formData, setFormData] = useState<OpinionSubmissionData>({
     writerType: 'Guest Essay',
@@ -18,7 +28,7 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
     headline: '',
     subHeadline: '',
     body: '',
-    category: 'General',
+    category: '', // Start empty - required field
     country: 'Global',
   });
 
@@ -29,11 +39,41 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
   });
   const [suggestedImage, setSuggestedImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [slug, setSlug] = useState<string>('');
+
+  // Auto-generate slug from headline in real-time
+  useEffect(() => {
+    if (formData.headline.trim()) {
+      const generatedSlug = generateSlug(formData.headline);
+      setSlug(generatedSlug);
+    } else {
+      setSlug('');
+    }
+  }, [formData.headline]);
+
+  // Sanitize form data before submission
+  const sanitizeFormData = (data: OpinionSubmissionData): OpinionSubmissionData => {
+    const sanitizedCategory = data.category.trim().toLowerCase() || 'general';
+    const validCategory = OPINION_CATEGORIES.some(cat => cat.value === sanitizedCategory) 
+      ? sanitizedCategory 
+      : 'general';
+
+    return {
+      ...data,
+      authorName: data.authorName.trim(),
+      authorTitle: data.authorTitle?.trim() || '',
+      headline: data.headline.trim(),
+      subHeadline: data.subHeadline.trim(),
+      body: data.body.trim(),
+      category: validCategory,
+      country: data.country?.trim() || 'Global',
+    };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
+    // Enhanced Validation
     if (!formData.authorName.trim()) {
       setSubmitStatus({ type: 'error', message: 'Please enter your name' });
       return;
@@ -50,6 +90,16 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
       setSubmitStatus({ type: 'error', message: 'Please enter the body of your essay' });
       return;
     }
+    // NEW: Category is now required
+    if (!formData.category || !formData.category.trim()) {
+      setSubmitStatus({ type: 'error', message: 'Please select a category' });
+      return;
+    }
+    // NEW: Validate slug is generated (headline must be valid)
+    if (!slug || slug.length < 3) {
+      setSubmitStatus({ type: 'error', message: 'Headline must be at least 3 characters to generate a valid URL slug' });
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitStatus({ type: null, message: '' });
@@ -57,6 +107,9 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
     try {
       // 🔐 Ensure authenticated before starting upload/submission
       await ensureAuthenticated();
+
+      // Sanitize data before submission
+      const sanitizedData = sanitizeFormData(formData);
 
       // Upload suggested image (optional) to Storage pending_uploads/
       let suggestedImageUrl: string | undefined;
@@ -69,8 +122,9 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
         }
       }
 
+      // Submit with sanitized data
       await submitOpinion({
-        ...formData,
+        ...sanitizedData,
         suggestedImageUrl,
       });
       setSubmitStatus({
@@ -86,11 +140,12 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
         headline: '',
         subHeadline: '',
         body: '',
-        category: 'General',
+        category: '',
         country: 'Global',
       });
       setSuggestedImage(null);
       setImageError(null);
+      setSlug('');
 
       // Call success callback after a delay
       if (onSuccess) {
@@ -265,6 +320,21 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
                 onFocus={(e) => e.target.style.borderBottomColor = '#000000'}
                 onBlur={(e) => e.target.style.borderBottomColor = '#e5e7eb'}
               />
+              {/* Auto-generated slug preview */}
+              {slug && (
+                <div style={{
+                  marginTop: '8px',
+                  fontSize: '0.75rem',
+                  color: '#6b7280',
+                  fontFamily: 'monospace',
+                  padding: '4px 8px',
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: '4px',
+                  display: 'inline-block'
+                }}>
+                  URL Slug: <strong>{slug}</strong>
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -320,24 +390,50 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
               />
             </div>
 
+            {/* Enhanced Category Picker */}
             <div className="form-group">
               <label htmlFor="category" className="form-label">
-                Category (Optional)
+                Category <span className="required">*</span>
               </label>
               <select
                 id="category"
                 className="form-select"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                required
                 disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                  fontFamily: 'system-ui, sans-serif',
+                  backgroundColor: 'white',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  transition: 'border-color 0.2s',
+                  ...(isSubmitting ? { opacity: 0.6 } : {}),
+                  ...(!formData.category ? { borderColor: '#dc2626' } : {})
+                }}
+                onFocus={(e) => {
+                  if (!isSubmitting) e.target.style.borderColor = '#000000';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = formData.category ? '#e5e7eb' : '#dc2626';
+                }}
               >
-                <option value="General">General</option>
-                <option value="Politics">Politics</option>
-                <option value="Tech">Tech</option>
-                <option value="Society">Society</option>
-                <option value="Business">Business</option>
-                <option value="Culture">Culture</option>
+                <option value="">-- Select a category --</option>
+                {OPINION_CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
+                ))}
               </select>
+              {!formData.category && (
+                <div style={{ marginTop: '4px', fontSize: '0.875rem', color: '#dc2626' }}>
+                  Category is required
+                </div>
+              )}
             </div>
 
             {submitStatus.type && (
@@ -350,7 +446,7 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !formData.headline.trim() || !formData.category}
               style={{
                 width: '100%',
                 backgroundColor: '#000000',
@@ -361,15 +457,19 @@ const OpinionSubmissionForm: React.FC<OpinionSubmissionFormProps> = ({ onBack, o
                 letterSpacing: '0.1em',
                 border: 'none',
                 marginTop: '2rem',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                cursor: (isSubmitting || !formData.headline.trim() || !formData.category) ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.2s',
-                ...(isSubmitting ? { opacity: 0.6 } : {})
+                ...((isSubmitting || !formData.headline.trim() || !formData.category) ? { opacity: 0.6 } : {})
               }}
               onMouseEnter={(e) => {
-                if (!isSubmitting) e.currentTarget.style.backgroundColor = '#1f2937';
+                if (!isSubmitting && formData.headline.trim() && formData.category) {
+                  e.currentTarget.style.backgroundColor = '#1f2937';
+                }
               }}
               onMouseLeave={(e) => {
-                if (!isSubmitting) e.currentTarget.style.backgroundColor = '#000000';
+                if (!isSubmitting) {
+                  e.currentTarget.style.backgroundColor = '#000000';
+                }
               }}
             >
               {isSubmitting ? 'Verifying Authentication & Sending...' : 'Submit for Editorial Review'}

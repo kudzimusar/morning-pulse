@@ -25,6 +25,7 @@ import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
 import { Opinion, OpinionSubmissionData, OpinionVersion } from '../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
+import { generateSlug } from '../utils/slugUtils';
 import EnhancedFirestore from './enhancedFirestore';
 
 // Get Firebase config (same pattern as FirebaseConnector)
@@ -228,15 +229,24 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
     const imageUrl = suggestedImageUrl || (opinionData as any).imageUrl || getImageByTopic(opinionData.headline || '');
     const imageGeneratedAt = new Date().toISOString();
 
+    // Generate slug from headline (for generate-shares.js compatibility)
+    const slug = generateSlug(opinionData.headline || '');
+
+    // Sanitize and normalize data
+    const sanitizedCategory = (opinionData.category || 'general').toLowerCase().trim();
+    const validCategories = ['the-board', 'guest-essays', 'letters', 'culture', 'general'];
+    const category = validCategories.includes(sanitizedCategory) ? sanitizedCategory : 'general';
+
     const docData = {
       writerType: opinionData.writerType || 'Guest Essay',
-      authorName: opinionData.authorName,
-      authorTitle: opinionData.authorTitle || '',
-      headline: opinionData.headline,
-      subHeadline: opinionData.subHeadline,
-      body: opinionData.body, // This will be HTML string from rich text editor
-      category: opinionData.category || 'General',
-      country: opinionData.country || 'Global',
+      authorName: (opinionData.authorName || '').trim(),
+      authorTitle: (opinionData.authorTitle || '').trim(),
+      headline: (opinionData.headline || '').trim(),
+      subHeadline: (opinionData.subHeadline || '').trim(),
+      body: (opinionData.body || '').trim(), // This will be HTML string from rich text editor
+      category: category,
+      country: (opinionData.country || 'Global').trim(),
+      slug: slug, // NEW: Include slug for generate-shares.js
       suggestedImageUrl: suggestedImageUrl || null,
       finalImageUrl: null,
       isPublished: false,
@@ -247,7 +257,7 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
     };
 
     const docRef = await addDoc(opinionsRef, docData);
-    console.log('✅ Opinion submitted with ID:', docRef.id);
+    console.log('✅ Opinion submitted with ID:', docRef.id, 'and slug:', slug);
     return docRef.id;
   } catch (error: any) {
     console.error('❌ Error submitting opinion:', error);
