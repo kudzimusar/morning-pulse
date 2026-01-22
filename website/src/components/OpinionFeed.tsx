@@ -83,9 +83,47 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
 
   const categories = ['Latest', 'The Board', 'Guest Essays', 'Letters', 'Culture'];
   
+  // Enhanced category filtering with proper mapping
   const filtered = activeCategory === 'Latest' 
     ? opinions 
-    : opinions.filter(o => o.category === activeCategory || (activeCategory === 'Guest Essays' && o.writerType === 'Guest Essay'));
+    : opinions.filter(o => {
+        const category = (o.category || '').toLowerCase();
+        const writerType = (o.writerType || '').toLowerCase();
+        
+        if (activeCategory === 'The Board') {
+          return category === 'the-board' || category === 'the board' || writerType === 'editorial';
+        }
+        if (activeCategory === 'Guest Essays') {
+          return category === 'guest-essays' || category === 'guest essays' || writerType === 'guest essay';
+        }
+        if (activeCategory === 'Letters') {
+          return category === 'letters' || category === 'letter';
+        }
+        if (activeCategory === 'Culture') {
+          return category === 'culture' || category === 'cultural';
+        }
+        return false;
+      });
+
+  // Helper to get category display name and kicker style
+  const getCategoryKicker = (opinion: Opinion) => {
+    const category = (opinion.category || '').toLowerCase();
+    const writerType = (opinion.writerType || '').toLowerCase();
+    
+    if (category === 'the-board' || category === 'the board' || writerType === 'editorial') {
+      return { text: 'THE BOARD', style: { color: '#dc2626', fontWeight: '900' } };
+    }
+    if (category === 'guest-essays' || category === 'guest essays' || writerType === 'guest essay') {
+      return { text: 'GUEST ESSAY', style: { color: '#2563eb', fontWeight: '700' } };
+    }
+    if (category === 'letters' || category === 'letter') {
+      return { text: 'LETTER', style: { color: '#059669', fontWeight: '700' } };
+    }
+    if (category === 'culture' || category === 'cultural') {
+      return { text: 'CULTURE', style: { color: '#7c3aed', fontWeight: '700' } };
+    }
+    return null;
+  };
 
   // NEW: Track view when opinion is opened
   useEffect(() => {
@@ -220,7 +258,29 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
                 </div>
-                <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: '900', lineHeight: '0.95', letterSpacing: '-0.04em' }}>{filtered[0].headline}</h1>
+                {/* Kicker (Category Label) */}
+                {getCategoryKicker(filtered[0]) && (
+                  <div style={{
+                    fontSize: '11px',
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    marginBottom: '12px',
+                    ...getCategoryKicker(filtered[0])!.style
+                  }}>
+                    {getCategoryKicker(filtered[0])!.text}
+                  </div>
+                )}
+                <h1 style={{ 
+                  fontSize: 'clamp(2.5rem, 6vw, 4rem)', 
+                  fontWeight: '900', 
+                  lineHeight: '0.95', 
+                  letterSpacing: '-0.04em',
+                  // Editorial styling for "The Board"
+                  ...(getCategoryKicker(filtered[0])?.text === 'THE BOARD' ? {
+                    fontFamily: '"Times New Roman", serif',
+                    fontStyle: 'italic'
+                  } : {})
+                }}>{filtered[0].headline}</h1>
                 <p style={{ fontSize: '1.4rem', color: '#57534e', fontStyle: 'italic', margin: '16px 0' }}>{filtered[0].subHeadline}</p>
                 {/* NEW: Enhanced byline with date for E-E-A-T */}
                 <div style={{ 
@@ -269,7 +329,28 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                       style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     />
                   </div>
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', lineHeight: '1.2' }}>{op.headline}</h3>
+                  {/* Kicker for secondary articles */}
+                  {getCategoryKicker(op) && (
+                    <div style={{
+                      fontSize: '9px',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      marginBottom: '6px',
+                      ...getCategoryKicker(op)!.style
+                    }}>
+                      {getCategoryKicker(op)!.text}
+                    </div>
+                  )}
+                  <h3 style={{ 
+                    fontSize: '1.4rem', 
+                    fontWeight: '900', 
+                    lineHeight: '1.2',
+                    // Editorial styling for "The Board"
+                    ...(getCategoryKicker(op)?.text === 'THE BOARD' ? {
+                      fontFamily: '"Times New Roman", serif',
+                      fontStyle: 'italic'
+                    } : {})
+                  }}>{op.headline}</h3>
                   {/* NEW: Enhanced metadata with author and date */}
                   <div style={{ 
                     fontSize: '11px', 

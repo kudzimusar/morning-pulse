@@ -1,5 +1,7 @@
 import { 
-  getFirestore, 
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
   collection, 
   addDoc, 
   query, 
@@ -82,7 +84,20 @@ const getDb = (): Firestore | null => {
       app = initializeApp(config);
     }
     
-    db = getFirestore(app);
+    // Use modern persistence with localCache (replaces deprecated enableIndexedDbPersistence)
+    try {
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache()
+      });
+    } catch (e: any) {
+      // If already initialized, get the existing instance
+      if (e.code === 'failed-precondition') {
+        db = getFirestore(app);
+      } else {
+        // Fallback to regular getFirestore
+        db = getFirestore(app);
+      }
+    }
     // CRITICAL: Initialize auth from the same app instance
     if (!auth) {
       auth = getAuth(app);
@@ -151,13 +166,7 @@ export const ensureAuthenticated = async (): Promise<void> => {
       // #endregion
       
       try {
-        // Add a timeout to prevent hanging on slow connections
-        const authPromise = signInAnonymously(auth);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Authentication timed out. Please check your connection.')), 10000)
-        );
-        
-        const userCredential = await Promise.race([authPromise, timeoutPromise]) as any;
+        const userCredential = await signInAnonymously(auth);
         console.log('✅ Anonymous authentication successful');
         
         // #region agent log
@@ -328,11 +337,9 @@ export const replaceArticleImage = async (
       await deleteObject(oldImageRef);
       console.log('🗑️ Deleted old image');
     } catch (error: any) {
-      // Ignore if file doesn't exist or if we don't have permission to delete
-      if (error.code !== 'storage/object-not-found' && error.code !== 'storage/unauthorized') {
+      // Ignore if file doesn't exist
+      if (error.code !== 'storage/object-not-found') {
         console.warn('Could not delete old image:', error);
-      } else {
-        console.log('ℹ️ Skipping old image deletion:', error.code);
       }
     }
     
@@ -348,90 +355,6 @@ export const replaceArticleImage = async (
   } catch (error: any) {
     console.error('❌ Error replacing image:', error);
     throw new Error(`Failed to replace image: ${error.message}`);
-  }
-};
-
-/**
- * Super Admin Media Override
- * Allows super_admin to replace images on published articles instantly
- * Includes audit trail and cleanup of old Firebase Storage files
- */
-export const superAdminMediaOverride = async (
-  articleId: string,
-  file: File,
-  superAdminUid: string,
-  superAdminName: string
-): Promise<void> => {
-  const db = getDb();
-  const s = getStorageInstance();
-  
-  if (!db || !s) {
-    throw new Error('Firebase not initialized');
-  }
-
-  await ensureAuthenticated();
-
-  try {
-    // Step 1: Get current article to find old image URL
-    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', articleId);
-    const snap = await getDoc(docRef);
-    
-    if (!snap.exists()) {
-      throw new Error('Article not found');
-    }
-
-    const existing = snap.data() as any;
-    const oldImageUrl = existing.finalImageUrl || existing.imageUrl || '';
-
-    // Step 2: Try to delete old Firebase Storage file if it exists
-    if (oldImageUrl && oldImageUrl.includes('firebasestorage.googleapis.com')) {
-      try {
-        // Extract the file path from Firebase Storage URL
-        // URL format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media
-        const urlMatch = oldImageUrl.match(/\/o\/([^?]+)/);
-        if (urlMatch) {
-          const decodedPath = decodeURIComponent(urlMatch[1].replace(/%2F/g, '/'));
-          const oldImageRef = storageRef(s, decodedPath);
-          await deleteObject(oldImageRef);
-          console.log('🗑️ Deleted old Firebase Storage image:', decodedPath);
-        }
-      } catch (deleteError: any) {
-        // Don't fail the whole operation if deletion fails
-        if (deleteError.code !== 'storage/object-not-found' && deleteError.code !== 'storage/unauthorized') {
-          console.warn('⚠️ Could not delete old image (non-critical):', deleteError);
-        } else {
-          console.log('ℹ️ Skipping old image deletion:', deleteError.code);
-        }
-      }
-    }
-
-    // Step 3: Upload new image to Storage
-    const newImageRef = storageRef(s, `published_images/${articleId}/final.jpg`);
-    await uploadBytes(newImageRef, file, {
-      contentType: file.type || 'image/jpeg',
-    });
-    
-    const newImageUrl = await getDownloadURL(newImageRef);
-    console.log('✅ New image uploaded:', newImageUrl);
-
-    // Step 4: Update Firestore with new image URL and audit trail
-    await setDoc(docRef, {
-      finalImageUrl: newImageUrl,
-      imageUrl: newImageUrl, // Keep legacy field aligned
-      lastMediaOverride: {
-        timestamp: Timestamp.now(),
-        performedBy: superAdminUid,
-        performedByName: superAdminName,
-        previousImageUrl: oldImageUrl,
-        newImageUrl: newImageUrl,
-      },
-      updatedAt: Timestamp.now(),
-    }, { merge: true });
-
-    console.log('✅ Super Admin media override completed for article:', articleId);
-  } catch (error: any) {
-    console.error('❌ Error in super admin media override:', error);
-    throw new Error(`Failed to override media: ${error.message}`);
   }
 };
 
@@ -704,21 +627,12 @@ export const approveOpinion = async (
     const existingFinal = typeof existing?.finalImageUrl === 'string' ? existing.finalImageUrl : '';
     const legacy = typeof existing?.imageUrl === 'string' ? existing.imageUrl : '';
 
-    // Helper function to validate URLs and filter out deprecated Unsplash URLs
-    const isValidUrl = (url: string): boolean => {
-      if (!url || typeof url !== 'string') return false;
-      if (!/^https?:\/\//i.test(url)) return false;
-      // Reject Unsplash URLs - they're deprecated and broken
-      if (url.includes('unsplash.com') || url.includes('source.unsplash.com')) return false;
-      return true;
-    };
-
     // Editorial Gate:
     // - If editor uploaded a replacement, use that.
-    // - Else keep existing finalImageUrl if present AND not Unsplash.
-    // - Else fallback to suggestedImageUrl (if not Unsplash), then legacy imageUrl (if not Unsplash).
+    // - Else keep existing finalImageUrl if present.
+    // - Else fallback to suggestedImageUrl, then legacy imageUrl.
     const candidate = replacementFinalImageUrl || existingFinal || suggested || legacy;
-    const hasValidUrl = isValidUrl(candidate);
+    const hasValidUrl = /^https?:\/\//i.test(candidate);
     const finalImageUrl = hasValidUrl ? candidate : getImageByTopic(existing?.headline || '', opinionId);
 
     const patch: any = {
