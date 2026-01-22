@@ -9,6 +9,7 @@ import {
   doc, 
   setDoc,
   getDoc,
+  updateDoc,
   onSnapshot,
   Timestamp,
   serverTimestamp,
@@ -355,6 +356,64 @@ export const replaceArticleImage = async (
   } catch (error: any) {
     console.error('❌ Error replacing image:', error);
     throw new Error(`Failed to replace image: ${error.message}`);
+  }
+};
+
+/**
+ * Super Admin Media Override
+ * Allows super admins to replace images on published articles with audit trail
+ */
+export const superAdminMediaOverride = async (
+  articleId: string,
+  file: File,
+  editorId: string,
+  editorName: string
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    // Get current article data to capture previous image URL
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', articleId);
+    const snap = await getDoc(docRef);
+    
+    if (!snap.exists()) {
+      throw new Error('Article not found');
+    }
+    
+    const existing = snap.data() as any;
+    const previousImageUrl = existing.finalImageUrl || existing.suggestedImageUrl || existing.imageUrl || null;
+    
+    // Upload new image
+    const newImageUrl = await replaceArticleImage(file, articleId);
+    
+    // Update document with new image and audit trail
+    await updateDoc(docRef, {
+      finalImageUrl: newImageUrl,
+      imageUrl: newImageUrl, // Keep legacy field aligned
+      lastMediaOverride: {
+        timestamp: Timestamp.now(),
+        performedBy: editorId,
+        performedByName: editorName,
+        previousImageUrl: previousImageUrl || null,
+        newImageUrl: newImageUrl
+      },
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log('✅ Super admin media override completed:', {
+      articleId,
+      previousImageUrl,
+      newImageUrl,
+      performedBy: editorName
+    });
+  } catch (error: any) {
+    console.error('❌ Super admin media override failed:', error);
+    throw new Error(`Failed to override image: ${error.message}`);
   }
 };
 
