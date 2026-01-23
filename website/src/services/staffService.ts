@@ -18,6 +18,8 @@ import {
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
+
 // Get Firestore instance
 const getDb = (): Firestore => {
   try {
@@ -50,7 +52,7 @@ export interface StaffMember {
  */
 export const getAllStaff = async (): Promise<StaffMember[]> => {
   const db = getDb();
-  const staffRef = collection(db, 'staff');
+  const staffRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'staff');
   
   const snapshot = await getDocs(staffRef);
   const staff: StaffMember[] = [];
@@ -86,7 +88,7 @@ export const getAllStaff = async (): Promise<StaffMember[]> => {
  */
 export const getStaffMember = async (uid: string): Promise<StaffMember | null> => {
   const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
+  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
   
   try {
     const snap = await getDoc(staffRef);
@@ -126,7 +128,7 @@ export const upsertStaffMember = async (
   roles: string[]
 ): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
+  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
   
   const snap = await getDoc(staffRef);
   const existingData = snap.exists() ? snap.data() : null;
@@ -148,7 +150,7 @@ export const updateStaffRoles = async (
   roles: string[]
 ): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
+  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
   
   await updateDoc(staffRef, {
     roles,
@@ -161,7 +163,7 @@ export const updateStaffRoles = async (
  */
 export const updateLastActive = async (uid: string): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
+  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
   
   try {
     await updateDoc(staffRef, {
@@ -185,7 +187,7 @@ export const suspendStaffMember = async (
   suspendedByName: string
 ): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
+  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
   
   await updateDoc(staffRef, {
     isActive: false,
@@ -204,7 +206,7 @@ export const suspendStaffMember = async (
  */
 export const activateStaffMember = async (uid: string): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
+  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
   
   await updateDoc(staffRef, {
     isActive: true,
@@ -222,7 +224,7 @@ export const activateStaffMember = async (uid: string): Promise<void> => {
  */
 export const deleteStaffMember = async (uid: string): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
+  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
   
   await deleteDoc(staffRef);
 };

@@ -20,6 +20,8 @@ import {
 } from 'firebase/firestore';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
+
 export interface Comment {
   id: string;
   articleId: string;
@@ -154,7 +156,7 @@ export const addComment = async (
     updatedAt: serverTimestamp(),
   };
 
-  const docRef = await addDoc(collection(db, 'comments'), commentData);
+  const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'comments'), commentData);
   return docRef.id;
 };
 
@@ -185,7 +187,7 @@ export const updateComment = async (
   if (!db) {
     throw new Error('Firebase not initialized');
   }
-  const commentRef = doc(db, 'comments', commentId);
+  const commentRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'comments', commentId);
 
   const updates: any = {
     content,
@@ -210,7 +212,7 @@ export const resolveComment = async (commentId: string): Promise<void> => {
   if (!db) {
     throw new Error('Firebase not initialized');
   }
-  const commentRef = doc(db, 'comments', commentId);
+  const commentRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'comments', commentId);
 
   await updateDoc(commentRef, {
     status: 'resolved',
@@ -226,7 +228,7 @@ export const deleteComment = async (commentId: string): Promise<void> => {
   if (!db) {
     throw new Error('Firebase not initialized');
   }
-  const commentRef = doc(db, 'comments', commentId);
+  const commentRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'comments', commentId);
 
   await updateDoc(commentRef, {
     status: 'deleted',
@@ -245,7 +247,7 @@ export const getArticleComments = async (articleId: string): Promise<Comment[]> 
   }
 
   const q = query(
-    collection(db, 'comments'),
+    collection(db, 'artifacts', APP_ID, 'public', 'data', 'comments'),
     where('articleId', '==', articleId),
     where('status', '!=', 'deleted'),
     orderBy('createdAt', 'asc')
@@ -281,7 +283,7 @@ export const subscribeToArticleComments = (
   }
 
   const q = query(
-    collection(db, 'comments'),
+    collection(db, 'artifacts', APP_ID, 'public', 'data', 'comments'),
     where('articleId', '==', articleId),
     where('status', '!=', 'deleted'),
     orderBy('createdAt', 'asc')
@@ -384,7 +386,7 @@ export const getAllUserComments = async (userId: string): Promise<Comment[]> => 
   }
 
   const q = query(
-    collection(db, 'comments'),
+    collection(db, 'artifacts', APP_ID, 'public', 'data', 'comments'),
     where('authorId', '==', userId),
     where('status', '!=', 'deleted'),
     orderBy('createdAt', 'desc')

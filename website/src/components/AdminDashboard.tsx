@@ -34,6 +34,7 @@ import SettingsTab from './admin/SettingsTab';
 import WriterManagementTab from './admin/WriterManagementTab';
 import SubscriberManagementTab from './admin/SubscriberManagementTab';
 import AdManagementTab from './admin/AdManagementTab';
+import IntegrationSettings from './admin/IntegrationSettings';
 import { updateLastActive } from '../services/staffService';
 
 // Constants
@@ -64,7 +65,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter' | 'subscribers' | 'image-compliance' | 'settings';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter' | 'subscribers' | 'image-compliance' | 'settings' | 'integrations';
 
 const AdminDashboard: React.FC = () => {
   // Auth state
@@ -119,7 +120,7 @@ const AdminDashboard: React.FC = () => {
         // Check staff document at root level: /staff/{uid}
         try {
           const { db } = firebaseInstances;
-          const staffRef = doc(db, 'staff', currentUser.uid);
+          const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', currentUser.uid);
           const staffSnap = await getDoc(staffRef);
           
           if (staffSnap.exists()) {
@@ -192,12 +193,12 @@ const AdminDashboard: React.FC = () => {
           } as Opinion);
         });
         
-        setAllOpinions(opinions);
-        setPendingOpinions(opinions.filter(op => op.status === 'pending'));
-        setPublishedOpinions(opinions.filter(op => op.status === 'published'));
+        setAllOpinions(opinions || []);
+        setPendingOpinions((opinions || []).filter(op => op.status === 'pending'));
+        setPublishedOpinions((opinions || []).filter(op => op.status === 'published'));
       },
       (error) => {
-        console.error('Error subscribing to opinions:', error);
+        console.error('❌ Firestore Permission Error (Opinions):', error);
       }
     );
 
@@ -251,12 +252,12 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Calculate priority metrics
-  const imageIssuesCount = pendingOpinions.filter(op => 
+  const imageIssuesCount = (pendingOpinions || []).filter(op => 
     !op.finalImageUrl && !op.suggestedImageUrl && !op.imageUrl
   ).length;
   
   const scheduledCount = 0; // TODO: Implement scheduled publishing
-  const recentlyPublishedCount = publishedOpinions.filter(op => {
+  const recentlyPublishedCount = (publishedOpinions || []).filter(op => {
     if (!op.publishedAt) return false;
     const dayAgo = new Date();
     dayAgo.setDate(dayAgo.getDate() - 1);
@@ -431,6 +432,7 @@ const AdminDashboard: React.FC = () => {
     { id: 'newsletter' as TabId, label: 'Newsletter Generator', icon: '📧' },
     { id: 'subscribers' as TabId, label: 'Subscribers', icon: '👥' },
     { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️' },
+    { id: 'integrations' as TabId, label: 'Integrations', icon: '🔌', adminOnly: true },
     { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
   ].filter(tab => !tab.adminOnly || isAdmin);
 
@@ -651,6 +653,13 @@ const AdminDashboard: React.FC = () => {
           {activeTab === 'image-compliance' && (
             <ImageComplianceTab
               firebaseInstances={firebaseInstances}
+              userRoles={userRoles}
+              showToast={showToast}
+            />
+          )}
+
+          {activeTab === 'integrations' && isAdmin && (
+            <IntegrationSettings
               userRoles={userRoles}
               showToast={showToast}
             />

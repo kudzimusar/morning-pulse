@@ -29,7 +29,7 @@ import { Opinion } from '../../types';
 import { getUIStatusLabel, getDbStatus, UIStatusLabel } from '../utils/opinionStatus';
 
 // Constants
-const APP_ID = "morning-pulse-app";
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 
 // Get Firebase instances (reuse existing app)
@@ -121,7 +121,7 @@ const AdminPortal: React.FC = () => {
         // Check staff document at root level: /staff/{uid}
         try {
           const { db } = firebaseInstances;
-          const staffRef = doc(db, 'staff', currentUser.uid);
+          const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', currentUser.uid);
           const staffSnap = await getDoc(staffRef);
           
           if (staffSnap.exists()) {

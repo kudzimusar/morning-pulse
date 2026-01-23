@@ -284,10 +284,29 @@ export interface AnalyticsSummary {
   }>;
 }
 
-// Mock function to get analytics summary (in a real app, this would fetch from GA4 API or a custom backend)
+// App ID Constant
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
+
+/**
+ * Get analytics summary from Firestore
+ * Uses mandatory path: artifacts/{appId}/public/data/analytics
+ */
 export const getAnalyticsSummary = async (db: any, period: 'day' | 'week' | 'month' = 'week'): Promise<AnalyticsSummary> => {
   console.log(`Fetching analytics summary for ${period}...`);
   
+  try {
+    const { collection, query, limit, getDocs } = await import('firebase/firestore');
+    const analyticsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'analytics');
+    const q = query(analyticsRef, limit(1));
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      return snapshot.docs[0].data() as AnalyticsSummary;
+    }
+  } catch (error) {
+    console.error('❌ Firestore Permission Error (Analytics):', error);
+  }
+
   // Return mock data for now
   return {
     totalViews: 1250,

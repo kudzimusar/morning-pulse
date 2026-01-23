@@ -1,8 +1,8 @@
 /**
  * Advertiser Management Service
  * Handles advertiser registration, ad submission, and ad management
- * Advertisers: artifacts/morning-pulse-app/public/data/advertisers/{uid}
- * Ads: artifacts/morning-pulse-app/public/data/ads/{adId}
+ * Advertisers: artifacts/{appId}/public/data/advertisers/{uid}
+ * Ads: artifacts/{appId}/public/data/ads/{adId}
  */
 
 import { 
@@ -18,7 +18,8 @@ import {
   deleteDoc,
   serverTimestamp,
   Firestore,
-  addDoc
+  addDoc,
+  onSnapshot
 } from 'firebase/firestore';
 import { 
   getAuth,
@@ -39,7 +40,7 @@ const getDb = (): Firestore => {
   }
 };
 
-const APP_ID = 'morning-pulse-app';
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 export interface Advertiser {
   uid: string;
@@ -451,6 +452,38 @@ export const getActiveAds = async (): Promise<Ad[]> => {
     console.error('Error fetching active ads:', error);
     throw new Error(`Failed to fetch active ads: ${error.message}`);
   }
+};
+
+/**
+ * Subscribe to real-time ad updates (admin only)
+ */
+export const subscribeToAds = (
+  callback: (ads: Ad[]) => void,
+  onError?: (error: any) => void
+): (() => void) => {
+  const db = getDb();
+  const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
+  
+  const unsubscribe = onSnapshot(adsRef, (snapshot) => {
+    const ads: Ad[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      ads.push({
+        id: docSnap.id,
+        ...data,
+        startDate: data.startDate?.toDate?.() || new Date(),
+        endDate: data.endDate?.toDate?.() || new Date(),
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        updatedAt: data.updatedAt?.toDate?.() || undefined,
+      } as Ad);
+    });
+    callback(ads);
+  }, (error) => {
+    console.error('❌ Firestore Permission Error (Ads):', error);
+    if (onError) onError(error);
+  });
+  
+  return unsubscribe;
 };
 
 /**

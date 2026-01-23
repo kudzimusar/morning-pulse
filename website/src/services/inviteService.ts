@@ -27,7 +27,7 @@ import { getApp } from 'firebase/app';
 import { StaffInvite, StaffMember } from '../../types';
 import { logStaffAction, AuditActions } from './auditService';
 
-const APP_ID = 'morning-pulse-app';
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 // Get Firestore instance
 const getDb = (): Firestore => {
@@ -208,7 +208,7 @@ export const createStaffFromInvite = async (
     console.log(`✅ [INVITE] Auth user created with UID: ${user.uid}`);
     
     // 3. Create staff document at /staff/{uid}
-    const staffRef = doc(db, 'staff', user.uid);
+    const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', user.uid);
     
     const staffMember: Partial<StaffMember> = {
       uid: user.uid,

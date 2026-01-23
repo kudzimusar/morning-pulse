@@ -17,6 +17,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   userRoles,
   showToast,
 }) => {
+  const APP_ID = (window as any).__app_id || 'morning-pulse-app';
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [autoPublish, setAutoPublish] = useState(false);
   const [requireImage, setRequireImage] = useState(true);
@@ -141,8 +142,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
           color: '#666',
           lineHeight: '1.6'
         }}>
-          <div><strong>App ID:</strong> morning-pulse-app</div>
-          <div><strong>Firestore Path:</strong> artifacts/morning-pulse-app/public/data/opinions</div>
+          <div><strong>App ID:</strong> {APP_ID}</div>
+          <div><strong>Firestore Path:</strong> artifacts/{APP_ID}/public/data/opinions</div>
           <div><strong>Storage Path:</strong> published_images/</div>
           <div><strong>Staff Collection:</strong> /staff/{'{uid}'}</div>
         </div>

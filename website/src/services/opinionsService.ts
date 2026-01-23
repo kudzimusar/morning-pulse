@@ -197,7 +197,8 @@ export const ensureAuthenticated = async (): Promise<void> => {
   }
 };
 
-const OPINIONS_COLLECTION = 'artifacts/morning-pulse-app/public/data/opinions';
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
+const OPINIONS_COLLECTION = `artifacts/${APP_ID}/public/data/opinions`;
 
 /**
  * Get current auth user (for components to check auth state)
@@ -219,10 +220,10 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
     // CRITICAL: Ensure anonymous authentication before writing to Firestore
     await ensureAuthenticated();
     
-    console.log('📝 Attempting to submit opinion to path: artifacts/morning-pulse-app/public/data/opinions');
+    console.log('📝 Attempting to submit opinion to path: artifacts/${APP_ID}/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     
     // PRIMARY: Generate imageUrl on submit so admins see an image during review
     const suggestedImageUrl = opinionData.suggestedImageUrl;
@@ -268,7 +269,7 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
 /**
  * Create a new editorial article directly (bypasses submission queue)
  * Used by editors to write and publish articles directly
- * Saves to: artifacts/morning-pulse-app/public/data/opinions
+ * Saves to: artifacts/${APP_ID}/public/data/opinions
  */
 export const createEditorialArticle = async (
   articleData: {
@@ -291,7 +292,7 @@ export const createEditorialArticle = async (
     
     console.log('📝 Creating editorial article directly...');
     
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     
     const imageUrl = articleData.finalImageUrl || getImageByTopic(articleData.headline || '');
     
@@ -388,7 +389,7 @@ export const superAdminMediaOverride = async (
     await ensureAuthenticated();
     
     // Get current article data to capture previous image URL
-    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', articleId);
+    const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', articleId);
     const snap = await getDoc(docRef);
     
     if (!snap.exists()) {
@@ -441,10 +442,10 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
     
-    console.log('📝 Attempting to fetch published opinions from path: artifacts/morning-pulse-app/public/data/opinions');
+    console.log('📝 Attempting to fetch published opinions from path: artifacts/${APP_ID}/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
@@ -496,7 +497,7 @@ export const subscribeToPublishedOpinions = (
     console.log('📰 Subscribing to published opinions in Firestore...');
     
     const enhancedFirestore = EnhancedFirestore.getInstance(db);
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
 
     const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
@@ -560,10 +561,10 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
     
-    console.log('📝 Attempting to fetch pending opinions from path: artifacts/morning-pulse-app/public/data/opinions');
+    console.log('📝 Attempting to fetch pending opinions from path: artifacts/${APP_ID}/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
     
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
@@ -615,7 +616,7 @@ export const subscribeToPendingOpinions = (
     console.log('📝 Subscribing to pending opinions in Firestore...');
     
     const enhancedFirestore = EnhancedFirestore.getInstance(db);
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
 
     const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
@@ -985,7 +986,7 @@ export const checkAndPublishScheduledStories = async (): Promise<number> => {
   try {
     await ensureAuthenticated();
     
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef, where('status', '==', 'scheduled'));
     const snapshot = await getDocs(q);
     
@@ -1043,7 +1044,7 @@ export const getOpinionBySlug = async (slugOrId: string): Promise<Opinion | null
   try {
     await ensureAuthenticated();
     
-    const opinionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
+    const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     
     // Try to find by slug first
     const slugQuery = query(opinionsRef, where('slug', '==', slugOrId), where('status', '==', 'published'));
@@ -1268,7 +1269,7 @@ export const createShortLink = async (
   };
 
   try {
-    await setDoc(doc(db, 'short_links', shortId), shortLinkData);
+    await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'short_links', shortId), shortLinkData);
     console.log(`✅ Short link created: ${shortId} for story ${storyId}`);
     return shortId;
   } catch (error: any) {

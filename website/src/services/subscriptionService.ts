@@ -1,7 +1,7 @@
 /**
  * Subscription Management Service
  * Handles subscriber registration, payment processing, and subscription management
- * Subscribers are stored at: artifacts/morning-pulse-app/public/data/subscribers/{uid}
+ * Subscribers are stored at: artifacts/{appId}/public/data/subscribers/{uid}
  */
 
 import { 
@@ -16,7 +16,8 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  Firestore
+  Firestore,
+  onSnapshot
 } from 'firebase/firestore';
 import { 
   getAuth,
@@ -36,7 +37,7 @@ const getDb = (): Firestore => {
   }
 };
 
-const APP_ID = 'morning-pulse-app';
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 export interface Subscriber {
   uid: string;
@@ -71,7 +72,7 @@ export const registerSubscriber = async (
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
     
-    // 2. Create subscriber document
+    // 2. Create subscriber document using mandatory path
     const subscriberRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'subscribers', uid);
     
     const now = new Date();
@@ -131,13 +132,52 @@ export const getSubscriber = async (uid: string): Promise<Subscriber | null> => 
 };
 
 /**
- * Get subscriber by current auth user
+ * Get current subscriber data
  */
 export const getCurrentSubscriber = async (): Promise<Subscriber | null> => {
   const auth = getAuth();
   const user = auth.currentUser;
   if (!user) return null;
+  
   return getSubscriber(user.uid);
+};
+
+/**
+ * Subscribe to real-time subscriber updates (admin only)
+ */
+export const subscribeToSubscribers = (
+  callback: (subscribers: Subscriber[]) => void,
+  onError?: (error: any) => void
+): (() => void) => {
+  const db = getDb();
+  const subscribersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'subscribers');
+  
+  const unsubscribe = onSnapshot(subscribersRef, (snapshot) => {
+    const subscribers: Subscriber[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      subscribers.push({
+        uid: docSnap.id,
+        email: data.email || '',
+        whatsapp: data.whatsapp,
+        subscriptionTier: data.subscriptionTier || 'micro-pulse',
+        status: data.status || 'pending_payment',
+        paymentStatus: data.paymentStatus || 'pending',
+        startDate: data.startDate?.toDate?.() || new Date(),
+        endDate: data.endDate?.toDate?.() || new Date(),
+        paymentId: data.paymentId,
+        stripeCustomerId: data.stripeCustomerId,
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        updatedAt: data.updatedAt?.toDate?.() || undefined,
+      });
+    });
+    callback(subscribers);
+  }, (error) => {
+    console.error('❌ Firestore Permission Error (Subscribers):', error);
+    if (onError) onError(error);
+  });
+  
+  return unsubscribe;
 };
 
 /**

@@ -26,6 +26,8 @@ import {
 } from 'firebase/auth';
 import { getApp } from 'firebase/app';
 
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
+
 // Get Firestore instance
 const getDb = (): Firestore => {
   try {
@@ -69,7 +71,7 @@ export const registerWriter = async (
     const uid = userCredential.user.uid;
     
     // 2. Create writer document at root level: /writers/{uid}
-    const writerRef = doc(db, 'writers', uid);
+    const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
     await setDoc(writerRef, {
       email,
       name,
@@ -92,7 +94,7 @@ export const registerWriter = async (
  */
 export const getWriter = async (uid: string): Promise<Writer | null> => {
   const db = getDb();
-  const writerRef = doc(db, 'writers', uid);
+  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
   
   try {
     const snap = await getDoc(writerRef);
@@ -133,7 +135,7 @@ export const getCurrentWriter = async (): Promise<Writer | null> => {
  */
 export const getPendingWriters = async (): Promise<Writer[]> => {
   const db = getDb();
-  const writersRef = collection(db, 'writers');
+  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
   const q = query(writersRef, where('status', '==', 'pending_approval'));
   
   try {
@@ -171,7 +173,7 @@ export const getPendingWriters = async (): Promise<Writer[]> => {
  */
 export const getApprovedWriters = async (): Promise<Writer[]> => {
   const db = getDb();
-  const writersRef = collection(db, 'writers');
+  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
   const q = query(writersRef, where('status', '==', 'approved'));
   
   try {
@@ -214,7 +216,7 @@ export const approveWriter = async (uid: string): Promise<void> => {
   
   try {
     // 1. Get writer data
-    const writerRef = doc(db, 'writers', uid);
+    const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
     const writerSnap = await getDoc(writerRef);
     
     if (!writerSnap.exists()) {
@@ -231,7 +233,7 @@ export const approveWriter = async (uid: string): Promise<void> => {
     });
     
     // 3. Add to staff collection with writer role
-    const staffRef = doc(db, 'staff', uid);
+    const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
     await setDoc(staffRef, {
       email: writerData.email,
       name: writerData.name,
@@ -254,7 +256,7 @@ export const approveWriter = async (uid: string): Promise<void> => {
  */
 export const rejectWriter = async (uid: string, reason: string): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'writers', uid);
+  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
   
   try {
     await updateDoc(writerRef, {
@@ -284,7 +286,7 @@ export const updateWriterProfile = async (
   }
 ): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'writers', uid);
+  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
   
   try {
     await updateDoc(writerRef, {
@@ -293,7 +295,7 @@ export const updateWriterProfile = async (
     });
     
     // Also update staff collection if writer is approved
-    const staffRef = doc(db, 'staff', uid);
+    const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
     const staffSnap = await getDoc(staffRef);
     if (staffSnap.exists()) {
       const updateData: any = {};

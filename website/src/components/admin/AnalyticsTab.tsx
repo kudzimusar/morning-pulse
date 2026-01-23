@@ -13,6 +13,7 @@ interface AnalyticsTabProps {
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,15 +27,25 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
       setLoading(true);
       const data = await getAnalyticsSummary();
       setAnalytics(data);
-    } catch (error) {
+      setError(null);
+    } catch (error: any) {
       console.error('Error loading analytics:', error);
+      setError(error.message || 'Failed to load analytics');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading || !analytics) {
+  if (loading) {
     return <div>Loading analytics...</div>;
+  }
+
+  if (error) {
+    return <div style={{ color: '#ef4444', padding: '20px' }}>Error: {error}</div>;
+  }
+
+  if (!analytics) {
+    return <div>No analytics data available.</div>;
   }
 
   return (
@@ -298,7 +309,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
           flexDirection: 'column',
           gap: '12px'
         }}>
-          {analytics.topCategories.length === 0 ? (
+          {!analytics.topCategories || analytics.topCategories.length === 0 ? (
             <div style={{ color: '#999' }}>No category data available</div>
           ) : (
             analytics.topCategories.map((cat, index) => (
@@ -344,7 +355,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
           flexDirection: 'column',
           gap: '8px'
         }}>
-          {analytics.recentActivity.length === 0 ? (
+          {!analytics.recentActivity || analytics.recentActivity.length === 0 ? (
             <div style={{ color: '#999' }}>No recent activity</div>
           ) : (
             analytics.recentActivity.map((activity, index) => (

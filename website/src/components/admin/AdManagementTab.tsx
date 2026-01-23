@@ -9,6 +9,7 @@ import {
   approveAd,
   rejectAd,
   activateAd,
+  subscribeToAds,
   Advertiser,
   Ad
 } from '../../services/advertiserService';
@@ -33,32 +34,44 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
     if (!requireSuperAdmin(userRoles)) {
       return;
     }
-    loadData();
+    
+    if (activeTab === 'advertisers') {
+      loadAdvertisers();
+    } else {
+      const unsubscribe = subscribeToAds(
+        (ads) => {
+          setPendingAds((ads || []).filter(a => a.status === 'pending'));
+          setActiveAds((ads || []).filter(a => a.status === 'active' || a.status === 'approved'));
+          setLoading(false);
+        },
+        (err) => {
+          console.error('Error subscribing to ads:', err);
+          setLoading(false);
+        }
+      );
+      return () => unsubscribe();
+    }
   }, [userRoles, activeTab, advertiserSubTab]);
 
-  const loadData = async () => {
+  const loadAdvertisers = async () => {
     try {
       setLoading(true);
-      if (activeTab === 'advertisers') {
-        const [pending, approved] = await Promise.all([
-          getPendingAdvertisers(),
-          getApprovedAdvertisers(),
-        ]);
-        setPendingAdvertisers(pending);
-        setApprovedAdvertisers(approved);
-      } else {
-        const [pending, active] = await Promise.all([
-          getPendingAds(),
-          getActiveAds(),
-        ]);
-        setPendingAds(pending);
-        setActiveAds(active);
-      }
+      const [pending, approved] = await Promise.all([
+        getPendingAdvertisers(),
+        getApprovedAdvertisers(),
+      ]);
+      setPendingAdvertisers(pending || []);
+      setApprovedAdvertisers(approved || []);
     } catch (error: any) {
-      console.error('Error loading data:', error);
-      alert(`Failed to load data: ${error.message}`);
+      console.error('Error loading advertisers:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadData = async () => {
+    if (activeTab === 'advertisers') {
+      await loadAdvertisers();
     }
   };
 
@@ -257,7 +270,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
       {/* Advertisers Content */}
       {activeTab === 'advertisers' && advertiserSubTab === 'pending' && (
         <div>
-          {pendingAdvertisers.length === 0 ? (
+          {(!pendingAdvertisers || pendingAdvertisers.length === 0) ? (
             <div style={{
               padding: '48px',
               textAlign: 'center',
@@ -294,7 +307,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                         </div>
                       )}
                       <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
-                        Applied: {advertiser.createdAt.toLocaleDateString()}
+                        Applied: {advertiser.createdAt?.toLocaleDateString()}
                       </div>
                     </div>
                     
@@ -397,7 +410,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
 
       {activeTab === 'advertisers' && advertiserSubTab === 'approved' && (
         <div>
-          {approvedAdvertisers.length === 0 ? (
+          {(!approvedAdvertisers || approvedAdvertisers.length === 0) ? (
             <div style={{
               padding: '48px',
               textAlign: 'center',
@@ -457,7 +470,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
         <div>
           <div style={{ marginBottom: '16px' }}>
             <h3 style={{ marginBottom: '12px' }}>Pending Ads ({pendingAds.length})</h3>
-            {pendingAds.length === 0 ? (
+            {(!pendingAds || pendingAds.length === 0) ? (
               <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No pending ads.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
@@ -475,7 +488,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                       <div style={{ flex: 1 }}>
                         <h4 style={{ margin: '0 0 8px 0' }}>{ad.title}</h4>
                         <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
-                          Placement: {ad.placement} | {ad.startDate.toLocaleDateString()} - {ad.endDate.toLocaleDateString()}
+                          Placement: {ad.placement} | {ad.startDate?.toLocaleDateString()} - {ad.endDate?.toLocaleDateString()}
                         </div>
                         {ad.creativeUrl && (
                           <img 
@@ -531,7 +544,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
 
           <div>
             <h3 style={{ marginBottom: '12px' }}>Active Ads ({activeAds.length})</h3>
-            {activeAds.length === 0 ? (
+            {(!activeAds || activeAds.length === 0) ? (
               <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No active ads.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -550,7 +563,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                         <h4 style={{ margin: '0 0 8px 0' }}>{ad.title}</h4>
                         <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                           Placement: {ad.placement} | Views: {ad.views} | Clicks: {ad.clicks} | 
-                          {ad.endDate.toLocaleDateString()}
+                          {ad.endDate?.toLocaleDateString()}
                         </div>
                       </div>
                       {ad.status === 'approved' && (

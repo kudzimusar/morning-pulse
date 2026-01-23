@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllSubscribers, Subscriber } from '../../services/subscriptionService';
+import { subscribeToSubscribers, Subscriber } from '../../services/subscriptionService';
 import { requireSuperAdmin } from '../../services/authService';
 
 interface SubscriberManagementTabProps {
@@ -9,27 +9,30 @@ interface SubscriberManagementTabProps {
 const SubscriberManagementTab: React.FC<SubscriberManagementTabProps> = ({ userRoles }) => {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'cancelled' | 'expired' | 'pending'>('all');
 
   useEffect(() => {
     if (!requireSuperAdmin(userRoles)) {
       return;
     }
-    loadSubscribers();
-  }, [userRoles]);
 
-  const loadSubscribers = async () => {
-    try {
-      setLoading(true);
-      const all = await getAllSubscribers();
-      setSubscribers(all);
-    } catch (error: any) {
-      console.error('Error loading subscribers:', error);
-      alert(`Failed to load subscribers: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setLoading(true);
+    const unsubscribe = subscribeToSubscribers(
+      (data) => {
+        setSubscribers(data || []);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        console.error('Error loading subscribers:', err);
+        setError(err.message || 'Failed to load subscribers');
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [userRoles]);
 
   const filteredSubscribers = subscribers.filter(sub => {
     if (filter === 'all') return true;
@@ -49,6 +52,18 @@ const SubscriberManagementTab: React.FC<SubscriberManagementTabProps> = ({ userR
     return (
       <div style={{ padding: '32px', textAlign: 'center' }}>
         <p>Loading subscribers...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '32px', textAlign: 'center', color: '#ef4444' }}>
+        <h2>Error</h2>
+        <p>{error}</p>
+        <p style={{ fontSize: '12px', color: '#666' }}>
+          Check Firestore permissions for path: artifacts/morning-pulse-app/public/data/subscribers
+        </p>
       </div>
     );
   }
@@ -128,7 +143,7 @@ const SubscriberManagementTab: React.FC<SubscriberManagementTabProps> = ({ userR
                 textTransform: 'capitalize'
               }}
             >
-              {f.replace('_', ' ')} ({f === 'all' ? stats.total : stats[f === 'pending' ? 'pending' : f]})
+              {f.replace('_', ' ')} ({f === 'all' ? stats.total : stats[f]})
             </button>
           ))}
         </div>
@@ -165,10 +180,10 @@ const SubscriberManagementTab: React.FC<SubscriberManagementTabProps> = ({ userR
                     {subscriber.whatsapp && `WhatsApp: ${subscriber.whatsapp}`}
                   </div>
                   <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: '#6b7280' }}>
-                    <span>Plan: <strong style={{ textTransform: 'capitalize' }}>{subscriber.subscriptionTier.replace('-', ' ')}</strong></span>
+                    <span>Plan: <strong style={{ textTransform: 'capitalize' }}>{subscriber.subscriptionTier?.replace('-', ' ')}</strong></span>
                     <span>Payment: <strong>{subscriber.paymentStatus}</strong></span>
-                    <span>Start: {subscriber.startDate.toLocaleDateString()}</span>
-                    <span>End: {subscriber.endDate.toLocaleDateString()}</span>
+                    <span>Start: {subscriber.startDate?.toLocaleDateString()}</span>
+                    <span>End: {subscriber.endDate?.toLocaleDateString()}</span>
                   </div>
                 </div>
                 <div>
@@ -197,7 +212,7 @@ const SubscriberManagementTab: React.FC<SubscriberManagementTabProps> = ({ userR
                       textTransform: 'capitalize'
                     }}
                   >
-                    {subscriber.status.replace('_', ' ')}
+                    {subscriber.status?.replace('_', ' ')}
                   </span>
                 </div>
               </div>
