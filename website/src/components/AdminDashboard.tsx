@@ -271,7 +271,10 @@ const AdminDashboard: React.FC = () => {
     try {
       const { auth } = firebaseInstances;
       await signOut(auth);
-      window.location.href = '/';
+      
+      // Redirect to home page with base path
+      const baseUrl = window.location.origin + '/morning-pulse';
+      window.location.href = `${baseUrl}/#/`;
     } catch (error) {
       console.error('Logout error:', error);
       showToast('Logout failed', 'error');

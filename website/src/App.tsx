@@ -616,7 +616,9 @@ const App: React.FC = () => {
                     await logoutEditor();
                     setView('public');
                     setUserRole(null);
-                    window.location.hash = '';
+                    // Redirect to home with base path
+                    const baseUrl = window.location.origin + '/morning-pulse';
+                    window.location.href = `${baseUrl}/#/`;
                   } catch (err) {
                     console.error('Logout error:', err);
                   }

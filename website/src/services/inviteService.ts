@@ -29,6 +29,19 @@ import { logStaffAction, AuditActions } from './auditService';
 
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
+/**
+ * Get the base URL for GitHub Pages (includes /morning-pulse subdirectory)
+ * @returns Base URL with /morning-pulse path
+ */
+export const getBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    return origin + '/morning-pulse';
+  }
+  // Fallback for SSR
+  return 'https://kudzimusar.github.io/morning-pulse';
+};
+
 // Get Firestore instance
 const getDb = (): Firestore => {
   try {
@@ -375,18 +388,6 @@ export const hasPendingInvite = async (email: string): Promise<boolean> => {
  * @returns Full join URL with correct base path for GitHub Pages
  */
 export const getInviteJoinUrl = (token: string, baseUrl?: string): string => {
-  let base = baseUrl;
-  
-  if (!base && typeof window !== 'undefined') {
-    const origin = window.location.origin;
-    // Always use GitHub Pages base path (/morning-pulse)
-    base = origin + '/morning-pulse';
-  }
-  
-  // Fallback for SSR or when window is undefined
-  if (!base) {
-    base = 'https://kudzimusar.github.io/morning-pulse';
-  }
-  
+  const base = baseUrl || getBaseUrl();
   return `${base}/#join?token=${token}`;
 };
