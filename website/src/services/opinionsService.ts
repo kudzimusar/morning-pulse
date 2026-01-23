@@ -330,6 +330,7 @@ export const createEditorialArticle = async (
  * Replace article image and overwrite existing final.jpg
  * Uploads to: published_images/{articleId}/final.jpg
  * Deletes old image if it exists before uploading new one
+ * ✅ NEW: Also updates Firestore document with new image URL
  */
 export const replaceArticleImage = async (
   file: File,
@@ -338,6 +339,11 @@ export const replaceArticleImage = async (
   const s = getStorageInstance();
   if (!s) {
     throw new Error('Firebase not initialized');
+  }
+
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firestore not initialized');
   }
 
   await ensureAuthenticated();
@@ -363,6 +369,29 @@ export const replaceArticleImage = async (
     
     const downloadURL = await getDownloadURL(newImageRef);
     console.log('✅ Image replaced successfully:', downloadURL);
+    
+    // ✅ NEW: Update Firestore document with new image URL
+    try {
+      const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', articleId);
+      
+      // Check if document exists before updating
+      const opinionSnap = await getDoc(opinionRef);
+      if (opinionSnap.exists()) {
+        await updateDoc(opinionRef, {
+          finalImageUrl: downloadURL,
+          imageUrl: downloadURL, // Also update imageUrl for backward compatibility
+          updatedAt: serverTimestamp(),
+        });
+        console.log('✅ Firestore updated with new image URL:', downloadURL);
+      } else {
+        console.warn('⚠️ Opinion document not found:', articleId);
+      }
+    } catch (firestoreError: any) {
+      console.error('⚠️ Failed to update Firestore with image URL:', firestoreError);
+      // Don't throw - image upload succeeded, just Firestore update failed
+      // The caller can handle this gracefully
+    }
+    
     return downloadURL;
   } catch (error: any) {
     console.error('❌ Error replacing image:', error);

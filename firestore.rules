@@ -97,12 +97,11 @@ service cloud.firestore {
     // OPINIONS COLLECTION (Editorial Content)
     // ===========================================
     match /artifacts/{appId}/public/data/opinions/{opinionId} {
-      // Public can read all opinions (filtering happens client-side)
-      // This allows collection queries to work, then client filters by status
-      allow read: if true;
+      // Public can read published opinions
+      allow read: if resource.data.status == 'published' || isEditor();
       
-      // Anyone (including anonymous) can create opinions (guest submissions)
-      allow create: if true;
+      // Writers can create opinions (submissions)
+      allow create: if isAuthenticated();
       
       // Only editors can update opinions (review, edit, publish)
       allow update: if isEditor();
@@ -112,70 +111,24 @@ service cloud.firestore {
     }
     
     // ===========================================
-    // OPINION VERSIONS SUB-COLLECTION
-    // ===========================================
-    match /artifacts/{appId}/public/data/opinions/{opinionId}/versions/{versionId} {
-      // Only editors can read version history
-      allow read: if isEditor();
-      
-      // Only editors can create versions (auto-save snapshots)
-      allow create: if isEditor();
-      
-      // Versions are immutable (no updates)
-      allow update: if false;
-      
-      // Only admins can delete versions
-      allow delete: if isAdmin();
-    }
-    
-    // ===========================================
-    // NEWS DATA COLLECTION (Public Access)
-    // ===========================================
-    match /artifacts/{appId}/public/data/news/{date} {
-      // Public can read news data (no authentication required)
-      allow read: if true;
-
-      // Only authenticated admin users can create/update news data
-      // (This is done by the news aggregator Cloud Function)
-      allow create, update: if isAdmin();
-
-      // Only admins can delete news data
-      allow delete: if isAdmin();
-    }
-
-    // ===========================================
-    // POLL DATA COLLECTION (Public Access)
-    // ===========================================
-    match /artifacts/{appId}/public/data/polls/{pollId} {
-      // Public can read poll data
-      allow read: if true;
-
-      // Only admins can create/update polls
-      allow create, update: if isAdmin();
-
-      // Only admins can delete polls
-      allow delete: if isAdmin();
-    }
-
-    // ===========================================
     // WRITERS COLLECTION
     // ===========================================
     match /writers/{uid} {
       // Anyone can create writer applications
       allow create: if true;
-
+      
       // Writers can read their own document
       // Admins can read all writer documents
       allow read: if request.auth.uid == uid || isAdmin();
-
+      
       // Writers can update their own profile
       // Admins can update any writer (approve/reject)
       allow update: if request.auth.uid == uid || isAdmin();
-
+      
       // Only admins can delete writers
       allow delete: if isAdmin();
     }
-
+    
     // ===========================================
     // SHORT LINKS COLLECTION
     // ===========================================

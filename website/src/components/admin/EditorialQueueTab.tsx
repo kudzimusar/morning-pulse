@@ -10,6 +10,7 @@ import {
   doc, 
   updateDoc, 
   addDoc,
+  getDoc,
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
@@ -39,6 +40,7 @@ import {
   restoreVersion
 } from '../../services/opinionsService';
 import { compressImage, validateImage } from '../../utils/imageCompression';
+import { getImageByTopic } from '../../utils/imageGenerator';
 import EnhancedFirestore from '../../services/enhancedFirestore';
 import { getCurrentEditor } from '../../services/authService';
 import { generateUniqueSlug, sanitizeSlug, isValidSlug } from '../../utils/slugUtils';
@@ -341,6 +343,16 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       // For existing articles, replace immediately
       if (!selectedOpinionId) {
         showToast('No article selected', 'error');
+        setUploadingImage(false);
+        setCompressing(false);
+        return;
+      }
+
+      // Safety check: Ensure firebaseInstances is available
+      if (!firebaseInstances) {
+        showToast('Firebase not initialized', 'error');
+        setUploadingImage(false);
+        setCompressing(false);
         return;
       }
 
@@ -368,6 +380,25 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       });
       
       const downloadURL = await getDownloadURL(newImageRef);
+      
+      // ✅ NEW: Immediately update Firestore document with new image URL
+      const { db } = firebaseInstances;
+      const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
+      
+      try {
+        await updateDoc(opinionRef, {
+          finalImageUrl: downloadURL,
+          imageUrl: downloadURL, // Also update imageUrl for backward compatibility
+          updatedAt: serverTimestamp(),
+        });
+        console.log('✅ Firestore updated with new image URL:', downloadURL);
+      } catch (firestoreError: any) {
+        console.error('⚠️ Failed to update Firestore with image URL:', firestoreError);
+        // Don't fail the entire operation - image is uploaded, just Firestore update failed
+        showToast('Image uploaded but Firestore update failed. Please save the article.', 'error');
+      }
+      
+      // Update React state
       setFinalImageUrl(downloadURL);
       setNewImagePreviewUrl(null); // Clear preview after upload
       setNewImageFile(null);
@@ -627,7 +658,32 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       return;
     }
 
-    const imageToUse = finalImageUrl || suggestedImageUrl;
+    // ✅ NEW: Fetch latest finalImageUrl from Firestore to avoid stale state
+    let imageToUse = finalImageUrl || suggestedImageUrl;
+    
+    // If no image in state, try fetching from database
+    if (!imageToUse && selectedOpinionId) {
+      try {
+        const { db } = firebaseInstances;
+        const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
+        const opinionSnap = await getDoc(opinionRef);
+        
+        if (opinionSnap.exists()) {
+          const opinionData = opinionSnap.data();
+          imageToUse = opinionData.finalImageUrl || opinionData.imageUrl || suggestedImageUrl;
+          
+          if (imageToUse && imageToUse !== finalImageUrl) {
+            // Update state with latest from database
+            setFinalImageUrl(imageToUse);
+            console.log('✅ Loaded latest image URL from Firestore:', imageToUse);
+          }
+        }
+      } catch (fetchError: any) {
+        console.warn('⚠️ Could not fetch latest image URL from Firestore:', fetchError);
+        // Continue with state value
+      }
+    }
+    
     if (!imageToUse) {
       showToast('Please upload or select an image before publishing', 'error');
       return;
@@ -660,7 +716,8 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         editorNotes: editorNotes,
         status: 'published',
         isPublished: true,
-        finalImageUrl: imageToUse,
+        finalImageUrl: imageToUse, // ✅ Uses latest value (from state or database)
+        imageUrl: imageToUse, // ✅ Also update imageUrl for backward compatibility
         publishedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
