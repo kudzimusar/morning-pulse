@@ -379,15 +379,8 @@ export const getInviteJoinUrl = (token: string, baseUrl?: string): string => {
   
   if (!base && typeof window !== 'undefined') {
     const origin = window.location.origin;
-    const currentPath = window.location.pathname;
-    
-    // Check if we're already on the correct base path
-    if (currentPath.startsWith('/morning-pulse')) {
-      base = origin + '/morning-pulse';
-    } else {
-      // Always use GitHub Pages base path
-      base = origin + '/morning-pulse';
-    }
+    // Always use GitHub Pages base path (/morning-pulse)
+    base = origin + '/morning-pulse';
   }
   
   // Fallback for SSR or when window is undefined
