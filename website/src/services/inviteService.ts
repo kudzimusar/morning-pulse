@@ -371,10 +371,29 @@ export const hasPendingInvite = async (email: string): Promise<boolean> => {
 /**
  * Generate the join URL for an invite
  * @param token - The invite token
- * @param baseUrl - Base URL of the app (optional, defaults to current origin)
- * @returns Full join URL
+ * @param baseUrl - Base URL of the app (optional, defaults to current origin + base path)
+ * @returns Full join URL with correct base path for GitHub Pages
  */
 export const getInviteJoinUrl = (token: string, baseUrl?: string): string => {
-  const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  let base = baseUrl;
+  
+  if (!base && typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    const currentPath = window.location.pathname;
+    
+    // Check if we're already on the correct base path
+    if (currentPath.startsWith('/morning-pulse')) {
+      base = origin + '/morning-pulse';
+    } else {
+      // Always use GitHub Pages base path
+      base = origin + '/morning-pulse';
+    }
+  }
+  
+  // Fallback for SSR or when window is undefined
+  if (!base) {
+    base = 'https://kudzimusar.github.io/morning-pulse';
+  }
+  
   return `${base}/#join?token=${token}`;
 };
