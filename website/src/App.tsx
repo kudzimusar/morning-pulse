@@ -273,11 +273,13 @@ const App: React.FC = () => {
           setView('admin');
           setCurrentPage('news'); // Keep currentPage for context
         }
-      } else if (hash.startsWith('join')) {
+      } else if (hash === 'join' || hash.startsWith('join?')) {
         // ✅ NEW: Staff invitation join page
+        // Handle both #join?token=... and #join
         setCurrentPage('join');
         setView('public');
         setShowAdminLogin(false);
+        console.log('🔗 [ROUTING] Join page detected, hash:', hash);
       } else {
         setCurrentPage('news');
         setShowAdminLogin(false);

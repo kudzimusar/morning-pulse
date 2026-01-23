@@ -23,16 +23,24 @@ const JoinPage: React.FC = () => {
     // Parse token from URL hash: #join?token=XYZ
     const parseToken = () => {
       const hash = window.location.hash;
-      const params = new URLSearchParams(hash.split('?')[1] || '');
+      console.log('🔍 [JOIN] Parsing hash:', hash);
+      
+      // Handle both #join?token=XYZ and join?token=XYZ formats
+      const hashWithoutHash = hash.replace('#', '');
+      const params = new URLSearchParams(hashWithoutHash.split('?')[1] || '');
       const tokenParam = params.get('token');
       
+      console.log('🔍 [JOIN] Extracted token:', tokenParam ? 'Found' : 'Not found');
+      
       if (!tokenParam) {
-        setError('No invitation token found in URL');
+        console.error('❌ [JOIN] No token found in URL hash');
+        setError('No invitation token found in URL. Please check the invitation link.');
         setLoading(false);
         return;
       }
       
       setToken(tokenParam);
+      console.log('✅ [JOIN] Token set:', tokenParam.substring(0, 8) + '...');
     };
 
     parseToken();
@@ -45,18 +53,21 @@ const JoinPage: React.FC = () => {
     const validateToken = async () => {
       try {
         setLoading(true);
+        console.log('🔍 [JOIN] Validating token:', token.substring(0, 8) + '...');
         const inviteData = await validateInviteToken(token);
         
         if (!inviteData) {
+          console.error('❌ [JOIN] Token validation failed - invalid, expired, or used');
           setError('This invitation is invalid, expired, or has already been used.');
           setInvite(null);
         } else {
+          console.log('✅ [JOIN] Token validated successfully for:', inviteData.email);
           setInvite(inviteData);
           setError(null);
         }
       } catch (err: any) {
-        console.error('Error validating token:', err);
-        setError('Failed to validate invitation. Please try again.');
+        console.error('❌ [JOIN] Error validating token:', err);
+        setError(`Failed to validate invitation: ${err.message || 'Please try again.'}`);
       } finally {
         setLoading(false);
       }

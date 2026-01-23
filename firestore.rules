@@ -37,9 +37,9 @@ service cloud.firestore {
     }
     
     // ===========================================
-    // STAFF COLLECTION (Root Level)
+    // STAFF COLLECTION (Nested Path)
     // ===========================================
-    match /staff/{uid} {
+    match /artifacts/{appId}/public/data/staff/{uid} {
       // Anyone authenticated can read staff (for role checks, activity display)
       allow read: if isAuthenticated();
       
@@ -54,6 +54,16 @@ service cloud.firestore {
       
       // Only admins can delete staff
       allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // STAFF COLLECTION (Root Level - Backward Compatibility)
+    // ===========================================
+    match /staff/{uid} {
+      // Allow read for backward compatibility
+      allow read: if isAuthenticated();
+      // Deny writes at root level (use nested path)
+      allow write: if false;
     }
     
     // ===========================================

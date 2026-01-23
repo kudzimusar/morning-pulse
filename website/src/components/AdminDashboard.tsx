@@ -144,7 +144,7 @@ const AdminDashboard: React.FC = () => {
           }
         }
 
-        // Check staff document at root level: /staff/{uid}
+        // Check staff document at nested path: artifacts/{appId}/public/data/staff/{uid}
         try {
           const { db } = firebaseInstances;
           const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', currentUser.uid);
