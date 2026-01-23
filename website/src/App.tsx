@@ -200,21 +200,61 @@ const App: React.FC = () => {
     }
   }, []); // Run only once on mount
 
+  // Helper function to parse hash parameters (e.g., #news?category=Business)
+  const parseHashParams = (hash: string): { path: string; params: URLSearchParams } => {
+    const [path, queryString] = hash.split('?');
+    const params = new URLSearchParams(queryString || '');
+    return { path, params };
+  };
+
+  // Category mapping: Footer section names -> Actual category names in data
+  const mapFooterCategoryToDataCategory = (footerCategory: string): string | null => {
+    const categoryMap: Record<string, string> = {
+      'Business': 'Business (Zim)',
+      'Technology': 'Tech & AI',
+      'World News': 'World News',
+      'Politics': 'Local (Zim)', // Map Politics to Local for now
+      'Sports': 'Sports',
+      'Health': 'Health',
+      'Environment': 'Environment',
+    };
+    return categoryMap[footerCategory] || null;
+  };
+
   // Handle hash-based routing
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
+      const { path, params } = parseHashParams(hash);
 
       // ✅ FIX: Guard clause - prevent processing if already on dashboard
-      if (hash === 'dashboard' && view === 'admin' && requireEditor(userRole)) {
+      if (path === 'dashboard' && view === 'admin' && requireEditor(userRole)) {
         return; // Already on dashboard, don't process again
       }
 
       // Track page view in Google Analytics
-      const pageTitle = getPageTitle(hash);
-      trackPageView(pageTitle, `/${hash || 'news'}`);
+      const pageTitle = getPageTitle(path);
+      trackPageView(pageTitle, `/${path || 'news'}`);
       
-      if (hash === 'opinion' || hash.startsWith('opinion')) {
+      // Handle category parameter for news page
+      if (path === 'news' || path === '') {
+        const categoryParam = params.get('category');
+        if (categoryParam) {
+          const mappedCategory = mapFooterCategoryToDataCategory(categoryParam);
+          if (mappedCategory) {
+            setSelectedCategory(mappedCategory);
+          } else {
+            setSelectedCategory(null);
+          }
+        } else {
+          setSelectedCategory(null);
+        }
+      } else {
+        // Clear category when navigating away from news page
+        setSelectedCategory(null);
+      }
+      
+      if (path === 'opinion' || hash.startsWith('opinion')) {
         if (hash === 'opinion/submit' || hash.startsWith('opinion/submit')) {
           setCurrentPage('opinion-submit');
           setOpinionSlug(null);
@@ -233,47 +273,47 @@ const App: React.FC = () => {
           setOpinionSlug(null);
           setCurrentPage('opinion');
         }
-      } else if (hash === 'privacy') {
+      } else if (path === 'privacy') {
         setCurrentPage('privacy');
-      } else if (hash === 'about') {
+      } else if (path === 'about') {
         setCurrentPage('about');
-      } else if (hash === 'subscribe' || hash === 'subscription') {
+      } else if (path === 'subscribe' || path === 'subscription') {
         setCurrentPage('subscription');
-      } else if (hash === 'advertise') {
+      } else if (path === 'advertise') {
         setCurrentPage('advertise');
-      } else if (hash === 'editorial') {
+      } else if (path === 'editorial') {
         setCurrentPage('editorial');
-      } else if (hash === 'writer/register' || hash.startsWith('writer/register')) {
+      } else if (path === 'writer/register' || hash.startsWith('writer/register')) {
         setCurrentPage('writer-register');
-      } else if (hash === 'writer/login' || hash.startsWith('writer/login')) {
+      } else if (path === 'writer/login' || hash.startsWith('writer/login')) {
         setCurrentPage('writer-login');
-      } else if (hash === 'writer/dashboard' || hash.startsWith('writer/dashboard')) {
+      } else if (path === 'writer/dashboard' || hash.startsWith('writer/dashboard')) {
         setCurrentPage('writer-dashboard');
-      } else if (hash === 'subscriber/register' || hash.startsWith('subscriber/register')) {
+      } else if (path === 'subscriber/register' || hash.startsWith('subscriber/register')) {
         setCurrentPage('subscriber-register');
-      } else if (hash === 'subscriber/login' || hash.startsWith('subscriber/login')) {
+      } else if (path === 'subscriber/login' || hash.startsWith('subscriber/login')) {
         setCurrentPage('subscriber-login');
-      } else if (hash === 'subscriber/dashboard' || hash.startsWith('subscriber/dashboard')) {
+      } else if (path === 'subscriber/dashboard' || hash.startsWith('subscriber/dashboard')) {
         setCurrentPage('subscriber-dashboard');
-      } else if (hash === 'advertiser/register' || hash.startsWith('advertiser/register')) {
+      } else if (path === 'advertiser/register' || hash.startsWith('advertiser/register')) {
         setCurrentPage('advertiser-register');
-      } else if (hash === 'advertiser/login' || hash.startsWith('advertiser/login')) {
+      } else if (path === 'advertiser/login' || hash.startsWith('advertiser/login')) {
         setCurrentPage('advertiser-login');
-      } else if (hash === 'advertiser/dashboard' || hash.startsWith('advertiser/dashboard')) {
+      } else if (path === 'advertiser/dashboard' || hash.startsWith('advertiser/dashboard')) {
         setCurrentPage('advertiser-dashboard');
-      } else if (hash === 'advertiser/submit-ad' || hash.startsWith('advertiser/submit-ad')) {
+      } else if (path === 'advertiser/submit-ad' || hash.startsWith('advertiser/submit-ad')) {
         setCurrentPage('advertiser-submit-ad');
-      } else if (hash === 'admin') {
+      } else if (path === 'admin') {
         // ✅ FIX: Make admin a full page, not overlay
         setCurrentPage('admin');
         setShowAdminLogin(false); // Don't use overlay flag
-      } else if (hash === 'dashboard') {
+      } else if (path === 'dashboard') {
         // ✅ NEW: Dashboard route for logged-in editors
         if (requireEditor(userRole)) {
           setView('admin');
           setCurrentPage('news'); // Keep currentPage for context
         }
-      } else if (hash === 'join' || hash.startsWith('join?')) {
+      } else if (path === 'join' || hash.startsWith('join?')) {
         // ✅ NEW: Staff invitation join page
         // Handle both #join?token=... and #join
         setCurrentPage('join');
