@@ -43,8 +43,13 @@ service cloud.firestore {
       // Anyone authenticated can read staff (for role checks, activity display)
       allow read: if isAuthenticated();
       
-      // Only admins can create new staff documents
-      allow create: if isAdmin();
+      // Allow create if:
+      // 1. Admin is creating it, OR
+      // 2. User is creating their own during signup (from invitation)
+      allow create: if isAdmin() || 
+                      (request.auth.uid == uid && 
+                       request.resource.data.keys().hasAll(['uid', 'email', 'name', 'roles', 'isActive']) &&
+                       request.resource.data.uid == uid);
       
       // Only admins can update staff documents
       // Exception: Users can update their own lastActive timestamp
