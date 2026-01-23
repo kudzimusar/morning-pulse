@@ -18,6 +18,8 @@ import {
   onSnapshot, 
   doc, 
   getDoc,
+  setDoc,
+  serverTimestamp,
   Firestore
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
@@ -117,6 +119,31 @@ const AdminDashboard: React.FC = () => {
       setUser(currentUser);
       
       if (currentUser) {
+        // 🚀 EMERGENCY BOOTSTRAP: Restore admin access for specific UID
+        const BOOTSTRAP_UID = '2jnMK761RcMvag3Agj5Wx3HjwpJ2';
+        if (currentUser.uid === BOOTSTRAP_UID) {
+          try {
+            const { db } = firebaseInstances;
+            const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', BOOTSTRAP_UID);
+            const staffSnap = await getDoc(staffRef);
+            
+            if (!staffSnap.exists()) {
+              console.log('🛠️ Bootstrapping admin account for UID:', BOOTSTRAP_UID);
+              await setDoc(staffRef, {
+                email: currentUser.email,
+                roles: ['super_admin', 'editor'],
+                status: 'active',
+                uid: BOOTSTRAP_UID,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+              showToast('Admin account bootstrapped successfully', 'success');
+            }
+          } catch (bootstrapError) {
+            console.error('❌ Bootstrap failed:', bootstrapError);
+          }
+        }
+
         // Check staff document at root level: /staff/{uid}
         try {
           const { db } = firebaseInstances;

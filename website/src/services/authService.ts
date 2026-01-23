@@ -107,7 +107,7 @@ const getDbInstance = (): Firestore => {
 // Backward compatible: can be array of roles or single role string
 export type StaffRole = string[] | null;
 
-const appId = 'morning-pulse-app';
+const appId = (window as any).__app_id || 'morning-pulse-app';
 
 /**
  * Sign in editor with email and password
@@ -133,7 +133,7 @@ export const signInEditor = async (email: string, password: string): Promise<Use
     
     // ✅ NEW: Check if account is active
     try {
-      const staffRef = doc(dbInstance, 'staff', user.uid);
+      const staffRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'staff', user.uid);
       const staffSnap = await getDoc(staffRef);
       
       if (staffSnap.exists()) {
@@ -204,12 +204,12 @@ export const signInEditor = async (email: string, password: string): Promise<Use
 export const getStaffRole = async (uid: string): Promise<StaffRole> => {
   try {
     const dbInstance = getDbInstance();
-    // ✅ FIX: Use top-level staff collection instead of nested path
-    const staffRef = doc(dbInstance, 'staff', uid);
+    // ✅ FIX: Use mandatory path structure
+    const staffRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'staff', uid);
     const snap = await getDoc(staffRef);
     
     if (!snap.exists()) {
-      console.log('⚠️ Staff document not found for UID:', uid);
+      console.warn(`⚠️ Staff record is missing in the new path: artifacts/${appId}/public/data/staff/${uid}`);
       return null;
     }
     
