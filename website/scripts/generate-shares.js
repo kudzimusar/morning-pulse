@@ -57,12 +57,23 @@ function escapeHtml(text) {
 }
 
 /**
- * Truncate text to a maximum length
+ * Truncate text to a maximum length, ensuring no mid-word cutoff
+ * Optimized for WhatsApp/Telegram (195 chars + '...' = 198 total)
  */
-function truncate(text, maxLength = 200) {
+function truncateDescription(text, maxLength = 195) {
   if (!text) return '';
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - 3) + '...';
+  
+  // Find the last space before maxLength to avoid mid-word cutoff
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  // If we found a space near the end, use it; otherwise just truncate
+  if (lastSpace > maxLength - 30) {
+    return truncated.substring(0, lastSpace) + '...';
+  }
+  
+  return truncated + '...';
 }
 
 /**
@@ -80,17 +91,50 @@ function getCategoryDisplayName(category) {
 }
 
 /**
+ * Format date for JSON-LD (ISO 8601 format)
+ */
+function formatDateForJSONLD(timestamp) {
+  if (!timestamp) return new Date().toISOString();
+  
+  // Handle Firestore Timestamp
+  if (timestamp.toDate) {
+    return timestamp.toDate().toISOString();
+  }
+  
+  // Handle Date object
+  if (timestamp instanceof Date) {
+    return timestamp.toISOString();
+  }
+  
+  // Handle Unix timestamp (seconds or milliseconds)
+  if (typeof timestamp === 'number') {
+    const date = timestamp > 1e12 ? new Date(timestamp) : new Date(timestamp * 1000);
+    return date.toISOString();
+  }
+  
+  // Fallback to current date
+  return new Date().toISOString();
+}
+
+/**
  * Generate HTML redirect shell for a story
  */
 function generateShareHTML(story) {
   const slug = story.slug || generateSlug(story.headline);
   const title = escapeHtml(story.headline || 'Morning Pulse Opinion');
-  const description = escapeHtml(truncate(story.subHeadline || story.body || 'Read this opinion piece on Morning Pulse', 200));
+  const description = escapeHtml(truncateDescription(story.subHeadline || story.body || 'Read this opinion piece on Morning Pulse'));
   const category = getCategoryDisplayName(story.category);
   const author = escapeHtml(story.authorName || 'Morning Pulse');
   const imageUrl = story.finalImageUrl || story.suggestedImageUrl || story.imageUrl || `${BASE_URL}/og-default.jpg`;
+  
+  // Share page URL (what bots see - static HTML page)
+  const sharePageUrl = `${BASE_URL}/shares/${slug}/`;
+  
+  // Story URL (where users are redirected - SPA hash route)
   const storyUrl = `${BASE_URL}/#opinion/${slug}`;
-  const siteUrl = BASE_URL;
+  
+  // Published date for structured data
+  const publishedDate = formatDateForJSONLD(story.publishedAt || story.submittedAt);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -98,36 +142,69 @@ function generateShareHTML(story) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
+  <!-- Open Graph / Facebook (Moved to top for bot priority) -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="${sharePageUrl}">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${description}">
+  <meta property="og:image" content="${imageUrl}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${title}">
+  <meta property="og:site_name" content="Morning Pulse">
+  <meta property="og:locale" content="en_US">
+  <meta property="article:author" content="${author}">
+  <meta property="article:section" content="${category}">
+  <meta property="article:published_time" content="${publishedDate}">
+  
+  <!-- Twitter Card (Moved to top for bot priority) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${sharePageUrl}">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${description}">
+  <meta name="twitter:image" content="${imageUrl}">
+  
   <!-- Primary Meta Tags -->
   <title>${title} | Morning Pulse</title>
   <meta name="title" content="${title} | Morning Pulse">
   <meta name="description" content="${description}">
   <meta name="author" content="${author}">
   
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="article">
-  <meta property="og:url" content="${storyUrl}">
-  <meta property="og:title" content="${title}">
-  <meta property="og:description" content="${description}">
-  <meta property="og:image" content="${imageUrl}">
-  <meta property="og:site_name" content="Morning Pulse">
-  <meta property="article:author" content="${author}">
-  <meta property="article:section" content="${category}">
+  <!-- Canonical URL (points to share page, not SPA) -->
+  <link rel="canonical" href="${sharePageUrl}">
   
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${storyUrl}">
-  <meta name="twitter:title" content="${title}">
-  <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="${imageUrl}">
-  
-  <!-- Redirect -->
-  <meta http-equiv="refresh" content="0; url=${storyUrl}">
-  
-  <!-- Fallback JavaScript redirect -->
-  <script>
-    window.location.href = "${storyUrl}";
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": ${JSON.stringify(title)},
+    "description": ${JSON.stringify(description)},
+    "image": ${JSON.stringify(imageUrl)},
+    "author": {
+      "@type": "Person",
+      "name": ${JSON.stringify(author)}
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Morning Pulse",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "${BASE_URL}/logo.png"
+      }
+    },
+    "datePublished": ${JSON.stringify(publishedDate)},
+    "dateModified": ${JSON.stringify(publishedDate)},
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": ${JSON.stringify(sharePageUrl)}
+    },
+    "articleSection": ${JSON.stringify(category)}
+  }
   </script>
+  
+  <!-- Meta refresh redirect (delayed for bot scraping) -->
+  <meta http-equiv="refresh" content="3; url=${storyUrl}">
   
   <!-- Fallback link for non-JS browsers -->
   <noscript>
@@ -136,7 +213,21 @@ function generateShareHTML(story) {
   </noscript>
 </head>
 <body>
-  <p>Redirecting to <a href="${storyUrl}">${title}</a>...</p>
+  <div style="font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 60px 20px;">
+    <h1 style="font-size: 24px; margin-bottom: 16px;">${title}</h1>
+    <p style="color: #666; margin-bottom: 24px;">${description}</p>
+    <p style="font-size: 14px; color: #999;">
+      <a href="${storyUrl}" style="color: #007bff; text-decoration: none;">Click here if you are not redirected</a>
+    </p>
+  </div>
+  
+  <!-- Bot-friendly JavaScript redirect (delayed to allow meta tag scraping) -->
+  <script>
+    // Give social media bots time to scrape meta tags before redirecting
+    setTimeout(function() {
+      window.location.href = ${JSON.stringify(storyUrl)};
+    }, 2000);
+  </script>
 </body>
 </html>`;
 }
