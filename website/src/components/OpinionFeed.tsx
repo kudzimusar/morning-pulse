@@ -81,6 +81,52 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
     return getImageByTopic(opinion.headline || '', opinion.id);
   };
 
+  // Share handler - uses static share page URL (not hash route)
+  const handleShare = async (opinion: Opinion) => {
+    const slug = opinion.slug || opinion.id;
+    const shareUrl = `https://kudzimusar.github.io/morning-pulse/shares/${slug}/`;
+    
+    // Try native share API first (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: opinion.headline,
+          text: opinion.subHeadline || opinion.headline,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or error - fall through to clipboard
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Share failed:', err);
+        }
+      }
+    }
+    
+    // Fallback: Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied to clipboard!');
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('Link copied to clipboard!');
+      } catch (clipboardErr) {
+        console.error('Clipboard copy failed:', clipboardErr);
+        alert(`Share this link: ${shareUrl}`);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
   const categories = ['Latest', 'The Board', 'Guest Essays', 'Letters', 'Culture'];
   
   // Enhanced category filtering with proper mapping
@@ -430,9 +476,31 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                 // NEW: Clear slug from URL when closing
                 window.history.pushState(null, '', '#opinion');
               }} 
-              style={{ position: 'fixed', top: '20px', right: '20px', background: '#000', color: '#fff', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer' }}
+              style={{ position: 'fixed', top: '20px', right: '20px', background: '#000', color: '#fff', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer', zIndex: 1001 }}
             >
               <X size={24} />
+            </button>
+            <button 
+              onClick={() => handleShare(selectedOpinion)}
+              style={{ 
+                position: 'fixed', 
+                top: '20px', 
+                left: '20px', 
+                background: '#000', 
+                color: '#fff', 
+                border: 'none', 
+                padding: '10px 16px', 
+                borderRadius: '4px', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                zIndex: 1001
+              }}
+            >
+              📤 Share
             </button>
             <header style={{ textAlign: 'center', marginBottom: '40px' }}>
               <div style={{ color: '#991b1b', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', marginBottom: '20px' }}>{selectedOpinion.category}</div>

@@ -125,7 +125,19 @@ function generateShareHTML(story) {
   const description = escapeHtml(truncateDescription(story.subHeadline || story.body || 'Read this opinion piece on Morning Pulse'));
   const category = getCategoryDisplayName(story.category);
   const author = escapeHtml(story.authorName || 'Morning Pulse');
-  const imageUrl = story.finalImageUrl || story.suggestedImageUrl || story.imageUrl || `${BASE_URL}/og-default.jpg`;
+  
+  // Ensure image URL is always absolute (WhatsApp requires full https:// URLs)
+  let imageUrl = story.finalImageUrl || story.suggestedImageUrl || story.imageUrl || `${BASE_URL}/og-default.jpg`;
+  
+  // If image URL is relative, make it absolute
+  if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+    // Handle relative paths
+    if (imageUrl.startsWith('/')) {
+      imageUrl = `${GITHUB_PAGES_URL}${imageUrl}`;
+    } else {
+      imageUrl = `${BASE_URL}/${imageUrl}`;
+    }
+  }
   
   // Share page URL (what bots see - static HTML page)
   const sharePageUrl = `${BASE_URL}/shares/${slug}/`;
