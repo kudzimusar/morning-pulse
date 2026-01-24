@@ -82,16 +82,22 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   };
 
   // Share handler - uses static share page URL (not hash route)
+  // Universal for ALL stories - no conditions
   const handleShare = async (opinion: Opinion) => {
-    const slug = opinion.slug || opinion.id;
+    // Generate slug from headline if not present (for older stories)
+    const slug = opinion.slug || (opinion.headline ? 
+      opinion.headline.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100) 
+      : opinion.id);
+    
+    // Use folder structure (works better for bots) - fallback to share.html if needed
     const shareUrl = `https://kudzimusar.github.io/morning-pulse/shares/${slug}/`;
     
     // Try native share API first (mobile)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: opinion.headline,
-          text: opinion.subHeadline || opinion.headline,
+          title: opinion.headline || 'Morning Pulse Article',
+          text: opinion.subHeadline || opinion.headline || 'Read this article on Morning Pulse',
           url: shareUrl,
         });
         return;

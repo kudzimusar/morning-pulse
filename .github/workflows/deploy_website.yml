@@ -141,10 +141,22 @@ jobs:
           node scripts/generate-shares.js
           echo ""
           echo "📁 Checking generated share pages..."
+          ls -lh dist/ || echo "⚠️  Dist directory check failed"
           ls -lh dist/shares/ || echo "⚠️  No shares directory created"
+          ls -lh dist/share.html || echo "⚠️  share.html not created"
+          ls -lh dist/.nojekyll || echo "⚠️  .nojekyll not created"
           if [ -d dist/shares ]; then
+            echo ""
             echo "Share pages generated:"
-            find dist/shares -name "index.html" | head -5
+            find dist/shares -name "index.html" | head -10
+            echo ""
+            echo "Total share folders: $(find dist/shares -type d -mindepth 1 | wc -l)"
+          fi
+          if [ -f dist/share.html ]; then
+            echo "✅ Universal share.html created ($(wc -c < dist/share.html) bytes)"
+          fi
+          if [ -f dist/.nojekyll ]; then
+            echo "✅ .nojekyll file created"
           fi
         continue-on-error: true # Continue even if share generation fails
       
