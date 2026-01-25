@@ -242,6 +242,34 @@ export const trackAdminAction = (
   });
 };
 
+// Track reactions (like, love, insightful, disagree)
+export const trackReaction = (
+  opinionId: string,
+  reactionType: 'like' | 'love' | 'insightful' | 'disagree',
+  action: 'add' | 'remove'
+): void => {
+  trackEvent('opinion_reaction', {
+    opinion_id: opinionId,
+    reaction_type: reactionType,
+    action: action,
+    timestamp: new Date().toISOString(),
+  });
+};
+
+// Track comment submission
+export const trackComment = (
+  opinionId: string,
+  commentId: string,
+  action: 'create' | 'edit' | 'delete' | 'reply'
+): void => {
+  trackEvent('opinion_comment', {
+    opinion_id: opinionId,
+    comment_id: commentId,
+    action: action,
+    timestamp: new Date().toISOString(),
+  });
+};
+
 // Initialize analytics on page load
 export const initAnalytics = (): void => {
   // Only initialize if GA_MEASUREMENT_ID is configured

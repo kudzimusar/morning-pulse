@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { Firestore } from 'firebase/firestore';
 import { getAnalyticsSummary, AnalyticsSummary } from '../../services/analyticsService';
+import { getEngagementSummary, EngagementSummary } from '../../services/engagementAnalyticsService';
 
 interface AnalyticsTabProps {
   firebaseInstances: { auth: any; db: Firestore } | null;
@@ -13,6 +14,7 @@ interface AnalyticsTabProps {
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [engagement, setEngagement] = useState<EngagementSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,8 +27,12 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const data = await getAnalyticsSummary();
-      setAnalytics(data);
+      const [analyticsData, engagementData] = await Promise.all([
+        getAnalyticsSummary(),
+        getEngagementSummary()
+      ]);
+      setAnalytics(analyticsData);
+      setEngagement(engagementData);
       setError(null);
     } catch (error: any) {
       console.error('Error loading analytics:', error);
@@ -157,6 +163,61 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
             From submission
           </div>
         </div>
+
+        {/* Engagement Metrics */}
+        {engagement && (
+          <>
+            <div style={{
+              border: '1px solid #e5e5e5',
+              borderRadius: '8px',
+              padding: '20px',
+              backgroundColor: '#fff'
+            }}>
+              <div style={{
+                fontSize: '14px',
+                color: '#666',
+                marginBottom: '8px'
+              }}>
+                Total Reactions
+              </div>
+              <div style={{
+                fontSize: '32px',
+                fontWeight: '700',
+                color: '#ec4899'
+              }}>
+                {engagement.totalReactions}
+              </div>
+              <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                Like: {engagement.reactionBreakdown.like} • Love: {engagement.reactionBreakdown.love} • Insightful: {engagement.reactionBreakdown.insightful} • Disagree: {engagement.reactionBreakdown.disagree}
+              </div>
+            </div>
+
+            <div style={{
+              border: '1px solid #e5e5e5',
+              borderRadius: '8px',
+              padding: '20px',
+              backgroundColor: '#fff'
+            }}>
+              <div style={{
+                fontSize: '14px',
+                color: '#666',
+                marginBottom: '8px'
+              }}>
+                Total Comments
+              </div>
+              <div style={{
+                fontSize: '32px',
+                fontWeight: '700',
+                color: '#8b5cf6'
+              }}>
+                {engagement.totalComments}
+              </div>
+              <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                {engagement.totalReplies} editorial replies
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Two Column Layout for Analytics */}
@@ -166,6 +227,49 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
         gap: '24px',
         marginBottom: '32px'
       }}>
+        {/* Top Opinions by Engagement */}
+        {engagement && engagement.topOpinions.length > 0 && (
+          <div style={{
+            border: '1px solid #e5e5e5',
+            borderRadius: '8px',
+            padding: '24px',
+            backgroundColor: '#fff'
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+              💬 Most Engaged Opinions
+            </h3>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              {engagement.topOpinions.slice(0, 5).map((op, index) => (
+                <div
+                  key={op.opinionId}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: index === 0 ? '#fef3c7' : '#f9fafb',
+                    borderRadius: '4px',
+                    border: index === 0 ? '1px solid #fbbf24' : '1px solid #e5e5e5'
+                  }}
+                >
+                  <div style={{ fontWeight: '600', fontSize: '14px', marginBottom: '6px' }}>
+                    {op.headline || 'Untitled Opinion'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', display: 'flex', gap: '12px' }}>
+                    <span>❤️ {op.reactions.total} reactions</span>
+                    <span>💬 {op.comments} comments</span>
+                    {op.replies > 0 && <span>↩️ {op.replies} replies</span>}
+                    <span style={{ fontWeight: '600', color: '#f59e0b' }}>
+                      {op.totalEngagement} total
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Top Opinions by Views */}
         <div style={{
           border: '1px solid #e5e5e5',

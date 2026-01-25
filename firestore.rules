@@ -160,6 +160,55 @@ service cloud.firestore {
     }
 
     // ===========================================
+    // PUBLIC REACTIONS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/reactions/{reactionId} {
+      // Public can read all reactions (for displaying counts)
+      allow read: if true;
+      
+      // Any authenticated user (including anonymous) can create reactions
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll(['opinionId', 'userId', 'type', 'createdAt']) &&
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own reactions (toggle off)
+      // Editors can delete any reaction (moderation)
+      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) ||
+                      isEditor();
+      
+      // Reactions cannot be updated (only create/delete)
+      allow update: if false;
+    }
+
+    // ===========================================
+    // PUBLIC COMMENTS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/publicComments/{commentId} {
+      // Public can read active comments
+      allow read: if resource.data.status == 'active' || isEditor();
+      
+      // Any authenticated user (including anonymous) can create comments
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll(['opinionId', 'userId', 'authorName', 'content', 'status', 'createdAt', 'updatedAt']) &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'active' &&
+                      request.resource.data.likes == 0 &&
+                      request.resource.data.isEdited == false;
+      
+      // Users can update their own comments (edit content)
+      // Editors can update any comment (moderation, replies)
+      allow update: if (isAuthenticated() && 
+                         resource.data.userId == request.auth.uid &&
+                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'isEdited', 'updatedAt'])) ||
+                      isEditor();
+      
+      // Users can soft-delete their own comments
+      // Editors can delete any comment (moderation)
+      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) ||
+                      isEditor();
+    }
+
+    // ===========================================
     // DEFAULT DENY
     // ===========================================
     // All other paths are denied by default

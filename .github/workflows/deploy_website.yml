@@ -164,6 +164,43 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
+      # Verify shares folder exists in artifact before upload
+      - name: Verify Shares Folder in Artifact
+        run: |
+          echo "=== ARTIFACT VERIFICATION ==="
+          echo "Checking dist directory structure:"
+          ls -la website/dist/ || echo "❌ dist directory missing"
+          echo ""
+          echo "Checking for shares folder:"
+          if [ -d website/dist/shares ]; then
+            echo "✅ shares folder exists"
+            echo "Share folders count: $(find website/dist/shares -type d -mindepth 1 | wc -l)"
+            echo "Share HTML files count: $(find website/dist/shares -name "index.html" | wc -l)"
+            echo ""
+            echo "Sample share folders:"
+            find website/dist/shares -type d -mindepth 1 | head -5
+            echo ""
+            echo "Sample share files:"
+            find website/dist/shares -name "index.html" | head -5
+          else
+            echo "❌ shares folder MISSING - this will cause 404s!"
+          fi
+          echo ""
+          echo "Checking for .nojekyll:"
+          if [ -f website/dist/.nojekyll ]; then
+            echo "✅ .nojekyll exists"
+          else
+            echo "❌ .nojekyll MISSING - GitHub Pages may ignore folders!"
+          fi
+          echo ""
+          echo "Checking for share.html:"
+          if [ -f website/dist/share.html ]; then
+            echo "✅ share.html exists ($(wc -c < website/dist/share.html) bytes)"
+          else
+            echo "⚠️  share.html missing (optional)"
+          fi
+          echo "=== END VERIFICATION ==="
+      
       # Upload artifact
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

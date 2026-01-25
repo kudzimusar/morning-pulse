@@ -98,9 +98,18 @@ const AdvertisePage: React.FC<AdvertisePageProps> = ({ onBack }) => {
         <div className="cta-section">
           <h2>Partner with a 360-degree news network</h2>
           <p>Contact us to discuss how Morning Pulse can amplify your brand</p>
-          <a href="mailto:info@morningpulse.net" className="primary-cta-button">
-            Contact info@morningpulse.net
-          </a>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <a 
+              href="mailto:ads@morningpulse.net?subject=Advertising%20Inquiry&body=Hello%20Morning%20Pulse%20Ad%20Team,%0D%0A%0D%0AI%20am%20interested%20in%20advertising%20with%20Morning%20Pulse.%0D%0A%0D%0A[Please%20provide%20details%20about%20your%20advertising%20needs]" 
+              className="primary-cta-button"
+              style={{ backgroundColor: '#f59e0b', color: 'white' }}
+            >
+              Contact Ad Team
+            </a>
+            <a href="mailto:info@morningpulse.net" className="primary-cta-button">
+              General Inquiries
+            </a>
+          </div>
         </div>
       </div>
     </div>

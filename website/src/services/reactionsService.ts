@@ -136,6 +136,8 @@ export const addReaction = async (
   
   const existingSnapshot = await getDocs(existingQuery);
   
+  let action: 'add' | 'remove' = 'add';
+  
   // If same reaction exists, remove it (toggle)
   if (!existingSnapshot.empty) {
     const existingDoc = existingSnapshot.docs[0];
@@ -143,10 +145,21 @@ export const addReaction = async (
     if (existingData.type === type) {
       // Remove reaction (toggle off)
       await deleteDoc(existingDoc.ref);
+      action = 'remove';
+      
+      // Track analytics
+      try {
+        const { trackReaction } = await import('./analyticsService');
+        trackReaction(opinionId, type, 'remove');
+      } catch (error) {
+        // Silently fail analytics
+      }
+      
       return null;
     } else {
       // Update reaction type
       await deleteDoc(existingDoc.ref);
+      action = 'add';
     }
   }
   
@@ -162,6 +175,14 @@ export const addReaction = async (
     collection(db, 'artifacts', APP_ID, 'public', 'data', 'reactions'),
     reactionData
   );
+  
+  // Track analytics
+  try {
+    const { trackReaction } = await import('./analyticsService');
+    trackReaction(opinionId, type, 'add');
+  } catch (error) {
+    // Silently fail analytics
+  }
   
   return docRef.id;
 };

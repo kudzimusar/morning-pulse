@@ -95,8 +95,8 @@ const Footer: React.FC = () => {
       title: 'Legal',
       links: [
         { label: 'Privacy Policy', hash: 'privacy' },
-        { label: 'Terms of Service', hash: 'privacy' }, // Can create separate page later
-        { label: 'Cookie Policy', hash: 'privacy' },
+        { label: 'Terms of Service', hash: 'terms' },
+        { label: 'Cookie Policy', hash: 'cookies' },
         { label: 'Accessibility', hash: 'privacy' },
       ],
     },
@@ -263,8 +263,12 @@ const Footer: React.FC = () => {
             Privacy Policy
           </a>
           <span className="footer-compliance-separator">|</span>
-          <a href="#privacy" onClick={(e) => handleLinkClick(e, { label: 'Terms', hash: 'privacy' })}>
+          <a href="#terms" onClick={(e) => handleLinkClick(e, { label: 'Terms', hash: 'terms' })}>
             Terms of Service
+          </a>
+          <span className="footer-compliance-separator">|</span>
+          <a href="#cookies" onClick={(e) => handleLinkClick(e, { label: 'Cookies', hash: 'cookies' })}>
+            Cookie Policy
           </a>
           <span className="footer-compliance-separator">|</span>
           <a href="#privacy" onClick={(e) => handleLinkClick(e, { label: 'Do Not Sell', hash: 'privacy' })}>

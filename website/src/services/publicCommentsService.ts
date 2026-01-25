@@ -28,8 +28,9 @@ const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 export interface PublicComment {
   id: string;
   opinionId: string;
-  userId: string; // Anonymous user ID
+  userId: string; // Anonymous user ID or editor UID
   authorName: string; // Display name (can be "Anonymous" or user-provided)
+  authorRole?: 'user' | 'editor' | 'admin'; // NEW: Track if comment is from editorial team
   content: string;
   parentId?: string; // For threaded replies
   createdAt: Date;
@@ -37,6 +38,7 @@ export interface PublicComment {
   isEdited: boolean;
   likes: number; // Simple like count for comments
   status: 'active' | 'deleted' | 'moderated';
+  isEditorialReply?: boolean; // NEW: Flag for editorial team replies
 }
 
 // Get Firebase config
@@ -124,9 +126,11 @@ export const addPublicComment = async (
   opinionId: string,
   content: string,
   authorName: string = 'Anonymous',
-  parentId?: string
+  parentId?: string,
+  isEditorialReply: boolean = false,
+  authorRole?: 'user' | 'editor' | 'admin'
 ): Promise<string | null> => {
-  const { db } = await initializeFirebaseIfNeeded();
+  const { db, auth } = await initializeFirebaseIfNeeded();
   if (!db) {
     console.warn('Firebase not initialized');
     return null;
@@ -143,14 +147,37 @@ export const addPublicComment = async (
     return null;
   }
   
+  // Determine author role if not provided
+  let finalAuthorRole: 'user' | 'editor' | 'admin' = authorRole || 'user';
+  if (isEditorialReply) {
+    // Check if user is staff member (editor/admin)
+    try {
+      const { getDoc, doc } = await import('firebase/firestore');
+      const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', userId);
+      const staffSnap = await getDoc(staffRef);
+      if (staffSnap.exists()) {
+        const staffData = staffSnap.data();
+        if (staffData.roles?.includes('admin') || staffData.roles?.includes('super_admin')) {
+          finalAuthorRole = 'admin';
+        } else if (staffData.roles?.includes('editor')) {
+          finalAuthorRole = 'editor';
+        }
+      }
+    } catch (error) {
+      console.warn('Could not verify staff role:', error);
+    }
+  }
+  
   const commentData = {
     opinionId,
     userId,
     authorName: authorName.trim() || 'Anonymous',
+    authorRole: finalAuthorRole,
     content: content.trim(),
     parentId: parentId || null,
     likes: 0,
     isEdited: false,
+    isEditorialReply: isEditorialReply || finalAuthorRole !== 'user',
     status: 'active',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
@@ -161,7 +188,34 @@ export const addPublicComment = async (
     commentData
   );
   
+  // Track analytics
+  try {
+    const { trackComment } = await import('./analyticsService');
+    trackComment(opinionId, docRef.id, parentId ? 'reply' : 'create');
+  } catch (error) {
+    // Silently fail analytics
+  }
+  
   return docRef.id;
+};
+
+/**
+ * Add an editorial reply to a user comment
+ */
+export const addEditorialReply = async (
+  opinionId: string,
+  parentCommentId: string,
+  content: string,
+  editorName: string
+): Promise<string | null> => {
+  return addPublicComment(
+    opinionId,
+    content,
+    editorName,
+    parentCommentId,
+    true, // isEditorialReply
+    'editor' // authorRole
+  );
 };
 
 /**
@@ -263,7 +317,7 @@ export const likeComment = async (commentId: string): Promise<void> => {
 };
 
 /**
- * Get all public comments for an opinion
+ * Get all public comments for an opinion (with replies organized)
  */
 export const getOpinionComments = async (opinionId: string): Promise<PublicComment[]> => {
   const { db } = await initializeFirebaseIfNeeded();
@@ -276,7 +330,7 @@ export const getOpinionComments = async (opinionId: string): Promise<PublicComme
     collection(db, 'artifacts', APP_ID, 'public', 'data', 'publicComments'),
     where('opinionId', '==', opinionId),
     where('status', '==', 'active'),
-    orderBy('createdAt', 'desc')
+    orderBy('createdAt', 'asc') // Changed to asc to show oldest first (better for threaded replies)
   );
   
   const snapshot = await getDocs(commentsQuery);
@@ -315,7 +369,7 @@ export const subscribeToOpinionComments = (
       collection(db, 'artifacts', APP_ID, 'public', 'data', 'publicComments'),
       where('opinionId', '==', opinionId),
       where('status', '==', 'active'),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'asc') // Changed to asc for better threaded display
     );
     
     unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
@@ -331,6 +385,10 @@ export const subscribeToOpinionComments = (
       });
       
       callback(comments);
+    }, (error) => {
+      console.error('Error in comment subscription:', error);
+      // Return empty array on error
+      callback([]);
     });
   };
   

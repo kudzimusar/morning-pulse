@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Editorial Team",
+    "role": "Editor-in-Chief",
+    "email": "editor@morningpulse.net",
+    "bio": "Leading Morning Pulse's editorial vision and ensuring journalistic integrity across all content."
+  },
+  {
+    "name": "News Desk",
+    "role": "Senior Editor",
+    "email": "news@morningpulse.net",
+    "bio": "Overseeing daily news curation and multi-channel distribution strategy."
+  }
+]

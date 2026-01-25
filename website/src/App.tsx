@@ -11,7 +11,7 @@ import OpinionSubmissionForm from './components/OpinionSubmissionForm';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
 import Footer from './components/Footer';
-import PrivacyPage from './components/PrivacyPage';
+import LegalPage from './components/LegalPage';
 import AboutPage from './components/AboutPage';
 import SubscriptionPage from './components/SubscriptionPage';
 import AdvertisePage from './components/AdvertisePage';
@@ -49,6 +49,8 @@ const getPageTitle = (hash: string): string => {
     'subscription': 'Morning Pulse - Newsletter Signup',
     'about': 'Morning Pulse - About Us',
     'privacy': 'Morning Pulse - Privacy Policy',
+    'terms': 'Morning Pulse - Terms of Service',
+    'cookies': 'Morning Pulse - Cookie Policy',
     'advertise': 'Morning Pulse - Advertise With Us',
     'editorial': 'Morning Pulse - Editorial Standards',
     'join': 'Morning Pulse - Join Our Team',
@@ -275,6 +277,10 @@ const App: React.FC = () => {
         }
       } else if (path === 'privacy') {
         setCurrentPage('privacy');
+      } else if (path === 'terms') {
+        setCurrentPage('terms');
+      } else if (path === 'cookies') {
+        setCurrentPage('cookies');
       } else if (path === 'about') {
         setCurrentPage('about');
       } else if (path === 'subscribe' || path === 'subscription') {
@@ -768,7 +774,15 @@ const App: React.FC = () => {
       )}
 
       {currentPage === 'privacy' && (
-        <PrivacyPage onBack={handleBackToNews} />
+        <LegalPage onBack={handleBackToNews} legalType="privacy" />
+      )}
+
+      {currentPage === 'terms' && (
+        <LegalPage onBack={handleBackToNews} legalType="terms" />
+      )}
+
+      {currentPage === 'cookies' && (
+        <LegalPage onBack={handleBackToNews} legalType="cookies" />
       )}
 
       {currentPage === 'about' && (

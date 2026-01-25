@@ -13,9 +13,11 @@ import {
 } from '../services/reactionsService';
 import { 
   addPublicComment, 
+  addEditorialReply,
   subscribeToOpinionComments,
   PublicComment 
 } from '../services/publicCommentsService';
+import { getCurrentEditor, getStaffRole, requireEditor } from '../services/authService';
 
 interface OpinionFeedProps {
   onNavigateToSubmit?: () => void;
@@ -37,6 +39,10 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   const [commentText, setCommentText] = useState('');
   const [commentAuthorName, setCommentAuthorName] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [isEditor, setIsEditor] = useState(false);
+  const [editorName, setEditorName] = useState('');
 
   // NEW: Fetch single opinion by slug if provided
   useEffect(() => {
@@ -270,6 +276,46 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
     };
   }, [selectedOpinion]);
 
+  // NEW: Check if current user is editor
+  useEffect(() => {
+    const checkEditorStatus = async () => {
+      try {
+        const currentUser = getCurrentEditor();
+        if (currentUser) {
+          const role = await getStaffRole(currentUser.uid);
+          if (requireEditor(role)) {
+            setIsEditor(true);
+            // Get editor name from staff document
+            try {
+              const { getDoc, doc, getFirestore, getApp } = await import('firebase/firestore');
+              const { initializeApp } = await import('firebase/app');
+              const config = (window as any).__firebase_config || JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG || '{}');
+              let app;
+              try {
+                app = getApp();
+              } catch {
+                app = initializeApp(config);
+              }
+              const db = getFirestore(app);
+              const staffRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'staff', currentUser.uid);
+              const staffSnap = await getDoc(staffRef);
+              if (staffSnap.exists()) {
+                setEditorName(staffSnap.data().name || 'Editor');
+              }
+            } catch (error) {
+              console.warn('Could not fetch editor name:', error);
+              setEditorName('Editor');
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Could not check editor status:', error);
+      }
+    };
+    
+    checkEditorStatus();
+  }, [selectedOpinion]);
+
   // NEW: Handle reaction click
   const handleReaction = async (type: 'like' | 'love' | 'insightful' | 'disagree') => {
     if (!selectedOpinion) return;
@@ -277,8 +323,12 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
     try {
       await addReaction(selectedOpinion.id, type);
       // The subscription will update the counts automatically
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add reaction:', error);
+      const errorMessage = error?.message || 'Failed to add reaction. Please try again.';
+      if (errorMessage.includes('permission')) {
+        alert('Permission denied. Please make sure you are signed in and Firestore rules allow reactions.');
+      }
     }
   };
 
@@ -288,20 +338,60 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
     
     setIsSubmittingComment(true);
     try {
-      await addPublicComment(
-        selectedOpinion.id,
-        commentText,
-        commentAuthorName.trim() || 'Anonymous'
-      );
-      setCommentText('');
-      setCommentAuthorName('');
+      if (replyingTo && isEditor) {
+        // Editorial reply
+        await addEditorialReply(
+          selectedOpinion.id,
+          replyingTo,
+          replyText,
+          editorName || 'Editorial Team'
+        );
+        setReplyText('');
+        setReplyingTo(null);
+      } else {
+        // Regular comment
+        await addPublicComment(
+          selectedOpinion.id,
+          commentText,
+          commentAuthorName.trim() || 'Anonymous',
+          replyingTo || undefined
+        );
+        setCommentText('');
+        setCommentAuthorName('');
+        setReplyingTo(null);
+      }
       setShowComments(true); // Keep comments visible after submission
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit comment:', error);
-      alert('Failed to submit comment. Please try again.');
+      const errorMessage = error?.message || 'Failed to submit comment. Please try again.';
+      if (errorMessage.includes('permission')) {
+        alert('Permission denied. Please make sure you are signed in and Firestore rules allow comments.');
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       setIsSubmittingComment(false);
     }
+  };
+
+  // NEW: Organize comments with replies
+  const organizeComments = (allComments: PublicComment[]): { root: PublicComment; replies: PublicComment[] }[] => {
+    const rootComments = allComments.filter(c => !c.parentId);
+    const repliesMap = new Map<string, PublicComment[]>();
+    
+    allComments.forEach(comment => {
+      if (comment.parentId) {
+        if (!repliesMap.has(comment.parentId)) {
+          repliesMap.set(comment.parentId, []);
+        }
+        repliesMap.get(comment.parentId)!.push(comment);
+      }
+    });
+    
+    return rootComments.map(root => ({
+      root,
+      replies: repliesMap.get(root.id) || []
+    }));
   };
 
   // NEW: Handle slug not found
@@ -790,81 +880,237 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
               {showComments && (
                 <>
                   {/* Comment Form */}
-                  <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
-                    <input
-                      type="text"
-                      placeholder="Your name (optional)"
-                      value={commentAuthorName}
-                      onChange={(e) => setCommentAuthorName(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        marginBottom: '10px',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
-                        fontSize: '14px'
-                      }}
-                    />
-                    <textarea
-                      placeholder="Write a comment..."
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      rows={4}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        marginBottom: '10px',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        fontFamily: 'inherit',
-                        resize: 'vertical'
-                      }}
-                    />
-                    <button
-                      onClick={handleSubmitComment}
-                      disabled={!commentText.trim() || isSubmittingComment}
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: commentText.trim() ? '#000' : '#9ca3af',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: commentText.trim() ? 'pointer' : 'not-allowed'
-                      }}
-                    >
-                      {isSubmittingComment ? 'Posting...' : 'Post Comment'}
-                    </button>
-                  </div>
+                  {!replyingTo && (
+                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                      {!isEditor && (
+                        <input
+                          type="text"
+                          placeholder="Your name (optional)"
+                          value={commentAuthorName}
+                          onChange={(e) => setCommentAuthorName(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '10px',
+                            marginBottom: '10px',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '4px',
+                            fontSize: '14px'
+                          }}
+                        />
+                      )}
+                      <textarea
+                        placeholder={isEditor ? "Write a response as editorial team..." : "Write a comment..."}
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        rows={4}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          marginBottom: '10px',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          fontFamily: 'inherit',
+                          resize: 'vertical'
+                        }}
+                      />
+                      <button
+                        onClick={handleSubmitComment}
+                        disabled={!commentText.trim() || isSubmittingComment}
+                        style={{
+                          padding: '10px 20px',
+                          backgroundColor: commentText.trim() ? '#000' : '#9ca3af',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: commentText.trim() ? 'pointer' : 'not-allowed'
+                        }}
+                      >
+                        {isSubmittingComment ? 'Posting...' : isEditor ? 'Post Editorial Response' : 'Post Comment'}
+                      </button>
+                    </div>
+                  )}
 
-                  {/* Comments List */}
+                  {/* Reply Form */}
+                  {replyingTo && (
+                    <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fbbf24' }}>
+                      <div style={{ marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#92400e' }}>
+                        {isEditor ? 'Replying as Editorial Team' : 'Replying to comment'}
+                      </div>
+                      <textarea
+                        placeholder={isEditor ? "Write your response..." : "Write a reply..."}
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          marginBottom: '10px',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          fontFamily: 'inherit',
+                          resize: 'vertical'
+                        }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={handleSubmitComment}
+                          disabled={!replyText.trim() || isSubmittingComment}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: replyText.trim() ? '#000' : '#9ca3af',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: replyText.trim() ? 'pointer' : 'not-allowed'
+                          }}
+                        >
+                          {isSubmittingComment ? 'Posting...' : 'Post Reply'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setReplyingTo(null);
+                            setReplyText('');
+                          }}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: 'transparent',
+                            color: '#78716c',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comments List with Threading */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {comments.length === 0 ? (
                       <p style={{ color: '#78716c', fontStyle: 'italic', textAlign: 'center', padding: '40px' }}>
                         No comments yet. Be the first to share your thoughts!
                       </p>
                     ) : (
-                      comments.map((comment) => (
-                        <div key={comment.id} style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                            <div>
-                              <strong style={{ fontSize: '14px', color: '#1a1a1a' }}>{comment.authorName}</strong>
-                              <span style={{ fontSize: '12px', color: '#78716c', marginLeft: '8px' }}>
-                                {comment.createdAt.toLocaleDateString('en-US', { 
-                                  month: 'short', 
-                                  day: 'numeric', 
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
+                      organizeComments(comments).map(({ root, replies }) => (
+                        <div key={root.id}>
+                          {/* Root Comment */}
+                          <div style={{ 
+                            padding: '16px', 
+                            backgroundColor: root.isEditorialReply ? '#fef3c7' : '#f9fafb', 
+                            borderRadius: '8px',
+                            borderLeft: root.isEditorialReply ? '4px solid #f59e0b' : 'none'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                              <div>
+                                <strong style={{ 
+                                  fontSize: '14px', 
+                                  color: root.isEditorialReply ? '#92400e' : '#1a1a1a' 
+                                }}>
+                                  {root.authorName}
+                                  {root.isEditorialReply && (
+                                    <span style={{ 
+                                      marginLeft: '8px', 
+                                      fontSize: '11px', 
+                                      backgroundColor: '#fbbf24', 
+                                      color: '#78350f',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      fontWeight: '600'
+                                    }}>
+                                      EDITORIAL
+                                    </span>
+                                  )}
+                                </strong>
+                                <span style={{ fontSize: '12px', color: '#78716c', marginLeft: '8px' }}>
+                                  {root.createdAt.toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
                             </div>
+                            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
+                              {root.content}
+                            </p>
+                            <button
+                              onClick={() => {
+                                setReplyingTo(root.id);
+                                setReplyText('');
+                              }}
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: 'transparent',
+                                color: '#78716c',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {isEditor ? 'Reply as Editorial Team' : 'Reply'}
+                            </button>
                           </div>
-                          <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151', whiteSpace: 'pre-wrap' }}>
-                            {comment.content}
-                          </p>
+                          
+                          {/* Replies */}
+                          {replies.length > 0 && (
+                            <div style={{ marginLeft: '32px', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {replies.map((reply) => (
+                                <div key={reply.id} style={{ 
+                                  padding: '12px', 
+                                  backgroundColor: reply.isEditorialReply ? '#fef3c7' : '#ffffff', 
+                                  borderRadius: '6px',
+                                  borderLeft: reply.isEditorialReply ? '3px solid #f59e0b' : '3px solid #e5e7eb'
+                                }}>
+                                  <div style={{ marginBottom: '6px' }}>
+                                    <strong style={{ 
+                                      fontSize: '13px', 
+                                      color: reply.isEditorialReply ? '#92400e' : '#1a1a1a' 
+                                    }}>
+                                      {reply.authorName}
+                                      {reply.isEditorialReply && (
+                                        <span style={{ 
+                                          marginLeft: '6px', 
+                                          fontSize: '10px', 
+                                          backgroundColor: '#fbbf24', 
+                                          color: '#78350f',
+                                          padding: '1px 4px',
+                                          borderRadius: '3px',
+                                          fontWeight: '600'
+                                        }}>
+                                          EDITORIAL
+                                        </span>
+                                      )}
+                                    </strong>
+                                    <span style={{ fontSize: '11px', color: '#78716c', marginLeft: '6px' }}>
+                                      {reply.createdAt.toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                  <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#374151', whiteSpace: 'pre-wrap' }}>
+                                    {reply.content}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
