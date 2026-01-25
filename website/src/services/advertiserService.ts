@@ -595,3 +595,505 @@ export const isAdvertiserApproved = async (): Promise<boolean> => {
   const advertiser = await getCurrentAdvertiser();
   return advertiser?.status === 'approved' || false;
 };
+
+// ===========================================
+// ENTERPRISE EXTENSIONS - CAMPAIGNS
+// ===========================================
+
+export interface Campaign {
+  id: string;
+  advertiserId: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  totalBudget: number;
+  dailyCap?: number;
+  priorityTier: 'premium' | 'standard' | 'house';
+  targetingRules?: {
+    categories?: string[];
+    countries?: string[];
+    devices?: string[];
+  };
+  adIds: string[];
+  slotIds: string[];
+  status: 'draft' | 'active' | 'paused' | 'completed';
+  createdAt: Date;
+  createdBy: string;
+  updatedAt?: Date;
+}
+
+/**
+ * Create a new campaign
+ */
+export const createCampaign = async (
+  advertiserId: string,
+  campaignData: {
+    name: string;
+    startDate: Date;
+    endDate: Date;
+    totalBudget: number;
+    dailyCap?: number;
+    priorityTier: 'premium' | 'standard' | 'house';
+    targetingRules?: Campaign['targetingRules'];
+    slotIds: string[];
+  }
+): Promise<string> => {
+  const db = getDb();
+  const auth = getAuth();
+  const campaignsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns');
+  
+  try {
+    const docRef = await addDoc(campaignsRef, {
+      advertiserId,
+      name: campaignData.name,
+      startDate: serverTimestamp(),
+      endDate: serverTimestamp(),
+      totalBudget: campaignData.totalBudget,
+      dailyCap: campaignData.dailyCap || null,
+      priorityTier: campaignData.priorityTier,
+      targetingRules: campaignData.targetingRules || {},
+      adIds: [],
+      slotIds: campaignData.slotIds,
+      status: 'draft',
+      createdAt: serverTimestamp(),
+      createdBy: auth.currentUser?.uid || advertiserId,
+    });
+    
+    console.log('✅ Campaign created:', docRef.id);
+    return docRef.id;
+  } catch (error: any) {
+    console.error('❌ Error creating campaign:', error);
+    throw new Error(`Failed to create campaign: ${error.message}`);
+  }
+};
+
+/**
+ * Update campaign
+ */
+export const updateCampaign = async (
+  campaignId: string,
+  updates: Partial<Campaign>
+): Promise<void> => {
+  const db = getDb();
+  const campaignRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns', campaignId);
+  
+  try {
+    const updateData: any = {
+      updatedAt: serverTimestamp(),
+    };
+    
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.startDate !== undefined) updateData.startDate = serverTimestamp();
+    if (updates.endDate !== undefined) updateData.endDate = serverTimestamp();
+    if (updates.totalBudget !== undefined) updateData.totalBudget = updates.totalBudget;
+    if (updates.dailyCap !== undefined) updateData.dailyCap = updates.dailyCap;
+    if (updates.priorityTier !== undefined) updateData.priorityTier = updates.priorityTier;
+    if (updates.targetingRules !== undefined) updateData.targetingRules = updates.targetingRules;
+    if (updates.adIds !== undefined) updateData.adIds = updates.adIds;
+    if (updates.slotIds !== undefined) updateData.slotIds = updates.slotIds;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    
+    await updateDoc(campaignRef, updateData);
+    console.log('✅ Campaign updated:', campaignId);
+  } catch (error: any) {
+    console.error('❌ Error updating campaign:', error);
+    throw new Error(`Failed to update campaign: ${error.message}`);
+  }
+};
+
+/**
+ * Attach ad to campaign
+ */
+export const attachAdToCampaign = async (campaignId: string, adId: string): Promise<void> => {
+  const db = getDb();
+  const campaignRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns', campaignId);
+  
+  try {
+    const campaignSnap = await getDoc(campaignRef);
+    if (!campaignSnap.exists()) {
+      throw new Error('Campaign not found');
+    }
+    
+    const currentAdIds = campaignSnap.data().adIds || [];
+    if (!currentAdIds.includes(adId)) {
+      await updateDoc(campaignRef, {
+        adIds: [...currentAdIds, adId],
+        updatedAt: serverTimestamp(),
+      });
+      console.log('✅ Ad attached to campaign:', adId);
+    }
+  } catch (error: any) {
+    console.error('❌ Error attaching ad to campaign:', error);
+    throw new Error(`Failed to attach ad: ${error.message}`);
+  }
+};
+
+/**
+ * Get campaigns by advertiser
+ */
+export const getCampaignsByAdvertiser = async (advertiserId: string): Promise<Campaign[]> => {
+  const db = getDb();
+  const campaignsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns');
+  const q = query(campaignsRef, where('advertiserId', '==', advertiserId));
+  
+  try {
+    const snapshot = await getDocs(q);
+    const campaigns: Campaign[] = [];
+    
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      campaigns.push({
+        id: docSnap.id,
+        advertiserId: data.advertiserId,
+        name: data.name || '',
+        startDate: data.startDate?.toDate?.() || new Date(),
+        endDate: data.endDate?.toDate?.() || new Date(),
+        totalBudget: data.totalBudget || 0,
+        dailyCap: data.dailyCap,
+        priorityTier: data.priorityTier || 'standard',
+        targetingRules: data.targetingRules,
+        adIds: data.adIds || [],
+        slotIds: data.slotIds || [],
+        status: data.status || 'draft',
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        createdBy: data.createdBy || '',
+        updatedAt: data.updatedAt?.toDate?.() || undefined,
+      });
+    });
+    
+    return campaigns.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  } catch (error: any) {
+    console.error('Error fetching campaigns:', error);
+    throw new Error(`Failed to fetch campaigns: ${error.message}`);
+  }
+};
+
+/**
+ * Get campaign analytics
+ */
+export const getCampaignAnalytics = async (campaignId: string): Promise<{
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  spend: number;
+}> => {
+  const db = getDb();
+  
+  try {
+    // Get campaign
+    const campaignRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns', campaignId);
+    const campaignSnap = await getDoc(campaignRef);
+    
+    if (!campaignSnap.exists()) {
+      throw new Error('Campaign not found');
+    }
+    
+    const adIds = campaignSnap.data().adIds || [];
+    
+    // Get impressions for all ads in campaign
+    const impressionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adImpressions');
+    const impressionsQuery = query(impressionsRef, where('adId', 'in', adIds.length > 0 ? adIds : ['']));
+    const impressionsSnap = await getDocs(impressionsQuery);
+    
+    // Get clicks for all ads in campaign
+    const clicksRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adClicks');
+    const clicksQuery = query(clicksRef, where('adId', 'in', adIds.length > 0 ? adIds : ['']));
+    const clicksSnap = await getDocs(clicksQuery);
+    
+    const impressions = impressionsSnap.size;
+    const clicks = clicksSnap.size;
+    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+    
+    // Calculate spend (placeholder - would need actual pricing logic)
+    const spend = 0; // TODO: Implement pricing calculation
+    
+    return { impressions, clicks, ctr, spend };
+  } catch (error: any) {
+    console.error('Error fetching campaign analytics:', error);
+    throw new Error(`Failed to fetch campaign analytics: ${error.message}`);
+  }
+};
+
+// ===========================================
+// AD SLOTS (INVENTORY REGISTRY)
+// ===========================================
+
+export interface AdSlot {
+  slotId: string;
+  pageType: 'article' | 'home' | 'section';
+  sizes: string[];
+  priorityTier: 'premium' | 'standard' | 'house';
+  maxAds: number;
+  createdAt: Date;
+}
+
+/**
+ * Get ad slot by ID
+ */
+export const getAdSlot = async (slotId: string): Promise<AdSlot | null> => {
+  const db = getDb();
+  const slotRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'adSlots', slotId);
+  
+  try {
+    const snap = await getDoc(slotRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      return {
+        slotId: snap.id,
+        pageType: data.pageType || 'article',
+        sizes: data.sizes || [],
+        priorityTier: data.priorityTier || 'standard',
+        maxAds: data.maxAds || 1,
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+      };
+    }
+    return null;
+  } catch (error: any) {
+    console.error('Error fetching ad slot:', error);
+    throw new Error(`Failed to fetch ad slot: ${error.message}`);
+  }
+};
+
+/**
+ * Get ads for a specific slot (for rendering)
+ */
+export const getAdsForSlot = async (
+  slotId: string,
+  options?: {
+    limit?: number;
+    priorityTier?: 'premium' | 'standard' | 'house';
+  }
+): Promise<Ad[]> => {
+  const db = getDb();
+  
+  try {
+    // Get slot configuration
+    const slot = await getAdSlot(slotId);
+    if (!slot) {
+      return [];
+    }
+    
+    // Map slotId to placement (backward compatibility)
+    const placementMap: Record<string, 'header' | 'sidebar' | 'inline'> = {
+      'header_banner': 'header',
+      'sidebar_1': 'sidebar',
+      'sidebar_2': 'sidebar',
+      'article_inline_1': 'inline',
+      'article_inline_2': 'inline',
+      'footer_1': 'sidebar',
+    };
+    
+    const placement = placementMap[slotId] || 'sidebar';
+    const limit = options?.limit || slot.maxAds || 1;
+    
+    // Get active ads matching placement and date range
+    const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
+    const now = new Date();
+    
+    // Query active ads
+    const activeAdsQuery = query(
+      adsRef,
+      where('status', '==', 'active'),
+      where('placement', '==', placement)
+    );
+    
+    const snapshot = await getDocs(activeAdsQuery);
+    const ads: Ad[] = [];
+    
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const startDate = data.startDate?.toDate?.() || new Date();
+      const endDate = data.endDate?.toDate?.() || new Date();
+      
+      // Filter by date range
+      if (startDate <= now && endDate >= now) {
+        ads.push({
+          id: docSnap.id,
+          advertiserId: data.advertiserId,
+          title: data.title || '',
+          description: data.description,
+          creativeUrl: data.creativeUrl || '',
+          placement: data.placement || 'sidebar',
+          status: 'active',
+          startDate,
+          endDate,
+          clicks: data.clicks || 0,
+          views: data.views || 0,
+          paymentStatus: data.paymentStatus || 'pending',
+          paymentId: data.paymentId,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          updatedAt: data.updatedAt?.toDate?.() || undefined,
+        });
+      }
+    });
+    
+    // Sort by priority tier (premium first) and return limited results
+    const priorityOrder = { premium: 0, standard: 1, house: 2 };
+    ads.sort((a, b) => {
+      // Simple rotation for now - can be enhanced with campaign priority
+      return Math.random() - 0.5;
+    });
+    
+    return ads.slice(0, limit);
+  } catch (error: any) {
+    console.error('Error fetching ads for slot:', error);
+    // Return empty array on error (graceful degradation)
+    return [];
+  }
+};
+
+// ===========================================
+// IMPRESSION & CLICK TRACKING
+// ===========================================
+
+export interface AdImpression {
+  id: string;
+  adId: string;
+  slotId: string;
+  timestamp: Date;
+  userId?: string;
+  userAgent?: string;
+  referrer?: string;
+}
+
+export interface AdClick {
+  id: string;
+  adId: string;
+  slotId: string;
+  timestamp: Date;
+  userId?: string;
+  userAgent?: string;
+  referrer?: string;
+}
+
+/**
+ * Track ad impression (write to collection)
+ */
+export const trackAdImpression = async (
+  adId: string,
+  slotId: string,
+  metadata?: {
+    userId?: string;
+    userAgent?: string;
+    referrer?: string;
+  }
+): Promise<string> => {
+  const db = getDb();
+  const impressionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adImpressions');
+  const auth = getAuth();
+  
+  try {
+    // Also update the ad's view count (backward compatibility)
+    await trackAdView(adId);
+    
+    // Create impression record
+    const docRef = await addDoc(impressionsRef, {
+      adId,
+      slotId,
+      timestamp: serverTimestamp(),
+      userId: metadata?.userId || auth.currentUser?.uid || null,
+      userAgent: metadata?.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : null),
+      referrer: metadata?.referrer || (typeof document !== 'undefined' ? document.referrer : null),
+    });
+    
+    console.log('✅ Impression tracked:', docRef.id);
+    return docRef.id;
+  } catch (error: any) {
+    console.error('Error tracking impression:', error);
+    // Don't throw - tracking failures shouldn't break ad rendering
+    return '';
+  }
+};
+
+/**
+ * Track ad click (write to collection)
+ */
+export const trackAdClickDetailed = async (
+  adId: string,
+  slotId: string,
+  metadata?: {
+    userId?: string;
+    userAgent?: string;
+    referrer?: string;
+  }
+): Promise<string> => {
+  const db = getDb();
+  const clicksRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adClicks');
+  const auth = getAuth();
+  
+  try {
+    // Also update the ad's click count (backward compatibility)
+    await trackAdClick(adId);
+    
+    // Create click record
+    const docRef = await addDoc(clicksRef, {
+      adId,
+      slotId,
+      timestamp: serverTimestamp(),
+      userId: metadata?.userId || auth.currentUser?.uid || null,
+      userAgent: metadata?.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : null),
+      referrer: metadata?.referrer || (typeof document !== 'undefined' ? document.referrer : null),
+    });
+    
+    console.log('✅ Click tracked:', docRef.id);
+    return docRef.id;
+  } catch (error: any) {
+    console.error('Error tracking click:', error);
+    // Don't throw - tracking failures shouldn't break ad rendering
+    return '';
+  }
+};
+
+// ===========================================
+// INVOICES (BILLING)
+// ===========================================
+
+export interface Invoice {
+  id: string;
+  advertiserId: string;
+  campaignId?: string;
+  adId?: string;
+  amount: number;
+  currency: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  dueDate: Date;
+  createdAt: Date;
+  paidAt?: Date;
+  invoiceNumber: string;
+}
+
+/**
+ * Get invoices by advertiser
+ */
+export const getAdvertiserInvoices = async (advertiserId: string): Promise<Invoice[]> => {
+  const db = getDb();
+  const invoicesRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'invoices');
+  const q = query(invoicesRef, where('advertiserId', '==', advertiserId));
+  
+  try {
+    const snapshot = await getDocs(q);
+    const invoices: Invoice[] = [];
+    
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      invoices.push({
+        id: docSnap.id,
+        advertiserId: data.advertiserId,
+        campaignId: data.campaignId,
+        adId: data.adId,
+        amount: data.amount || 0,
+        currency: data.currency || 'USD',
+        status: data.status || 'draft',
+        dueDate: data.dueDate?.toDate() || new Date(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        paidAt: data.paidAt?.toDate(),
+        invoiceNumber: data.invoiceNumber || '',
+      });
+    });
+    
+    return invoices.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  } catch (error: any) {
+    console.error('Error fetching invoices:', error);
+    throw new Error(`Failed to fetch invoices: ${error.message}`);
+  }
+};

@@ -144,8 +144,12 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
         </section>
       )}
 
-      {/* Advertising Slot */}
-      <AdSlot userCountry={userCountry} />
+      {/* Advertising Slot - Homepage Sidebar */}
+      <AdSlot 
+        slotId="homepage_sidebar_1" 
+        userCountry={userCountry}
+        style={{ marginBottom: '32px' }}
+      />
 
       {/* Featured Editorials Section */}
       {editorials.length > 0 && (

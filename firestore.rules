@@ -36,6 +36,24 @@ service cloud.firestore {
              getStaffDoc().data.isActive == true;
     }
     
+    // Helper function: Check if user is ad ops (ad_manager, sales, admin, super_admin)
+    function isAdOps() {
+      return isAuthenticated() && 
+             getStaffDoc().data.roles.hasAny(['ad_manager', 'sales', 'admin', 'super_admin']);
+    }
+    
+    // Helper function: Check if user is approved advertiser
+    function isApprovedAdvertiser() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(request.auth.uid)).data.status == 'approved';
+    }
+    
+    // Helper function: Get advertiser document
+    function getAdvertiserDoc(uid) {
+      return get(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(uid));
+    }
+    
     // ===========================================
     // STAFF COLLECTION (Nested Path)
     // ===========================================
@@ -206,6 +224,195 @@ service cloud.firestore {
       // Editors can delete any comment (moderation)
       allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) ||
                       isEditor();
+    }
+
+    // ===========================================
+    // ADVERTISERS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/advertisers/{uid} {
+      // Advertisers can read their own profile
+      allow read: if request.auth.uid == uid;
+      // Admins and ad ops can read all advertisers
+      allow read: if isAdmin() || isAdOps();
+      
+      // Anyone can create during registration (must be their own UID)
+      allow create: if request.auth.uid == uid &&
+                      request.resource.data.keys().hasAll(['companyName', 'contactEmail', 'contactPhone', 'status', 'createdAt']) &&
+                      request.resource.data.status == 'pending_approval';
+      
+      // Only admins and ad ops can update (approve/reject)
+      allow update: if isAdmin() || isAdOps();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // ADS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/ads/{adId} {
+      // Public can read active ads (for display)
+      allow read: if resource.data.status == 'active' && 
+                     resource.data.startDate <= request.time &&
+                     resource.data.endDate >= request.time;
+      
+      // Advertisers can read their own ads
+      allow read: if isAuthenticated() && 
+                     resource.data.advertiserId == request.auth.uid;
+      
+      // Admins and ad ops can read all ads
+      allow read: if isAdmin() || isAdOps();
+      
+      // Approved advertisers can create ads
+      allow create: if isApprovedAdvertiser() &&
+                      request.resource.data.advertiserId == request.auth.uid &&
+                      request.resource.data.status == 'pending';
+      
+      // Only admins and ad ops can update (approve/reject/activate)
+      allow update: if isAdmin() || isAdOps();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // CAMPAIGNS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/campaigns/{campaignId} {
+      // Advertisers can read their own campaigns
+      allow read: if isAuthenticated() && 
+                     resource.data.advertiserId == request.auth.uid;
+      
+      // Admins and ad ops can read all campaigns
+      allow read: if isAdmin() || isAdOps();
+      
+      // Approved advertisers can create campaigns
+      allow create: if isApprovedAdvertiser() &&
+                      request.resource.data.advertiserId == request.auth.uid &&
+                      request.resource.data.status == 'draft';
+      
+      // Advertisers can update their own draft campaigns
+      allow update: if isAuthenticated() && 
+                      resource.data.advertiserId == request.auth.uid &&
+                      resource.data.status == 'draft';
+      
+      // Admins and ad ops can update any campaign
+      allow update: if isAdmin() || isAdOps();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // AD SLOTS COLLECTION (Inventory Registry)
+    // ===========================================
+    match /artifacts/{appId}/public/data/adSlots/{slotId} {
+      // Public can read slots (for ad rendering)
+      allow read: if true;
+      
+      // Only admins and ad ops can create/update slots
+      allow create, update: if isAdmin() || isAdOps();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // AD IMPRESSIONS COLLECTION (Analytics)
+    // ===========================================
+    match /artifacts/{appId}/public/data/adImpressions/{impressionId} {
+      // Advertisers can read impressions for their own ads
+      allow read: if isAuthenticated() && 
+                     exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)) &&
+                     get(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)).data.advertiserId == request.auth.uid;
+      
+      // Admins and ad ops can read all impressions
+      allow read: if isAdmin() || isAdOps();
+      
+      // Any authenticated user can create impressions (tracking)
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll(['adId', 'slotId', 'timestamp']) &&
+                      request.resource.data.timestamp == request.time;
+      
+      // Impressions are immutable (no updates/deletes)
+      allow update, delete: if false;
+    }
+    
+    // ===========================================
+    // AD CLICKS COLLECTION (Analytics)
+    // ===========================================
+    match /artifacts/{appId}/public/data/adClicks/{clickId} {
+      // Advertisers can read clicks for their own ads
+      allow read: if isAuthenticated() && 
+                     exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)) &&
+                     get(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)).data.advertiserId == request.auth.uid;
+      
+      // Admins and ad ops can read all clicks
+      allow read: if isAdmin() || isAdOps();
+      
+      // Any authenticated user can create clicks (tracking)
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll(['adId', 'slotId', 'timestamp']) &&
+                      request.resource.data.timestamp == request.time;
+      
+      // Clicks are immutable (no updates/deletes)
+      allow update, delete: if false;
+    }
+    
+    // ===========================================
+    // INVOICES COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/invoices/{invoiceId} {
+      // Advertisers can read their own invoices
+      allow read: if isAuthenticated() && 
+                     resource.data.advertiserId == request.auth.uid;
+      
+      // Admins and ad ops can read all invoices
+      allow read: if isAdmin() || isAdOps();
+      
+      // Only admins and ad ops can create invoices
+      allow create: if isAdmin() || isAdOps();
+      
+      // Only admins and ad ops can update invoices
+      allow update: if isAdmin() || isAdOps();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // PAYMENTS COLLECTION
+    // ===========================================
+    match /artifacts/{appId}/public/data/payments/{paymentId} {
+      // Advertisers can read their own payments
+      allow read: if isAuthenticated() && 
+                     resource.data.advertiserId == request.auth.uid;
+      
+      // Admins and ad ops can read all payments
+      allow read: if isAdmin() || isAdOps();
+      
+      // Only admins and ad ops can create payments
+      allow create: if isAdmin() || isAdOps();
+      
+      // Only admins and ad ops can update payments
+      allow update: if isAdmin() || isAdOps();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // PLACEMENTS COLLECTION (Configuration)
+    // ===========================================
+    match /artifacts/{appId}/public/data/placements/{placementId} {
+      // Public can read placements (for ad rendering)
+      allow read: if true;
+      
+      // Only admins and ad ops can create/update placements
+      allow create, update: if isAdmin() || isAdOps();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
     }
 
     // ===========================================

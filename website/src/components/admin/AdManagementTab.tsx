@@ -14,10 +14,16 @@ import {
   Ad
 } from '../../services/advertiserService';
 import { requireSuperAdmin } from '../../services/authService';
+import CampaignsTab from './CampaignsTab';
+import PlacementsTab from './PlacementsTab';
+import AdAnalyticsTab from './AdAnalyticsTab';
+import AdBillingTab from './AdBillingTab';
 
 interface AdManagementTabProps {
   userRoles: string[] | null;
 }
+
+type MainTab = 'advertisers' | 'creatives' | 'campaigns' | 'placements' | 'analytics' | 'billing';
 
 const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
   const [pendingAdvertisers, setPendingAdvertisers] = useState<Advertiser[]>([]);
@@ -25,7 +31,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
   const [pendingAds, setPendingAds] = useState<Ad[]>([]);
   const [activeAds, setActiveAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'advertisers' | 'ads'>('advertisers');
+  const [activeTab, setActiveTab] = useState<MainTab>('advertisers');
   const [advertiserSubTab, setAdvertiserSubTab] = useState<'pending' | 'approved'>('pending');
   const [rejectReason, setRejectReason] = useState<{ [key: string]: string }>({});
   const [showRejectForm, setShowRejectForm] = useState<{ [key: string]: boolean }>({});
@@ -37,7 +43,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
     
     if (activeTab === 'advertisers') {
       loadAdvertisers();
-    } else {
+    } else if (activeTab === 'creatives') {
       const unsubscribe = subscribeToAds(
         (ads) => {
           setPendingAds((ads || []).filter(a => a.status === 'pending'));
@@ -50,6 +56,8 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
         }
       );
       return () => unsubscribe();
+    } else {
+      setLoading(false);
     }
   }, [userRoles, activeTab, advertiserSubTab]);
 
@@ -198,37 +206,105 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem' }}>Ad Management</h2>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem' }}>Ad Operations Console</h2>
         
         {/* Main Tabs */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e5e7eb', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid #e5e7eb', marginBottom: '16px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('advertisers')}
             style={{
-              padding: '12px 24px',
+              padding: '12px 20px',
               border: 'none',
               backgroundColor: 'transparent',
               borderBottom: activeTab === 'advertisers' ? '2px solid #000' : '2px solid transparent',
               cursor: 'pointer',
               fontWeight: activeTab === 'advertisers' ? '600' : '400',
-              color: activeTab === 'advertisers' ? '#000' : '#6b7280'
+              color: activeTab === 'advertisers' ? '#000' : '#6b7280',
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap'
             }}
           >
             Advertisers
           </button>
           <button
-            onClick={() => setActiveTab('ads')}
+            onClick={() => setActiveTab('creatives')}
             style={{
-              padding: '12px 24px',
+              padding: '12px 20px',
               border: 'none',
               backgroundColor: 'transparent',
-              borderBottom: activeTab === 'ads' ? '2px solid #000' : '2px solid transparent',
+              borderBottom: activeTab === 'creatives' ? '2px solid #000' : '2px solid transparent',
               cursor: 'pointer',
-              fontWeight: activeTab === 'ads' ? '600' : '400',
-              color: activeTab === 'ads' ? '#000' : '#6b7280'
+              fontWeight: activeTab === 'creatives' ? '600' : '400',
+              color: activeTab === 'creatives' ? '#000' : '#6b7280',
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap'
             }}
           >
-            Ads ({pendingAds.length} pending, {activeAds.length} active)
+            Creatives ({pendingAds.length} pending, {activeAds.length} active)
+          </button>
+          <button
+            onClick={() => setActiveTab('campaigns')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'campaigns' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'campaigns' ? '600' : '400',
+              color: activeTab === 'campaigns' ? '#000' : '#6b7280',
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Campaigns
+          </button>
+          <button
+            onClick={() => setActiveTab('placements')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'placements' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'placements' ? '600' : '400',
+              color: activeTab === 'placements' ? '#000' : '#6b7280',
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Placements
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'analytics' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'analytics' ? '600' : '400',
+              color: activeTab === 'analytics' ? '#000' : '#6b7280',
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Analytics
+          </button>
+          <button
+            onClick={() => setActiveTab('billing')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'billing' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'billing' ? '600' : '400',
+              color: activeTab === 'billing' ? '#000' : '#6b7280',
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Billing
           </button>
         </div>
 
@@ -465,8 +541,8 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
         </div>
       )}
 
-      {/* Ads Content */}
-      {activeTab === 'ads' && (
+      {/* Creatives Content */}
+      {activeTab === 'creatives' && (
         <div>
           <div style={{ marginBottom: '16px' }}>
             <h3 style={{ marginBottom: '12px' }}>Pending Ads ({pendingAds.length})</h3>
@@ -589,6 +665,26 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Campaigns Tab */}
+      {activeTab === 'campaigns' && (
+        <CampaignsTab userRoles={userRoles} />
+      )}
+
+      {/* Placements Tab */}
+      {activeTab === 'placements' && (
+        <PlacementsTab userRoles={userRoles} />
+      )}
+
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <AdAnalyticsTab userRoles={userRoles} />
+      )}
+
+      {/* Billing Tab */}
+      {activeTab === 'billing' && (
+        <AdBillingTab userRoles={userRoles} />
       )}
     </div>
   );
