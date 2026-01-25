@@ -311,6 +311,53 @@ const AdBillingTab: React.FC<AdBillingTabProps> = ({ userRoles }) => {
           </table>
         </div>
       )}
+
+      {/* Revenue Report Modal */}
+      {showRevenueReport && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            maxWidth: '1200px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setShowRevenueReport(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                padding: '8px 12px',
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                zIndex: 1
+              }}
+            >
+              Close
+            </button>
+            <RevenueReport userRoles={userRoles} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
