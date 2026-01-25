@@ -177,12 +177,19 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
                 imageUrl: editorial.finalImageUrl || editorial.suggestedImageUrl || editorial.imageUrl
               };
               
+              // Generate slug if not present (for older editorials)
+              const slug = editorial.slug || (editorial.headline ? 
+                editorial.headline.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100) 
+                : editorial.id);
+              
               return (
                 <ArticleCard 
                   key={editorial.id}
                   article={editorialArticle}
                   variant="grid"
                   userCountry={userCountry}
+                  opinionSlug={slug}
+                  isEditorial={true}
                 />
               );
             })}

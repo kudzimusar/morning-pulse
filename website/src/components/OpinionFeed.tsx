@@ -3,8 +3,19 @@ import { Opinion } from '../../types';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
 import SEOHeader from './SEOHeader';
 import { trackArticleView, trackArticleEngagement } from '../services/analyticsService';
-import { X, PenTool, Share2, Check } from 'lucide-react';
+import { X, PenTool, Share2, Check, Heart, Lightbulb, ThumbsDown, MessageCircle } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
+import { 
+  addReaction, 
+  getUserReaction, 
+  subscribeToOpinionReactions,
+  getOpinionReactionCounts 
+} from '../services/reactionsService';
+import { 
+  addPublicComment, 
+  subscribeToOpinionComments,
+  PublicComment 
+} from '../services/publicCommentsService';
 
 interface OpinionFeedProps {
   onNavigateToSubmit?: () => void;
@@ -19,6 +30,13 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   const [slugOpinion, setSlugOpinion] = useState<Opinion | null>(null); // NEW: Opinion loaded by slug
   const [slugNotFound, setSlugNotFound] = useState(false); // NEW: Track if slug lookup failed
   const [shareCopied, setShareCopied] = useState(false); // NEW: Track share link copy status
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({ like: 0, love: 0, insightful: 0, disagree: 0, total: 0 });
+  const [userReaction, setUserReaction] = useState<{ type: string } | null>(null);
+  const [comments, setComments] = useState<PublicComment[]>([]);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [commentAuthorName, setCommentAuthorName] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   // NEW: Fetch single opinion by slug if provided
   useEffect(() => {
@@ -201,6 +219,90 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
       }
     }
   }, [selectedOpinion]);
+
+  // NEW: Subscribe to reactions for selected opinion
+  useEffect(() => {
+    if (!selectedOpinion) {
+      setReactionCounts({ like: 0, love: 0, insightful: 0, disagree: 0, total: 0 });
+      setUserReaction(null);
+      return;
+    }
+
+    // Get initial reaction counts
+    getOpinionReactionCounts(selectedOpinion.id).then(setReactionCounts);
+    
+    // Get user's reaction
+    getUserReaction(selectedOpinion.id).then(reaction => {
+      if (reaction) {
+        setUserReaction({ type: reaction.type });
+      } else {
+        setUserReaction(null);
+      }
+    });
+
+    // Subscribe to real-time updates
+    const unsubscribe = subscribeToOpinionReactions(selectedOpinion.id, async (reactions, counts) => {
+      setReactionCounts(counts);
+      
+      // Update user reaction by checking current user
+      const currentReaction = await getUserReaction(selectedOpinion.id);
+      setUserReaction(currentReaction ? { type: currentReaction.type } : null);
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [selectedOpinion]);
+
+  // NEW: Subscribe to comments for selected opinion
+  useEffect(() => {
+    if (!selectedOpinion) {
+      setComments([]);
+      return;
+    }
+
+    const unsubscribe = subscribeToOpinionComments(selectedOpinion.id, (fetchedComments) => {
+      setComments(fetchedComments);
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [selectedOpinion]);
+
+  // NEW: Handle reaction click
+  const handleReaction = async (type: 'like' | 'love' | 'insightful' | 'disagree') => {
+    if (!selectedOpinion) return;
+    
+    try {
+      await addReaction(selectedOpinion.id, type);
+      // The subscription will update the counts automatically
+    } catch (error) {
+      console.error('Failed to add reaction:', error);
+    }
+  };
+
+  // NEW: Handle comment submission
+  const handleSubmitComment = async () => {
+    if (!selectedOpinion || !commentText.trim()) return;
+    
+    setIsSubmittingComment(true);
+    try {
+      await addPublicComment(
+        selectedOpinion.id,
+        commentText,
+        commentAuthorName.trim() || 'Anonymous'
+      );
+      setCommentText('');
+      setCommentAuthorName('');
+      setShowComments(true); // Keep comments visible after submission
+    } catch (error) {
+      console.error('Failed to submit comment:', error);
+      alert('Failed to submit comment. Please try again.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
 
   // NEW: Handle slug not found
   if (slugNotFound) {
@@ -557,9 +659,223 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
             </div>
             <div className="drop-cap" style={{ fontSize: '1.3rem', lineHeight: '1.8', whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
             
-            {/* NEW: Share Section at bottom of article */}
+            {/* NEW: Reactions Section */}
             <div style={{ 
               marginTop: '60px', 
+              paddingTop: '30px', 
+              borderTop: '1px solid #e7e5e4',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '20px'
+            }}>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                What do you think?
+              </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  onClick={() => handleReaction('like')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 20px',
+                    backgroundColor: userReaction?.type === 'like' ? '#2563eb' : '#f3f4f6',
+                    color: userReaction?.type === 'like' ? '#fff' : '#374151',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Heart size={16} fill={userReaction?.type === 'like' ? '#fff' : 'none'} />
+                  Like {reactionCounts.like > 0 && `(${reactionCounts.like})`}
+                </button>
+                <button
+                  onClick={() => handleReaction('love')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 20px',
+                    backgroundColor: userReaction?.type === 'love' ? '#dc2626' : '#f3f4f6',
+                    color: userReaction?.type === 'love' ? '#fff' : '#374151',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Heart size={16} fill={userReaction?.type === 'love' ? '#fff' : 'none'} />
+                  Love {reactionCounts.love > 0 && `(${reactionCounts.love})`}
+                </button>
+                <button
+                  onClick={() => handleReaction('insightful')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 20px',
+                    backgroundColor: userReaction?.type === 'insightful' ? '#f59e0b' : '#f3f4f6',
+                    color: userReaction?.type === 'insightful' ? '#fff' : '#374151',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Lightbulb size={16} />
+                  Insightful {reactionCounts.insightful > 0 && `(${reactionCounts.insightful})`}
+                </button>
+                <button
+                  onClick={() => handleReaction('disagree')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 20px',
+                    backgroundColor: userReaction?.type === 'disagree' ? '#6b7280' : '#f3f4f6',
+                    color: userReaction?.type === 'disagree' ? '#fff' : '#374151',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <ThumbsDown size={16} />
+                  Disagree {reactionCounts.disagree > 0 && `(${reactionCounts.disagree})`}
+                </button>
+              </div>
+            </div>
+
+            {/* NEW: Comments Section */}
+            <div style={{ 
+              marginTop: '40px', 
+              paddingTop: '30px', 
+              borderTop: '1px solid #e7e5e4'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a1a' }}>
+                  Comments ({comments.length})
+                </h3>
+                <button
+                  onClick={() => setShowComments(!showComments)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    backgroundColor: 'transparent',
+                    color: '#78716c',
+                    border: '1px solid #e7e5e4',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <MessageCircle size={16} />
+                  {showComments ? 'Hide' : 'Show'} Comments
+                </button>
+              </div>
+
+              {showComments && (
+                <>
+                  {/* Comment Form */}
+                  <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                    <input
+                      type="text"
+                      placeholder="Your name (optional)"
+                      value={commentAuthorName}
+                      onChange={(e) => setCommentAuthorName(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        marginBottom: '10px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        fontSize: '14px'
+                      }}
+                    />
+                    <textarea
+                      placeholder="Write a comment..."
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        marginBottom: '10px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        fontFamily: 'inherit',
+                        resize: 'vertical'
+                      }}
+                    />
+                    <button
+                      onClick={handleSubmitComment}
+                      disabled={!commentText.trim() || isSubmittingComment}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: commentText.trim() ? '#000' : '#9ca3af',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: commentText.trim() ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      {isSubmittingComment ? 'Posting...' : 'Post Comment'}
+                    </button>
+                  </div>
+
+                  {/* Comments List */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {comments.length === 0 ? (
+                      <p style={{ color: '#78716c', fontStyle: 'italic', textAlign: 'center', padding: '40px' }}>
+                        No comments yet. Be the first to share your thoughts!
+                      </p>
+                    ) : (
+                      comments.map((comment) => (
+                        <div key={comment.id} style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                            <div>
+                              <strong style={{ fontSize: '14px', color: '#1a1a1a' }}>{comment.authorName}</strong>
+                              <span style={{ fontSize: '12px', color: '#78716c', marginLeft: '8px' }}>
+                                {comment.createdAt.toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric', 
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                          <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151', whiteSpace: 'pre-wrap' }}>
+                            {comment.content}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* NEW: Share Section at bottom of article */}
+            <div style={{ 
+              marginTop: '40px', 
               paddingTop: '30px', 
               borderTop: '1px solid #e7e5e4',
               display: 'flex',

@@ -7,9 +7,11 @@ interface ArticleCardProps {
   article: NewsStory;
   variant?: 'grid' | 'compact';
   userCountry?: CountryInfo;
+  opinionSlug?: string; // NEW: Slug for editorials/opinions to route to detail page
+  isEditorial?: boolean; // NEW: Flag to indicate if this is an editorial/opinion
 }
 
-const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', userCountry }) => {
+const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', userCountry, opinionSlug, isEditorial }) => {
   const [imageUrl, setImageUrl] = useState<string>('');
 
   // Fetch image URL on mount
@@ -52,6 +54,13 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
   }, [article.id, article.urlToImage, article.category, article.headline]);
 
   const handleClick = () => {
+    // NEW: Route to opinion detail page if this is an editorial/opinion
+    if (isEditorial && opinionSlug) {
+      window.location.hash = `opinion/${opinionSlug}`;
+      return;
+    }
+    
+    // Fallback to external URL if available
     if (article.url) {
       window.open(article.url, '_blank', 'noopener,noreferrer');
     }
@@ -106,9 +115,12 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
     return tags;
   };
 
+  // Determine if card is clickable
+  const isClickable = article.url || (isEditorial && opinionSlug);
+
   return (
     <article 
-      className={`premium-article-card ${variant} ${article.url ? 'clickable' : ''}`}
+      className={`premium-article-card ${variant} ${isClickable ? 'clickable' : ''}`}
       onClick={handleClick}
     >
       <div 
@@ -136,7 +148,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
         <div className="article-footer">
           <div className="article-meta">
             <span className="article-source">{article.source}</span>
-            {article.url && (
+            {isClickable && (
               <span className="article-link">Read more →</span>
             )}
           </div>
