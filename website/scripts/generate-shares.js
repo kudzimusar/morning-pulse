@@ -153,8 +153,8 @@ function generateShareHTML(story) {
   // Share page URL (what bots see - static HTML page)
   const sharePageUrl = `${BASE_URL}/shares/${slug}/`;
   
-  // Story URL (where users are redirected - SPA hash route)
-  const storyUrl = `${BASE_URL}/#opinion/${slug}`;
+  // Story URL (where users are redirected - SPA query param route)
+  const storyUrl = `${BASE_URL}/?story=${slug}`;
   
   // Published date for structured data
   const publishedDate = formatDateForJSONLD(story.publishedAt || story.submittedAt);
@@ -256,8 +256,7 @@ function generateShareHTML(story) {
 }
 
 /**
- * Generate a single share.html file that handles all stories via query params
- * Also generates individual folder structure for better bot compatibility
+ * Main function to generate all share pages
  */
 async function generateSharePages() {
   try {
@@ -271,70 +270,48 @@ async function generateSharePages() {
 
     if (snapshot.empty) {
       console.log('⚠️  No published opinions found');
-      // Still create share.html with empty data
-      await createSingleShareHTML({});
       return;
     }
 
     console.log(`📰 Found ${snapshot.size} published opinions`);
 
-    // Ensure dist directory exists
+    // Ensure dist/shares directory exists
     const distPath = path.join(__dirname, '..', 'dist');
+    const sharesPath = path.join(distPath, 'shares');
+
     if (!fs.existsSync(distPath)) {
       fs.mkdirSync(distPath, { recursive: true });
       console.log('📁 Created dist directory');
     }
 
-    // Create .nojekyll file to ensure GitHub Pages serves all files
-    const nojekyllPath = path.join(distPath, '.nojekyll');
-    fs.writeFileSync(nojekyllPath, '', 'utf8');
-    console.log('✅ Created .nojekyll file');
-
-    // Prepare stories data for share.html
-    const storiesData = {};
-    let generated = 0;
-    let errors = 0;
-
-    // Also keep folder structure for better bot compatibility
-    const sharesPath = path.join(distPath, 'shares');
     if (!fs.existsSync(sharesPath)) {
       fs.mkdirSync(sharesPath, { recursive: true });
       console.log('📁 Created shares directory');
     }
 
-    // Process each opinion
+    let generated = 0;
+    let errors = 0;
+
+    // Generate share page for each opinion
     for (const docSnap of snapshot.docs) {
       try {
         const data = docSnap.data();
         const slug = data.slug || generateSlug(data.headline || docSnap.id);
 
-        // Store story data for share.html
-        storiesData[slug] = {
-          id: docSnap.id,
-          headline: data.headline || '',
-          subHeadline: data.subHeadline || '',
-          body: data.body || '',
-          authorName: data.authorName || 'Morning Pulse',
-          category: data.category || 'general',
-          finalImageUrl: data.finalImageUrl || null,
-          suggestedImageUrl: data.suggestedImageUrl || null,
-          imageUrl: data.imageUrl || null,
-          publishedAt: data.publishedAt ? formatDateForJSONLD(data.publishedAt) : null,
-          submittedAt: data.submittedAt ? formatDateForJSONLD(data.submittedAt) : null
-        };
-
-        // Also generate individual folder structure (for better bot compatibility)
+        // Create directory for this story
         const storyDir = path.join(sharesPath, slug);
         if (!fs.existsSync(storyDir)) {
           fs.mkdirSync(storyDir, { recursive: true });
         }
 
+        // Generate HTML
         const html = generateShareHTML({
           ...data,
           slug,
           id: docSnap.id
         });
 
+        // Write index.html
         const indexPath = path.join(storyDir, 'index.html');
         fs.writeFileSync(indexPath, html, 'utf8');
 
@@ -348,196 +325,31 @@ async function generateSharePages() {
       }
     }
 
-    // Generate single share.html file
-    await createSingleShareHTML(storiesData);
-
     console.log('');
     console.log('✅ Share page generation complete!');
-    console.log(`   Generated: ${generated} individual pages`);
-    console.log(`   Generated: 1 universal share.html`);
+    console.log(`   Generated: ${generated} pages`);
     if (errors > 0) {
       console.log(`   Errors: ${errors}`);
     }
-    console.log(`   Output: ${distPath}/share.html`);
-    console.log(`   Output: ${sharesPath}/[slug]/index.html`);
+    console.log(`   Output directory: ${sharesPath}`);
+
+    // List a few examples
+    if (generated > 0) {
+      console.log('');
+      console.log('📋 Sample generated pages:');
+      const sampleDirs = fs.readdirSync(sharesPath).slice(0, 5);
+      sampleDirs.forEach(dir => {
+        const indexPath = path.join(sharesPath, dir, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          console.log(`   - shares/${dir}/index.html`);
+        }
+      });
+    }
 
   } catch (error) {
     console.error('❌ Fatal error generating share pages:', error);
     process.exit(1);
   }
-}
-
-/**
- * Create a single share.html file that handles all stories via query params
- */
-async function createSingleShareHTML(storiesData) {
-  const distPath = path.join(__dirname, '..', 'dist');
-  const shareHtmlPath = path.join(distPath, 'share.html');
-  
-  // Default brand image (1200x630)
-  const defaultBrandImage = `${BASE_URL}/og-default.jpg`;
-  
-  // Create JavaScript object with all stories
-  const storiesJson = JSON.stringify(storiesData, null, 2);
-  
-  const shareHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Default meta tags (will be updated by JavaScript) -->
-  <title>Morning Pulse | Share Article</title>
-  <meta name="description" content="Read this article on Morning Pulse">
-  
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="Morning Pulse">
-  <meta property="og:description" content="Read this article on Morning Pulse">
-  <meta property="og:image" content="${defaultBrandImage}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Morning Pulse">
-  <meta property="og:site_name" content="Morning Pulse">
-  <meta property="og:locale" content="en_US">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Morning Pulse">
-  <meta name="twitter:description" content="Read this article on Morning Pulse">
-  <meta name="twitter:image" content="${defaultBrandImage}">
-  
-  <!-- Canonical URL -->
-  <link rel="canonical" href="${BASE_URL}/share.html">
-  
-  <!-- Stories data (embedded for client-side access) -->
-  <script type="application/json" id="stories-data">${storiesJson}</script>
-  
-  <script>
-    (function() {
-      // Get slug from query parameter
-      const urlParams = new URLSearchParams(window.location.search);
-      const slug = urlParams.get('id') || urlParams.get('slug');
-      
-      if (!slug) {
-        // No slug provided, redirect to main site
-        window.location.href = '${BASE_URL}/';
-        return;
-      }
-      
-      // Get stories data
-      const storiesDataEl = document.getElementById('stories-data');
-      if (!storiesDataEl) {
-        window.location.href = '${BASE_URL}/#opinion/' + slug;
-        return;
-      }
-      
-      const storiesData = JSON.parse(storiesDataEl.textContent);
-      const story = storiesData[slug];
-      
-      if (!story) {
-        // Story not found, redirect to main site
-        window.location.href = '${BASE_URL}/#opinion/' + slug;
-        return;
-      }
-      
-      // Update meta tags with story data
-      const title = story.headline || 'Morning Pulse Opinion';
-      const description = story.subHeadline || story.body || 'Read this article on Morning Pulse';
-      const author = story.authorName || 'Morning Pulse';
-      const category = story.category || 'general';
-      
-      // Get image URL (ensure absolute)
-      let imageUrl = story.finalImageUrl || story.suggestedImageUrl || story.imageUrl || '${defaultBrandImage}';
-      if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-        if (imageUrl.startsWith('/')) {
-          imageUrl = '${GITHUB_PAGES_URL}' + imageUrl;
-        } else {
-          imageUrl = '${BASE_URL}/' + imageUrl;
-        }
-      }
-      
-      const sharePageUrl = '${BASE_URL}/share.html?id=' + slug;
-      const storyUrl = '${BASE_URL}/#opinion/' + slug;
-      const publishedDate = story.publishedAt || story.submittedAt || new Date().toISOString();
-      
-      // Update all meta tags
-      document.title = title + ' | Morning Pulse';
-      document.querySelector('meta[name="description"]').setAttribute('content', description);
-      document.querySelector('meta[property="og:url"]').setAttribute('content', sharePageUrl);
-      document.querySelector('meta[property="og:title"]').setAttribute('content', title);
-      document.querySelector('meta[property="og:description"]').setAttribute('content', description);
-      document.querySelector('meta[property="og:image"]').setAttribute('content', imageUrl);
-      document.querySelector('meta[property="og:image:alt"]').setAttribute('content', title);
-      document.querySelector('meta[property="article:author"]').setAttribute('content', author);
-      document.querySelector('meta[property="article:section"]').setAttribute('content', category);
-      document.querySelector('meta[property="article:published_time"]').setAttribute('content', publishedDate);
-      
-      document.querySelector('meta[name="twitter:url"]').setAttribute('content', sharePageUrl);
-      document.querySelector('meta[name="twitter:title"]').setAttribute('content', title);
-      document.querySelector('meta[name="twitter:description"]').setAttribute('content', description);
-      document.querySelector('meta[name="twitter:image"]').setAttribute('content', imageUrl);
-      
-      document.querySelector('link[rel="canonical"]').setAttribute('href', sharePageUrl);
-      
-      // Update structured data
-      const structuredData = {
-        "@context": "https://schema.org",
-        "@type": "NewsArticle",
-        "headline": title,
-        "description": description,
-        "image": imageUrl,
-        "author": {
-          "@type": "Person",
-          "name": author
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "Morning Pulse",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "${BASE_URL}/logo.png"
-          }
-        },
-        "datePublished": publishedDate,
-        "dateModified": publishedDate,
-        "mainEntityOfPage": {
-          "@type": "WebPage",
-          "@id": sharePageUrl
-        },
-        "articleSection": category
-      };
-      
-      // Remove old structured data if exists
-      const oldScript = document.querySelector('script[type="application/ld+json"]');
-      if (oldScript) oldScript.remove();
-      
-      // Add new structured data
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.textContent = JSON.stringify(structuredData);
-      document.head.appendChild(script);
-      
-      // Redirect after a delay (give bots time to scrape)
-      setTimeout(function() {
-        window.location.href = storyUrl;
-      }, 2000);
-    })();
-  </script>
-</head>
-<body>
-  <div style="font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 60px 20px;">
-    <h1 style="font-size: 24px; margin-bottom: 16px;">Loading article...</h1>
-    <p style="color: #666; margin-bottom: 24px;">Redirecting to article...</p>
-    <p style="font-size: 14px; color: #999;">
-      <a href="${BASE_URL}/" style="color: #007bff; text-decoration: none;">Click here if you are not redirected</a>
-    </p>
-  </div>
-</body>
-</html>`;
-
-  fs.writeFileSync(shareHtmlPath, shareHtml, 'utf8');
-  console.log('✅ Created universal share.html file');
 }
 
 // Run the generator
