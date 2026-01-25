@@ -44,6 +44,56 @@ function generateSlug(headline) {
 }
 
 /**
+ * Generate image URL by topic (matches frontend getImageByTopic logic)
+ * Returns absolute URL for WhatsApp/social media compatibility
+ */
+function getImageByTopic(headline, id) {
+  const lower = (headline || '').toLowerCase();
+  let searchTerm = 'news,journalism';
+  
+  if (lower.includes('tech') || lower.includes('ai') || lower.includes('artificial') || lower.includes('digital')) {
+    searchTerm = 'technology,computer,digital';
+  } else if (lower.includes('polit') || lower.includes('government') || lower.includes('election')) {
+    searchTerm = 'government,politics,democracy';
+  } else if (lower.includes('econom') || lower.includes('business') || lower.includes('finance') || lower.includes('market')) {
+    searchTerm = 'business,finance,economy';
+  } else if (lower.includes('climate') || lower.includes('environment') || lower.includes('energy')) {
+    searchTerm = 'nature,environment,climate';
+  } else if (lower.includes('health') || lower.includes('medical') || lower.includes('pandemic')) {
+    searchTerm = 'health,medical,science';
+  } else if (lower.includes('educat') || lower.includes('school') || lower.includes('university')) {
+    searchTerm = 'education,learning,student';
+  } else if (lower.includes('sport') || lower.includes('game') || lower.includes('athlete')) {
+    searchTerm = 'sports,competition,athlete';
+  }
+  
+  // Use picsum.photos with a seed based on ID for consistent images
+  const width = 1200;
+  const height = 800;
+  
+  // Create a seed from the ID or use a hash of the search term
+  let seed = 0;
+  if (id) {
+    // Convert ID to a number seed
+    for (let i = 0; i < id.length; i++) {
+      seed = ((seed << 5) - seed) + id.charCodeAt(i);
+      seed = seed & seed; // Convert to 32-bit integer
+    }
+    seed = Math.abs(seed) % 1000;
+  } else {
+    // Use search term as seed
+    for (let i = 0; i < searchTerm.length; i++) {
+      seed = ((seed << 5) - seed) + searchTerm.charCodeAt(i);
+      seed = seed & seed;
+    }
+    seed = Math.abs(seed) % 1000;
+  }
+  
+  // Use picsum.photos with seed for consistent, reliable placeholder images
+  return `https://picsum.photos/seed/${seed}/${width}/${height}`;
+}
+
+/**
  * Escape HTML entities
  */
 function escapeHtml(text) {
@@ -127,13 +177,8 @@ function generateShareHTML(story) {
   const author = escapeHtml(story.authorName || 'Morning Pulse');
   
   // Ensure image URL is always absolute (WhatsApp requires full https:// URLs)
-  // Priority: finalImageUrl > suggestedImageUrl > imageUrl > brand fallback
+  // Priority: finalImageUrl > suggestedImageUrl > imageUrl > getImageByTopic fallback > brand fallback
   let imageUrl = story.finalImageUrl || story.suggestedImageUrl || story.imageUrl;
-  
-  // If no image, use Morning Pulse brand hero image (1200x630)
-  if (!imageUrl) {
-    imageUrl = `${BASE_URL}/og-default.jpg`;
-  }
   
   // If image URL is relative, make it absolute
   if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
@@ -145,9 +190,14 @@ function generateShareHTML(story) {
     }
   }
   
-  // Filter out deprecated Unsplash URLs - use brand image instead
+  // Filter out deprecated Unsplash URLs - use getImageByTopic instead
   if (imageUrl && (imageUrl.includes('unsplash.com') || imageUrl.includes('source.unsplash.com'))) {
-    imageUrl = `${BASE_URL}/og-default.jpg`;
+    imageUrl = null; // Will fall through to getImageByTopic
+  }
+  
+  // If no image or Unsplash was filtered, use getImageByTopic (matches frontend behavior)
+  if (!imageUrl) {
+    imageUrl = getImageByTopic(story.headline || '', story.id);
   }
   
   // Share page URL (what bots see - static HTML page)
@@ -351,15 +401,38 @@ async function generateSharePages() {
     // Generate single share.html file
     await createSingleShareHTML(storiesData);
 
+    // Create 404.html handler for GitHub Pages
+    await create404Handler(distPath, BASE_URL);
+
     console.log('');
     console.log('✅ Share page generation complete!');
     console.log(`   Generated: ${generated} individual pages`);
     console.log(`   Generated: 1 universal share.html`);
+    console.log(`   Generated: 1 404.html handler`);
     if (errors > 0) {
       console.log(`   Errors: ${errors}`);
     }
     console.log(`   Output: ${distPath}/share.html`);
+    console.log(`   Output: ${distPath}/404.html`);
     console.log(`   Output: ${sharesPath}/[slug]/index.html`);
+    
+    // Final verification
+    console.log('');
+    console.log('🔍 Final Verification:');
+    const sharesExists = fs.existsSync(sharesPath);
+    const nojekyllExists = fs.existsSync(nojekyllPath);
+    const shareHtmlExists = fs.existsSync(path.join(distPath, 'share.html'));
+    const four04Exists = fs.existsSync(path.join(distPath, '404.html'));
+    
+    console.log(`   shares/ folder: ${sharesExists ? '✅' : '❌'}`);
+    console.log(`   .nojekyll file: ${nojekyllExists ? '✅' : '❌'}`);
+    console.log(`   share.html: ${shareHtmlExists ? '✅' : '❌'}`);
+    console.log(`   404.html: ${four04Exists ? '✅' : '❌'}`);
+    
+    if (sharesExists) {
+      const shareCount = fs.readdirSync(sharesPath).length;
+      console.log(`   Share folders: ${shareCount}`);
+    }
 
   } catch (error) {
     console.error('❌ Fatal error generating share pages:', error);
@@ -448,13 +521,58 @@ async function createSingleShareHTML(storiesData) {
       const category = story.category || 'general';
       
       // Get image URL (ensure absolute)
-      let imageUrl = story.finalImageUrl || story.suggestedImageUrl || story.imageUrl || '${defaultBrandImage}';
+      // Priority: finalImageUrl > suggestedImageUrl > imageUrl > getImageByTopic > brand fallback
+      let imageUrl = story.finalImageUrl || story.suggestedImageUrl || story.imageUrl;
+      
+      // If image URL is relative, make it absolute
       if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
         if (imageUrl.startsWith('/')) {
           imageUrl = '${GITHUB_PAGES_URL}' + imageUrl;
         } else {
           imageUrl = '${BASE_URL}/' + imageUrl;
         }
+      }
+      
+      // Filter out deprecated Unsplash URLs
+      if (imageUrl && (imageUrl.includes('unsplash.com') || imageUrl.includes('source.unsplash.com'))) {
+        imageUrl = null; // Will fall through to getImageByTopic
+      }
+      
+      // If no image, use getImageByTopic (matches frontend behavior)
+      if (!imageUrl) {
+        // Use getImageByTopic function (defined above)
+        const lower = (story.headline || '').toLowerCase();
+        let searchTerm = 'news,journalism';
+        if (lower.includes('tech') || lower.includes('ai') || lower.includes('artificial') || lower.includes('digital')) {
+          searchTerm = 'technology,computer,digital';
+        } else if (lower.includes('polit') || lower.includes('government') || lower.includes('election')) {
+          searchTerm = 'government,politics,democracy';
+        } else if (lower.includes('econom') || lower.includes('business') || lower.includes('finance') || lower.includes('market')) {
+          searchTerm = 'business,finance,economy';
+        } else if (lower.includes('climate') || lower.includes('environment') || lower.includes('energy')) {
+          searchTerm = 'nature,environment,climate';
+        } else if (lower.includes('health') || lower.includes('medical') || lower.includes('pandemic')) {
+          searchTerm = 'health,medical,science';
+        } else if (lower.includes('educat') || lower.includes('school') || lower.includes('university')) {
+          searchTerm = 'education,learning,student';
+        } else if (lower.includes('sport') || lower.includes('game') || lower.includes('athlete')) {
+          searchTerm = 'sports,competition,athlete';
+        }
+        let seed = 0;
+        if (story.id) {
+          for (let i = 0; i < story.id.length; i++) {
+            seed = ((seed << 5) - seed) + story.id.charCodeAt(i);
+            seed = seed & seed;
+          }
+          seed = Math.abs(seed) % 1000;
+        } else {
+          for (let i = 0; i < searchTerm.length; i++) {
+            seed = ((seed << 5) - seed) + searchTerm.charCodeAt(i);
+            seed = seed & seed;
+          }
+          seed = Math.abs(seed) % 1000;
+        }
+        imageUrl = 'https://picsum.photos/seed/' + seed + '/1200/800';
       }
       
       const sharePageUrl = '${BASE_URL}/share.html?id=' + slug;
@@ -538,6 +656,66 @@ async function createSingleShareHTML(storiesData) {
 
   fs.writeFileSync(shareHtmlPath, shareHtml, 'utf8');
   console.log('✅ Created universal share.html file');
+}
+
+/**
+ * Create 404.html handler for GitHub Pages
+ * This ensures /shares/ paths are properly served before SPA fallback
+ */
+async function create404Handler(distPath, baseUrl) {
+  const four04Path = path.join(distPath, '404.html');
+  
+  const four04Html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found | Morning Pulse</title>
+  <script>
+    (function() {
+      // Get current path
+      const path = window.location.pathname;
+      
+      // Check if this is a /shares/ path
+      const sharesMatch = path.match(/\\/morning-pulse\\/shares\\/([^\\/]+)\\/?$/);
+      
+      if (sharesMatch) {
+        const slug = sharesMatch[1];
+        // Try to load the actual share page
+        const sharePath = '/morning-pulse/shares/' + slug + '/index.html';
+        
+        // Use fetch to check if file exists
+        fetch(sharePath, { method: 'HEAD' })
+          .then(response => {
+            if (response.ok) {
+              // File exists, redirect to it
+              window.location.href = sharePath;
+            } else {
+              // File doesn't exist, redirect to SPA
+              window.location.href = baseUrl + '/#opinion/' + slug;
+            }
+          })
+          .catch(() => {
+            // Error fetching, redirect to SPA
+            window.location.href = baseUrl + '/#opinion/' + slug;
+          });
+      } else {
+        // Not a shares path, redirect to main SPA
+        window.location.href = baseUrl + '/';
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div style="font-family: system-ui, sans-serif; text-align: center; padding: 60px 20px;">
+    <h1>404 - Page Not Found</h1>
+    <p>Redirecting...</p>
+  </div>
+</body>
+</html>`.replace('baseUrl', JSON.stringify(baseUrl));
+
+  fs.writeFileSync(four04Path, four04Html, 'utf8');
+  console.log('✅ Created 404.html handler');
 }
 
 // Run the generator
