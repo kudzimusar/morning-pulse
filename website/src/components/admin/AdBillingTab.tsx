@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getAdvertiserInvoices, Invoice, getApprovedAdvertisers, Advertiser } from '../../services/advertiserService';
+import { getAllInvoices, getRevenueSummary, markInvoicePaid, checkOverdueInvoices } from '../../services/billingService';
+import InvoiceGenerator from './InvoiceGenerator';
+import RevenueReport from './RevenueReport';
 
 interface AdBillingTabProps {
   userRoles: string[] | null;
@@ -11,6 +14,10 @@ const AdBillingTab: React.FC<AdBillingTabProps> = ({ userRoles }) => {
   const [loading, setLoading] = useState(true);
   const [selectedAdvertiser, setSelectedAdvertiser] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<Invoice['status'] | 'all'>('all');
+  const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
+  const [revenueSummary, setRevenueSummary] = useState<any>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showRevenueReport, setShowRevenueReport] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -19,16 +26,24 @@ const AdBillingTab: React.FC<AdBillingTabProps> = ({ userRoles }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const advertisersList = await getApprovedAdvertisers();
+      const [advertisersList, allInvoices, summary] = await Promise.all([
+        getApprovedAdvertisers(),
+        getAllInvoices(),
+        getRevenueSummary(),
+      ]);
+      
       setAdvertisers(advertisersList);
-
+      setRevenueSummary(summary);
+      
       if (selectedAdvertiser) {
         const invoicesList = await getAdvertiserInvoices(selectedAdvertiser);
         setInvoices(invoicesList);
       } else {
-        // Load all invoices (would need admin method)
-        setInvoices([]);
+        setInvoices(allInvoices);
       }
+      
+      // Check for overdue invoices
+      await checkOverdueInvoices();
     } catch (error: any) {
       console.error('Error loading data:', error);
     } finally {
@@ -40,11 +55,27 @@ const AdBillingTab: React.FC<AdBillingTabProps> = ({ userRoles }) => {
     filterStatus === 'all' || inv.status === filterStatus
   );
 
-  const totalRevenue = filteredInvoices
+  const handleMarkPaid = async (invoice: Invoice) => {
+    if (!confirm(`Mark invoice ${invoice.invoiceNumber} as paid?`)) {
+      return;
+    }
+
+    try {
+      await markInvoicePaid(invoice.id, {
+        paymentMethod: 'manual',
+      });
+      await loadData();
+      alert('Invoice marked as paid!');
+    } catch (error: any) {
+      alert(`Failed to mark invoice as paid: ${error.message}`);
+    }
+  };
+
+  const totalRevenue = revenueSummary?.totalRevenue || filteredInvoices
     .filter(inv => inv.status === 'paid')
     .reduce((sum, inv) => sum + inv.amount, 0);
 
-  const pendingAmount = filteredInvoices
+  const pendingAmount = revenueSummary?.pendingRevenue || filteredInvoices
     .filter(inv => inv.status === 'sent' || inv.status === 'overdue')
     .reduce((sum, inv) => sum + inv.amount, 0);
 
@@ -55,7 +86,41 @@ const AdBillingTab: React.FC<AdBillingTabProps> = ({ userRoles }) => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ marginBottom: '16px' }}>Billing & Invoices</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0 }}>Billing & Invoices</h3>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => setShowRevenueReport(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}
+            >
+              Revenue Report
+            </button>
+            <button
+              onClick={() => setShowInvoiceGenerator(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#000',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}
+            >
+              + Generate Invoice
+            </button>
+          </div>
+        </div>
         
         {/* Summary Cards */}
         <div style={{
@@ -172,6 +237,7 @@ const AdBillingTab: React.FC<AdBillingTabProps> = ({ userRoles }) => {
                 <th style={{ padding: '12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>Status</th>
                 <th style={{ padding: '12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>Due Date</th>
                 <th style={{ padding: '12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>Created</th>
+                <th style={{ padding: '12px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -221,6 +287,22 @@ const AdBillingTab: React.FC<AdBillingTabProps> = ({ userRoles }) => {
                     </td>
                     <td style={{ padding: '12px', fontSize: '0.875rem' }}>
                       {invoice.createdAt.toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      <button
+                        onClick={() => setSelectedInvoice(invoice)}
+                        style={{
+                          padding: '4px 8px',
+                          backgroundColor: '#f3f4f6',
+                          color: '#374151',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        Actions
+                      </button>
                     </td>
                   </tr>
                 );

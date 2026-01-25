@@ -14,6 +14,7 @@ import {
   Ad
 } from '../../services/advertiserService';
 import { requireSuperAdmin } from '../../services/authService';
+import { generateInvoiceForAd } from '../../services/billingService';
 import CampaignsTab from './CampaignsTab';
 import PlacementsTab from './PlacementsTab';
 import AdAnalyticsTab from './AdAnalyticsTab';
@@ -141,7 +142,30 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
 
     try {
       await approveAd(adId);
-      alert('Ad approved successfully!');
+      
+      // Auto-generate invoice if enabled
+      const generateInvoice = confirm('Generate invoice for this ad?');
+      if (generateInvoice) {
+        const amount = parseFloat(prompt('Enter invoice amount (USD):') || '0');
+        if (amount > 0) {
+          try {
+            await generateInvoiceForAd(adId, {
+              amount,
+              currency: 'USD',
+              description: `Advertisement approval - Ad ID: ${adId}`,
+            });
+            alert('Ad approved and invoice generated successfully!');
+          } catch (invoiceError: any) {
+            console.error('Invoice generation failed:', invoiceError);
+            alert(`Ad approved, but invoice generation failed: ${invoiceError.message}`);
+          }
+        } else {
+          alert('Ad approved successfully!');
+        }
+      } else {
+        alert('Ad approved successfully!');
+      }
+      
       await loadData();
     } catch (error: any) {
       alert(`Failed to approve ad: ${error.message}`);

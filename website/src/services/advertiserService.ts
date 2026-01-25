@@ -1060,6 +1060,15 @@ export interface Invoice {
   createdAt: Date;
   paidAt?: Date;
   invoiceNumber: string;
+  lineItems?: Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+  }>;
+  notes?: string;
+  paymentMethod?: 'stripe' | 'manual' | 'wire';
+  paymentId?: string;
 }
 
 /**
