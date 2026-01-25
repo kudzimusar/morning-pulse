@@ -61,6 +61,7 @@ export interface Ad {
   title: string;
   description?: string;
   creativeUrl: string;
+  destinationUrl?: string;
   placement: 'header' | 'sidebar' | 'inline';
   status: 'pending' | 'approved' | 'active' | 'expired' | 'rejected';
   startDate: Date;
@@ -277,6 +278,7 @@ export const submitAd = async (
   adData: {
     title: string;
     description?: string;
+    destinationUrl?: string;
     creativeUrl: string;
     placement: 'header' | 'sidebar' | 'inline';
     startDate: Date;
@@ -291,6 +293,7 @@ export const submitAd = async (
       advertiserId,
       title: adData.title,
       description: adData.description || '',
+      destinationUrl: adData.destinationUrl || '',
       creativeUrl: adData.creativeUrl,
       placement: adData.placement,
       status: 'pending',
@@ -350,6 +353,7 @@ export const getAdsByAdvertiser = async (advertiserId: string): Promise<Ad[]> =>
         title: data.title || '',
         description: data.description,
         creativeUrl: data.creativeUrl || '',
+        destinationUrl: data.destinationUrl,
         placement: data.placement || 'sidebar',
         status: data.status || 'pending',
         startDate: data.startDate?.toDate?.() || new Date(),
@@ -392,6 +396,7 @@ export const getPendingAds = async (): Promise<Ad[]> => {
         title: data.title || '',
         description: data.description,
         creativeUrl: data.creativeUrl || '',
+        destinationUrl: data.destinationUrl,
         placement: data.placement || 'sidebar',
         status: 'pending',
         startDate: data.startDate?.toDate?.() || new Date(),
@@ -470,12 +475,22 @@ export const subscribeToAds = (
       const data = docSnap.data();
       ads.push({
         id: docSnap.id,
-        ...data,
+        advertiserId: data.advertiserId,
+        title: data.title || '',
+        description: data.description,
+        creativeUrl: data.creativeUrl || '',
+        destinationUrl: data.destinationUrl,
+        placement: data.placement || 'sidebar',
+        status: data.status || 'pending',
         startDate: data.startDate?.toDate?.() || new Date(),
         endDate: data.endDate?.toDate?.() || new Date(),
+        clicks: data.clicks || 0,
+        views: data.views || 0,
+        paymentStatus: data.paymentStatus || 'pending',
+        paymentId: data.paymentId,
         createdAt: data.createdAt?.toDate?.() || new Date(),
         updatedAt: data.updatedAt?.toDate?.() || undefined,
-      } as Ad);
+      });
     });
     callback(ads);
   }, (error) => {
@@ -873,28 +888,30 @@ export const getAdsForSlot = async (
       return [];
     }
     
-    // Map slotId to placement (backward compatibility)
+    // Map slotId to placement (FIXED - use full slotId)
     const placementMap: Record<string, 'header' | 'sidebar' | 'inline'> = {
       'header_banner': 'header',
-      'sidebar_1': 'sidebar',
-      'sidebar_2': 'sidebar',
+      'homepage_sidebar_1': 'sidebar',
+      'homepage_sidebar_2': 'sidebar',
       'article_inline_1': 'inline',
       'article_inline_2': 'inline',
+      'article_sidebar_1': 'sidebar',
       'footer_1': 'sidebar',
     };
     
     const placement = placementMap[slotId] || 'sidebar';
     const limit = options?.limit || slot.maxAds || 1;
     
-    // Get active ads matching placement and date range
+    // Get active ads matching placement, payment status, and date range
     const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
     const now = new Date();
     
-    // Query active ads
+    // Query active ads with paid status
     const activeAdsQuery = query(
       adsRef,
       where('status', '==', 'active'),
-      where('placement', '==', placement)
+      where('placement', '==', placement),
+      where('paymentStatus', '==', 'paid')
     );
     
     const snapshot = await getDocs(activeAdsQuery);
@@ -913,6 +930,7 @@ export const getAdsForSlot = async (
           title: data.title || '',
           description: data.description,
           creativeUrl: data.creativeUrl || '',
+          destinationUrl: data.destinationUrl,
           placement: data.placement || 'sidebar',
           status: 'active',
           startDate,
@@ -936,7 +954,7 @@ export const getAdsForSlot = async (
     
     return ads.slice(0, limit);
   } catch (error: any) {
-    console.error('Error fetching ads for slot:', error);
+    console.error('Error fetching ads for slot:', slotId, error);
     // Return empty array on error (graceful degradation)
     return [];
   }

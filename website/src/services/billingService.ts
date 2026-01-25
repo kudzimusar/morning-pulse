@@ -18,6 +18,7 @@ import {
   addDoc
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
+import { notifyAdvertiserPayment } from './notificationService';
 
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
@@ -184,14 +185,25 @@ export const markInvoicePaid = async (
     
     // Update ad payment status if invoice is for an ad
     if (invoiceData.adId) {
-      const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
-      const adRef = doc(adsRef, invoiceData.adId);
+      // FIX: Use correct Firestore path
+      const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', invoiceData.adId);
       await updateDoc(adRef, {
         paymentStatus: 'paid',
         paymentId: paymentData.paymentId || invoiceId,
         updatedAt: serverTimestamp(),
       });
+      console.log('✅ Ad payment status updated:', invoiceData.adId);
     }
+    
+    // Notify advertiser (async, don't wait)
+    notifyAdvertiserPayment(
+      invoiceData.advertiserId,
+      invoiceId,
+      invoiceData.amount,
+      invoiceData.currency || 'USD'
+    ).catch(err => {
+      console.error('Failed to send payment notification:', err);
+    });
     
     console.log('✅ Invoice marked as paid:', invoiceId);
   } catch (error: any) {

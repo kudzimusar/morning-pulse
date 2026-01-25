@@ -103,11 +103,16 @@ const AdSlot: React.FC<AdSlotProps> = ({
       referrer: document.referrer,
     });
 
-    // Open ad destination (if available) or advertiser website
-    if (ad.creativeUrl) {
-      // For now, we'll use the creative URL as the destination
-      // In production, ads should have a separate destinationUrl field
-      window.open(ad.creativeUrl, '_blank', 'noopener,noreferrer');
+    // Open ad destination URL (preferred) or fallback to advertiser website
+    const destinationUrl = ad.destinationUrl || ad.creativeUrl;
+    if (destinationUrl) {
+      // Check if it's a valid URL
+      if (destinationUrl.startsWith('http://') || destinationUrl.startsWith('https://')) {
+        window.open(destinationUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        // If not a full URL, treat as relative or add https://
+        window.open(`https://${destinationUrl}`, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 

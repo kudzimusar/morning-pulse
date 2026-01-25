@@ -10,6 +10,7 @@ const AdSubmissionForm: React.FC<AdSubmissionFormProps> = ({ onSuccess, onBack }
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    destinationUrl: '',
     placement: 'sidebar' as 'header' | 'sidebar' | 'inline',
     startDate: '',
     endDate: '',
@@ -26,6 +27,10 @@ const AdSubmissionForm: React.FC<AdSubmissionFormProps> = ({ onSuccess, onBack }
     // Validation
     if (!formData.title.trim()) {
       setError('Please enter an ad title');
+      return;
+    }
+    if (!formData.destinationUrl.trim()) {
+      setError('Please enter a destination URL');
       return;
     }
     if (!creativeFile) {
@@ -57,6 +62,7 @@ const AdSubmissionForm: React.FC<AdSubmissionFormProps> = ({ onSuccess, onBack }
       await submitAd(advertiser.uid, {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
+        destinationUrl: formData.destinationUrl.trim(),
         creativeUrl,
         placement: formData.placement,
         startDate: new Date(formData.startDate),
@@ -67,6 +73,7 @@ const AdSubmissionForm: React.FC<AdSubmissionFormProps> = ({ onSuccess, onBack }
       setFormData({
         title: '',
         description: '',
+        destinationUrl: '',
         placement: 'sidebar',
         startDate: '',
         endDate: '',
@@ -249,6 +256,39 @@ const AdSubmissionForm: React.FC<AdSubmissionFormProps> = ({ onSuccess, onBack }
               }}
               placeholder="Brief description of your ad campaign..."
             />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="destinationUrl" style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              Destination URL (Where users go when they click) <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <input
+              type="url"
+              id="destinationUrl"
+              value={formData.destinationUrl}
+              onChange={(e) => setFormData({ ...formData, destinationUrl: e.target.value })}
+              required
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+              placeholder="https://counthwithdad.com"
+            />
+            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px' }}>
+              The website URL users will visit when they click your ad
+            </p>
           </div>
 
           <div style={{ marginBottom: '20px' }}>

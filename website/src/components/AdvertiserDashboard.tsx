@@ -3,8 +3,10 @@ import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { 
   getCurrentAdvertiser, 
   getAdsByAdvertiser,
+  getAdvertiserInvoices,
   Advertiser,
-  Ad
+  Ad,
+  Invoice
 } from '../services/advertiserService';
 
 const AdvertiserDashboard: React.FC = () => {
@@ -12,7 +14,8 @@ const AdvertiserDashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [ads, setAds] = useState<Ad[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'ads' | 'profile'>('overview');
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'ads' | 'profile' | 'billing'>('overview');
 
   useEffect(() => {
     const auth = getAuth();
@@ -24,6 +27,7 @@ const AdvertiserDashboard: React.FC = () => {
           if (advertiserData && advertiserData.status === 'approved') {
             setAdvertiser(advertiserData);
             await loadAds(currentUser.uid);
+            await loadInvoices(currentUser.uid);
           } else {
             window.location.hash = 'advertiser/login';
           }
@@ -45,6 +49,15 @@ const AdvertiserDashboard: React.FC = () => {
       setAds(adsList);
     } catch (error) {
       console.error('Error loading ads:', error);
+    }
+  };
+
+  const loadInvoices = async (advertiserId: string) => {
+    try {
+      const invoicesList = await getAdvertiserInvoices(advertiserId);
+      setInvoices(invoicesList);
+    } catch (error) {
+      console.error('Error loading invoices:', error);
     }
   };
 
@@ -209,6 +222,20 @@ const AdvertiserDashboard: React.FC = () => {
             }}
           >
             Profile
+          </button>
+          <button
+            onClick={() => setActiveTab('billing')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'billing' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'billing' ? '600' : '400',
+              color: activeTab === 'billing' ? '#000' : '#6b7280'
+            }}
+          >
+            Billing ({invoices.filter(inv => inv.status !== 'paid').length})
           </button>
         </div>
 
@@ -427,6 +454,83 @@ const AdvertiserDashboard: React.FC = () => {
                 </span>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'billing' && (
+          <div style={{
+            backgroundColor: 'white',
+            padding: '32px',
+            borderRadius: '8px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h2 style={{ marginTop: 0, marginBottom: '24px' }}>Invoices & Billing</h2>
+            
+            {invoices.length === 0 ? (
+              <p style={{ color: '#6b7280' }}>No invoices found.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {invoices.map((invoice) => (
+                  <div
+                    key={invoice.id}
+                    style={{
+                      padding: '16px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>
+                        Invoice {invoice.invoiceNumber || invoice.id.substring(0, 8)}
+                      </h3>
+                      <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: '#6b7280' }}>
+                        <span>Amount: ${invoice.amount.toLocaleString()} {invoice.currency}</span>
+                        <span>Due: {invoice.dueDate.toLocaleDateString()}</span>
+                        <span>Created: {invoice.createdAt.toLocaleDateString()}</span>
+                      </div>
+                      {invoice.lineItems && invoice.lineItems.length > 0 && (
+                        <div style={{ marginTop: '8px', fontSize: '0.875rem', color: '#6b7280' }}>
+                          {invoice.lineItems.map((item, idx) => (
+                            <div key={idx}>{item.description}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                          backgroundColor:
+                            invoice.status === 'paid'
+                              ? '#d1fae5'
+                              : invoice.status === 'overdue'
+                              ? '#fee2e2'
+                              : invoice.status === 'sent'
+                              ? '#dbeafe'
+                              : '#f3f4f6',
+                          color:
+                            invoice.status === 'paid'
+                              ? '#065f46'
+                              : invoice.status === 'overdue'
+                              ? '#991b1b'
+                              : invoice.status === 'sent'
+                              ? '#1e40af'
+                              : '#374151'
+                        }}
+                      >
+                        {invoice.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
