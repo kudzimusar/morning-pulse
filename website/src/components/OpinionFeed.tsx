@@ -3,7 +3,7 @@ import { Opinion } from '../../types';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
 import SEOHeader from './SEOHeader';
 import { trackArticleView, trackArticleEngagement } from '../services/analyticsService';
-import { X, PenTool } from 'lucide-react';
+import { X, PenTool, Share2, Check } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
 
 interface OpinionFeedProps {
@@ -18,6 +18,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null);
   const [slugOpinion, setSlugOpinion] = useState<Opinion | null>(null); // NEW: Opinion loaded by slug
   const [slugNotFound, setSlugNotFound] = useState(false); // NEW: Track if slug lookup failed
+  const [shareCopied, setShareCopied] = useState(false); // NEW: Track share link copy status
 
   // NEW: Fetch single opinion by slug if provided
   useEffect(() => {
@@ -555,6 +556,42 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
               />
             </div>
             <div className="drop-cap" style={{ fontSize: '1.3rem', lineHeight: '1.8', whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
+            
+            {/* NEW: Share Section at bottom of article */}
+            <div style={{ 
+              marginTop: '60px', 
+              paddingTop: '30px', 
+              borderTop: '1px solid #e7e5e4',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Share this perspective
+              </p>
+              <button
+                onClick={() => handleShare(selectedOpinion)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  backgroundColor: shareCopied ? '#059669' : '#000',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '30px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}
+              >
+                {shareCopied ? <Check size={20} /> : <Share2 size={20} />}
+                {shareCopied ? 'Link Copied!' : 'Share Story'}
+              </button>
+            </div>
           </div>
         </div>
       )}
