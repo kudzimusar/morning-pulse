@@ -101,8 +101,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [loadingHistory, setLoadingHistory] = useState(false); // NEW: Loading history
   const [restoringVersion, setRestoringVersion] = useState<string | null>(null); // NEW: Version being restored
   
-  // NEW: Current editor info
-  const currentEditor = getCurrentEditor();
+  // ✅ FIX: Move getCurrentEditor() call to useMemo to prevent top-level execution
+  // This prevents "Cannot access 'E' before initialization" errors
+  const currentEditor = useMemo(() => {
+    try {
+      return getCurrentEditor();
+    } catch (error) {
+      console.warn('Error getting current editor:', error);
+      return null;
+    }
+  }, []); // Only run once on mount
+  
   const currentEditorId = currentEditor?.uid || '';
   const currentEditorName = currentEditor?.email?.split('@')[0] || 'Editor';
   

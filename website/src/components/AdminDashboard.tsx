@@ -89,22 +89,51 @@ const AdminDashboard: React.FC = () => {
   const [publishedOpinions, setPublishedOpinions] = useState<Opinion[]>([]);
   const [allOpinions, setAllOpinions] = useState<Opinion[]>([]);
   
-  // ✅ FIX: Handle URL parameters for article selection
+  // ✅ FIX: Handle URL parameters for article selection - preserve query string
   useEffect(() => {
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.split('?')[1] || '');
-    const tabParam = params.get('tab') as TabId;
-    const articleParam = params.get('article');
+    const parseHashParams = () => {
+      try {
+        const hash = window.location.hash;
+        // ✅ FIX: Preserve full hash including query string: #dashboard?tab=editorial-queue&article=ID
+        const hashMatch = hash.match(/#([^?]+)(\?.+)?/);
+        if (hashMatch) {
+          const path = hashMatch[1];
+          const queryString = hashMatch[2] || '';
+          
+          // If we have query params, parse them
+          if (queryString) {
+            const params = new URLSearchParams(queryString.substring(1)); // Remove '?'
+            const tabParam = params.get('tab') as TabId;
+            const articleParam = params.get('article');
+            
+            if (tabParam && ['editorial-queue', 'published-content'].includes(tabParam)) {
+              setActiveTab(tabParam);
+            }
+            
+            // ✅ FIX: Preserve article param in hash for EditorialQueueTab
+            if (articleParam && tabParam === 'editorial-queue') {
+              // Ensure hash includes the full query string
+              if (!hash.includes(`article=${articleParam}`)) {
+                const newHash = `#dashboard?tab=editorial-queue&article=${articleParam}`;
+                window.history.replaceState(null, '', newHash);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing hash params:', error);
+      }
+    };
     
-    if (tabParam && ['editorial-queue', 'published-content'].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
+    parseHashParams();
     
-    // If article param exists and we're on editorial-queue, select it
-    if (articleParam && tabParam === 'editorial-queue' && firebaseInstances) {
-      // This will be handled by EditorialQueueTab component
-      // We just need to pass it as a prop
-    }
+    // Listen for hash changes to preserve query params
+    const handleHashChange = () => {
+      parseHashParams();
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, [firebaseInstances]);
   
   // UI state
