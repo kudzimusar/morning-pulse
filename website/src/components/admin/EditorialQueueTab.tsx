@@ -125,43 +125,66 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     return EnhancedFirestore.getInstance(firebaseInstances.db);
   }, [firebaseInstances?.db]);
 
-  // NEW: Auto-publisher - Check for scheduled stories every 30 seconds
+  // ✅ FIX: Auto-publisher - Check for scheduled stories every 30 seconds
+  // ✅ FIX: Wrap checkAndPublishScheduledStories in try-catch to prevent initialization errors
   useEffect(() => {
     if (!firebaseInstances) return;
 
-    // Initial check
-    checkAndPublishScheduledStories();
+    // ✅ FIX: Delay initial check to ensure all services are initialized
+    const initialCheck = setTimeout(() => {
+      try {
+        checkAndPublishScheduledStories();
+      } catch (error) {
+        console.warn('Error in initial scheduled stories check:', error);
+      }
+    }, 1000); // Delay 1 second to ensure initialization
 
     // Set up interval to check every 30 seconds
     const intervalId = setInterval(() => {
-      checkAndPublishScheduledStories().then(count => {
-        if (count > 0) {
-          showToast(`Auto-published ${count} scheduled stor${count === 1 ? 'y' : 'ies'}`, 'success');
-        }
-      });
+      try {
+        checkAndPublishScheduledStories().then(count => {
+          if (count > 0) {
+            showToast(`Auto-published ${count} scheduled stor${count === 1 ? 'y' : 'ies'}`, 'success');
+          }
+        }).catch(error => {
+          console.warn('Error checking scheduled stories:', error);
+        });
+      } catch (error) {
+        console.warn('Error in scheduled stories interval:', error);
+      }
     }, 30000); // 30 seconds
 
     return () => {
+      clearTimeout(initialCheck);
       clearInterval(intervalId);
     };
   }, [firebaseInstances, showToast]);
 
   // ✅ FIX: Handle URL parameters to auto-select article when coming from PublishedContentTab
   // ✅ FIX: Use hash routing correctly - hash format: #dashboard?tab=editorial-queue&article=ID
+  // ✅ FIX: Preserve query string during lazy-load transition
   useEffect(() => {
     const parseHashParams = () => {
       try {
         const hash = window.location.hash;
-        // Handle both #dashboard?tab=editorial-queue&article=ID and #editorial-queue?article=ID
-        const hashMatch = hash.match(/#[^?]*\?(.+)/);
-        if (hashMatch) {
-          const params = new URLSearchParams(hashMatch[1]);
+        // ✅ FIX: Handle both #dashboard?tab=editorial-queue&article=ID and #editorial-queue?article=ID
+        // Match pattern: #path?params or #path?tab=X&article=Y
+        const hashMatch = hash.match(/#([^?]+)(\?.+)?/);
+        if (hashMatch && hashMatch[2]) {
+          // hashMatch[2] is the query string including '?'
+          const params = new URLSearchParams(hashMatch[2].substring(1)); // Remove '?'
           const articleParam = params.get('article');
           
           if (articleParam && articleParam !== selectedOpinionId) {
             console.log('📝 URL parameter detected - selecting article:', articleParam);
             setSelectedOpinionId(articleParam);
             setIsNewArticle(false);
+            
+            // ✅ FIX: Ensure hash is preserved with query params
+            if (!hash.includes(`article=${articleParam}`)) {
+              const newHash = `#dashboard?tab=editorial-queue&article=${articleParam}`;
+              window.history.replaceState(null, '', newHash);
+            }
             return true;
           }
         }
@@ -172,8 +195,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       }
     };
     
-    // Try immediately
-    parseHashParams();
+    // ✅ FIX: Delay parsing to ensure component is fully mounted
+    const timeoutId = setTimeout(() => {
+      parseHashParams();
+    }, 100);
     
     // Also listen for hash changes
     const handleHashChange = () => {
@@ -181,7 +206,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     };
     
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, [selectedOpinionId]); // Include selectedOpinionId to prevent infinite loops
 
   // NEW: Auto-generate slug from headline
