@@ -666,9 +666,11 @@ const AdminDashboard: React.FC = () => {
             />
           )}
 
-          {activeTab === 'analytics' && (
+          {activeTab === 'analytics' && isAuthorized && (
             <AnalyticsTab
               firebaseInstances={firebaseInstances}
+              isAuthorized={isAuthorized}
+              userRoles={userRoles}
             />
           )}
 

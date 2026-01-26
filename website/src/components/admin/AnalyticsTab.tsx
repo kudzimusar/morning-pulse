@@ -10,25 +10,40 @@ import { getEngagementSummary, EngagementSummary } from '../../services/engageme
 
 interface AnalyticsTabProps {
   firebaseInstances: { auth: any; db: Firestore } | null;
+  isAuthorized?: boolean;
+  userRoles?: string[] | null;
 }
 
-const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances }) => {
+const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ firebaseInstances, isAuthorized = false, userRoles = null }) => {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [engagement, setEngagement] = useState<EngagementSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ✅ FIX: Wait for auth handshake to complete and ensure db is available
+    if (!isAuthorized || !userRoles || userRoles.length === 0 || !firebaseInstances?.db) {
+      return;
+    }
+    
     loadAnalytics();
     const interval = setInterval(loadAnalytics, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthorized, userRoles, firebaseInstances]);
 
   const loadAnalytics = async () => {
+    // ✅ FIX: Double-check before loading
+    if (!firebaseInstances?.db) {
+      console.warn('⚠️ Analytics: Firestore database not available');
+      setError('Database not initialized');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const [analyticsData, engagementData] = await Promise.all([
-        getAnalyticsSummary(),
+        getAnalyticsSummary(firebaseInstances.db), // ✅ FIX: Pass db instance
         getEngagementSummary()
       ]);
       setAnalytics(analyticsData);

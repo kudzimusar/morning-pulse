@@ -439,6 +439,7 @@ export const getActiveAds = async (): Promise<Ad[]> => {
         title: data.title || '',
         description: data.description,
         creativeUrl: data.creativeUrl || '',
+        destinationUrl: data.destinationUrl,
         placement: data.placement || 'sidebar',
         status: 'active',
         startDate: data.startDate?.toDate?.() || new Date(),

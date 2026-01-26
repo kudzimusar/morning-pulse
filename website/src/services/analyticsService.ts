@@ -322,6 +322,30 @@ const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 export const getAnalyticsSummary = async (db: any, period: 'day' | 'week' | 'month' = 'week'): Promise<AnalyticsSummary> => {
   console.log(`Fetching analytics summary for ${period}...`);
   
+  // ✅ FIX: Validate db instance before use
+  if (!db) {
+    console.error('❌ Analytics: Firestore database instance is undefined');
+    throw new Error('Firestore database not initialized');
+  }
+  
+  // ✅ FIX: Check if db is a valid Firestore instance
+  // Firestore instances have a type property or collection method
+  if (typeof db !== 'object' || (!db.type && typeof db.collection !== 'function')) {
+    console.error('❌ Analytics: Invalid Firestore database instance');
+    console.error('   db type:', typeof db);
+    console.error('   db keys:', db ? Object.keys(db) : 'null');
+    throw new Error('Invalid Firestore database instance');
+  }
+  
+  // ✅ FIX: Validate APP_ID before using
+  if (!APP_ID || APP_ID === 'undefined' || APP_ID === 'null') {
+    console.error('❌ Analytics: APP_ID is undefined or invalid');
+    console.error('   APP_ID value:', APP_ID);
+    throw new Error('App ID not configured');
+  }
+  
+  console.log(`🔍 [ANALYTICS] Using AppID: ${APP_ID}, DB type: ${db.type || 'Firestore'}`);
+  
   try {
     const { collection, query, limit, getDocs } = await import('firebase/firestore');
     const analyticsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'analytics');
@@ -331,8 +355,13 @@ export const getAnalyticsSummary = async (db: any, period: 'day' | 'week' | 'mon
     if (!snapshot.empty) {
       return snapshot.docs[0].data() as AnalyticsSummary;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Firestore Permission Error (Analytics):', error);
+    console.error('   Error code:', error.code);
+    console.error('   Error message:', error.message);
+    console.error('   AppID used:', APP_ID);
+    console.error('   DB instance:', db ? 'defined' : 'undefined');
+    throw error; // Re-throw to let caller handle
   }
 
   // Return mock data for now

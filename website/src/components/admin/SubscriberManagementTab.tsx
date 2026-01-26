@@ -13,6 +13,10 @@ const SubscriberManagementTab: React.FC<SubscriberManagementTabProps> = ({ userR
   const [filter, setFilter] = useState<'all' | 'active' | 'cancelled' | 'expired' | 'pending'>('all');
 
   useEffect(() => {
+    // ✅ FIX: Wait for auth handshake to complete before fetching
+    if (!userRoles || userRoles.length === 0) {
+      return;
+    }
     if (!requireSuperAdmin(userRoles)) {
       return;
     }

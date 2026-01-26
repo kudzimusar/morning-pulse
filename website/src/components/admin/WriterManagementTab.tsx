@@ -15,6 +15,10 @@ const WriterManagementTab: React.FC<WriterManagementTabProps> = ({ userRoles }) 
   const [showRejectForm, setShowRejectForm] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
+    // ✅ FIX: Wait for auth handshake to complete before fetching
+    if (!userRoles || userRoles.length === 0) {
+      return;
+    }
     if (!requireSuperAdmin(userRoles)) {
       return;
     }

@@ -180,6 +180,10 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
       try {
         // ✅ FIX: Use 'morning-pulse-app' to match existing Firestore database
         const appId = 'morning-pulse-app';
+        
+        // ✅ ADD: Log the appId being used
+        console.log(`🔍 [FIRESTORE] Fetching news with AppID: ${appId}, Date: ${dateString}`);
+        
         const newsPath = `artifacts/${appId}/public/data/news/${dateString}`;
         const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
         

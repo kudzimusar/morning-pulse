@@ -204,12 +204,17 @@ export const signInEditor = async (email: string, password: string): Promise<Use
 export const getStaffRole = async (uid: string): Promise<StaffRole> => {
   try {
     const dbInstance = getDbInstance();
-    // ✅ FIX: Use mandatory path structure
+    const appId = (window as any).__app_id || 'morning-pulse-app';
+    
+    // ✅ ADD: Log the exact appId being used
+    console.log(`🔍 [AUTH] Checking staff role for UID: ${uid}, AppID: ${appId}`);
+    
+    // ✅ FIX: Use mandatory path structure with logged appId
     const staffRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'staff', uid);
     const snap = await getDoc(staffRef);
     
     if (!snap.exists()) {
-      console.warn(`⚠️ Staff record is missing in the new path: artifacts/${appId}/public/data/staff/${uid}`);
+      console.warn(`⚠️ Staff record is missing in path: artifacts/${appId}/public/data/staff/${uid}`);
       return null;
     }
     
