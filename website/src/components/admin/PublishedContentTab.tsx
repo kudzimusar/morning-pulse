@@ -226,21 +226,48 @@ const PublishedContentTab: React.FC<PublishedContentTabProps> = ({
                     Published: {opinion.publishedAt?.toLocaleDateString() || 'Unknown'}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleUnpublish(opinion.id)}
-                  style={{
-                    padding: '6px 12px',
-                    backgroundColor: '#ef4444',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    fontWeight: '500'
-                  }}
-                >
-                  Unpublish
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => {
+                      // Navigate to Editorial Queue tab and select this article
+                      // Use hash navigation to switch tabs and select article
+                      const currentHash = window.location.hash;
+                      const baseHash = currentHash.split('?')[0] || '#dashboard';
+                      window.location.hash = baseHash + '?tab=editorial-queue&article=' + opinion.id;
+                      // Trigger a page reload to ensure tab switch works
+                      setTimeout(() => {
+                        window.location.reload();
+                      }, 100);
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#1e40af',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Edit Image & Content
+                  </button>
+                  <button
+                    onClick={() => handleUnpublish(opinion.id)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Unpublish
+                  </button>
+                </div>
               </div>
             </div>
           ))

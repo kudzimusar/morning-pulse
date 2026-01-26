@@ -89,6 +89,24 @@ const AdminDashboard: React.FC = () => {
   const [publishedOpinions, setPublishedOpinions] = useState<Opinion[]>([]);
   const [allOpinions, setAllOpinions] = useState<Opinion[]>([]);
   
+  // ✅ FIX: Handle URL parameters for article selection
+  useEffect(() => {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.split('?')[1] || '');
+    const tabParam = params.get('tab') as TabId;
+    const articleParam = params.get('article');
+    
+    if (tabParam && ['editorial-queue', 'published-content'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+    
+    // If article param exists and we're on editorial-queue, select it
+    if (articleParam && tabParam === 'editorial-queue' && firebaseInstances) {
+      // This will be handled by EditorialQueueTab component
+      // We just need to pass it as a prop
+    }
+  }, [firebaseInstances]);
+  
   // UI state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   

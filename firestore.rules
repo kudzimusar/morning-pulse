@@ -376,21 +376,29 @@ service cloud.firestore {
     // OTHER COLLECTIONS
     // ===========================================
     
-    // WRITERS COLLECTION
-    match /writers/{uid} {
+    // WRITERS COLLECTION (Nested path - matches writerService.ts)
+    match /artifacts/{appId}/public/data/writers/{uid} {
       // Anyone can create writer applications
       allow create: if true;
       
       // Writers can read their own document
       // Admins can read all writer documents
-      allow read, list: if request.auth.uid == uid || isAdmin();
+      allow read, list: if request.auth.uid == uid || isAdmin(appId);
       
       // Writers can update their own profile
       // Admins can update any writer (approve/reject)
-      allow update: if request.auth.uid == uid || isAdmin();
+      allow update: if request.auth.uid == uid || isAdmin(appId);
       
       // Only admins can delete writers
-      allow delete: if isAdmin();
+      allow delete: if isAdmin(appId);
+    }
+    
+    // WRITERS COLLECTION (Root level - Backward compatibility)
+    match /writers/{uid} {
+      // Allow read for backward compatibility
+      allow read, list: if request.auth.uid == uid || isAdmin('morning-pulse-app');
+      // Deny writes at root level (use nested path)
+      allow write: if false;
     }
     
     // SHORT LINKS COLLECTION

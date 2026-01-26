@@ -182,7 +182,8 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           } as Opinion;
           
           // NEW: Separate into three queues based on status (include scheduled in inReview)
-          if (opinion.status === 'draft') {
+          // ✅ FIX: Include published articles in drafts queue so they can be edited
+          if (opinion.status === 'draft' || opinion.status === 'published') {
             drafts.push(opinion);
           } else if (opinion.status === 'pending') {
             pending.push(opinion);
@@ -497,7 +498,13 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     try {
       const { db } = firebaseInstances;
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
-      const dbStatus = getDbStatus(status);
+      
+      // ✅ FIX: Get current status to preserve it if published
+      const currentSnap = await getDoc(opinionRef);
+      const currentStatus = currentSnap.data()?.status || 'draft';
+      
+      // ✅ FIX: Preserve published status when updating published articles
+      const dbStatus = currentStatus === 'published' ? 'published' : getDbStatus(status);
       
       // NEW: Generate slug if empty
       let finalSlug = editedSlug;
@@ -513,8 +520,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         authorName: editedAuthorName,
         slug: finalSlug || null, // NEW: Save slug
         editorNotes: editorNotes,
-        status: dbStatus,
+        status: dbStatus, // ✅ Preserves 'published' status when editing published articles
         finalImageUrl: finalImageUrl || suggestedImageUrl,
+        imageUrl: finalImageUrl || suggestedImageUrl, // ✅ Also update imageUrl for backward compatibility
         updatedAt: serverTimestamp(),
       });
       
