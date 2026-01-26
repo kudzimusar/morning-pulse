@@ -138,17 +138,42 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   }, [firebaseInstances, showToast]);
 
   // ✅ FIX: Handle URL parameters to auto-select article when coming from PublishedContentTab
+  // ✅ FIX: Use hash routing correctly - hash format: #dashboard?tab=editorial-queue&article=ID
   useEffect(() => {
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.split('?')[1] || '');
-    const articleParam = params.get('article');
+    const parseHashParams = () => {
+      try {
+        const hash = window.location.hash;
+        // Handle both #dashboard?tab=editorial-queue&article=ID and #editorial-queue?article=ID
+        const hashMatch = hash.match(/#[^?]*\?(.+)/);
+        if (hashMatch) {
+          const params = new URLSearchParams(hashMatch[1]);
+          const articleParam = params.get('article');
+          
+          if (articleParam && articleParam !== selectedOpinionId) {
+            console.log('📝 URL parameter detected - selecting article:', articleParam);
+            setSelectedOpinionId(articleParam);
+            setIsNewArticle(false);
+            return true;
+          }
+        }
+        return false;
+      } catch (error) {
+        console.error('Error parsing hash params:', error);
+        return false;
+      }
+    };
     
-    if (articleParam && articleParam !== selectedOpinionId) {
-      console.log('📝 URL parameter detected - selecting article:', articleParam);
-      setSelectedOpinionId(articleParam);
-      setIsNewArticle(false);
-    }
-  }, []); // Run once on mount
+    // Try immediately
+    parseHashParams();
+    
+    // Also listen for hash changes
+    const handleHashChange = () => {
+      parseHashParams();
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [selectedOpinionId]); // Include selectedOpinionId to prevent infinite loops
 
   // NEW: Auto-generate slug from headline
   useEffect(() => {

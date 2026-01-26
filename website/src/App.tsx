@@ -8,8 +8,9 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import FirebaseConnector from './components/FirebaseConnector';
 import OpinionPage from './components/OpinionPage';
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
-import AdminDashboard from './components/AdminDashboard';
+// ✅ FIX: Lazy load AdminDashboard to break circular dependencies
 import AdminLogin from './components/AdminLogin';
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 import Footer from './components/Footer';
 import LegalPage from './components/LegalPage';
 import AboutPage from './components/AboutPage';
@@ -685,9 +686,22 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          {/* Full Admin Dashboard */}
+          {/* Full Admin Dashboard - Lazy loaded */}
           <div style={{ minHeight: 'calc(100vh - 80px)' }}>
-            <AdminDashboard />
+            <React.Suspense fallback={
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: 'calc(100vh - 80px)',
+                fontSize: '18px',
+                color: '#666'
+              }}>
+                Loading Dashboard...
+              </div>
+            }>
+              <AdminDashboard />
+            </React.Suspense>
           </div>
         </>
       ) : (

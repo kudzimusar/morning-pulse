@@ -229,15 +229,12 @@ const PublishedContentTab: React.FC<PublishedContentTabProps> = ({
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => {
-                      // Navigate to Editorial Queue tab and select this article
-                      // Use hash navigation to switch tabs and select article
-                      const currentHash = window.location.hash;
-                      const baseHash = currentHash.split('?')[0] || '#dashboard';
+                      // ✅ FIX: Navigate to Editorial Queue tab and select this article
+                      // Use hash navigation correctly: #dashboard?tab=editorial-queue&article=ID
+                      const baseHash = '#dashboard';
                       window.location.hash = baseHash + '?tab=editorial-queue&article=' + opinion.id;
-                      // Trigger a page reload to ensure tab switch works
-                      setTimeout(() => {
-                        window.location.reload();
-                      }, 100);
+                      // No reload needed - hash change will trigger useEffect in EditorialQueueTab
+                      console.log('🔗 Navigating to article:', opinion.id);
                     }}
                     style={{
                       padding: '6px 12px',
