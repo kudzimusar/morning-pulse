@@ -105,6 +105,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const currentEditor = getCurrentEditor();
   const currentEditorId = currentEditor?.uid || '';
   const currentEditorName = currentEditor?.email?.split('@')[0] || 'Editor';
+  
+  // ✅ FIX: Check if user is admin/editor to force render image section
+  const isAdmin = userRoles.includes('admin') || userRoles.includes('super_admin');
+  const isEditor = userRoles.includes('editor') || isAdmin;
 
   // ✅ FIX: Move Firestore service initialization out of render path using useMemo
   const firestoreService = useMemo(() => {
@@ -132,6 +136,19 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       clearInterval(intervalId);
     };
   }, [firebaseInstances, showToast]);
+
+  // ✅ FIX: Handle URL parameters to auto-select article when coming from PublishedContentTab
+  useEffect(() => {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.split('?')[1] || '');
+    const articleParam = params.get('article');
+    
+    if (articleParam && articleParam !== selectedOpinionId) {
+      console.log('📝 URL parameter detected - selecting article:', articleParam);
+      setSelectedOpinionId(articleParam);
+      setIsNewArticle(false);
+    }
+  }, []); // Run once on mount
 
   // NEW: Auto-generate slug from headline
   useEffect(() => {
@@ -1757,59 +1774,61 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 )}
               </div>
 
-              {/* ENHANCED: Image Management with Preview */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}>
-                  Image
-                </label>
-                <div style={{
-                  marginBottom: '8px',
-                  fontSize: '12px',
-                  color: '#666'
-                }}>
-                  Images will be automatically compressed to max 2000px width. Max 5MB. Replaces existing image.
+              {/* ✅ FIX: ENHANCED: Image Management with Preview - Always visible for editors/admins */}
+              {(isEditor || selectedOpinionId || isNewArticle) && (
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    Image {selectedOpinion?.status === 'published' && <span style={{ color: '#1e40af', fontSize: '12px' }}>(Published - Edit to update)</span>}
+                  </label>
+                  <div style={{
+                    marginBottom: '8px',
+                    fontSize: '12px',
+                    color: '#666'
+                  }}>
+                    Images will be automatically compressed to max 2000px width. Max 5MB. Replaces existing image.
+                  </div>
+                  
+                  {/* ImagePreview Component - Shows current vs new */}
+                  {(finalImageUrl || suggestedImageUrl || newImagePreviewUrl) && (
+                    <ImagePreview
+                      currentImageUrl={finalImageUrl || suggestedImageUrl}
+                      newImageUrl={newImagePreviewUrl}
+                      currentImageLabel={finalImageUrl ? "Current Final Image" : "Suggested Image"}
+                      newImageLabel="New Image (Preview)"
+                    />
+                  )}
+                  
+                  <label style={{
+                    display: 'inline-block',
+                    padding: '8px 16px',
+                    backgroundColor: uploadingImage || compressing ? '#9ca3af' : '#000',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    cursor: (uploadingImage || compressing) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    opacity: (uploadingImage || compressing) ? 0.6 : 1
+                  }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      disabled={uploadingImage || compressing}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageReplace(file);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                    {compressing ? 'Compressing...' : uploadingImage ? 'Uploading...' : finalImageUrl ? 'Replace Image' : 'Upload Image'}
+                  </label>
                 </div>
-                
-                {/* ImagePreview Component - Shows current vs new */}
-                {(finalImageUrl || suggestedImageUrl || newImagePreviewUrl) && (
-                  <ImagePreview
-                    currentImageUrl={finalImageUrl || suggestedImageUrl}
-                    newImageUrl={newImagePreviewUrl}
-                    currentImageLabel={finalImageUrl ? "Current Final Image" : "Suggested Image"}
-                    newImageLabel="New Image (Preview)"
-                  />
-                )}
-                
-                <label style={{
-                  display: 'inline-block',
-                  padding: '8px 16px',
-                  backgroundColor: uploadingImage || compressing ? '#9ca3af' : '#000',
-                  color: '#fff',
-                  borderRadius: '4px',
-                  cursor: (uploadingImage || compressing) ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  opacity: (uploadingImage || compressing) ? 0.6 : 1
-                }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    disabled={uploadingImage || compressing}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageReplace(file);
-                      e.currentTarget.value = '';
-                    }}
-                  />
-                  {compressing ? 'Compressing...' : uploadingImage ? 'Uploading...' : finalImageUrl ? 'Replace Image' : 'Upload Image'}
-                </label>
-              </div>
+              )}
 
               {/* ENHANCED: Rich Text Editor for Body with Split-Pane Option */}
               <div style={{ marginBottom: '16px' }}>
