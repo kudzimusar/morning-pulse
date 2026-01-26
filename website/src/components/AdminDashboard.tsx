@@ -69,6 +69,24 @@ interface ToastMessage {
 
 type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter' | 'subscribers' | 'image-compliance' | 'settings' | 'integrations';
 
+// ✅ FIX: Move tabs array to top level to prevent initialization errors
+// This prevents "Cannot access 'T' before initialization" errors
+const ALL_TABS = [
+  { id: 'dashboard' as TabId, label: 'Dashboard Overview', icon: '📊' },
+  { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: '📝' },
+  { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
+  { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
+  { id: 'writer-management' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
+  { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
+  { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
+  { id: 'analytics' as TabId, label: 'Analytics', icon: '📈' },
+  { id: 'newsletter' as TabId, label: 'Newsletter Generator', icon: '📧' },
+  { id: 'subscribers' as TabId, label: 'Subscribers', icon: '👥' },
+  { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️' },
+  { id: 'integrations' as TabId, label: 'Integrations', icon: '🔌', adminOnly: true },
+  { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
+];
+
 const AdminDashboard: React.FC = () => {
   // Auth state
   const [user, setUser] = useState<User | null>(null);
@@ -496,22 +514,10 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  // Authorized - show dashboard
-  const tabs = [
-    { id: 'dashboard' as TabId, label: 'Dashboard Overview', icon: '📊' },
-    { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: '📝' },
-    { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
-    { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
-    { id: 'writer-management' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
-    { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
-    { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
-    { id: 'analytics' as TabId, label: 'Analytics', icon: '📈' },
-    { id: 'newsletter' as TabId, label: 'Newsletter Generator', icon: '📧' },
-    { id: 'subscribers' as TabId, label: 'Subscribers', icon: '👥' },
-    { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️' },
-    { id: 'integrations' as TabId, label: 'Integrations', icon: '🔌', adminOnly: true },
-    { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
-  ].filter(tab => !tab.adminOnly || isAdmin);
+  // ✅ FIX: Use top-level tabs array, filter based on admin status
+  const tabs = React.useMemo(() => {
+    return ALL_TABS.filter(tab => !tab.adminOnly || isAdmin);
+  }, [isAdmin]);
 
   return (
     <div style={{

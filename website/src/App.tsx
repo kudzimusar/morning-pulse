@@ -3,6 +3,54 @@ import React, { useState, useEffect } from 'react';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
 import Header from './components/Header';
+
+// ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
+const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {
+  const [isReady, setIsReady] = useState(false);
+  
+  useEffect(() => {
+    // ✅ FIX: Add small delay to ensure AuthContext has finished updating userRoles
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 150); // 150ms delay to ensure auth state is fully resolved
+    
+    return () => clearTimeout(timer);
+  }, [userRole]);
+  
+  if (!isReady) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 'calc(100vh - 80px)',
+        fontSize: '18px',
+        color: '#666'
+      }}>
+        Initializing Dashboard...
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <React.Suspense fallback={
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: 'calc(100vh - 80px)',
+          fontSize: '18px',
+          color: '#666'
+        }}>
+          Loading Dashboard...
+        </div>
+      }>
+        <AdminDashboard />
+      </React.Suspense>
+    </div>
+  );
+};
 import NewsGrid from './components/NewsGrid';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import FirebaseConnector from './components/FirebaseConnector';
@@ -626,6 +674,7 @@ const App: React.FC = () => {
   return (
     <div className="app">
       {/* Admin Dashboard View - Full Page */}
+      {/* ✅ FIX: Add delay to ensure AuthContext has finished updating userRoles */}
       {view === 'admin' && requireEditor(userRole) ? (
         <>
           {/* Admin Dashboard Header */}
@@ -686,23 +735,8 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          {/* Full Admin Dashboard - Lazy loaded */}
-          <div style={{ minHeight: 'calc(100vh - 80px)' }}>
-            <React.Suspense fallback={
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: 'calc(100vh - 80px)',
-                fontSize: '18px',
-                color: '#666'
-              }}>
-                Loading Dashboard...
-              </div>
-            }>
-              <AdminDashboard />
-            </React.Suspense>
-          </div>
+          {/* ✅ FIX: Full Admin Dashboard - Lazy loaded with secondary loading state */}
+          <AdminDashboardWrapper userRole={userRole} />
         </>
       ) : (
         <>

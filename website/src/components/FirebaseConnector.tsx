@@ -385,6 +385,38 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({ onNewsUpdate, onE
         console.error('❌ Firebase initialization error:', error);
         console.error('   Error code:', error.code);
         console.error('   Error message:', error.message);
+        
+        // ✅ FIX: Clear cache if permission denied for unknown UID
+        if (error.code === 'permission-denied' || error.message?.includes('permission') || error.message?.includes('Permission')) {
+          const errorMessage = error.message || '';
+          // Check for unknown UID patterns (like SKbiVPu8...)
+          const uidMatch = errorMessage.match(/[A-Za-z0-9]{20,}/);
+          if (uidMatch) {
+            const unknownUid = uidMatch[0];
+            console.warn(`⚠️ Permission denied for unknown UID: ${unknownUid}`);
+            console.warn('   Clearing auth cache to prevent blocking legitimate editor login...');
+            
+            try {
+              // Clear localStorage and sessionStorage for auth-related data
+              const keysToRemove: string[] = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('firebase') || key.includes('auth') || key.includes(unknownUid))) {
+                  keysToRemove.push(key);
+                }
+              }
+              keysToRemove.forEach(key => localStorage.removeItem(key));
+              
+              // Clear sessionStorage
+              sessionStorage.clear();
+              
+              console.log('✅ Auth cache cleared');
+            } catch (clearError) {
+              console.warn('⚠️ Could not clear auth cache:', clearError);
+            }
+          }
+        }
+        
         onErrorRef.current('Failed to initialize Firebase: ' + error.message);
       }
     };
