@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import WeatherBar from './WeatherBar';
 import CountrySwitcher from './CountrySwitcher';
+import AdSlot from './AdSlot';
 import { CountryInfo, getCountryTimezone } from '../services/locationService';
 import { getOrderedCategories, trackCategoryInteraction } from '../services/userPreferences';
 
@@ -233,6 +234,25 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       )}
+
+      {/* ✅ FIX: Header Banner Ad Slot - Responsive */}
+      <div style={{
+        width: '100%',
+        maxWidth: '100%',
+        marginTop: '8px',
+        padding: '0 16px',
+        boxSizing: 'border-box'
+      }}>
+        <AdSlot 
+          slotId="header_banner" 
+          userCountry={currentCountry}
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            margin: '0 auto'
+          }}
+        />
+      </div>
     </header>
   );
 };

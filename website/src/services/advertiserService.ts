@@ -920,8 +920,41 @@ export const getAdsForSlot = async (
     
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      const startDate = data.startDate?.toDate?.() || new Date();
-      const endDate = data.endDate?.toDate?.() || new Date();
+      
+      // ✅ FIX: Harden date filtering - ensure proper Timestamp conversion
+      let startDate: Date;
+      let endDate: Date;
+      
+      // Handle Firestore Timestamp objects
+      if (data.startDate && typeof data.startDate.toDate === 'function') {
+        startDate = data.startDate.toDate();
+      } else if (data.startDate && data.startDate.seconds) {
+        // Handle Timestamp object with seconds property
+        startDate = new Date(data.startDate.seconds * 1000);
+      } else if (data.startDate) {
+        // Handle string or number timestamps
+        startDate = new Date(data.startDate);
+      } else {
+        startDate = new Date(0); // Default to epoch if missing
+      }
+      
+      if (data.endDate && typeof data.endDate.toDate === 'function') {
+        endDate = data.endDate.toDate();
+      } else if (data.endDate && data.endDate.seconds) {
+        // Handle Timestamp object with seconds property
+        endDate = new Date(data.endDate.seconds * 1000);
+      } else if (data.endDate) {
+        // Handle string or number timestamps
+        endDate = new Date(data.endDate);
+      } else {
+        endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Default to 1 year from now if missing
+      }
+      
+      // Validate dates are valid
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.warn(`⚠️ Invalid date range for ad ${docSnap.id}, skipping`);
+        return;
+      }
       
       // Filter by date range
       if (startDate <= now && endDate >= now) {
@@ -945,6 +978,12 @@ export const getAdsForSlot = async (
         });
       }
     });
+    
+    // ✅ FIX: Add fallback logger when no ads found
+    if (ads.length === 0) {
+      const countryName = (window as any).__user_country?.name || 'Unknown';
+      console.log(`🔍 AdSlot [${slotId}] found 0 active ads for ${countryName}. Placement: ${placement}, Status: active, PaymentStatus: paid`);
+    }
     
     // Sort by priority tier (premium first) and return limited results
     const priorityOrder = { premium: 0, standard: 1, house: 2 };

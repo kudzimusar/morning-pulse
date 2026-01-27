@@ -206,15 +206,26 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
     const dbInstance = getDbInstance();
     const appId = (window as any).__app_id || 'morning-pulse-app';
     
-    // ✅ ADD: Log the exact appId being used
-    console.log(`🔍 [AUTH] Checking staff role for UID: ${uid}, AppID: ${appId}`);
+    // ✅ FIX: Silence staff warning for anonymous users
+    // Check if this is an anonymous user (anonymous UIDs are typically long random strings)
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    const isAnonymous = currentUser?.isAnonymous || false;
+    
+    // Only log for authenticated (non-anonymous) users
+    if (!isAnonymous) {
+      console.log(`🔍 [AUTH] Checking staff role for UID: ${uid}, AppID: ${appId}`);
+    }
     
     // ✅ FIX: Use mandatory path structure with logged appId
     const staffRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'staff', uid);
     const snap = await getDoc(staffRef);
     
     if (!snap.exists()) {
-      console.warn(`⚠️ Staff record is missing in path: artifacts/${appId}/public/data/staff/${uid}`);
+      // ✅ FIX: Only warn for authenticated users, not anonymous
+      if (!isAnonymous) {
+        console.warn(`⚠️ Staff record is missing in path: artifacts/${appId}/public/data/staff/${uid}`);
+      }
       return null;
     }
     
