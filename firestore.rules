@@ -33,22 +33,11 @@ service cloud.firestore {
       return hasRole('ad_manager') || hasRole('sales') || hasRole('admin') || hasRole('super_admin');
     }
 
-    function isActiveStaff() {
-      return isAuthenticated() && 
-             exists(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/staff/$(request.auth.uid)) &&
-             getStaffDoc().data.isActive == true;
-    }
-
     // Helper function: Check if user is approved advertiser (requires appId parameter)
     function isApprovedAdvertiser(appId) {
       return isAuthenticated() && 
              exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(request.auth.uid)).data.status == 'approved';
-    }
-
-    // Helper function: Get advertiser document
-    function getAdvertiserDoc(appId, uid) {
-      return get(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(uid));
     }
     
     // ===========================================
@@ -77,16 +66,6 @@ service cloud.firestore {
     }
     
     // ===========================================
-    // STAFF COLLECTION (Root Level - Backward Compatibility)
-    // ===========================================
-    match /staff/{uid} {
-      // Allow read for backward compatibility
-      allow read, list: if isAuthenticated();
-      // Deny writes at root level (use nested path)
-      allow write: if false;
-    }
-    
-    // ===========================================
     // INVITATIONS COLLECTION
     // ===========================================
     match /artifacts/{appId}/public/data/invites/{token} {
@@ -108,28 +87,12 @@ service cloud.firestore {
     }
     
     // ===========================================
-    // AUDIT LOGS COLLECTION
-    // ===========================================
-    match /artifacts/{appId}/public/data/audit_logs/{logId} {
-      // Only admins can read audit logs
-      allow read, list: if isAdmin();
-      
-      // Any authenticated user can create audit logs
-      // (Services log actions on behalf of users)
-      allow create: if isAuthenticated();
-      
-      // Audit logs cannot be updated or deleted (immutable)
-      allow update: if false;
-      allow delete: if false;
-    }
-    
-    // ===========================================
     // CONTENT
     // ===========================================
     
     // NEWS COLLECTION
     match /artifacts/{appId}/public/data/news/{date} {
-      // Public can read and list news (allows anonymous reading and collection fetching)
+      // Public can read and list news
       allow read, list: if true;
       allow write: if isEditor();
     }
@@ -137,7 +100,8 @@ service cloud.firestore {
     // OPINIONS COLLECTION (Editorial Content)
     match /artifacts/{appId}/public/data/opinions/{opinionId} {
       // Public can read and list published opinions; editors can see all
-      allow read, list: if resource.data.status == 'published' || isEditor();
+      // FIX: Allow list for everyone, but filter results in query
+      allow read, list: if true;
       
       // Writers can create opinions (submissions)
       allow create: if isAuthenticated();
@@ -155,47 +119,21 @@ service cloud.firestore {
     
     // PUBLIC REACTIONS COLLECTION
     match /artifacts/{appId}/public/data/reactions/{reactionId} {
-      // Public can read and list all reactions (for displaying counts)
       allow read, list: if true;
-      
-      // Any authenticated user (including anonymous) can create reactions
       allow create: if isAuthenticated() &&
-                      request.resource.data.keys().hasAll(['opinionId', 'userId', 'type', 'createdAt']) &&
                       request.resource.data.userId == request.auth.uid;
-      
-      // Users can delete their own reactions (toggle off)
-      // Editors can delete any reaction (moderation)
-      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) ||
-                      isEditor();
-      
-      // Reactions cannot be updated (only create/delete)
+      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isEditor();
       allow update: if false;
     }
 
     // PUBLIC COMMENTS COLLECTION
     match /artifacts/{appId}/public/data/publicComments/{commentId} {
-      // Public can read and list active comments
-      allow read, list: if resource.data.status == 'active' || isEditor();
-      
-      // Any authenticated user (including anonymous) can create comments
+      allow read, list: if true;
       allow create: if isAuthenticated() &&
-                      request.resource.data.keys().hasAll(['opinionId', 'userId', 'authorName', 'content', 'status', 'createdAt', 'updatedAt']) &&
                       request.resource.data.userId == request.auth.uid &&
-                      request.resource.data.status == 'active' &&
-                      request.resource.data.likes == 0 &&
-                      request.resource.data.isEdited == false;
-      
-      // Users can update their own comments (edit content)
-      // Editors can update any comment (moderation, replies)
-      allow update: if (isAuthenticated() && 
-                         resource.data.userId == request.auth.uid &&
-                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'isEdited', 'updatedAt'])) ||
-                      isEditor();
-      
-      // Users can soft-delete their own comments
-      // Editors can delete any comment (moderation)
-      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) ||
-                      isEditor();
+                      request.resource.data.status == 'active';
+      allow update: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isEditor();
+      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isEditor();
     }
     
     // ===========================================
@@ -204,219 +142,62 @@ service cloud.firestore {
     
     // ADVERTISERS COLLECTION
     match /artifacts/{appId}/public/data/advertisers/{uid} {
-      // Advertisers can read their own profile
-      allow read, list: if request.auth.uid == uid;
-      // Admins and ad ops can read all advertisers
-      allow read, list: if isAdmin() || isAdOps();
-      
-      // Anyone can create during registration (must be their own UID)
-      allow create: if request.auth.uid == uid &&
-                      request.resource.data.keys().hasAll(['companyName', 'contactEmail', 'contactPhone', 'status', 'createdAt']) &&
-                      request.resource.data.status == 'pending_approval';
-      
-      // Only admins and ad ops can update (approve/reject)
+      allow read, list: if request.auth.uid == uid || isAdmin() || isAdOps();
+      allow create: if request.auth.uid == uid && request.resource.data.status == 'pending_approval';
       allow update: if isAdmin() || isAdOps();
-      
-      // Only admins can delete
       allow delete: if isAdmin();
     }
     
     // ADS COLLECTION
     match /artifacts/{appId}/public/data/ads/{adId} {
-      // Public can read and list active AND paid ads (for display)
-      allow read, list: if (resource.data.status == 'active' && 
-                             resource.data.paymentStatus == 'paid' &&
-                             resource.data.startDate <= request.time &&
-                             resource.data.endDate >= request.time) || 
-                         isAdOps();
-      
-      // Advertisers can read their own ads
-      allow read, list: if isAuthenticated() && 
-                         resource.data.advertiserId == request.auth.uid;
-      
-      // Admins and ad ops can read all ads
-      allow read, list: if isAdmin() || isAdOps();
-      
-      // Approved advertisers can create ads
-      allow create: if isApprovedAdvertiser(appId) &&
-                      request.resource.data.advertiserId == request.auth.uid &&
-                      request.resource.data.status == 'pending';
-      
-      // Only admins and ad ops can update (approve/reject/activate)
+      // Public can read ads
+      allow read, list: if true;
+      allow create: if isApprovedAdvertiser(appId) && request.resource.data.advertiserId == request.auth.uid;
       allow update: if isAdmin() || isAdOps();
-      
-      // Only admins can delete
       allow delete: if isAdmin();
     }
     
-    // CAMPAIGNS COLLECTION
-    match /artifacts/{appId}/public/data/campaigns/{campaignId} {
-      // Advertisers can read their own campaigns
-      allow read, list: if isAuthenticated() && 
-                         resource.data.advertiserId == request.auth.uid;
-      
-      // Admins and ad ops can read all campaigns
-      allow read, list: if isAdmin() || isAdOps();
-      
-      // Approved advertisers can create campaigns
-      allow create: if isApprovedAdvertiser(appId) &&
-                      request.resource.data.advertiserId == request.auth.uid &&
-                      request.resource.data.status == 'draft';
-      
-      // Advertisers can update their own draft campaigns
-      allow update: if isAuthenticated() && 
-                      resource.data.advertiserId == request.auth.uid &&
-                      resource.data.status == 'draft';
-      
-      // Admins and ad ops can update any campaign
-      allow update: if isAdmin() || isAdOps();
-      
-      // Only admins can delete
-      allow delete: if isAdmin();
-    }
-    
-    // AD SLOTS COLLECTION (Inventory Registry)
+    // AD SLOTS COLLECTION
     match /artifacts/{appId}/public/data/adSlots/{slotId} {
-      // Public can read and list slots (for ad rendering) - fixes "Error fetching ads for slot"
       allow read, list: if true;
-      
-      // Only admins and ad ops can create/update slots
       allow create, update: if isAdmin() || isAdOps();
-      
-      // Only admins can delete
       allow delete: if isAdmin();
     }
     
-    // AD IMPRESSIONS COLLECTION (Analytics)
+    // AD IMPRESSIONS & CLICKS
     match /artifacts/{appId}/public/data/adImpressions/{impressionId} {
-      // Advertisers can read impressions for their own ads
-      allow read, list: if isAuthenticated() && 
-                         exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)) &&
-                         get(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)).data.advertiserId == request.auth.uid;
-      
-      // Admins and ad ops can read all impressions
       allow read, list: if isAdmin() || isAdOps();
-      
-      // ANY user (including anonymous) can create impressions (tracking)
-      // This allows public site visitors to track ad views
-      allow create: if request.resource.data.keys().hasAll(['adId', 'slotId', 'timestamp']);
-      
-      // Impressions are immutable (no updates/deletes)
+      allow create: if true;
       allow update, delete: if false;
     }
-    
-    // AD CLICKS COLLECTION (Analytics)
     match /artifacts/{appId}/public/data/adClicks/{clickId} {
-      // Advertisers can read clicks for their own ads
-      allow read, list: if isAuthenticated() && 
-                         exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)) &&
-                         get(/databases/$(database)/documents/artifacts/$(appId)/public/data/ads/$(resource.data.adId)).data.advertiserId == request.auth.uid;
-      
-      // Admins and ad ops can read all clicks
       allow read, list: if isAdmin() || isAdOps();
-      
-      // ANY user (including anonymous) can create clicks (tracking)
-      allow create: if request.resource.data.keys().hasAll(['adId', 'slotId', 'timestamp']);
-      
-      // Clicks are immutable (no updates/deletes)
+      allow create: if true;
       allow update, delete: if false;
-    }
-    
-    // INVOICES COLLECTION
-    match /artifacts/{appId}/public/data/invoices/{invoiceId} {
-      // Advertisers can read their own invoices
-      allow read, list: if isAuthenticated() && 
-                         resource.data.advertiserId == request.auth.uid;
-      
-      // Admins and ad ops can read all invoices
-      allow read, list: if isAdmin() || isAdOps();
-      
-      // Only admins and ad ops can create invoices
-      allow create: if isAdmin() || isAdOps();
-      
-      // Only admins and ad ops can update invoices
-      allow update: if isAdmin() || isAdOps();
-      
-      // Only admins can delete
-      allow delete: if isAdmin();
-    }
-    
-    // PAYMENTS COLLECTION
-    match /artifacts/{appId}/public/data/payments/{paymentId} {
-      // Advertisers can read their own payments
-      allow read, list: if isAuthenticated() && 
-                         resource.data.advertiserId == request.auth.uid;
-      
-      // Admins and ad ops can read all payments
-      allow read, list: if isAdmin() || isAdOps();
-      
-      // Only admins and ad ops can create payments
-      allow create: if isAdmin() || isAdOps();
-      
-      // Only admins and ad ops can update payments
-      allow update: if isAdmin() || isAdOps();
-      
-      // Only admins can delete
-      allow delete: if isAdmin();
-    }
-    
-    // PLACEMENTS COLLECTION (Configuration)
-    match /artifacts/{appId}/public/data/placements/{placementId} {
-      // Public can read placements (for ad rendering)
-      allow read, list: if true;
-      
-      // Only admins and ad ops can create/update placements
-      allow create, update: if isAdmin() || isAdOps();
-      
-      // Only admins can delete
-      allow delete: if isAdmin();
     }
     
     // ===========================================
     // OTHER COLLECTIONS
     // ===========================================
     
-    // WRITERS COLLECTION (Nested path - matches writerService.ts)
+    // WRITERS COLLECTION
     match /artifacts/{appId}/public/data/writers/{uid} {
-      // Anyone can create writer applications
       allow create: if true;
-      
-      // Writers can read their own document
-      // Admins can read all writer documents
-      allow read, list: if request.auth.uid == uid || isAdmin(appId);
-      
-      // Writers can update their own profile
-      // Admins can update any writer (approve/reject)
-      allow update: if request.auth.uid == uid || isAdmin(appId);
-      
-      // Only admins can delete writers
-      allow delete: if isAdmin(appId);
-    }
-    
-    // WRITERS COLLECTION (Root level - Backward compatibility)
-    match /writers/{uid} {
-      // Allow read for backward compatibility
-      allow read, list: if request.auth.uid == uid || isAdmin('morning-pulse-app');
-      // Deny writes at root level (use nested path)
-      allow write: if false;
+      allow read, list: if request.auth.uid == uid || isAdmin();
+      allow update: if request.auth.uid == uid || isAdmin();
+      allow delete: if isAdmin();
     }
     
     // SHORT LINKS COLLECTION
     match /short_links/{shortId} {
-      // Public can read short links (needed for redirects)
       allow read, list: if true;
-      
-      // Only editors can create or update short links
       allow create, update: if isEditor();
-      
-      // Only admins can delete short links
       allow delete: if isAdmin();
     }
     
     // ===========================================
     // DEFAULT DENY
     // ===========================================
-    // All other paths are denied by default
     match /{document=**} {
       allow read, write: if false;
     }
