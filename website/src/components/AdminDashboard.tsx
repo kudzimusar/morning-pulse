@@ -107,8 +107,32 @@ const AdminDashboard: React.FC = () => {
   const [publishedOpinions, setPublishedOpinions] = useState<Opinion[]>([]);
   const [allOpinions, setAllOpinions] = useState<Opinion[]>([]);
   
-  // ✅ FIX: Handle URL parameters for article selection - preserve query string
+  // UI state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  
+  // Firebase instances
+  const [firebaseInstances, setFirebaseInstances] = useState<{
+    auth: any;
+    db: Firestore;
+  } | null>(null);
+
+  // Initialize Firebase instances
   useEffect(() => {
+    try {
+      const instances = getFirebaseInstances();
+      setFirebaseInstances(instances);
+    } catch (error) {
+      console.error('Failed to get Firebase instances:', error);
+      setLoading(false);
+    }
+  }, []);
+
+  // ✅ FIX: Move URL params handler AFTER firebaseInstances initialization
+  // This prevents "Cannot access before initialization" errors
+  useEffect(() => {
+    // ✅ Only run after Firebase is initialized
+    if (!firebaseInstances) return;
+    
     const parseHashParams = () => {
       try {
         const hash = window.location.hash;
@@ -152,27 +176,7 @@ const AdminDashboard: React.FC = () => {
     
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [firebaseInstances]);
-  
-  // UI state
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  
-  // Firebase instances
-  const [firebaseInstances, setFirebaseInstances] = useState<{
-    auth: any;
-    db: Firestore;
-  } | null>(null);
-
-  // Initialize Firebase instances
-  useEffect(() => {
-    try {
-      const instances = getFirebaseInstances();
-      setFirebaseInstances(instances);
-    } catch (error) {
-      console.error('Failed to get Firebase instances:', error);
-      setLoading(false);
-    }
-  }, []);
+  }, [firebaseInstances]); // ✅ Now this dependency is safe
 
   // Auth state listener
   useEffect(() => {
