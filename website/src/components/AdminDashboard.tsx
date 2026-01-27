@@ -518,10 +518,8 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  // ✅ FIX: Use top-level tabs array, filter based on admin status
-  const tabs = React.useMemo(() => {
-    return ALL_TABS.filter(tab => !tab.adminOnly || isAdmin);
-  }, [isAdmin]);
+  // ✅ FIX: Simplified tabs filtering without useMemo to avoid React error #310
+const tabs = ALL_TABS.filter(tab => !tab.adminOnly || isAdmin);
 
   return (
     <div style={{
