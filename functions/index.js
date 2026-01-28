@@ -84,6 +84,7 @@ ${!isZimbabwe ? `2. LOCAL NEWS PRIORITY: For the "${localCategory}" section, pri
 4. TONE: Factual, journalistic, and strictly objective. Do not add personal AI commentary.
 
 5. STYLE: Maintain Kukurigo professional newspaper style with proper formatting.`;
+};
 
 // Mock Data for fallback (kept for backward compatibility)
 const NEWS_DATA = {
@@ -923,86 +924,86 @@ exports.sendNewsletter = async (req, res) => {
     }
 
     try {
-    const { newsletter, interests } = req.body;
+      const { newsletter, interests } = req.body;
 
-    if (!newsletter || !newsletter.subject || !newsletter.html) {
-      res.status(400).json({ error: 'Missing required fields: newsletter.subject, newsletter.html' });
-      return;
-    }
-
-    // Get subscribers
-    const allSubscribers = await getNewsletterSubscribers();
-
-    if (allSubscribers.length === 0) {
-      res.status(200).json({
-        success: true,
-        message: 'No active subscribers found',
-        sent: 0
-      });
-      return;
-    }
-
-    // Segment subscribers if interests specified
-    const targetSubscribers = segmentSubscribers(allSubscribers, interests);
-
-    if (targetSubscribers.length === 0) {
-      res.status(200).json({
-        success: true,
-        message: 'No subscribers match the specified interests',
-        sent: 0
-      });
-      return;
-    }
-
-    console.log(`📧 Sending newsletter "${newsletter.subject}" to ${targetSubscribers.length} subscribers`);
-
-    // Send the newsletter
-    const results = await sendNewsletterEmail(newsletter, targetSubscribers);
-
-    // Calculate success stats
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-
-    // Log the newsletter send
-    const sentAt = admin.firestore.FieldValue.serverTimestamp();
-    const sendDoc = await db.collection('artifacts').doc(APP_ID).collection('analytics').doc('newsletters').collection('sends').add({
-      subject: newsletter.subject,
-      sentAt,
-      totalSubscribers: allSubscribers.length,
-      targetedSubscribers: targetSubscribers.length,
-      successfulSends: successful,
-      failedSends: failed,
-      interests: interests || null
-    });
-
-    // Log Ad Impressions if ads were included in the HTML
-    if (newsletter.adIds && Array.isArray(newsletter.adIds)) {
-      const adImpressionsRef = db.collection('artifacts')
-        .doc(APP_ID)
-        .collection('analytics')
-        .doc('newsletterAdImpressions')
-        .collection('logs');
-
-      for (const adId of newsletter.adIds) {
-        await adImpressionsRef.add({
-          adId,
-          newsletterSendId: sendDoc.id,
-          sentAt,
-          impressionCount: successful
-        });
+      if (!newsletter || !newsletter.subject || !newsletter.html) {
+        res.status(400).json({ error: 'Missing required fields: newsletter.subject, newsletter.html' });
+        return;
       }
-    }
 
-    res.status(200).json({
-      success: true,
-      message: `Newsletter sent successfully to ${successful} subscribers`,
-      stats: {
+      // Get subscribers
+      const allSubscribers = await getNewsletterSubscribers();
+
+      if (allSubscribers.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No active subscribers found',
+          sent: 0
+        });
+        return;
+      }
+
+      // Segment subscribers if interests specified
+      const targetSubscribers = segmentSubscribers(allSubscribers, interests);
+
+      if (targetSubscribers.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No subscribers match the specified interests',
+          sent: 0
+        });
+        return;
+      }
+
+      console.log(`📧 Sending newsletter "${newsletter.subject}" to ${targetSubscribers.length} subscribers`);
+
+      // Send the newsletter
+      const results = await sendNewsletterEmail(newsletter, targetSubscribers);
+
+      // Calculate success stats
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+
+      // Log the newsletter send
+      const sentAt = admin.firestore.FieldValue.serverTimestamp();
+      const sendDoc = await db.collection('artifacts').doc(APP_ID).collection('analytics').doc('newsletters').collection('sends').add({
+        subject: newsletter.subject,
+        sentAt,
         totalSubscribers: allSubscribers.length,
         targetedSubscribers: targetSubscribers.length,
         successfulSends: successful,
-        failedSends: failed
+        failedSends: failed,
+        interests: interests || null
+      });
+
+      // Log Ad Impressions if ads were included in the HTML
+      if (newsletter.adIds && Array.isArray(newsletter.adIds)) {
+        const adImpressionsRef = db.collection('artifacts')
+          .doc(APP_ID)
+          .collection('analytics')
+          .doc('newsletterAdImpressions')
+          .collection('logs');
+
+        for (const adId of newsletter.adIds) {
+          await adImpressionsRef.add({
+            adId,
+            newsletterSendId: sendDoc.id,
+            sentAt,
+            impressionCount: successful
+          });
+        }
       }
-    });
+
+      res.status(200).json({
+        success: true,
+        message: `Newsletter sent successfully to ${successful} subscribers`,
+        stats: {
+          totalSubscribers: allSubscribers.length,
+          targetedSubscribers: targetSubscribers.length,
+          successfulSends: successful,
+          failedSends: failed
+        }
+      });
 
     } catch (error) {
       console.error('❌ Newsletter send error:', error);
@@ -1216,188 +1217,188 @@ function generateNewsletterHTML({ title, currentDate, articles, ads, type }) {
 exports.sendScheduledNewsletter = async (req, res) => {
   corsHandler(req, res, async () => {
     try {
-    const { newsletterType = 'weekly' } = req.body || {};
+      const { newsletterType = 'weekly' } = req.body || {};
 
-    // Get recent published opinions (last 7 days for weekly, 1 day for daily)
-    const cutoffDate = new Date();
-    if (newsletterType === 'weekly') {
-      cutoffDate.setDate(cutoffDate.getDate() - 7);
-    } else if (newsletterType === 'daily') {
-      cutoffDate.setDate(cutoffDate.getDate() - 1);
-    }
+      // Get recent published opinions (last 7 days for weekly, 1 day for daily)
+      const cutoffDate = new Date();
+      if (newsletterType === 'weekly') {
+        cutoffDate.setDate(cutoffDate.getDate() - 7);
+      } else if (newsletterType === 'daily') {
+        cutoffDate.setDate(cutoffDate.getDate() - 1);
+      }
 
-    const opinionsRef = db.collection('artifacts')
-      .doc(APP_ID)
-      .collection('public')
-      .doc('data')
-      .collection('opinions');
-
-    const snapshot = await opinionsRef
-      .where('status', '==', 'published')
-      .where('publishedAt', '>=', cutoffDate)
-      .orderBy('publishedAt', 'desc')
-      .limit(15)
-      .get();
-
-    const articles = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      articles.push({
-        id: doc.id,
-        headline: data.headline,
-        subHeadline: data.subHeadline,
-        authorName: data.authorName,
-        slug: data.slug,
-        publishedAt: data.publishedAt?.toDate?.() || new Date(),
-        imageUrl: data.finalImageUrl || data.imageUrl
-      });
-    });
-
-    if (articles.length === 0) {
-      res.status(200).json({
-        success: true,
-        message: 'No new articles for newsletter period',
-        articlesCount: 0
-      });
-      return;
-    }
-
-    // Generate newsletter HTML
-    const title = `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-
-    // Fetch active newsletter ads
-    let ads = {};
-    try {
-      const adsRef = db.collection('artifacts')
+      const opinionsRef = db.collection('artifacts')
         .doc(APP_ID)
         .collection('public')
         .doc('data')
-        .collection('ads');
-      
-      const activeAdsSnapshot = await adsRef
-        .where('status', '==', 'active')
-        .where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
+        .collection('opinions');
+
+      const snapshot = await opinionsRef
+        .where('status', '==', 'published')
+        .where('publishedAt', '>=', cutoffDate)
+        .orderBy('publishedAt', 'desc')
+        .limit(15)
         .get();
 
-      const activeAds = [];
-      activeAdsSnapshot.forEach(doc => {
+      const articles = [];
+      snapshot.forEach(doc => {
         const data = doc.data();
-        activeAds.push({
+        articles.push({
           id: doc.id,
-          advertiserName: data.advertiserName || 'Sponsor',
-          headline: data.title,
-          body: data.description,
-          imageUrl: data.creativeUrl,
-          destinationUrl: data.destinationUrl,
-          placement: data.placement
+          headline: data.headline,
+          subHeadline: data.subHeadline,
+          authorName: data.authorName,
+          slug: data.slug,
+          publishedAt: data.publishedAt?.toDate?.() || new Date(),
+          imageUrl: data.finalImageUrl || data.imageUrl
         });
       });
 
-      ads = {
-        top: activeAds.find(a => a.placement === 'newsletter_top'),
-        inline: activeAds.filter(a => a.placement === 'newsletter_inline'),
-        footer: activeAds.find(a => a.placement === 'newsletter_footer')
-      };
-    } catch (adError) {
-      console.warn('⚠️ Could not fetch ads for newsletter:', adError.message);
-    }
+      if (articles.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No new articles for newsletter period',
+          articlesCount: 0
+        });
+        return;
+      }
 
-    const newsletterHTML = generateNewsletterHTML({
-      title,
-      currentDate,
-      articles,
-      ads,
-      type: newsletterType
-    });
+      // Generate newsletter HTML
+      const title = `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
+      const currentDate = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
 
-    // Get subscribers
-    const subscribers = await getNewsletterSubscribers();
+      // Fetch active newsletter ads
+      let ads = {};
+      try {
+        const adsRef = db.collection('artifacts')
+          .doc(APP_ID)
+          .collection('public')
+          .doc('data')
+          .collection('ads');
+        
+        const activeAdsSnapshot = await adsRef
+          .where('status', '==', 'active')
+          .where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
+          .get();
 
-    if (subscribers.length === 0) {
+        const activeAds = [];
+        activeAdsSnapshot.forEach(doc => {
+          const data = doc.data();
+          activeAds.push({
+            id: doc.id,
+            advertiserName: data.advertiserName || 'Sponsor',
+            headline: data.title,
+            body: data.description,
+            imageUrl: data.creativeUrl,
+            destinationUrl: data.destinationUrl,
+            placement: data.placement
+          });
+        });
+
+        ads = {
+          top: activeAds.find(a => a.placement === 'newsletter_top'),
+          inline: activeAds.filter(a => a.placement === 'newsletter_inline'),
+          footer: activeAds.find(a => a.placement === 'newsletter_footer')
+        };
+      } catch (adError) {
+        console.warn('⚠️ Could not fetch ads for newsletter:', adError.message);
+      }
+
+      const newsletterHTML = generateNewsletterHTML({
+        title,
+        currentDate,
+        articles,
+        ads,
+        type: newsletterType
+      });
+
+      // Get subscribers
+      const subscribers = await getNewsletterSubscribers();
+
+      if (subscribers.length === 0) {
+        res.status(200).json({
+          success: true,
+          message: 'No subscribers found',
+          articlesCount: articles.length
+        });
+        return;
+      }
+
+      // Send newsletter
+      const results = await sendNewsletterEmail({
+        subject: `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`,
+        html: newsletterHTML
+      }, subscribers);
+
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+
+      // Log analytics
+      try {
+        const sendId = `${newsletterType}_${Date.now()}`;
+        const sentAt = admin.firestore.FieldValue.serverTimestamp();
+        
+        await db.collection('artifacts')
+          .doc(APP_ID)
+          .collection('analytics')
+          .doc('newsletters')
+          .collection('sends')
+          .doc(sendId)
+          .set({
+            subject: title,
+            sentAt,
+            totalSubscribers: subscribers.length,
+            targetedSubscribers: subscribers.length,
+            successfulSends: successful,
+            failedSends: failed,
+            newsletterType,
+            articlesCount: articles.length,
+            adIds: [
+              ...(ads.top ? [ads.top.id] : []),
+              ...(ads.inline ? ads.inline.map(a => a.id) : []),
+              ...(ads.footer ? [ads.footer.id] : [])
+            ]
+          });
+
+        // Log Ad Impressions
+        const adImpressionsRef = db.collection('artifacts')
+          .doc(APP_ID)
+          .collection('analytics')
+          .doc('newsletterAdImpressions')
+          .collection('logs');
+
+        const impressionLogs = [];
+        if (ads.top) impressionLogs.push({ adId: ads.top.id, placement: 'top' });
+        if (ads.inline) ads.inline.forEach(a => impressionLogs.push({ adId: a.id, placement: 'inline' }));
+        if (ads.footer) impressionLogs.push({ adId: ads.footer.id, placement: 'footer' });
+
+        for (const log of impressionLogs) {
+          await adImpressionsRef.add({
+            ...log,
+            newsletterSendId: sendId,
+            sentAt,
+            impressionCount: successful // Each successful email is one impression
+          });
+        }
+      } catch (logError) {
+        console.error('❌ Failed to log newsletter analytics:', logError);
+      }
+
       res.status(200).json({
         success: true,
-        message: 'No subscribers found',
-        articlesCount: articles.length
-      });
-      return;
-    }
-
-    // Send newsletter
-    const results = await sendNewsletterEmail({
-      subject: `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`,
-      html: newsletterHTML
-    }, subscribers);
-
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-
-    // Log analytics
-    try {
-      const sendId = `${newsletterType}_${Date.now()}`;
-      const sentAt = admin.firestore.FieldValue.serverTimestamp();
-      
-      await db.collection('artifacts')
-        .doc(APP_ID)
-        .collection('analytics')
-        .doc('newsletters')
-        .collection('sends')
-        .doc(sendId)
-        .set({
-          subject: title,
-          sentAt,
-          totalSubscribers: subscribers.length,
-          targetedSubscribers: subscribers.length,
-          successfulSends: successful,
-          failedSends: failed,
-          newsletterType,
+        message: `Scheduled ${newsletterType} newsletter sent to ${successful} subscribers`,
+        stats: {
           articlesCount: articles.length,
-          adIds: [
-            ...(ads.top ? [ads.top.id] : []),
-            ...(ads.inline ? ads.inline.map(a => a.id) : []),
-            ...(ads.footer ? [ads.footer.id] : [])
-          ]
-        });
-
-      // Log Ad Impressions
-      const adImpressionsRef = db.collection('artifacts')
-        .doc(APP_ID)
-        .collection('analytics')
-        .doc('newsletterAdImpressions')
-        .collection('logs');
-
-      const impressionLogs = [];
-      if (ads.top) impressionLogs.push({ adId: ads.top.id, placement: 'top' });
-      if (ads.inline) ads.inline.forEach(a => impressionLogs.push({ adId: a.id, placement: 'inline' }));
-      if (ads.footer) impressionLogs.push({ adId: ads.footer.id, placement: 'footer' });
-
-      for (const log of impressionLogs) {
-        await adImpressionsRef.add({
-          ...log,
-          newsletterSendId: sendId,
-          sentAt,
-          impressionCount: successful // Each successful email is one impression
-        });
-      }
-    } catch (logError) {
-      console.error('❌ Failed to log newsletter analytics:', logError);
-    }
-
-    res.status(200).json({
-      success: true,
-      message: `Scheduled ${newsletterType} newsletter sent to ${successful} subscribers`,
-      stats: {
-        articlesCount: articles.length,
-        subscribersCount: subscribers.length,
-        successfulSends: successful,
-        failedSends: failed
-      }
-    });
+          subscribersCount: subscribers.length,
+          successfulSends: successful,
+          failedSends: failed
+        }
+      });
 
     } catch (error) {
       console.error('❌ Scheduled newsletter error:', error);
@@ -1494,3 +1495,4 @@ exports.handleShortLink = async (req, res) => {
     return res.status(500).send('Internal Server Error');
   }
 };
+
