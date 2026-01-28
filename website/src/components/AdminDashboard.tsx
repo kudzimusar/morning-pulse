@@ -29,6 +29,7 @@ import PublishedContentTab from './admin/PublishedContentTab';
 import StaffManagementTab from './admin/StaffManagementTab';
 import AnalyticsTab from './admin/AnalyticsTab';
 import NewsletterTab from './admin/NewsletterTab';
+import NewsletterAnalyticsTab from './admin/NewsletterAnalyticsTab';
 import SubscriberTab from './admin/SubscriberTab';
 import ImageComplianceTab from './admin/ImageComplianceTab';
 import SettingsTab from './admin/SettingsTab';
@@ -66,7 +67,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter' | 'subscribers' | 'image-compliance' | 'settings' | 'integrations';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter' | 'newsletter-analytics' | 'subscribers' | 'image-compliance' | 'settings' | 'integrations';
 
 // ✅ FIX: Move tabs array to top level to prevent initialization errors
 const ALL_TABS = [
@@ -79,6 +80,7 @@ const ALL_TABS = [
   { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
   { id: 'analytics' as TabId, label: 'Analytics', icon: '📈', superAdminOnly: true },
   { id: 'newsletter' as TabId, label: 'Newsletter Generator', icon: '📧', superAdminOnly: true },
+  { id: 'newsletter-analytics' as TabId, label: 'Newsletter History', icon: '📊', superAdminOnly: true },
   { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️', superAdminOnly: true },
   { id: 'integrations' as TabId, label: 'Integrations', icon: '🔌', adminOnly: true },
   { id: 'subscribers' as TabId, label: 'Subscribers', icon: '👥' },
@@ -468,6 +470,10 @@ const AdminDashboard: React.FC = () => {
 
           {activeTab === 'newsletter' && (
             <NewsletterTab />
+          )}
+
+          {activeTab === 'newsletter-analytics' && isSuperAdmin && (
+            <NewsletterAnalyticsTab />
           )}
 
           {activeTab === 'subscribers' && (

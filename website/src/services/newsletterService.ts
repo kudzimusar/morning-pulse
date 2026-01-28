@@ -1,290 +1,30 @@
 /**
  * Newsletter Service
- * Auto-generates HTML email newsletters from published content
- * Perfect for sending weekly/daily digest to subscribers
- * Integrates with SendGrid for automated email delivery
+ * Handles subscriber management and newsletter generation
  */
 
-import { Opinion } from '../../types';
-import { getPublishedOpinions } from './opinionsService';
+import { getFirestore, collection, addDoc, query, getDocs, where, Timestamp, Firestore } from 'firebase/firestore';
+import { getApp } from 'firebase/app';
+import { generateNewsletterHTML as sharedGenerateNewsletterHTML, NewsletterArticle, NewsletterAd } from '../../../shared/newsletterTemplates';
 
-export interface NewsletterOptions {
-  title: string;
-  dateRange: 'today' | 'week' | 'month';
-  maxArticles?: number;
-  includeImages?: boolean;
-}
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
-/**
- * Generate HTML newsletter from published opinions
- * Creates beautiful, responsive HTML email template
- */
-export const generateNewsletter = async (options: NewsletterOptions): Promise<string> => {
-  const { title, dateRange, maxArticles = 10, includeImages = true } = options;
-  
-  // Get published opinions
-  const allOpinions = await getPublishedOpinions();
-  
-  // Filter by date range
-  const now = new Date();
-  const cutoffDate = new Date();
-  
-  switch (dateRange) {
-    case 'today':
-      cutoffDate.setHours(0, 0, 0, 0);
-      break;
-    case 'week':
-      cutoffDate.setDate(cutoffDate.getDate() - 7);
-      break;
-    case 'month':
-      cutoffDate.setMonth(cutoffDate.getMonth() - 1);
-      break;
-  }
-  
-  const filteredOpinions = allOpinions
-    .filter(op => {
-      const pubDate = op.publishedAt;
-      return pubDate && pubDate >= cutoffDate;
-    })
-    .slice(0, maxArticles);
-  
-  if (filteredOpinions.length === 0) {
-    return generateEmptyNewsletter(title);
-  }
-  
-  // Generate HTML
-  return generateNewsletterHTML(title, filteredOpinions, includeImages);
-};
-
-/**
- * Generate HTML template for newsletter
- */
-const generateNewsletterHTML = (title: string, opinions: Opinion[], includeImages: boolean): string => {
-  const articleHTML = opinions.map((opinion, index) => {
-    const imageUrl = opinion.finalImageUrl || opinion.imageUrl;
-    const slug = opinion.slug || opinion.id;
-    const url = `https://kudzimusar.github.io/morning-pulse/#opinion/${slug}`;
-    
-    // Strip HTML tags from body for preview
-    const bodyPreview = opinion.body
-      .replace(/<[^>]*>/g, '')
-      .substring(0, 200) + '...';
-    
-    return `
-      <tr>
-        <td style="padding: 20px 0; border-bottom: 1px solid #e5e5e5;">
-          ${includeImages && imageUrl ? `
-            <a href="${url}" style="display: block; margin-bottom: 16px;">
-              <img src="${imageUrl}" alt="${opinion.headline}" style="width: 100%; max-width: 600px; height: auto; border-radius: 8px;" />
-            </a>
-          ` : ''}
-          
-          <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; line-height: 1.3;">
-            <a href="${url}" style="color: #000; text-decoration: none;">${opinion.headline}</a>
-          </h2>
-          
-          <p style="margin: 0 0 12px 0; font-size: 16px; color: #666; font-style: italic;">
-            ${opinion.subHeadline}
-          </p>
-          
-          <p style="margin: 0 0 12px 0; font-size: 14px; color: #444; line-height: 1.6;">
-            ${bodyPreview}
-          </p>
-          
-          <div style="margin-bottom: 12px;">
-            <span style="font-size: 12px; color: #999;">
-              By <strong style="color: #666;">${opinion.authorName}</strong>
-              ${opinion.publishedAt ? ` • ${opinion.publishedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
-            </span>
-          </div>
-          
-          <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 600;">
-            Read Full Article →
-          </a>
-        </td>
-      </tr>
-    `;
-  }).join('');
-  
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-  
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: Georgia, serif; background-color: #f9fafb;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td style="padding: 40px 20px;">
-        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
-          
-          <!-- Header -->
-          <tr>
-            <td style="padding: 40px 30px; background-color: #000; text-align: center;">
-              <h1 style="margin: 0; color: #fff; font-size: 32px; font-weight: 900; letter-spacing: 0.05em;">
-                MORNING PULSE
-              </h1>
-              <p style="margin: 12px 0 0 0; color: #fff; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;">
-                ${title}
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Date -->
-          <tr>
-            <td style="padding: 20px 30px; background-color: #f9fafb; border-bottom: 2px solid #000;">
-              <p style="margin: 0; font-size: 14px; color: #666; text-align: center;">
-                ${currentDate}
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Articles -->
-          <tr>
-            <td style="padding: 0 30px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                ${articleHTML}
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 30px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e5e5;">
-              <p style="margin: 0 0 12px 0; font-size: 12px; color: #999;">
-                You're receiving this because you subscribed to Morning Pulse newsletters.
-              </p>
-              <p style="margin: 0; font-size: 12px;">
-                <a href="https://kudzimusar.github.io/morning-pulse/" style="color: #000; text-decoration: underline;">Visit Website</a>
-                •
-                <a href="https://kudzimusar.github.io/morning-pulse/#subscribe" style="color: #000; text-decoration: underline;">Manage Subscription</a>
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
-};
-
-/**
- * Generate empty newsletter (no content available)
- */
-const generateEmptyNewsletter = (title: string): string => {
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: Georgia, serif; background-color: #f9fafb;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td style="padding: 40px 20px;">
-        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
-          <tr>
-            <td style="padding: 40px 30px; background-color: #000; text-align: center;">
-              <h1 style="margin: 0; color: #fff; font-size: 32px; font-weight: 900;">MORNING PULSE</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 60px 30px; text-align: center;">
-              <p style="font-size: 18px; color: #666;">No new content for this period.</p>
-              <p style="font-size: 14px; color: #999;">Check back soon for fresh journalism!</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
-};
-
-/**
- * NEW: Download newsletter as HTML file
- * Allows editors to save and send via email platform
- */
-export const downloadNewsletter = (html: string, filename: string = 'morning-pulse-newsletter.html'): void => {
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
-
-/**
- * NEW: Preview newsletter in new window
- */
-export const previewNewsletter = (html: string): void => {
-  const previewWindow = window.open('', '_blank');
-  if (previewWindow) {
-    previewWindow.document.write(html);
-    previewWindow.document.close();
-  }
-};
-
-// --- BACKEND INTEGRATION FUNCTIONS ---
-
-/**
- * NEW: Send newsletter via backend (SendGrid)
- * @param newsletter - Newsletter content
- * @param interests - Optional subscriber segmentation by interests
- */
-export const sendNewsletter = async (
-  newsletter: { subject: string; html: string; text?: string },
-  interests?: string[]
-): Promise<{ success: boolean; message: string; stats?: any }> => {
+// Get Firestore instance
+const getDb = (): Firestore => {
   try {
-    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendNewsletter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        newsletter,
-        interests
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to send newsletter');
-    }
-
-    return result;
-  } catch (error: any) {
-    console.error('Newsletter send error:', error);
-    throw new Error(error.message || 'Failed to send newsletter');
+    const app = getApp();
+    return getFirestore(app);
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+    throw new Error('Firebase not initialized');
   }
 };
 
 /**
- * NEW: Subscribe to newsletter
- * @param email - Subscriber email
- * @param name - Optional subscriber name
- * @param interests - Optional interests array
+ * Subscribe a new user to the newsletter
+ * @param email - User email
+ * @param name - User name (optional)
+ * @param interests - User interests (optional)
  */
 export const subscribeToNewsletter = async (
   email: string,
@@ -292,6 +32,7 @@ export const subscribeToNewsletter = async (
   interests?: string[]
 ): Promise<{ success: boolean; message: string }> => {
   try {
+    // We use the manageSubscription cloud function for consistency
     const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
       method: 'POST',
       headers: {
@@ -315,6 +56,138 @@ export const subscribeToNewsletter = async (
   } catch (error: any) {
     console.error('Newsletter subscription error:', error);
     throw new Error(error.message || 'Failed to subscribe to newsletter');
+  }
+};
+
+/**
+ * Get all active subscribers
+ * Note: In production, this would be a protected admin-only call
+ */
+export const getActiveSubscribers = async (): Promise<any[]> => {
+  const db = getDb();
+  const subscribersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'subscribers');
+  const q = query(subscribersRef, where('status', '==', 'active'), where('emailNewsletter', '==', true));
+  
+  const snapshot = await getDocs(q);
+  const subscribers: any[] = [];
+  
+  snapshot.forEach((doc) => {
+    subscribers.push({ id: doc.id, ...doc.data() });
+  });
+  
+  return subscribers;
+};
+
+/**
+ * Generate newsletter HTML from articles
+ * @param articles - List of articles to include
+ * @param type - 'daily' or 'weekly'
+ */
+export const generateNewsletter = async (
+  articles: any[],
+  type: 'daily' | 'weekly' = 'weekly'
+): Promise<string> => {
+  const db = getDb();
+  const title = `Morning Pulse ${type === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  // Fetch active newsletter ads
+  let ads: any = {};
+  try {
+    const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
+    const q = query(
+      adsRef, 
+      where('status', '==', 'active'),
+      where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
+    );
+    
+    const snapshot = await getDocs(q);
+    const activeAds: any[] = [];
+    
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      activeAds.push({
+        id: doc.id,
+        advertiserName: data.advertiserName || 'Sponsor',
+        headline: data.title,
+        body: data.description,
+        imageUrl: data.creativeUrl,
+        destinationUrl: data.destinationUrl,
+        placement: data.placement
+      });
+    });
+
+    ads = {
+      top: activeAds.find(a => a.placement === 'newsletter_top'),
+      inline: activeAds.filter(a => a.placement === 'newsletter_inline'),
+      footer: activeAds.find(a => a.placement === 'newsletter_footer')
+    };
+  } catch (adError) {
+    console.warn('Could not fetch ads for newsletter:', adError);
+  }
+
+  // Map to shared interface
+  const newsletterArticles: NewsletterArticle[] = articles.map(article => ({
+    id: article.id,
+    headline: article.headline,
+    subHeadline: article.subHeadline,
+    authorName: article.authorName,
+    slug: article.slug,
+    publishedAt: article.publishedAt instanceof Date ? article.publishedAt : (article.publishedAt?.toDate?.() || new Date()),
+    imageUrl: article.finalImageUrl || article.imageUrl
+  }));
+
+  // Use the centralized template generator
+  return sharedGenerateNewsletterHTML({
+    title,
+    currentDate,
+    articles: newsletterArticles,
+    ads,
+    type
+  });
+};
+
+/**
+ * Send newsletter to subscribers
+ * @param subject - Email subject
+ * @param html - Email HTML content
+ * @param interests - Optional interest filtering
+ */
+export const sendNewsletter = async (
+  subject: string,
+  html: string,
+  interests?: string[]
+): Promise<{ success: boolean; message: string; stats?: any }> => {
+  try {
+    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendNewsletter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        newsletter: {
+          subject,
+          html
+        },
+        interests
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to send newsletter');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('Newsletter send error:', error);
+    throw new Error(error.message || 'Failed to send newsletter');
   }
 };
 

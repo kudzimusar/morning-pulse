@@ -11,6 +11,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 const axios = require('axios');
 const sgMail = require('@sendgrid/mail');
+const { generateNewsletterHTML, getNewsletterAds } = require('./newsletterTemplates');
 
 // --- CONFIGURATION ---
 
@@ -1142,7 +1143,58 @@ exports.sendScheduledNewsletter = async (req, res) => {
     }
 
     // Generate newsletter HTML
-    const newsletterHTML = generateNewsletterHTML(articles, newsletterType);
+    const title = `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    // Fetch active newsletter ads
+    let ads = {};
+    try {
+      const adsRef = db.collection('artifacts')
+        .doc(APP_ID)
+        .collection('public')
+        .doc('data')
+        .collection('ads');
+      
+      const activeAdsSnapshot = await adsRef
+        .where('status', '==', 'active')
+        .where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
+        .get();
+
+      const activeAds = [];
+      activeAdsSnapshot.forEach(doc => {
+        const data = doc.data();
+        activeAds.push({
+          id: doc.id,
+          advertiserName: data.advertiserName || 'Sponsor',
+          headline: data.title,
+          body: data.description,
+          imageUrl: data.creativeUrl,
+          destinationUrl: data.destinationUrl,
+          placement: data.placement
+        });
+      });
+
+      ads = {
+        top: activeAds.find(a => a.placement === 'newsletter_top'),
+        inline: activeAds.filter(a => a.placement === 'newsletter_inline'),
+        footer: activeAds.find(a => a.placement === 'newsletter_footer')
+      };
+    } catch (adError) {
+      console.warn('⚠️ Could not fetch ads for newsletter:', adError.message);
+    }
+
+    const newsletterHTML = generateNewsletterHTML({
+      title,
+      currentDate,
+      articles,
+      ads,
+      type: newsletterType
+    });
 
     // Get subscribers
     const subscribers = await getNewsletterSubscribers();
@@ -1164,6 +1216,35 @@ exports.sendScheduledNewsletter = async (req, res) => {
     }, emails);
 
     const successful = results.filter(r => r.success).reduce((sum, r) => sum + r.count, 0);
+    const failed = results.filter(r => !r.success).reduce((sum, r) => sum + r.count, 0);
+
+    // Log analytics
+    try {
+      const sendId = `${newsletterType}_${Date.now()}`;
+      await db.collection('artifacts')
+        .doc(APP_ID)
+        .collection('analytics')
+        .doc('newsletters')
+        .collection('sends')
+        .doc(sendId)
+        .set({
+          subject: title,
+          sentAt: admin.firestore.FieldValue.serverTimestamp(),
+          totalSubscribers: subscribers.length,
+          targetedSubscribers: emails.length,
+          successfulSends: successful,
+          failedSends: failed,
+          newsletterType,
+          articlesCount: articles.length,
+          adIds: [
+            ...(ads.top ? [ads.top.id] : []),
+            ...(ads.inline ? ads.inline.map(a => a.id) : []),
+            ...(ads.footer ? [ads.footer.id] : [])
+          ]
+        });
+    } catch (logError) {
+      console.error('❌ Failed to log newsletter analytics:', logError);
+    }
 
     res.status(200).json({
       success: true,
@@ -1171,7 +1252,8 @@ exports.sendScheduledNewsletter = async (req, res) => {
       stats: {
         articlesCount: articles.length,
         subscribersCount: emails.length,
-        successfulSends: successful
+        successfulSends: successful,
+        failedSends: failed
       }
     });
 
@@ -1184,126 +1266,7 @@ exports.sendScheduledNewsletter = async (req, res) => {
   }
 };
 
-/**
- * Generate newsletter HTML from articles array
- */
-function generateNewsletterHTML(articles, type = 'weekly') {
-  const title = `Morning Pulse ${type === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
 
-  const articleHTML = articles.map((article, index) => {
-    const url = `https://kudzimusar.github.io/morning-pulse/#opinion/${article.slug || article.id}`;
-    const pubDate = article.publishedAt.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-
-    return `
-      <tr>
-        <td style="padding: 20px 0; border-bottom: 1px solid #e5e5e5;">
-          ${article.imageUrl ? `
-            <a href="${url}" style="display: block; margin-bottom: 16px;">
-              <img src="${article.imageUrl}" alt="${article.headline}" style="width: 100%; max-width: 600px; height: auto; border-radius: 8px;" />
-            </a>
-          ` : ''}
-
-          <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; line-height: 1.3;">
-            <a href="${url}" style="color: #000; text-decoration: none;">${article.headline}</a>
-          </h2>
-
-          <p style="margin: 0 0 12px 0; font-size: 16px; color: #666; font-style: italic;">
-            ${article.subHeadline}
-          </p>
-
-          <p style="margin: 0 0 12px 0; font-size: 14px; color: #444; line-height: 1.6;">
-            ${article.subHeadline.substring(0, 150)}...
-          </p>
-
-          <div style="margin-bottom: 12px;">
-            <span style="font-size: 12px; color: #999;">
-              By <strong style="color: #666;">${article.authorName}</strong> • ${pubDate}
-            </span>
-          </div>
-
-          <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 600;">
-            Read Full Article →
-          </a>
-        </td>
-      </tr>
-    `;
-  }).join('');
-
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: Georgia, serif; background-color: #f9fafb;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td style="padding: 40px 20px;">
-        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
-
-          <!-- Header -->
-          <tr>
-            <td style="padding: 40px 30px; background-color: #000; text-align: center;">
-              <h1 style="margin: 0; color: #fff; font-size: 32px; font-weight: 900; letter-spacing: 0.05em;">
-                MORNING PULSE
-              </h1>
-              <p style="margin: 12px 0 0 0; color: #fff; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;">
-                ${title}
-              </p>
-            </td>
-          </tr>
-
-          <!-- Date -->
-          <tr>
-            <td style="padding: 20px 30px; background-color: #f9fafb; border-bottom: 2px solid #000;">
-              <p style="margin: 0; font-size: 14px; color: #666; text-align: center;">
-                ${currentDate}
-              </p>
-            </td>
-          </tr>
-
-          <!-- Articles -->
-          <tr>
-            <td style="padding: 0 30px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                ${articleHTML}
-              </table>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 30px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e5e5;">
-              <p style="margin: 0 0 12px 0; font-size: 12px; color: #999;">
-                You're receiving this because you subscribed to Morning Pulse newsletters.
-              </p>
-              <p style="margin: 0; font-size: 12px;">
-                <a href="https://kudzimusar.github.io/morning-pulse/#subscribe" style="color: #000; text-decoration: underline;">Manage Subscription</a>
-                •
-                <a href="https://kudzimusar.github.io/morning-pulse/" style="color: #000; text-decoration: underline;">Visit Website</a>
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
-}
 
 /**
  * Part A: The Redirect Cloud Function (handleShortLink)

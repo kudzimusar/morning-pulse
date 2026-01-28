@@ -17,15 +17,42 @@ const NewsletterTab: React.FC = () => {
     maxArticles: 10,
     includeImages: true,
   });
-  const [interests, setInterests] = useState<string>('');
-
   const handleGenerate = async () => {
     setGenerating(true);
+    setGeneratedHTML(null);
+    setSendResult(null);
     
     try {
-      const html = await generateNewsletter(options);
+      // Import the opinions service to fetch articles
+      const { getPublishedOpinions } = await import('../../services/opinionsService');
+      const allPublished = await getPublishedOpinions();
+      
+      // Filter by date range
+      const now = new Date();
+      let filtered = allPublished;
+      
+      if (options.dateRange === 'today') {
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= today.getTime());
+      } else if (options.dateRange === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= weekAgo.getTime());
+      } else if (options.dateRange === 'month') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= monthAgo.getTime());
+      }
+      
+      const articlesToSend = filtered.slice(0, options.maxArticles);
+      
+      if (articlesToSend.length === 0) {
+        alert('No published articles found for the selected time period.');
+        return;
+      }
+
+      const html = await generateNewsletter(articlesToSend, options.dateRange === 'today' ? 'daily' : 'weekly');
       setGeneratedHTML(html);
     } catch (error: any) {
+      console.error('Newsletter generation error:', error);
       alert(`Failed to generate newsletter: ${error.message}`);
     } finally {
       setGenerating(false);
@@ -46,12 +73,10 @@ const NewsletterTab: React.FC = () => {
     setSendResult(null);
 
     try {
-      const interestsArray = interests.trim() ? interests.split(',').map(i => i.trim()) : undefined;
-
       const result = await sendNewsletter({
         subject: options.title,
         html: generatedHTML
-      }, interestsArray);
+      });
 
       setSendResult(result);
     } catch (error: any) {
@@ -224,33 +249,7 @@ const NewsletterTab: React.FC = () => {
           </label>
         </div>
 
-        {/* Interests Segmentation */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '8px',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>
-            Target Interests (Optional)
-          </label>
-          <input
-            type="text"
-            value={interests}
-            onChange={(e) => setInterests(e.target.value)}
-            placeholder="politics, business, tech (comma-separated)"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '14px'
-            }}
-          />
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-            Leave empty to send to all subscribers. Use interests to segment your audience.
-          </div>
-        </div>
+
 
         {/* Generate Button */}
         <button

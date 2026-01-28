@@ -4,7 +4,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { getApp } from 'firebase/app';
 import { subscribeToNewsletter, unsubscribeFromNewsletter, updateNewsletterPreferences } from '../../services/newsletterService';
+
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 interface Subscriber {
   id: string;
@@ -26,39 +30,39 @@ const SubscriberTab: React.FC = () => {
     interests: ''
   });
 
-  // Mock data for demonstration - in production, this would fetch from Firestore
   useEffect(() => {
-    // Simulate loading subscribers
-    setTimeout(() => {
-      setSubscribers([
-        {
-          id: '1',
-          email: 'john.doe@example.com',
-          name: 'John Doe',
-          interests: ['politics', 'business'],
-          subscribedAt: new Date('2024-01-15'),
-          status: 'active'
-        },
-        {
-          id: '2',
-          email: 'jane.smith@example.com',
-          name: 'Jane Smith',
-          interests: ['tech', 'global'],
-          subscribedAt: new Date('2024-01-20'),
-          status: 'active'
-        },
-        {
-          id: '3',
-          email: 'mike.johnson@example.com',
-          name: 'Mike Johnson',
-          interests: ['sports', 'business'],
-          subscribedAt: new Date('2024-01-25'),
-          status: 'active'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    loadSubscribers();
   }, []);
+
+  const loadSubscribers = async () => {
+    try {
+      setLoading(true);
+      const db = getFirestore(getApp());
+      const subscribersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'subscribers');
+      const q = query(subscribersRef, orderBy('subscribedAt', 'desc'));
+      
+      const snapshot = await getDocs(q);
+      const subscribersList: Subscriber[] = [];
+      
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        subscribersList.push({
+          id: docSnap.id,
+          email: data.email || docSnap.id,
+          name: data.name || '',
+          interests: data.interests || [],
+          subscribedAt: data.subscribedAt?.toDate?.() || new Date(),
+          status: data.status || 'active'
+        });
+      });
+      
+      setSubscribers(subscribersList);
+    } catch (error) {
+      console.error('Error loading subscribers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddSubscriber = async () => {
     try {

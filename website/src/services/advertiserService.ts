@@ -62,7 +62,7 @@ export interface Ad {
   description?: string;
   creativeUrl: string;
   destinationUrl?: string;
-  placement: 'header' | 'sidebar' | 'inline';
+  placement: 'header' | 'sidebar' | 'inline' | 'newsletter_top' | 'newsletter_inline' | 'newsletter_footer';
   status: 'pending' | 'approved' | 'active' | 'expired' | 'rejected';
   startDate: Date;
   endDate: Date;
@@ -280,7 +280,7 @@ export const submitAd = async (
     description?: string;
     destinationUrl?: string;
     creativeUrl: string;
-    placement: 'header' | 'sidebar' | 'inline';
+    placement: 'header' | 'sidebar' | 'inline' | 'newsletter_top' | 'newsletter_inline' | 'newsletter_footer';
     startDate: Date;
     endDate: Date;
   }

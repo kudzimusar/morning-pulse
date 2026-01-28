@@ -73,6 +73,27 @@ const DEFAULT_SLOTS: Omit<AdSlot, 'createdAt'>[] = [
     priorityTier: 'house',
     maxAds: 1,
   },
+  {
+    slotId: 'newsletter_top',
+    pageType: 'newsletter',
+    sizes: ['600x150'],
+    priorityTier: 'premium',
+    maxAds: 1,
+  },
+  {
+    slotId: 'newsletter_inline',
+    pageType: 'newsletter',
+    sizes: ['600x200'],
+    priorityTier: 'standard',
+    maxAds: 2,
+  },
+  {
+    slotId: 'newsletter_footer',
+    pageType: 'newsletter',
+    sizes: ['600x150'],
+    priorityTier: 'house',
+    maxAds: 1,
+  },
 ];
 
 /**
