@@ -10,7 +10,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 const axios = require('axios');
-const { generateNewsletterHTML, getNewsletterAds } = require('./newsletterTemplates');
+const cors = require('cors');
+const corsHandler = cors({ origin: true });
 
 // --- CONFIGURATION ---
 
@@ -915,14 +916,13 @@ function segmentSubscribers(subscribers, interests = null) {
  * Trigger: HTTP POST with newsletter content
  */
 exports.sendNewsletter = async (req, res) => {
-  if (applyCors(req, res, 'POST, OPTIONS')) return;
+  corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+      return;
+    }
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-    return;
-  }
-
-  try {
+    try {
     const { newsletter, interests } = req.body;
 
     if (!newsletter || !newsletter.subject || !newsletter.html) {
@@ -961,7 +961,9 @@ exports.sendNewsletter = async (req, res) => {
 
     // Calculate success stats
     const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r     // Log the newsletter send
+    const failed = results.filter(r => !r.success).length;
+
+    // Log the newsletter send
     const sentAt = admin.firestore.FieldValue.serverTimestamp();
     const sendDoc = await db.collection('artifacts').doc(APP_ID).collection('analytics').doc('newsletters').collection('sends').add({
       subject: newsletter.subject,
@@ -989,7 +991,9 @@ exports.sendNewsletter = async (req, res) => {
           impressionCount: successful
         });
       }
-    }tatus(200).json({
+    }
+
+    res.status(200).json({
       success: true,
       message: `Newsletter sent successfully to ${successful} subscribers`,
       stats: {
@@ -1000,13 +1004,14 @@ exports.sendNewsletter = async (req, res) => {
       }
     });
 
-  } catch (error) {
-    console.error('❌ Newsletter send error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    } catch (error) {
+      console.error('❌ Newsletter send error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
 };
 
 /**
@@ -1014,81 +1019,81 @@ exports.sendNewsletter = async (req, res) => {
  * Supports subscribe, unsubscribe, and update preferences
  */
 exports.manageSubscription = async (req, res) => {
-  if (applyCors(req, res, 'POST, OPTIONS')) return;
-
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-    return;
-  }
-
-  try {
-    const { action, email, name, interests } = req.body;
-
-    if (!email || !action) {
-      res.status(400).json({ error: 'Missing required fields: email, action' });
+  corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
       return;
     }
 
-    const subscriberRef = db.collection('artifacts')
-      .doc(APP_ID)
-      .collection('public')
-      .doc('data')
-      .collection('subscribers')
-      .doc(email.toLowerCase());
+    try {
+      const { action, email, name, interests } = req.body;
 
-    if (action === 'subscribe') {
-      await subscriberRef.set({
-        email: email.toLowerCase(),
-        name: name || null,
-        interests: interests || [],
-        status: 'active',
-        emailNewsletter: true,
-        subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      if (!email || !action) {
+        res.status(400).json({ error: 'Missing required fields: email, action' });
+        return;
+      }
 
-      res.status(200).json({
-        success: true,
-        message: 'Successfully subscribed to newsletter',
-        subscriber: { email, name, interests }
+      const subscriberRef = db.collection('artifacts')
+        .doc(APP_ID)
+        .collection('public')
+        .doc('data')
+        .collection('subscribers')
+        .doc(email.toLowerCase());
+
+      if (action === 'subscribe') {
+        await subscriberRef.set({
+          email: email.toLowerCase(),
+          name: name || null,
+          interests: interests || [],
+          status: 'active',
+          emailNewsletter: true,
+          subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        res.status(200).json({
+          success: true,
+          message: 'Successfully subscribed to newsletter',
+          subscriber: { email, name, interests }
+        });
+
+      } else if (action === 'unsubscribe') {
+        await subscriberRef.update({
+          status: 'inactive',
+          emailNewsletter: false,
+          unsubscribedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.status(200).json({
+          success: true,
+          message: 'Successfully unsubscribed from newsletter'
+        });
+
+      } else if (action === 'update') {
+        await subscriberRef.update({
+          name: name || null,
+          interests: interests || [],
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.status(200).json({
+          success: true,
+          message: 'Subscription preferences updated',
+          subscriber: { email, name, interests }
+        });
+
+      } else {
+        res.status(400).json({ error: 'Invalid action. Use: subscribe, unsubscribe, update' });
+      }
+
+    } catch (error) {
+      console.error('❌ Subscription management error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
       });
-
-    } else if (action === 'unsubscribe') {
-      await subscriberRef.update({
-        status: 'inactive',
-        emailNewsletter: false,
-        unsubscribedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Successfully unsubscribed from newsletter'
-      });
-
-    } else if (action === 'update') {
-      await subscriberRef.update({
-        name: name || null,
-        interests: interests || [],
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Subscription preferences updated',
-        subscriber: { email, name, interests }
-      });
-
-    } else {
-      res.status(400).json({ error: 'Invalid action. Use: subscribe, unsubscribe, update' });
     }
-
-  } catch (error) {
-    console.error('❌ Subscription management error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+  });
 };
 
 /**
