@@ -83,6 +83,18 @@ export const getActiveSubscribers = async (): Promise<any[]> => {
  * @param articles - List of articles to include
  * @param type - 'daily' or 'weekly'
  */
+export function downloadNewsletter(html: string, filename = 'newsletter.html') {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
 export const generateNewsletter = async (
   articles: any[],
   type: 'daily' | 'weekly' = 'weekly'

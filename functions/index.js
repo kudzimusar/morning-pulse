@@ -10,7 +10,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 const axios = require('axios');
-const sgMail = require('@sendgrid/mail');
 const { generateNewsletterHTML, getNewsletterAds } = require('./newsletterTemplates');
 
 // --- CONFIGURATION ---
@@ -22,9 +21,9 @@ const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
-// Email Configuration
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const NEWSLETTER_FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'news@morningpulse.net';
+// Email Configuration (Brevo)
+const BREVO_API_KEY = process.env.MORNING_PULSE_BREVO;
+const NEWSLETTER_FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'buynsellpvtltd@gmail.com';
 const NEWSLETTER_FROM_NAME = 'Morning Pulse News';
 
 // Expected news categories from newsAggregator
@@ -156,12 +155,11 @@ try {
   console.warn('⚠️ Continuing without Firebase. Premium features will be unavailable.');
 }
 
-// Initialize SendGrid
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-  console.log('✅ SendGrid initialized successfully');
+// Initialize Brevo
+if (BREVO_API_KEY) {
+  console.log('✅ Brevo API Key detected');
 } else {
-  console.warn('⚠️ SENDGRID_API_KEY not set. Email features will be unavailable.');
+  console.warn('⚠️ MORNING_PULSE_BREVO not set. Email features will be unavailable.');
 }
 
 // Initialize Gemini AI
@@ -789,54 +787,60 @@ try {
 // --- EMAIL NEWSLETTER FUNCTIONS ---
 
 /**
- * Send email newsletter via SendGrid
+ * Send single email via Brevo REST API
+ */
+async function sendBrevoEmail({ toEmail, toName, subject, html }) {
+  if (!BREVO_API_KEY) {
+    throw new Error('Brevo API key not configured');
+  }
+
+  try {
+    const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+      sender: { 
+        email: NEWSLETTER_FROM_EMAIL,  
+        name: NEWSLETTER_FROM_NAME 
+      },
+      to: [{ email: toEmail, name: toName || '' }],
+      subject,
+      htmlContent: html,
+      headers: {
+        'List-Unsubscribe': '<https://morningpulse.net/unsubscribe>'
+      }
+    }, {
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+
+    return { success: true, result: response.data };
+  } catch (error) {
+    const errorData = error.response ? JSON.stringify(error.response.data) : error.message;
+    console.error(`❌ Brevo error for ${toEmail}:`, errorData);
+    return { success: false, error: errorData };
+  }
+}
+
+/**
+ * Send email newsletter via Brevo (iterative for now to ensure delivery)
  * @param {Object} newsletter - Newsletter data
- * @param {string[]} recipients - List of email addresses
+ * @param {Object[]} recipients - List of subscriber objects {email, name}
  */
 async function sendNewsletterEmail(newsletter, recipients) {
-  if (!SENDGRID_API_KEY) {
-    throw new Error('SendGrid not configured');
-  }
-
-  const { subject, html, text } = newsletter;
-
-  // SendGrid has a limit of 1000 recipients per request, so batch if needed
-  const batchSize = 1000;
-  const batches = [];
-
-  for (let i = 0; i < recipients.length; i += batchSize) {
-    batches.push(recipients.slice(i, i + batchSize));
-  }
-
+  const { subject, html } = newsletter;
   const results = [];
-  for (const batch of batches) {
-    const msg = {
-      to: batch,
-      from: {
-        email: NEWSLETTER_FROM_EMAIL,
-        name: NEWSLETTER_FROM_NAME
-      },
-      subject: subject,
-      html: html,
-      text: text || html.replace(/<[^>]*>/g, ''), // Basic HTML to text conversion
-      tracking_settings: {
-        click_tracking: { enable: true },
-        open_tracking: { enable: true },
-        subscription_tracking: {
-          enable: true,
-          html: `<p>Unsubscribe: <%unsubscribe_url%></p>`
-        }
-      }
-    };
-
-    try {
-      const result = await sgMail.send(msg);
-      results.push({ success: true, count: batch.length, result });
-      console.log(`✅ Sent newsletter batch to ${batch.length} recipients`);
-    } catch (error) {
-      console.error('❌ SendGrid error:', error);
-      results.push({ success: false, count: batch.length, error: error.message });
-    }
+  
+  // Brevo free tier has daily limits, so we send one by one
+  // In a high-volume scenario, we'd use their batch/template API
+  for (const recipient of recipients) {
+    const result = await sendBrevoEmail({
+      toEmail: recipient.email,
+      toName: recipient.name,
+      subject,
+      html
+    });
+    results.push({ ...result, email: recipient.email });
   }
 
   return results;
@@ -939,9 +943,8 @@ exports.sendNewsletter = async (req, res) => {
 
     // Segment subscribers if interests specified
     const targetSubscribers = segmentSubscribers(allSubscribers, interests);
-    const recipientEmails = targetSubscribers.map(sub => sub.email);
 
-    if (recipientEmails.length === 0) {
+    if (targetSubscribers.length === 0) {
       res.status(200).json({
         success: true,
         message: 'No subscribers match the specified interests',
@@ -950,19 +953,18 @@ exports.sendNewsletter = async (req, res) => {
       return;
     }
 
-    console.log(`📧 Sending newsletter "${newsletter.subject}" to ${recipientEmails.length} subscribers`);
+    console.log(`📧 Sending newsletter "${newsletter.subject}" to ${targetSubscribers.length} subscribers`);
 
     // Send the newsletter
-    const results = await sendNewsletterEmail(newsletter, recipientEmails);
+    const results = await sendNewsletterEmail(newsletter, targetSubscribers);
 
     // Calculate success stats
-    const successful = results.filter(r => r.success).reduce((sum, r) => sum + r.count, 0);
-    const failed = results.filter(r => !r.success).reduce((sum, r) => sum + r.count, 0);
-
-    // Log the newsletter send
-    await db.collection('artifacts').doc(APP_ID).collection('analytics').doc('newsletters').collection('sends').add({
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r     // Log the newsletter send
+    const sentAt = admin.firestore.FieldValue.serverTimestamp();
+    const sendDoc = await db.collection('artifacts').doc(APP_ID).collection('analytics').doc('newsletters').collection('sends').add({
       subject: newsletter.subject,
-      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      sentAt,
       totalSubscribers: allSubscribers.length,
       targetedSubscribers: targetSubscribers.length,
       successfulSends: successful,
@@ -970,7 +972,23 @@ exports.sendNewsletter = async (req, res) => {
       interests: interests || null
     });
 
-    res.status(200).json({
+    // Log Ad Impressions if ads were included in the HTML
+    if (newsletter.adIds && Array.isArray(newsletter.adIds)) {
+      const adImpressionsRef = db.collection('artifacts')
+        .doc(APP_ID)
+        .collection('analytics')
+        .doc('newsletterAdImpressions')
+        .collection('logs');
+
+      for (const adId of newsletter.adIds) {
+        await adImpressionsRef.add({
+          adId,
+          newsletterSendId: sendDoc.id,
+          sentAt,
+          impressionCount: successful
+        });
+      }
+    }tatus(200).json({
       success: true,
       message: `Newsletter sent successfully to ${successful} subscribers`,
       stats: {
@@ -1198,9 +1216,8 @@ exports.sendScheduledNewsletter = async (req, res) => {
 
     // Get subscribers
     const subscribers = await getNewsletterSubscribers();
-    const emails = subscribers.map(sub => sub.email);
 
-    if (emails.length === 0) {
+    if (subscribers.length === 0) {
       res.status(200).json({
         success: true,
         message: 'No subscribers found',
@@ -1213,14 +1230,16 @@ exports.sendScheduledNewsletter = async (req, res) => {
     const results = await sendNewsletterEmail({
       subject: `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`,
       html: newsletterHTML
-    }, emails);
+    }, subscribers);
 
-    const successful = results.filter(r => r.success).reduce((sum, r) => sum + r.count, 0);
-    const failed = results.filter(r => !r.success).reduce((sum, r) => sum + r.count, 0);
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
 
     // Log analytics
     try {
       const sendId = `${newsletterType}_${Date.now()}`;
+      const sentAt = admin.firestore.FieldValue.serverTimestamp();
+      
       await db.collection('artifacts')
         .doc(APP_ID)
         .collection('analytics')
@@ -1229,9 +1248,9 @@ exports.sendScheduledNewsletter = async (req, res) => {
         .doc(sendId)
         .set({
           subject: title,
-          sentAt: admin.firestore.FieldValue.serverTimestamp(),
+          sentAt,
           totalSubscribers: subscribers.length,
-          targetedSubscribers: emails.length,
+          targetedSubscribers: subscribers.length,
           successfulSends: successful,
           failedSends: failed,
           newsletterType,
@@ -1242,6 +1261,27 @@ exports.sendScheduledNewsletter = async (req, res) => {
             ...(ads.footer ? [ads.footer.id] : [])
           ]
         });
+
+      // Log Ad Impressions
+      const adImpressionsRef = db.collection('artifacts')
+        .doc(APP_ID)
+        .collection('analytics')
+        .doc('newsletterAdImpressions')
+        .collection('logs');
+
+      const impressionLogs = [];
+      if (ads.top) impressionLogs.push({ adId: ads.top.id, placement: 'top' });
+      if (ads.inline) ads.inline.forEach(a => impressionLogs.push({ adId: a.id, placement: 'inline' }));
+      if (ads.footer) impressionLogs.push({ adId: ads.footer.id, placement: 'footer' });
+
+      for (const log of impressionLogs) {
+        await adImpressionsRef.add({
+          ...log,
+          newsletterSendId: sendId,
+          sentAt,
+          impressionCount: successful // Each successful email is one impression
+        });
+      }
     } catch (logError) {
       console.error('❌ Failed to log newsletter analytics:', logError);
     }
