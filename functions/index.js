@@ -1,7 +1,7 @@
 /**
  * WhatsApp Webhook Handler for Google Cloud Functions
  * Entry point: webhook
- * 
+ *  
  * Multi-dimensional news system front-end that fetches and formats news
  * from 7-category scraping architecture in Kukurigo style.
  */
