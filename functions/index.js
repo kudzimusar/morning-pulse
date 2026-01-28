@@ -26,6 +26,22 @@ const BREVO_API_KEY = process.env.MORNING_PULSE_BREVO;
 const NEWSLETTER_FROM_EMAIL = process.env.NEWSLETTER_FROM_EMAIL || 'buynsellpvtltd@gmail.com';
 const NEWSLETTER_FROM_NAME = 'Morning Pulse News';
 
+// =======================
+// GLOBAL CORS HELPER
+// =======================
+function applyCors(req, res, methods = 'GET, POST, OPTIONS') {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', methods);
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Max-Age', '3600');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return true;
+  }
+  return false;
+}
+
 // Expected news categories from newsAggregator
 const NEWS_CATEGORIES = [
   'Local (Zim)',
@@ -703,654 +719,615 @@ try {
 }
 /**
  * HTTP Cloud Function to fetch opinions from Firestore
- * This endpoint allows the frontend to fetch opinions without needing 'list' permission
- * Backend has admin access, so it can list the collection
- */
+
+This endpoint allows the frontend to fetch opinions without needing 'list' permission
+Backend has admin access, so it can list the collection
+/
 exports.getOpinions = async (req, res) => {
-  // CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
+// CORS headers
+res.set('Access-Control-Allow-Origin', '');
+res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
+if (req.method === 'OPTIONS') {
+res.status(204).send('');
+return;
+}
+if (req.method !== 'GET') {
+res.status(405).send('Method Not Allowed');
+return;
+}
+try {
+if (!db) {
+res.status(500).json({ error: 'Firebase not initialized' });
+return;
+}
+const status = req.query.status || 'all'; // 'pending', 'published', or 'all'
+const appId = APP_ID;
 
-  if (req.method !== 'GET') {
-    res.status(405).send('Method Not Allowed');
-    return;
-  }
+// Use admin SDK path structure: artifacts/{appId}/public/data/opinions
+const opinionsRef = db.collection('artifacts').doc(appId)
+  .collection('public').doc('data')
+  .collection('opinions');
 
-  try {
-    if (!db) {
-      res.status(500).json({ error: 'Firebase not initialized' });
-      return;
-    }
+let query = opinionsRef;
 
-    const status = req.query.status || 'all'; // 'pending', 'published', or 'all'
-    const appId = APP_ID;
-    
-    // Use admin SDK path structure: artifacts/{appId}/public/data/opinions
-    const opinionsRef = db.collection('artifacts').doc(appId)
-      .collection('public').doc('data')
-      .collection('opinions');
+// Apply status filter if specified
+if (status === 'pending') {
+  query = query.where('status', '==', 'pending');
+} else if (status === 'published') {
+  query = query.where('status', '==', 'published');
+}
 
-    let query = opinionsRef;
-    
-    // Apply status filter if specified
-    if (status === 'pending') {
-      query = query.where('status', '==', 'pending');
-    } else if (status === 'published') {
-      query = query.where('status', '==', 'published');
-    }
+// Order by submittedAt or publishedAt
+if (status === 'published') {
+  query = query.orderBy('publishedAt', 'desc');
+} else if (status === 'pending') {
+  query = query.orderBy('submittedAt', 'desc');
+}
 
-    // Order by submittedAt or publishedAt
-    if (status === 'published') {
-      query = query.orderBy('publishedAt', 'desc');
-    } else if (status === 'pending') {
-      query = query.orderBy('submittedAt', 'desc');
-    }
+const snapshot = await query.get();
+const opinions = [];
 
-    const snapshot = await query.get();
-    const opinions = [];
+snapshot.forEach((docSnap) => {
+  const data = docSnap.data();
+  opinions.push({
+    id: docSnap.id,
+    ...data,
+    submittedAt: data.submittedAt?.toDate ? data.submittedAt.toDate().toISOString() : (data.submittedAt || null),
+    publishedAt: data.publishedAt?.toDate ? data.publishedAt.toDate().toISOString() : (data.publishedAt || null),
+  });
+});
 
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      opinions.push({
-        id: docSnap.id,
-        ...data,
-        submittedAt: data.submittedAt?.toDate ? data.submittedAt.toDate().toISOString() : (data.submittedAt || null),
-        publishedAt: data.publishedAt?.toDate ? data.publishedAt.toDate().toISOString() : (data.publishedAt || null),
-      });
-    });
-
-    res.status(200).json({ opinions });
-  } catch (error) {
-    console.error('Error fetching opinions:', error);
-    res.status(500).json({ error: error.message });
-  }
+res.status(200).json({ opinions });
+} catch (error) {
+console.error('Error fetching opinions:', error);
+res.status(500).json({ error: error.message });
+}
 };
-
 // Export Unsplash image proxy function (with error handling)
 try {
-  const unsplashProxyModule = require('./unsplashProxy');
-  if (unsplashProxyModule && unsplashProxyModule.unsplashImage) {
-    exports.unsplashImage = unsplashProxyModule.unsplashImage;
-    console.log('unsplashImage function exported successfully.');
-  }
+const unsplashProxyModule = require('./unsplashProxy');
+if (unsplashProxyModule && unsplashProxyModule.unsplashImage) {
+exports.unsplashImage = unsplashProxyModule.unsplashImage;
+console.log('unsplashImage function exported successfully.');
+}
 } catch (error) {
-  console.warn('unsplashProxy module not available:', error.message);
-  console.warn('Unsplash image proxy features will be unavailable.');
+console.warn('unsplashProxy module not available:', error.message);
+console.warn('Unsplash image proxy features will be unavailable.');
 }
-
 // --- EMAIL NEWSLETTER FUNCTIONS ---
-
 /**
- * Send single email via Brevo REST API
- */
+
+Send single email via Brevo REST API
+*/
 async function sendBrevoEmail({ toEmail, toName, subject, html }) {
-  if (!BREVO_API_KEY) {
-    throw new Error('Brevo API key not configured');
-  }
-
-  try {
-    const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
-      sender: { 
-        email: NEWSLETTER_FROM_EMAIL,  
-        name: NEWSLETTER_FROM_NAME 
-      },
-      to: [{ email: toEmail, name: toName || '' }],
-      subject,
-      htmlContent: html,
-      headers: {
-        'List-Unsubscribe': '<https://morningpulse.net/unsubscribe>'
-      }
-    }, {
-      headers: {
-        'api-key': BREVO_API_KEY,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
-
-    return { success: true, result: response.data };
-  } catch (error) {
-    const errorData = error.response ? JSON.stringify(error.response.data) : error.message;
-    console.error(`❌ Brevo error for ${toEmail}:`, errorData);
-    return { success: false, error: errorData };
-  }
+if (!BREVO_API_KEY) {
+throw new Error('Brevo API key not configured');
 }
 
+try {
+const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+sender: {
+email: NEWSLETTER_FROM_EMAIL,
+name: NEWSLETTER_FROM_NAME
+},
+to: [{ email: toEmail, name: toName || '' }],
+subject,
+htmlContent: html,
+headers: {
+'List-Unsubscribe': 'https://morningpulse.net/unsubscribe'
+}
+}, {
+headers: {
+'api-key': BREVO_API_KEY,
+'Content-Type': 'application/json',
+'Accept': 'application/json'
+}
+});
+return { success: true, result: response.data };
+} catch (error) {
+const errorData = error.response ? JSON.stringify(error.response.data) : error.message;
+console.error(❌ Brevo error for ${toEmail}:, errorData);
+return { success: false, error: errorData };
+}
+}
 /**
- * Send email newsletter via Brevo (iterative for now to ensure delivery)
- * @param {Object} newsletter - Newsletter data
- * @param {Object[]} recipients - List of subscriber objects {email, name}
- */
+
+Send email newsletter via Brevo (iterative for now to ensure delivery)
+@param {Object} newsletter - Newsletter data
+@param {Object[]} recipients - List of subscriber objects {email, name}
+*/
 async function sendNewsletterEmail(newsletter, recipients) {
-  const { subject, html } = newsletter;
-  const results = [];
-  
-  // Brevo free tier has daily limits, so we send one by one
-  // In a high-volume scenario, we'd use their batch/template API
-  for (const recipient of recipients) {
-    const result = await sendBrevoEmail({
-      toEmail: recipient.email,
-      toName: recipient.name,
-      subject,
-      html
-    });
-    results.push({ ...result, email: recipient.email });
-  }
+const { subject, html } = newsletter;
+const results = [];
 
-  return results;
+// Brevo free tier has daily limits, so we send one by one
+// In a high-volume scenario, we'd use their batch/template API
+for (const recipient of recipients) {
+const result = await sendBrevoEmail({
+toEmail: recipient.email,
+toName: recipient.name,
+subject,
+html
+});
+results.push({ ...result, email: recipient.email });
+}
+return results;
+}
+/**
+
+Get active newsletter subscribers from Firestore
+*/
+async function getNewsletterSubscribers() {
+if (!db) {
+throw new Error('Firebase not initialized');
 }
 
+const subscribersRef = db.collection('artifacts')
+.doc(APP_ID)
+.collection('public')
+.doc('data')
+.collection('subscribers');
+const snapshot = await subscribersRef
+.where('status', '==', 'active')
+.where('emailNewsletter', '==', true)
+.get();
+const subscribers = [];
+snapshot.forEach(doc => {
+const data = doc.data();
+if (data.email && data.email.trim()) {
+subscribers.push({
+id: doc.id,
+email: data.email,
+name: data.name || null,
+interests: data.interests || [],
+subscribedAt: data.subscribedAt?.toDate?.() || new Date()
+});
+}
+});
+console.log(📧 Found ${subscribers.length} active newsletter subscribers);
+return subscribers;
+}
 /**
- * Get active newsletter subscribers from Firestore
- */
-async function getNewsletterSubscribers() {
-  if (!db) {
-    throw new Error('Firebase not initialized');
-  }
 
-  const subscribersRef = db.collection('artifacts')
+Segment subscribers by interests
+@param {Array} subscribers - All subscribers
+@param {string[]} interests - Filter by these interests (optional)
+*/
+function segmentSubscribers(subscribers, interests = null) {
+if (!interests || interests.length === 0) {
+return subscribers; // Return all if no interests specified
+}
+
+return subscribers.filter(sub => {
+if (!sub.interests || sub.interests.length === 0) {
+return false; // Skip if no interests set
+}
+return interests.some(interest => sub.interests.includes(interest));
+});
+}
+/**
+
+Cloud Function: Send newsletter to all subscribers
+Trigger: HTTP POST with newsletter content
+*/
+exports.sendNewsletter = async (req, res) => {
+if (applyCors(req, res, 'POST, OPTIONS')) return;
+
+if (req.method !== 'POST') {
+res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+return;
+}
+try {
+const { newsletter, interests } = req.body;
+if (!newsletter || !newsletter.subject || !newsletter.html) {
+  res.status(400).json({ error: 'Missing required fields: newsletter.subject, newsletter.html' });
+  return;
+}
+
+// Get subscribers
+const allSubscribers = await getNewsletterSubscribers();
+
+if (allSubscribers.length === 0) {
+  res.status(200).json({
+    success: true,
+    message: 'No active subscribers found',
+    sent: 0
+  });
+  return;
+}
+
+// Segment subscribers if interests specified
+const targetSubscribers = segmentSubscribers(allSubscribers, interests);
+
+if (targetSubscribers.length === 0) {
+  res.status(200).json({
+    success: true,
+    message: 'No subscribers match the specified interests',
+    sent: 0
+  });
+  return;
+}
+
+console.log(`📧 Sending newsletter "${newsletter.subject}" to ${targetSubscribers.length} subscribers`);
+
+// Send the newsletter
+const results = await sendNewsletterEmail(newsletter, targetSubscribers);
+
+// Calculate success stats
+const successful = results.filter(r => r.success).length;
+const failed = results.filter(r => !r.success).length;
+
+// Log the newsletter send
+const sentAt = admin.firestore.FieldValue.serverTimestamp();
+const sendDoc = await db.collection('artifacts').doc(APP_ID)
+  .collection('analytics').doc('newsletters')
+  .collection('sends').add({
+    subject: newsletter.subject,
+    sentAt,
+    totalSubscribers: allSubscribers.length,
+    targetedSubscribers: targetSubscribers.length,
+    successfulSends: successful,
+    failedSends: failed,
+    interests: interests || null
+  });
+
+// Log Ad Impressions if ads were included in the HTML
+if (newsletter.adIds && Array.isArray(newsletter.adIds)) {
+  const adImpressionsRef = db.collection('artifacts')
+    .doc(APP_ID)
+    .collection('analytics')
+    .doc('newsletterAdImpressions')
+    .collection('logs');
+
+  for (const adId of newsletter.adIds) {
+    await adImpressionsRef.add({
+      adId,
+      newsletterSendId: sendDoc.id,
+      sentAt,
+      impressionCount: successful
+    });
+  }
+}
+
+res.status(200).json({
+  success: true,
+  message: `Newsletter sent successfully to ${successful} subscribers`,
+  stats: {
+    totalSubscribers: allSubscribers.length,
+    targetedSubscribers: targetSubscribers.length,
+    successfulSends: successful,
+    failedSends: failed
+  }
+});
+} catch (error) {
+console.error('❌ Newsletter send error:', error);
+res.status(500).json({
+success: false,
+error: error.message
+});
+}
+};
+/**
+
+Cloud Function: Manage newsletter subscriptions
+Supports subscribe, unsubscribe, and update preferences
+*/
+exports.manageSubscription = async (req, res) => {
+if (applyCors(req, res, 'POST, OPTIONS')) return;
+
+if (req.method !== 'POST') {
+res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+return;
+}
+try {
+const { action, email, name, interests } = req.body;
+if (!email || !action) {
+  res.status(400).json({ error: 'Missing required fields: email, action' });
+  return;
+}
+
+const subscriberRef = db.collection('artifacts')
+  .doc(APP_ID)
+  .collection('public')
+  .doc('data')
+  .collection('subscribers')
+  .doc(email.toLowerCase());
+
+if (action === 'subscribe') {
+  await subscriberRef.set({
+    email: email.toLowerCase(),
+    name: name || null,
+    interests: interests || [],
+    status: 'active',
+    emailNewsletter: true,
+    subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  res.status(200).json({
+    success: true,
+    message: 'Successfully subscribed to newsletter',
+    subscriber: { email, name, interests }
+  });
+
+} else if (action === 'unsubscribe') {
+  await subscriberRef.update({
+    status: 'inactive',
+    emailNewsletter: false,
+    unsubscribedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Successfully unsubscribed from newsletter'
+  });
+
+} else if (action === 'update') {
+  await subscriberRef.update({
+    name: name || null,
+    interests: interests || [],
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Subscription preferences updated',
+    subscriber: { email, name, interests }
+  });
+
+} else {
+  res.status(400).json({ error: 'Invalid action. Use: subscribe, unsubscribe, update' });
+}
+} catch (error) {
+console.error('❌ Subscription management error:', error);
+res.status(500).json({
+success: false,
+error: error.message
+});
+}
+};
+/**
+
+Cloud Function: Scheduled newsletter sender
+Automatically sends newsletters on schedule (can be triggered by Cloud Scheduler)
+*/
+exports.sendScheduledNewsletter = async (req, res) => {
+if (applyCors(req, res, 'POST, OPTIONS')) return;
+
+try {
+const { newsletterType = 'weekly' } = req.body || {};
+// Get recent published opinions (last 7 days for weekly, 1 day for daily)
+const cutoffDate = new Date();
+if (newsletterType === 'weekly') {
+  cutoffDate.setDate(cutoffDate.getDate() - 7);
+} else if (newsletterType === 'daily') {
+  cutoffDate.setDate(cutoffDate.getDate() - 1);
+}
+
+const opinionsRef = db.collection('artifacts')
+  .doc(APP_ID)
+  .collection('public')
+  .doc('data')
+  .collection('opinions');
+
+const snapshot = await opinionsRef
+  .where('status', '==', 'published')
+  .where('publishedAt', '>=', cutoffDate)
+  .orderBy('publishedAt', 'desc')
+  .limit(15)
+  .get();
+
+const articles = [];
+snapshot.forEach(doc => {
+  const data = doc.data();
+  articles.push({
+    id: doc.id,
+    headline: data.headline,
+    subHeadline: data.subHeadline,
+    authorName: data.authorName,
+    slug: data.slug,
+    publishedAt: data.publishedAt?.toDate?.() || new Date(),
+    imageUrl: data.finalImageUrl || data.imageUrl
+  });
+});
+
+if (articles.length === 0) {
+  res.status(200).json({
+    success: true,
+    message: 'No new articles for newsletter period',
+    articlesCount: 0
+  });
+  return;
+}
+
+// Generate newsletter HTML
+const title = `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
+const currentDate = new Date().toLocaleDateString('en-US', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric'
+});
+
+// Fetch active newsletter ads
+let ads = {};
+try {
+  const adsRef = db.collection('artifacts')
     .doc(APP_ID)
     .collection('public')
     .doc('data')
-    .collection('subscribers');
-
-  const snapshot = await subscribersRef
+    .collection('ads');
+  
+  const activeAdsSnapshot = await adsRef
     .where('status', '==', 'active')
-    .where('emailNewsletter', '==', true)
+    .where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
     .get();
 
-  const subscribers = [];
-  snapshot.forEach(doc => {
+  const activeAds = [];
+  activeAdsSnapshot.forEach(doc => {
     const data = doc.data();
-    if (data.email && data.email.trim()) {
-      subscribers.push({
-        id: doc.id,
-        email: data.email,
-        name: data.name || null,
-        interests: data.interests || [],
-        subscribedAt: data.subscribedAt?.toDate?.() || new Date()
-      });
-    }
+    activeAds.push({
+      id: doc.id,
+      advertiserName: data.advertiserName || 'Sponsor',
+      headline: data.title,
+      body: data.description,
+      imageUrl: data.creativeUrl,
+      destinationUrl: data.destinationUrl,
+      placement: data.placement
+    });
   });
 
-  console.log(`📧 Found ${subscribers.length} active newsletter subscribers`);
-  return subscribers;
+  ads = {
+    top: activeAds.find(a => a.placement === 'newsletter_top'),
+    inline: activeAds.filter(a => a.placement === 'newsletter_inline'),
+    footer: activeAds.find(a => a.placement === 'newsletter_footer')
+  };
+} catch (adError) {
+  console.warn('⚠️ Could not fetch ads for newsletter:', adError.message);
 }
 
-/**
- * Segment subscribers by interests
- * @param {Array} subscribers - All subscribers
- * @param {string[]} interests - Filter by these interests (optional)
- */
-function segmentSubscribers(subscribers, interests = null) {
-  if (!interests || interests.length === 0) {
-    return subscribers; // Return all if no interests specified
-  }
+const newsletterHTML = generateNewsletterHTML({
+  title,
+  currentDate,
+  articles,
+  ads,
+  type: newsletterType
+});
 
-  return subscribers.filter(sub => {
-    if (!sub.interests || sub.interests.length === 0) {
-      return false; // Skip if no interests set
-    }
-    return interests.some(interest => sub.interests.includes(interest));
+// Get subscribers
+const subscribers = await getNewsletterSubscribers();
+
+if (subscribers.length === 0) {
+  res.status(200).json({
+    success: true,
+    message: 'No subscribers found',
+    articlesCount: articles.length
   });
+  return;
 }
 
-/**
- * Cloud Function: Send newsletter to all subscribers
- * Trigger: HTTP POST with newsletter content
- */
-exports.sendNewsletter = async (req, res) => {
-  // CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+// Send newsletter
+const results = await sendNewsletterEmail({
+  subject: `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`,
+  html: newsletterHTML
+}, subscribers);
 
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
+const successful = results.filter(r => r.success).length;
+const failed = results.filter(r => !r.success).length;
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-    return;
-  }
-
-  try {
-    const { newsletter, interests } = req.body;
-
-    if (!newsletter || !newsletter.subject || !newsletter.html) {
-      res.status(400).json({ error: 'Missing required fields: newsletter.subject, newsletter.html' });
-      return;
-    }
-
-    // Get subscribers
-    const allSubscribers = await getNewsletterSubscribers();
-
-    if (allSubscribers.length === 0) {
-      res.status(200).json({
-        success: true,
-        message: 'No active subscribers found',
-        sent: 0
-      });
-      return;
-    }
-
-    // Segment subscribers if interests specified
-    const targetSubscribers = segmentSubscribers(allSubscribers, interests);
-
-    if (targetSubscribers.length === 0) {
-      res.status(200).json({
-        success: true,
-        message: 'No subscribers match the specified interests',
-        sent: 0
-      });
-      return;
-    }
-
-    console.log(`📧 Sending newsletter "${newsletter.subject}" to ${targetSubscribers.length} subscribers`);
-
-    // Send the newsletter
-    const results = await sendNewsletterEmail(newsletter, targetSubscribers);
-
-    // Calculate success stats
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r     // Log the newsletter send
-    const sentAt = admin.firestore.FieldValue.serverTimestamp();
-    const sendDoc = await db.collection('artifacts').doc(APP_ID).collection('analytics').doc('newsletters').collection('sends').add({
-      subject: newsletter.subject,
+// Log analytics
+try {
+  const sendId = `${newsletterType}_${Date.now()}`;
+  const sentAt = admin.firestore.FieldValue.serverTimestamp();
+  
+  await db.collection('artifacts')
+    .doc(APP_ID)
+    .collection('analytics')
+    .doc('newsletters')
+    .collection('sends')
+    .doc(sendId)
+    .set({
+      subject: title,
       sentAt,
-      totalSubscribers: allSubscribers.length,
-      targetedSubscribers: targetSubscribers.length,
+      totalSubscribers: subscribers.length,
+      targetedSubscribers: subscribers.length,
       successfulSends: successful,
       failedSends: failed,
-      interests: interests || null
+      newsletterType,
+      articlesCount: articles.length,
+      adIds: [
+        ...(ads.top ? [ads.top.id] : []),
+        ...(ads.inline ? ads.inline.map(a => a.id) : []),
+        ...(ads.footer ? [ads.footer.id] : [])
+      ]
     });
 
-    // Log Ad Impressions if ads were included in the HTML
-    if (newsletter.adIds && Array.isArray(newsletter.adIds)) {
-      const adImpressionsRef = db.collection('artifacts')
-        .doc(APP_ID)
-        .collection('analytics')
-        .doc('newsletterAdImpressions')
-        .collection('logs');
+  // Log Ad Impressions
+  const adImpressionsRef = db.collection('artifacts')
+    .doc(APP_ID)
+    .collection('analytics')
+    .doc('newsletterAdImpressions')
+    .collection('logs');
 
-      for (const adId of newsletter.adIds) {
-        await adImpressionsRef.add({
-          adId,
-          newsletterSendId: sendDoc.id,
-          sentAt,
-          impressionCount: successful
-        });
-      }
-    }tatus(200).json({
-      success: true,
-      message: `Newsletter sent successfully to ${successful} subscribers`,
-      stats: {
-        totalSubscribers: allSubscribers.length,
-        targetedSubscribers: targetSubscribers.length,
-        successfulSends: successful,
-        failedSends: failed
-      }
-    });
+  const impressionLogs = [];
+  if (ads.top) impressionLogs.push({ adId: ads.top.id, placement: 'top' });
+  if (ads.inline) ads.inline.forEach(a => impressionLogs.push({ adId: a.id, placement: 'inline' }));
+  if (ads.footer) impressionLogs.push({ adId: ads.footer.id, placement: 'footer' });
 
-  } catch (error) {
-    console.error('❌ Newsletter send error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
+  for (const log of impressionLogs) {
+    await adImpressionsRef.add({
+      ...log,
+      newsletterSendId: sendId,
+      sentAt,
+      impressionCount: successful // Each successful email is one impression
     });
   }
+} catch (logError) {
+  console.error('❌ Failed to log newsletter analytics:', logError);
+}
+
+res.status(200).json({
+  success: true,
+  message: `Scheduled ${newsletterType} newsletter sent to ${successful} subscribers`,
+  stats: {
+    articlesCount: articles.length,
+    subscribersCount: subscribers.length,
+    successfulSends: successful,
+    failedSends: failed
+  }
+});
+} catch (error) {
+console.error('❌ Scheduled newsletter error:', error);
+res.status(500).json({
+success: false,
+error: error.message
+});
+}
 };
-
 /**
- * Cloud Function: Manage newsletter subscriptions
- * Supports subscribe, unsubscribe, and update preferences
- */
-exports.manageSubscription = async (req, res) => {
-  // CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-    return;
-  }
-
-  try {
-    const { action, email, name, interests } = req.body;
-
-    if (!email || !action) {
-      res.status(400).json({ error: 'Missing required fields: email, action' });
-      return;
-    }
-
-    const subscriberRef = db.collection('artifacts')
-      .doc(APP_ID)
-      .collection('public')
-      .doc('data')
-      .collection('subscribers')
-      .doc(email.toLowerCase());
-
-    if (action === 'subscribe') {
-      await subscriberRef.set({
-        email: email.toLowerCase(),
-        name: name || null,
-        interests: interests || [],
-        status: 'active',
-        emailNewsletter: true,
-        subscribedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-
-      res.status(200).json({
-        success: true,
-        message: 'Successfully subscribed to newsletter',
-        subscriber: { email, name, interests }
-      });
-
-    } else if (action === 'unsubscribe') {
-      await subscriberRef.update({
-        status: 'inactive',
-        emailNewsletter: false,
-        unsubscribedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Successfully unsubscribed from newsletter'
-      });
-
-    } else if (action === 'update') {
-      await subscriberRef.update({
-        name: name || null,
-        interests: interests || [],
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Subscription preferences updated',
-        subscriber: { email, name, interests }
-      });
-
-    } else {
-      res.status(400).json({ error: 'Invalid action. Use: subscribe, unsubscribe, update' });
-    }
-
-  } catch (error) {
-    console.error('❌ Subscription management error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
-
-/**
- * Cloud Function: Scheduled newsletter sender
- * Automatically sends newsletters on schedule (can be triggered by Cloud Scheduler)
- */
-exports.sendScheduledNewsletter = async (req, res) => {
-  // CORS headers (for testing) - in production this might be called by Cloud Scheduler
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
-  try {
-    const { newsletterType = 'weekly' } = req.body || {};
-
-    // Get recent published opinions (last 7 days for weekly, 1 day for daily)
-    const cutoffDate = new Date();
-    if (newsletterType === 'weekly') {
-      cutoffDate.setDate(cutoffDate.getDate() - 7);
-    } else if (newsletterType === 'daily') {
-      cutoffDate.setDate(cutoffDate.getDate() - 1);
-    }
-
-    const opinionsRef = db.collection('artifacts')
-      .doc(APP_ID)
-      .collection('public')
-      .doc('data')
-      .collection('opinions');
-
-    const snapshot = await opinionsRef
-      .where('status', '==', 'published')
-      .where('publishedAt', '>=', cutoffDate)
-      .orderBy('publishedAt', 'desc')
-      .limit(15)
-      .get();
-
-    const articles = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      articles.push({
-        id: doc.id,
-        headline: data.headline,
-        subHeadline: data.subHeadline,
-        authorName: data.authorName,
-        slug: data.slug,
-        publishedAt: data.publishedAt?.toDate?.() || new Date(),
-        imageUrl: data.finalImageUrl || data.imageUrl
-      });
-    });
-
-    if (articles.length === 0) {
-      res.status(200).json({
-        success: true,
-        message: 'No new articles for newsletter period',
-        articlesCount: 0
-      });
-      return;
-    }
-
-    // Generate newsletter HTML
-    const title = `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`;
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-
-    // Fetch active newsletter ads
-    let ads = {};
-    try {
-      const adsRef = db.collection('artifacts')
-        .doc(APP_ID)
-        .collection('public')
-        .doc('data')
-        .collection('ads');
-      
-      const activeAdsSnapshot = await adsRef
-        .where('status', '==', 'active')
-        .where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
-        .get();
-
-      const activeAds = [];
-      activeAdsSnapshot.forEach(doc => {
-        const data = doc.data();
-        activeAds.push({
-          id: doc.id,
-          advertiserName: data.advertiserName || 'Sponsor',
-          headline: data.title,
-          body: data.description,
-          imageUrl: data.creativeUrl,
-          destinationUrl: data.destinationUrl,
-          placement: data.placement
-        });
-      });
-
-      ads = {
-        top: activeAds.find(a => a.placement === 'newsletter_top'),
-        inline: activeAds.filter(a => a.placement === 'newsletter_inline'),
-        footer: activeAds.find(a => a.placement === 'newsletter_footer')
-      };
-    } catch (adError) {
-      console.warn('⚠️ Could not fetch ads for newsletter:', adError.message);
-    }
-
-    const newsletterHTML = generateNewsletterHTML({
-      title,
-      currentDate,
-      articles,
-      ads,
-      type: newsletterType
-    });
-
-    // Get subscribers
-    const subscribers = await getNewsletterSubscribers();
-
-    if (subscribers.length === 0) {
-      res.status(200).json({
-        success: true,
-        message: 'No subscribers found',
-        articlesCount: articles.length
-      });
-      return;
-    }
-
-    // Send newsletter
-    const results = await sendNewsletterEmail({
-      subject: `Morning Pulse ${newsletterType === 'weekly' ? 'Weekly' : 'Daily'} Digest`,
-      html: newsletterHTML
-    }, subscribers);
-
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-
-    // Log analytics
-    try {
-      const sendId = `${newsletterType}_${Date.now()}`;
-      const sentAt = admin.firestore.FieldValue.serverTimestamp();
-      
-      await db.collection('artifacts')
-        .doc(APP_ID)
-        .collection('analytics')
-        .doc('newsletters')
-        .collection('sends')
-        .doc(sendId)
-        .set({
-          subject: title,
-          sentAt,
-          totalSubscribers: subscribers.length,
-          targetedSubscribers: subscribers.length,
-          successfulSends: successful,
-          failedSends: failed,
-          newsletterType,
-          articlesCount: articles.length,
-          adIds: [
-            ...(ads.top ? [ads.top.id] : []),
-            ...(ads.inline ? ads.inline.map(a => a.id) : []),
-            ...(ads.footer ? [ads.footer.id] : [])
-          ]
-        });
-
-      // Log Ad Impressions
-      const adImpressionsRef = db.collection('artifacts')
-        .doc(APP_ID)
-        .collection('analytics')
-        .doc('newsletterAdImpressions')
-        .collection('logs');
-
-      const impressionLogs = [];
-      if (ads.top) impressionLogs.push({ adId: ads.top.id, placement: 'top' });
-      if (ads.inline) ads.inline.forEach(a => impressionLogs.push({ adId: a.id, placement: 'inline' }));
-      if (ads.footer) impressionLogs.push({ adId: ads.footer.id, placement: 'footer' });
-
-      for (const log of impressionLogs) {
-        await adImpressionsRef.add({
-          ...log,
-          newsletterSendId: sendId,
-          sentAt,
-          impressionCount: successful // Each successful email is one impression
-        });
-      }
-    } catch (logError) {
-      console.error('❌ Failed to log newsletter analytics:', logError);
-    }
-
-    res.status(200).json({
-      success: true,
-      message: `Scheduled ${newsletterType} newsletter sent to ${successful} subscribers`,
-      stats: {
-        articlesCount: articles.length,
-        subscribersCount: emails.length,
-        successfulSends: successful,
-        failedSends: failed
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Scheduled newsletter error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
-
-
-
-/**
- * Part A: The Redirect Cloud Function (handleShortLink)
- * Handles requests from /s/** for social media unfurling and user redirection.
- */
+Part A: The Redirect Cloud Function (handleShortLink)
+Handles requests from /s/** for social media unfurling and user redirection.
+*/
 exports.handleShortLink = async (req, res) => {
-  // Extract the ID from the URL (e.g., /s/Abc123 -> Abc123)
-  const pathParts = req.path.split('/');
-  const shortId = pathParts[pathParts.length - 1];
+// Extract the ID from the URL (e.g., /s/Abc123 -> Abc123)
+const pathParts = req.path.split('/');
+const shortId = pathParts[pathParts.length - 1];
 
-  if (!shortId) {
-    return res.status(404).send('Short link ID missing');
-  }
+if (!shortId) {
+return res.status(404).send('Short link ID missing');
+}
+try {
+if (!db) {
+console.error('❌ Firestore not initialized in handleShortLink');
+return res.status(500).send('Internal Server Error');
+}
+// 2. Lookup the originalUrl and metadata from Firestore
+const shortLinkDoc = await db.collection('short_links').doc(shortId).get();
 
-  try {
-    if (!db) {
-      console.error('❌ Firestore not initialized in handleShortLink');
-      return res.status(500).send('Internal Server Error');
-    }
+if (!shortLinkDoc.exists) {
+  console.warn(`⚠️ Short link not found: ${shortId}`);
+  return res.status(404).send('Short link not found');
+}
 
-    // 2. Lookup the originalUrl and metadata from Firestore
-    const shortLinkDoc = await db.collection('short_links').doc(shortId).get();
+const data = shortLinkDoc.data();
+const { originalUrl, title, summary, coverImage } = data;
 
-    if (!shortLinkDoc.exists) {
-      console.warn(`⚠️ Short link not found: ${shortId}`);
-      return res.status(404).send('Short link not found');
-    }
+// Increment click count asynchronously
+db.collection('short_links').doc(shortId).update({
+  clicks: admin.firestore.FieldValue.increment(1)
+}).catch(err => console.error('Error incrementing clicks:', err));
 
-    const data = shortLinkDoc.data();
-    const { originalUrl, title, summary, coverImage } = data;
+// 3. Unfurling Logic: Detect Social Media Bots
+const userAgent = req.headers['user-agent'] || '';
+const isBot = /Twitterbot|facebookexternalhit|WhatsApp|TelegramBot|Slackbot|LinkedInBot|Embedly/i.test(userAgent);
 
-    // Increment click count asynchronously
-    db.collection('short_links').doc(shortId).update({
-      clicks: admin.firestore.FieldValue.increment(1)
-    }).catch(err => console.error('Error incrementing clicks:', err));
-
-    // 3. Unfurling Logic: Detect Social Media Bots
-    const userAgent = req.headers['user-agent'] || '';
-    const isBot = /Twitterbot|facebookexternalhit|WhatsApp|TelegramBot|Slackbot|LinkedInBot|Embedly/i.test(userAgent);
-
-    if (isBot) {
-      console.log(`🤖 Bot detected: ${userAgent}. Serving metadata for ${shortId}`);
-      // Return static HTML with Open Graph tags
-      const html = `
+if (isBot) {
+  console.log(`🤖 Bot detected: ${userAgent}. Serving metadata for ${shortId}`);
+  // Return static HTML with Open Graph tags
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1358,20 +1335,19 @@ exports.handleShortLink = async (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <meta name="description" content="${summary}">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="${originalUrl}">
-    <meta property="og:title" content="${title}">
-    <meta property="og:description" content="${summary}">
-    <meta property="og:image" content="${coverImage}">
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="${originalUrl}">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${summary}">
+<meta property="og:image" content="${coverImage}">
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="${originalUrl}">
-    <meta property="twitter:title" content="${title}">
-    <meta property="twitter:description" content="${summary}">
-    <meta property="twitter:image" content="${coverImage}">
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="${originalUrl}">
+<meta property="twitter:title" content="${title}">
+<meta property="twitter:description" content="${summary}">
+<meta property="twitter:image" content="${coverImage}">
 </head>
 <body>
     <p>Redirecting to <a href="${originalUrl}">${title}</a>...</p>
@@ -1381,13 +1357,11 @@ exports.handleShortLink = async (req, res) => {
       res.set('Content-Type', 'text/html');
       return res.status(200).send(html);
     }
-
-    // 4. User Logic: Redirect human users
-    console.log(`👤 Human user detected. Redirecting ${shortId} to ${originalUrl}`);
-    return res.redirect(301, originalUrl);
-
-  } catch (error) {
-    console.error('❌ Error in handleShortLink:', error);
-    return res.status(500).send('Internal Server Error');
-  }
+// 4. User Logic: Redirect human users
+console.log(`👤 Human user detected. Redirecting ${shortId} to ${originalUrl}`);
+return res.redirect(301, originalUrl);
+} catch (error) {
+console.error('❌ Error in handleShortLink:', error);
+return res.status(500).send('Internal Server Error');
+}
 };
