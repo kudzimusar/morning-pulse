@@ -1097,13 +1097,125 @@ exports.manageSubscription = async (req, res) => {
 };
 
 /**
+ * Generate newsletter HTML from articles
+ */
+function generateNewsletterHTML({ title, currentDate, articles, ads, type }) {
+  const baseUrl = 'https://kudzimusar.github.io/morning-pulse/';
+  
+  const articleHTML = articles.map((article, index) => {
+    const url = `${baseUrl}#opinion/${article.slug || article.id}`;
+    const pubDate = article.publishedAt.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+
+    return `
+      <tr>
+        <td style="padding: 20px 0; border-bottom: 1px solid #e5e5e5;">
+          ${article.imageUrl ? `
+            <a href="${url}" style="display: block; margin-bottom: 16px;">
+              <img src="${article.imageUrl}" alt="${article.headline}" style="width: 100%; max-width: 600px; height: auto; border-radius: 8px;" />
+            </a>
+          ` : ''}
+
+          <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; line-height: 1.3;">
+            <a href="${url}" style="color: #000; text-decoration: none;">${article.headline}</a>
+          </h2>
+
+          <p style="margin: 0 0 12px 0; font-size: 16px; color: #666; font-style: italic;">
+            ${article.subHeadline}
+          </p>
+
+          <div style="margin-bottom: 12px;">
+            <span style="font-size: 12px; color: #999;">
+              By <strong style="color: #666;">${article.authorName}</strong> • ${pubDate}
+            </span>
+          </div>
+
+          <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 600;">
+            Read Full Article →
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Georgia, serif; background-color: #f9fafb;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 30px; background-color: #000; text-align: center;">
+              <h1 style="margin: 0; color: #fff; font-size: 32px; font-weight: 900; letter-spacing: 0.05em;">
+                MORNING PULSE
+              </h1>
+              <p style="margin: 12px 0 0 0; color: #fff; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;">
+                ${title}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Date -->
+          <tr>
+            <td style="padding: 20px 30px; background-color: #f9fafb; border-bottom: 2px solid #000;">
+              <p style="margin: 0; font-size: 14px; color: #666; text-align: center;">
+                ${currentDate}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Articles -->
+          <tr>
+            <td style="padding: 0 30px;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                ${articleHTML}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 12px 0; font-size: 12px; color: #999;">
+                You're receiving this because you subscribed to Morning Pulse newsletters.
+              </p>
+              <p style="margin: 0; font-size: 12px;">
+                <a href="https://kudzimusar.github.io/morning-pulse/?action=manage" style="color: #000; text-decoration: underline;">Manage Subscription</a>
+                •
+                <a href="https://kudzimusar.github.io/morning-pulse/?action=unsubscribe" style="color: #000; text-decoration: underline;">Unsubscribe</a>
+                •
+                <a href="https://kudzimusar.github.io/morning-pulse/privacy-policy" style="color: #000; text-decoration: underline;">Privacy Policy</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
+/**
  * Cloud Function: Scheduled newsletter sender
  * Automatically sends newsletters on schedule (can be triggered by Cloud Scheduler)
  */
 exports.sendScheduledNewsletter = async (req, res) => {
-  if (applyCors(req, res, 'POST, OPTIONS')) return;
-
-  try {
+  corsHandler(req, res, async () => {
+    try {
     const { newsletterType = 'weekly' } = req.body || {};
 
     // Get recent published opinions (last 7 days for weekly, 1 day for daily)
@@ -1281,19 +1393,20 @@ exports.sendScheduledNewsletter = async (req, res) => {
       message: `Scheduled ${newsletterType} newsletter sent to ${successful} subscribers`,
       stats: {
         articlesCount: articles.length,
-        subscribersCount: emails.length,
+        subscribersCount: subscribers.length,
         successfulSends: successful,
         failedSends: failed
       }
     });
 
-  } catch (error) {
-    console.error('❌ Scheduled newsletter error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    } catch (error) {
+      console.error('❌ Scheduled newsletter error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
 };
 
 
