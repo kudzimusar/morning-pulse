@@ -22,9 +22,6 @@ const getDb = (): Firestore => {
 
 /**
  * Subscribe a new user to the newsletter
- * @param email - User email
- * @param name - User name (optional)
- * @param interests - User interests (optional)
  */
 export const subscribeToNewsletter = async (
   email: string,
@@ -32,12 +29,9 @@ export const subscribeToNewsletter = async (
   interests?: string[]
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    // We use the manageSubscription cloud function for consistency
     const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'subscribe',
         email,
@@ -61,7 +55,6 @@ export const subscribeToNewsletter = async (
 
 /**
  * Get all active subscribers
- * Note: In production, this would be a protected admin-only call
  */
 export const getActiveSubscribers = async (): Promise<any[]> => {
   const db = getDb();
@@ -79,9 +72,7 @@ export const getActiveSubscribers = async (): Promise<any[]> => {
 };
 
 /**
- * Generate newsletter HTML from articles
- * @param articles - List of articles to include
- * @param type - 'daily' or 'weekly'
+ * Download newsletter HTML as file
  */
 export function downloadNewsletter(html: string, filename = 'newsletter.html') {
   const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
@@ -95,6 +86,24 @@ export function downloadNewsletter(html: string, filename = 'newsletter.html') {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * ✅ NEW: Preview newsletter in new browser tab (for Admin UI)
+ * This is what your UI expects and what Rollup is failing on.
+ */
+export function previewNewsletter(html: string) {
+  const previewWindow = window.open('', '_blank');
+  if (!previewWindow) {
+    throw new Error('Popup blocked. Please allow popups for preview.');
+  }
+
+  previewWindow.document.open();
+  previewWindow.document.write(html);
+  previewWindow.document.close();
+}
+
+/**
+ * Generate newsletter HTML from articles
+ */
 export const generateNewsletter = async (
   articles: any[],
   type: 'daily' | 'weekly' = 'weekly'
@@ -143,18 +152,18 @@ export const generateNewsletter = async (
     console.warn('Could not fetch ads for newsletter:', adError);
   }
 
-  // Map to shared interface
   const newsletterArticles: NewsletterArticle[] = articles.map(article => ({
     id: article.id,
     headline: article.headline,
     subHeadline: article.subHeadline,
     authorName: article.authorName,
     slug: article.slug,
-    publishedAt: article.publishedAt instanceof Date ? article.publishedAt : (article.publishedAt?.toDate?.() || new Date()),
+    publishedAt: article.publishedAt instanceof Date 
+      ? article.publishedAt 
+      : (article.publishedAt?.toDate?.() || new Date()),
     imageUrl: article.finalImageUrl || article.imageUrl
   }));
 
-  // Use the centralized template generator
   return sharedGenerateNewsletterHTML({
     title,
     currentDate,
@@ -165,10 +174,7 @@ export const generateNewsletter = async (
 };
 
 /**
- * Send newsletter to subscribers
- * @param subject - Email subject
- * @param html - Email HTML content
- * @param interests - Optional interest filtering
+ * Send newsletter immediately
  */
 export const sendNewsletter = async (
   subject: string,
@@ -178,14 +184,9 @@ export const sendNewsletter = async (
   try {
     const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendNewsletter', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        newsletter: {
-          subject,
-          html
-        },
+        newsletter: { subject, html },
         interests
       })
     });
@@ -204,8 +205,7 @@ export const sendNewsletter = async (
 };
 
 /**
- * NEW: Unsubscribe from newsletter
- * @param email - Subscriber email
+ * Unsubscribe
  */
 export const unsubscribeFromNewsletter = async (
   email: string
@@ -213,9 +213,7 @@ export const unsubscribeFromNewsletter = async (
   try {
     const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'unsubscribe',
         email
@@ -236,10 +234,7 @@ export const unsubscribeFromNewsletter = async (
 };
 
 /**
- * NEW: Update newsletter subscription preferences
- * @param email - Subscriber email
- * @param name - Updated name
- * @param interests - Updated interests array
+ * Update preferences
  */
 export const updateNewsletterPreferences = async (
   email: string,
@@ -249,9 +244,7 @@ export const updateNewsletterPreferences = async (
   try {
     const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'update',
         email,
@@ -274,8 +267,7 @@ export const updateNewsletterPreferences = async (
 };
 
 /**
- * NEW: Send scheduled newsletter (daily/weekly)
- * @param newsletterType - 'daily' or 'weekly'
+ * Send scheduled newsletter
  */
 export const sendScheduledNewsletter = async (
   newsletterType: 'daily' | 'weekly' = 'weekly'
@@ -283,12 +275,8 @@ export const sendScheduledNewsletter = async (
   try {
     const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendScheduledNewsletter', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        newsletterType
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newsletterType })
     });
 
     const result = await response.json();
