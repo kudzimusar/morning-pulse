@@ -723,15 +723,7 @@ try {
  * Backend has admin access, so it can list the collection
  */
 exports.getOpinions = async (req, res) => {
-  // CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
+  if (applyCors(req, res, 'GET, OPTIONS')) return;
 
   if (req.method !== 'GET') {
     res.status(405).send('Method Not Allowed');
@@ -925,8 +917,6 @@ exports.sendNewsletter = async (req, res) => {
   if (applyCors(req, res, 'POST, OPTIONS')) return;
 
   if (req.method !== 'POST') {
-
-  if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
     return;
   }
@@ -1026,8 +1016,6 @@ exports.manageSubscription = async (req, res) => {
   if (applyCors(req, res, 'POST, OPTIONS')) return;
 
   if (req.method !== 'POST') {
-
-  if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
     return;
   }
@@ -1108,8 +1096,6 @@ exports.manageSubscription = async (req, res) => {
  */
 exports.sendScheduledNewsletter = async (req, res) => {
   if (applyCors(req, res, 'POST, OPTIONS')) return;
-
-  try {
 
   try {
     const { newsletterType = 'weekly' } = req.body || {};
