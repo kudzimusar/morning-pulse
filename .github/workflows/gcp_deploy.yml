@@ -125,6 +125,41 @@ jobs:
             FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
             APP_ID=morning-pulse-app
 
+      # Deploy Newsletter Functions
+      - name: Deploy Send Newsletter Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-send-newsletter
+        with:
+          name: sendNewsletter
+          runtime: nodejs20
+          entry_point: sendNewsletter
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 512
+          timeout: 540s
+          env_vars: |
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            NEWSLETTER_FROM_EMAIL=${{ secrets.NEWSLETTER_FROM_EMAIL }}
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            APP_ID=morning-pulse-app
+
+      - name: Deploy Manage Subscription Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-manage-subscription
+        with:
+          name: manageSubscription
+          runtime: nodejs20
+          entry_point: manageSubscription
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 256
+          timeout: 540s
+          env_vars: |
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            APP_ID=morning-pulse-app
+
       # Set up Cloud Scheduler for news aggregator
       - name: Setup Cloud Scheduler
         if: success() && steps.deploy-news.outputs.url != ''
@@ -173,4 +208,8 @@ jobs:
           if [ -n "${{ steps.deploy-news.outputs.url }}" ]; then
             echo "✅ Cloud Scheduler configured for daily news aggregation"
           fi
+          echo ""
+          echo "✅ Newsletter Functions Deployed:"
+          echo "sendNewsletter URL: ${{ steps.deploy-send-newsletter.outputs.url }}"
+          echo "manageSubscription URL: ${{ steps.deploy-manage-subscription.outputs.url }}"
           echo "=========================================================================="
