@@ -144,7 +144,8 @@ export function generateNewsletterHTML(payload: NewsletterPayload): string {
               <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700;">MORNING PULSE</p>
               <p style="margin: 0 0 20px 0; font-size: 12px; color: #666666; line-height: 1.6;">
                 The daily briefing for the global professional.<br>
-                123 Business District, Harare, Zimbabwe
+                123 Business District, Harare, Zimbabwe<br>
+                Email: news@morningpulse.net
               </p>
               <p style="margin: 0 0 20px 0; font-size: 12px; color: #666666;">
                 You are receiving this because you subscribed at <a href="${baseUrl}" style="color: #000000; text-decoration: underline;">morningpulse.net</a>
@@ -152,11 +153,11 @@ export function generateNewsletterHTML(payload: NewsletterPayload): string {
               <table role="presentation" style="margin: 0 auto;">
                 <tr>
                   <td style="font-size: 12px; color: #666666;">
-                    <a href="${baseUrl}#subscribe" style="color: #000000; text-decoration: underline;">Manage Preferences</a>
+                    <a href="${baseUrl}?action=manage" style="color: #000000; text-decoration: underline;">Manage Preferences</a>
                     <span style="padding: 0 10px;">&bull;</span>
-                    <a href="${baseUrl}#unsubscribe" style="color: #000000; text-decoration: underline;">Unsubscribe</a>
+                    <a href="${baseUrl}?action=unsubscribe" style="color: #000000; text-decoration: underline;">Unsubscribe</a>
                     <span style="padding: 0 10px;">&bull;</span>
-                    <a href="${baseUrl}#privacy" style="color: #000000; text-decoration: underline;">Privacy Policy</a>
+                    <a href="${baseUrl}privacy-policy" style="color: #000000; text-decoration: underline;">Privacy Policy</a>
                   </td>
                 </tr>
               </table>

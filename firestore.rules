@@ -196,6 +196,30 @@ service cloud.firestore {
     }
     
     // ===========================================
+    // NEWSLETTER SUBSCRIBERS
+    // ===========================================
+    match /artifacts/{appId}/public/data/subscribers/{subscriberId} {
+      // Public can read (needed for unsubscribe pages)
+      // Anyone can create (subscribe)
+      // Anyone can update (unsubscribe, update preferences)
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+    
+    // ===========================================
+    // ANALYTICS COLLECTION
+    // ===========================================
+    // Analytics are written by Cloud Functions (admin SDK)
+    // Only admins can read analytics
+    match /artifacts/{appId}/analytics/{document=**} {
+      allow read: if isAdmin();
+      // Cloud Functions use admin SDK, so client writes are blocked
+      allow write: if false;
+    }
+    
+    // ===========================================
     // DEFAULT DENY
     // ===========================================
     match /{document=**} {

@@ -812,7 +812,8 @@ async function sendBrevoEmail({ toEmail, toName, subject, html }) {
       subject,
       htmlContent: html,
       headers: {
-        'List-Unsubscribe': '<https://morningpulse.net/unsubscribe>'
+        'List-Unsubscribe': '<https://kudzimusar.github.io/morning-pulse/?action=unsubscribe>, <mailto:news@morningpulse.net?subject=Unsubscribe>',
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
       }
     }, {
       headers: {
