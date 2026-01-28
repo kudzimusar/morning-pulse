@@ -52,7 +52,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
           setLoading(false);
         },
         (err) => {
-          console.error('Error subscribing to ads:', err);
+          // console.error('Error subscribing to ads:', err);
           setLoading(false);
         }
       );
@@ -72,7 +72,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
       setPendingAdvertisers(pending || []);
       setApprovedAdvertisers(approved || []);
     } catch (error: any) {
-      console.error('Error loading advertisers:', error);
+      // console.error('Error loading advertisers:', error);
     } finally {
       setLoading(false);
     }
@@ -156,7 +156,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
             });
             alert('Ad approved and invoice generated successfully!');
           } catch (invoiceError: any) {
-            console.error('Invoice generation failed:', invoiceError);
+            // console.error('Invoice generation failed:', invoiceError);
             alert(`Ad approved, but invoice generation failed: ${invoiceError.message}`);
           }
         } else {
@@ -331,20 +331,22 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
             Billing
           </button>
         </div>
+      </div>
 
-        {/* Advertiser Sub-tabs */}
-        {activeTab === 'advertisers' && (
-          <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e5e7eb' }}>
+      {/* Advertisers Content */}
+      {activeTab === 'advertisers' && (
+        <div>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
             <button
               onClick={() => setAdvertiserSubTab('pending')}
               style={{
-                padding: '12px 24px',
-                border: 'none',
-                backgroundColor: 'transparent',
-                borderBottom: advertiserSubTab === 'pending' ? '2px solid #000' : '2px solid transparent',
-                cursor: 'pointer',
+                padding: '6px 12px',
+                backgroundColor: advertiserSubTab === 'pending' ? '#f3f4f6' : 'transparent',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
                 fontWeight: advertiserSubTab === 'pending' ? '600' : '400',
-                color: advertiserSubTab === 'pending' ? '#000' : '#6b7280'
+                cursor: 'pointer'
               }}
             >
               Pending Approval ({pendingAdvertisers.length})
@@ -352,214 +354,213 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
             <button
               onClick={() => setAdvertiserSubTab('approved')}
               style={{
-                padding: '12px 24px',
-                border: 'none',
-                backgroundColor: 'transparent',
-                borderBottom: advertiserSubTab === 'approved' ? '2px solid #000' : '2px solid transparent',
-                cursor: 'pointer',
+                padding: '6px 12px',
+                backgroundColor: advertiserSubTab === 'approved' ? '#f3f4f6' : 'transparent',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
                 fontWeight: advertiserSubTab === 'approved' ? '600' : '400',
-                color: advertiserSubTab === 'approved' ? '#000' : '#6b7280'
+                cursor: 'pointer'
               }}
             >
               Approved ({approvedAdvertisers.length})
             </button>
           </div>
-        )}
-      </div>
 
-      {/* Advertisers Content */}
-      {activeTab === 'advertisers' && advertiserSubTab === 'pending' && (
-        <div>
-          {(!pendingAdvertisers || pendingAdvertisers.length === 0) ? (
-            <div style={{
-              padding: '48px',
-              textAlign: 'center',
-              backgroundColor: '#f9fafb',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <p style={{ color: '#6b7280', margin: 0 }}>No pending advertiser applications.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {pendingAdvertisers.map((advertiser) => (
-                <div
-                  key={advertiser.uid}
-                  style={{
-                    padding: '20px',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: '0 0 8px 0', fontSize: '1.125rem' }}>{advertiser.companyName}</h3>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
-                        {advertiser.contactEmail} | {advertiser.contactPhone}
-                      </div>
-                      {advertiser.website && (
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
-                          <a href={advertiser.website} target="_blank" rel="noopener noreferrer" style={{ color: '#000' }}>
-                            {advertiser.website}
-                          </a>
+          {advertiserSubTab === 'pending' && (
+            <div>
+              {(!pendingAdvertisers || pendingAdvertisers.length === 0) ? (
+                <div style={{
+                  padding: '48px',
+                  textAlign: 'center',
+                  backgroundColor: '#f9fafb',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <p style={{ color: '#6b7280', margin: 0 }}>No pending advertiser registrations.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {pendingAdvertisers.map((advertiser) => (
+                    <div
+                      key={advertiser.uid}
+                      style={{
+                        padding: '20px',
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ margin: '0 0 8px 0', fontSize: '1.125rem' }}>{advertiser.companyName}</h3>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
+                            {advertiser.contactEmail} | {advertiser.contactPhone}
+                          </div>
+                          {advertiser.website && (
+                            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
+                              <a href={advertiser.website} target="_blank" rel="noopener noreferrer" style={{ color: '#000' }}>
+                                {advertiser.website}
+                              </a>
+                            </div>
+                          )}
+                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
+                            Applied: {advertiser.createdAt?.toLocaleDateString()}
+                          </div>
                         </div>
-                      )}
-                      <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
-                        Applied: {advertiser.createdAt?.toLocaleDateString()}
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '16px' }}>
-                      <button
-                        onClick={() => handleApproveAdvertiser(advertiser.uid)}
-                        style={{
-                          padding: '8px 16px',
-                          backgroundColor: '#16a34a',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        Approve
-                      </button>
-                      
-                      {!showRejectForm[advertiser.uid] ? (
-                        <button
-                          onClick={() => setShowRejectForm({ ...showRejectForm, [advertiser.uid]: true })}
-                          style={{
-                            padding: '8px 16px',
-                            backgroundColor: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          Reject
-                        </button>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
-                          <textarea
-                            value={rejectReason[advertiser.uid] || ''}
-                            onChange={(e) => setRejectReason({ ...rejectReason, [advertiser.uid]: e.target.value })}
-                            placeholder="Reason for rejection..."
-                            rows={3}
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '16px' }}>
+                          <button
+                            onClick={() => handleApproveAdvertiser(advertiser.uid)}
                             style={{
-                              padding: '8px',
-                              border: '1px solid #d1d5db',
+                              padding: '8px 16px',
+                              backgroundColor: '#16a34a',
+                              color: 'white',
+                              border: 'none',
                               borderRadius: '6px',
+                              cursor: 'pointer',
                               fontSize: '0.875rem',
-                              resize: 'vertical',
-                              fontFamily: 'inherit'
+                              fontWeight: '500',
+                              whiteSpace: 'nowrap'
                             }}
-                          />
-                          <div style={{ display: 'flex', gap: '8px' }}>
+                          >
+                            Approve
+                          </button>
+                          
+                          {!showRejectForm[advertiser.uid] ? (
                             <button
-                              onClick={() => handleRejectAdvertiser(advertiser.uid)}
+                              onClick={() => setShowRejectForm({ ...showRejectForm, [advertiser.uid]: true })}
                               style={{
-                                flex: 1,
-                                padding: '6px 12px',
+                                padding: '8px 16px',
                                 backgroundColor: '#ef4444',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '6px',
                                 cursor: 'pointer',
-                                fontSize: '0.75rem'
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                whiteSpace: 'nowrap'
                               }}
                             >
-                              Confirm Reject
+                              Reject
                             </button>
-                            <button
-                              onClick={() => {
-                                setShowRejectForm({ ...showRejectForm, [advertiser.uid]: false });
-                                setRejectReason({ ...rejectReason, [advertiser.uid]: '' });
-                              }}
-                              style={{
-                                flex: 1,
-                                padding: '6px 12px',
-                                backgroundColor: '#6b7280',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '0.75rem'
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
+                              <textarea
+                                value={rejectReason[advertiser.uid] || ''}
+                                onChange={(e) => setRejectReason({ ...rejectReason, [advertiser.uid]: e.target.value })}
+                                placeholder="Reason for rejection..."
+                                rows={3}
+                                style={{
+                                  padding: '8px',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '6px',
+                                  fontSize: '0.875rem',
+                                  resize: 'vertical',
+                                  fontFamily: 'inherit'
+                                }}
+                              />
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                  onClick={() => handleRejectAdvertiser(advertiser.uid)}
+                                  style={{
+                                    flex: 1,
+                                    padding: '6px 12px',
+                                    backgroundColor: '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.75rem'
+                                  }}
+                                >
+                                  Confirm Reject
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowRejectForm({ ...showRejectForm, [advertiser.uid]: false });
+                                    setRejectReason({ ...rejectReason, [advertiser.uid]: '' });
+                                  }}
+                                  style={{
+                                    flex: 1,
+                                    padding: '6px 12px',
+                                    backgroundColor: '#6b7280',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.75rem'
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {activeTab === 'advertisers' && advertiserSubTab === 'approved' && (
-        <div>
-          {(!approvedAdvertisers || approvedAdvertisers.length === 0) ? (
-            <div style={{
-              padding: '48px',
-              textAlign: 'center',
-              backgroundColor: '#f9fafb',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <p style={{ color: '#6b7280', margin: 0 }}>No approved advertisers yet.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {approvedAdvertisers.map((advertiser) => (
-                <div
-                  key={advertiser.uid}
-                  style={{
-                    padding: '20px',
-                    backgroundColor: 'white',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: '0 0 8px 0', fontSize: '1.125rem' }}>{advertiser.companyName}</h3>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
-                        {advertiser.contactEmail} | {advertiser.contactPhone}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
-                        Approved: {advertiser.approvedAt?.toLocaleDateString() || 'N/A'}
-                      </div>
-                    </div>
-                    <div>
-                      <span
-                        style={{
-                          padding: '4px 12px',
-                          borderRadius: '12px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          backgroundColor: '#d1fae5',
-                          color: '#065f46'
-                        }}
-                      >
-                        Approved
-                      </span>
-                    </div>
-                  </div>
+          {advertiserSubTab === 'approved' && (
+            <div>
+              {(!approvedAdvertisers || approvedAdvertisers.length === 0) ? (
+                <div style={{
+                  padding: '48px',
+                  textAlign: 'center',
+                  backgroundColor: '#f9fafb',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <p style={{ color: '#6b7280', margin: 0 }}>No approved advertisers yet.</p>
                 </div>
-              ))}
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {approvedAdvertisers.map((advertiser) => (
+                    <div
+                      key={advertiser.uid}
+                      style={{
+                        padding: '20px',
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ margin: '0 0 8px 0', fontSize: '1.125rem' }}>{advertiser.companyName}</h3>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
+                            {advertiser.contactEmail} | {advertiser.contactPhone}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
+                            Approved: {advertiser.approvedAt?.toLocaleDateString() || 'N/A'}
+                          </div>
+                        </div>
+                        <div>
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '500',
+                              backgroundColor: '#d1fae5',
+                              color: '#065f46'
+                            }}
+                          >
+                            Approved
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -568,10 +569,10 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
       {/* Creatives Content */}
       {activeTab === 'creatives' && (
         <div>
-          <div style={{ marginBottom: '16px' }}>
-            <h3 style={{ marginBottom: '12px' }}>Pending Ads ({pendingAds.length})</h3>
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ marginBottom: '16px', fontSize: '1.125rem', fontWeight: '600' }}>Pending Approval ({pendingAds.length})</h3>
             {(!pendingAds || pendingAds.length === 0) ? (
-              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No pending ads.</p>
+              <p style={{ color: '#6b7280', fontSize: '0.875rem', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>No pending ads.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                 {pendingAds.map((ad) => (
@@ -581,41 +582,46 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                       padding: '16px',
                       backgroundColor: 'white',
                       borderRadius: '6px',
-                      border: '1px solid #e5e7eb'
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: '0 0 8px 0' }}>{ad.title}</h4>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>{ad.title}</h4>
                         <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px' }}>
-                          Placement: {ad.placement} | {ad.startDate?.toLocaleDateString()} - {ad.endDate?.toLocaleDateString()}
+                          Placement: <span style={{ color: '#374151', fontWeight: '500' }}>{ad.placement}</span> | Schedule: <span style={{ color: '#374151', fontWeight: '500' }}>{ad.startDate?.toLocaleDateString()} - {ad.endDate?.toLocaleDateString()}</span>
                         </div>
                         {ad.creativeUrl && (
-                          <img 
-                            src={ad.creativeUrl} 
-                            alt={ad.title}
-                            style={{
-                              maxWidth: '200px',
-                              maxHeight: '100px',
-                              objectFit: 'contain',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '4px',
-                              marginTop: '8px'
-                            }}
-                          />
+                          <div style={{ marginTop: '12px' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>Creative Preview:</div>
+                            <img 
+                              src={ad.creativeUrl} 
+                              alt={ad.title}
+                              style={{
+                                maxWidth: '300px',
+                                maxHeight: '150px',
+                                objectFit: 'contain',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '4px',
+                                backgroundColor: '#f9fafb'
+                              }}
+                            />
+                          </div>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
                         <button
                           onClick={() => handleApproveAd(ad.id)}
                           style={{
-                            padding: '6px 12px',
+                            padding: '8px 16px',
                             backgroundColor: '#16a34a',
                             color: 'white',
                             border: 'none',
                             borderRadius: '6px',
                             cursor: 'pointer',
-                            fontSize: '0.75rem'
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
                           }}
                         >
                           Approve
@@ -623,13 +629,14 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                         <button
                           onClick={() => handleRejectAd(ad.id)}
                           style={{
-                            padding: '6px 12px',
+                            padding: '8px 16px',
                             backgroundColor: '#ef4444',
                             color: 'white',
                             border: 'none',
                             borderRadius: '6px',
                             cursor: 'pointer',
-                            fontSize: '0.75rem'
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
                           }}
                         >
                           Reject
@@ -643,48 +650,90 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
           </div>
 
           <div>
-            <h3 style={{ marginBottom: '12px' }}>Active Ads ({activeAds.length})</h3>
+            <h3 style={{ marginBottom: '16px', fontSize: '1.125rem', fontWeight: '600' }}>Active Inventory & Performance ({activeAds.length})</h3>
             {(!activeAds || activeAds.length === 0) ? (
-              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No active ads.</p>
+              <p style={{ color: '#6b7280', fontSize: '0.875rem', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>No active ads in inventory.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {activeAds.map((ad) => (
-                  <div
-                    key={ad.id}
-                    style={{
-                      padding: '16px',
-                      backgroundColor: 'white',
-                      borderRadius: '6px',
-                      border: '1px solid #e5e7eb'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: '0 0 8px 0' }}>{ad.title}</h4>
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                          Placement: {ad.placement} | Views: {ad.views} | Clicks: {ad.clicks} | 
-                          {ad.endDate?.toLocaleDateString()}
-                        </div>
-                      </div>
-                      {ad.status === 'approved' && (
-                        <button
-                          onClick={() => handleActivateAd(ad.id)}
-                          style={{
-                            padding: '6px 12px',
-                            backgroundColor: '#000',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '0.75rem'
-                          }}
-                        >
-                          Activate
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div style={{ 
+                backgroundColor: 'white', 
+                borderRadius: '8px', 
+                border: '1px solid #e5e7eb',
+                overflow: 'hidden',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Ad Creative</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Placement</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Views</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Clicks</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>CTR</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Revenue</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeAds.map((ad) => {
+                      const ctr = ad.views > 0 ? (ad.clicks / ad.views) * 100 : 0;
+                      const revenue = ad.clicks * 0.50; // Mock rate of $0.50 per click
+                      return (
+                        <tr key={ad.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '12px 16px' }}>
+                            <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#111827' }}>{ad.title}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>ID: {ad.id.substring(0, 8)}</div>
+                          </td>
+                          <td style={{ padding: '12px 16px', fontSize: '0.875rem', color: '#374151' }}>
+                            {ad.placement}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.875rem', color: '#374151' }}>
+                            {ad.views.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.875rem', color: '#374151' }}>
+                            {ad.clicks.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.875rem', fontWeight: '600', color: '#f59e0b' }}>
+                            {ctr.toFixed(2)}%
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.875rem', fontWeight: '600', color: '#16a34a' }}>
+                            ${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            {ad.status === 'approved' ? (
+                              <button
+                                onClick={() => handleActivateAd(ad.id)}
+                                style={{
+                                  padding: '4px 12px',
+                                  backgroundColor: '#000',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600'
+                                }}
+                              >
+                                Activate
+                              </button>
+                            ) : (
+                              <span style={{ 
+                                padding: '4px 10px', 
+                                backgroundColor: '#d1fae5', 
+                                color: '#065f46', 
+                                borderRadius: '12px', 
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                textTransform: 'uppercase'
+                              }}>
+                                {ad.status}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
