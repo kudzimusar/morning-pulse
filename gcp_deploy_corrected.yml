@@ -1,0 +1,236 @@
+name: Deploy WhatsApp Bot to Google Cloud Functions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger
+
+# Define necessary permissions for the workflow to interact with OIDC and GCP
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }} # Your Google Cloud Project ID
+  FUNCTION_NAME: webhook
+  REGION: us-central1
+  ENTRY_POINT: webhook
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Install dependencies in functions directory
+      - name: Install Function Dependencies
+        run: |
+          cd functions
+          npm install
+
+      # Authenticate to Google Cloud using the Service Account Key
+      - name: Authenticate Google Cloud with Service Account Key
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      # Setup gcloud SDK
+      - name: Setup gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      # Enable required APIs
+      - name: Enable Cloud Functions API
+        run: |
+          gcloud services enable cloudfunctions.googleapis.com --project=${{ env.PROJECT_ID }}
+          gcloud services enable cloudbuild.googleapis.com --project=${{ env.PROJECT_ID }}
+          gcloud services enable artifactregistry.googleapis.com --project=${{ env.PROJECT_ID }}
+
+      # Wait for any in-progress deployments to complete
+      - name: Wait for previous deployment to complete
+        run: |
+          echo "Checking for in-progress deployments..."
+          max_wait=300  # 5 minutes max wait
+          wait_time=0
+          while [ $wait_time -lt $max_wait ]; do
+            # Check if there's an operation in progress
+            operations=$(gcloud functions operations list \
+              --region=${{ env.REGION }} \
+              --project=${{ env.PROJECT_ID }} \
+              --filter="metadata.target.name:${{ env.FUNCTION_NAME }} AND done:false" \
+              --format="value(name)" 2>/dev/null || echo "")
+            
+            if [ -z "$operations" ]; then
+              echo "✅ No operations in progress. Safe to deploy."
+              break
+            else
+              echo "⏳ Deployment operation in progress. Waiting 10 seconds... ($wait_time/$max_wait seconds)"
+              sleep 10
+              wait_time=$((wait_time + 10))
+            fi
+          done
+          
+          if [ $wait_time -ge $max_wait ]; then
+            echo "⚠️  Timeout waiting for previous deployment. Proceeding anyway..."
+          fi
+
+      # Deploy the Cloud Function
+      - name: Deploy Cloud Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy
+        with:
+          name: ${{ env.FUNCTION_NAME }}
+          runtime: nodejs20
+          entry_point: ${{ env.ENTRY_POINT }}
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 256
+          timeout: 540s
+          # This handles environment variables cleanly using the action's 'env_vars' input
+          env_vars: |
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+            WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}
+            WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+            VERIFY_TOKEN=${{ secrets.VERIFY_TOKEN }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            APP_ID=morning-pulse-app
+
+      # Deploy the News Aggregator Function
+      - name: Deploy News Aggregator Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-news
+        with:
+          name: newsAggregator
+          runtime: nodejs20
+          entry_point: newsAggregator
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 512
+          timeout: 540s
+          env_vars: |
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            APP_ID=morning-pulse-app
+
+      # Deploy Newsletter Functions
+      - name: Deploy Send Newsletter Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-send-newsletter
+        with:
+          name: sendNewsletter
+          runtime: nodejs20
+          entry_point: sendNewsletter
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 512
+          timeout: 540s
+          env_vars: |
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            NEWSLETTER_FROM_EMAIL=${{ secrets.NEWSLETTER_FROM_EMAIL }}
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            APP_ID=morning-pulse-app
+
+      - name: Deploy Manage Subscription Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-manage-subscription
+        with:
+          name: manageSubscription
+          runtime: nodejs20
+          entry_point: manageSubscription
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 256
+          timeout: 540s
+          env_vars: |
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            APP_ID=morning-pulse-app
+
+      - name: Deploy Send Scheduled Newsletter Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-send-scheduled-newsletter
+        with:
+          name: sendScheduledNewsletter
+          runtime: nodejs20
+          entry_point: sendScheduledNewsletter
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 512
+          timeout: 540s
+          env_vars: |
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            APP_ID=morning-pulse-app
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+      # Set up Cloud Scheduler for news aggregator
+      - name: Setup Cloud Scheduler
+        if: success() && steps.deploy-news.outputs.url != ''
+        run: |
+          FUNCTION_URL="${{ steps.deploy-news.outputs.url }}"
+          SCHEDULER_NAME="daily-news-aggregation"
+          REGION="${{ env.REGION }}"
+          
+          # Check if scheduler already exists
+          if gcloud scheduler jobs describe $SCHEDULER_NAME --location=$REGION --project=${{ env.PROJECT_ID }} &>/dev/null; then
+            echo "Updating existing scheduler job..."
+            gcloud scheduler jobs update http $SCHEDULER_NAME \
+              --location=$REGION \
+              --project=${{ env.PROJECT_ID }} \
+              --schedule="0 2 * * *" \
+              --time-zone="UTC" \
+              --uri="$FUNCTION_URL" \
+              --http-method=GET \
+              --description="Daily news aggregation for Morning Pulse"
+          else
+            echo "Creating new scheduler job..."
+            gcloud scheduler jobs create http $SCHEDULER_NAME \
+              --location=$REGION \
+              --project=${{ env.PROJECT_ID }} \
+              --schedule="0 2 * * *" \
+              --time-zone="UTC" \
+              --uri="$FUNCTION_URL" \
+              --http-method=GET \
+              --description="Daily news aggregation for Morning Pulse"
+          fi
+          echo "✅ Cloud Scheduler configured successfully!"
+
+      # IMPORTANT: Output the final deployed URL for the user to configure the webhook
+      - name: Print Final WebHook Configuration Instructions
+        if: success()
+        run: |
+          echo "=========================================================================="
+          echo "✅ DEPLOYMENT SUCCESSFUL! - WebHook URL:"
+          echo "Copy the URL below and paste it into the Meta Developer Portal's Webhook Configuration."
+          echo "URL: ${{ steps.deploy.outputs.url }}"
+          echo "Verification Token: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}"
+          echo "=========================================================================="
+          echo ""
+          echo "✅ News Aggregator Function Deployed:"
+          echo "URL: ${{ steps.deploy-news.outputs.url }}"
+          if [ -n "${{ steps.deploy-news.outputs.url }}" ]; then
+            echo "✅ Cloud Scheduler configured for daily news aggregation"
+          fi
+          echo ""
+          echo "✅ Newsletter Functions Deployed:"
+          echo "sendNewsletter URL: ${{ steps.deploy-send-newsletter.outputs.url }}"
+          echo "manageSubscription URL: ${{ steps.deploy-manage-subscription.outputs.url }}"
+          echo "sendScheduledNewsletter URL: ${{ steps.deploy-send-scheduled-newsletter.outputs.url }}"
+          echo "=========================================================================="

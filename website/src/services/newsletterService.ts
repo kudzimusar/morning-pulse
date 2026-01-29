@@ -29,7 +29,10 @@ export const subscribeToNewsletter = async (
   interests?: string[]
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
+    const url = 'https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription';
+    console.log(`🔗 POST to ${url}`);
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -182,7 +185,10 @@ export const sendNewsletter = async (
   interests?: string[]
 ): Promise<{ success: boolean; message: string; stats?: any }> => {
   try {
-    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendNewsletter', {
+    const url = 'https://us-central1-morning-pulse-app.cloudfunctions.net/sendNewsletter';
+    console.log(`📧 Sending newsletter via ${url}`);
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

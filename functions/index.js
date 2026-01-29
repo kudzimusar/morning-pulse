@@ -917,6 +917,8 @@ function segmentSubscribers(subscribers, interests = null) {
  * Trigger: HTTP POST with newsletter content
  */
 exports.sendNewsletter = async (req, res) => {
+  if (applyCors(req, res, 'POST, OPTIONS')) return;
+  
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
@@ -1020,6 +1022,8 @@ exports.sendNewsletter = async (req, res) => {
  * Supports subscribe, unsubscribe, and update preferences
  */
 exports.manageSubscription = async (req, res) => {
+  if (applyCors(req, res, 'POST, OPTIONS')) return;
+
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
