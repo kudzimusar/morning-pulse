@@ -29,7 +29,7 @@ export const subscribeToNewsletter = async (
   interests?: string[]
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    const url = 'https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription';
+    const url = 'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/manageSubscription';
     console.log(`🔗 POST to ${url}`);
     
     const response = await fetch(url, {
@@ -185,7 +185,7 @@ export const sendNewsletter = async (
   interests?: string[]
 ): Promise<{ success: boolean; message: string; stats?: any }> => {
   try {
-    const url = 'https://us-central1-morning-pulse-app.cloudfunctions.net/sendNewsletter';
+    const url = 'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/sendNewsletter';
     console.log(`📧 Sending newsletter via ${url}`);
     
     const response = await fetch(url, {
@@ -217,7 +217,7 @@ export const unsubscribeFromNewsletter = async (
   email: string
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
+    const response = await fetch('https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/manageSubscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -248,7 +248,7 @@ export const updateNewsletterPreferences = async (
   interests?: string[]
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/manageSubscription', {
+    const response = await fetch('https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/manageSubscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -279,7 +279,7 @@ export const sendScheduledNewsletter = async (
   newsletterType: 'daily' | 'weekly' = 'weekly'
 ): Promise<{ success: boolean; message: string; stats?: any }> => {
   try {
-    const response = await fetch('https://us-central1-morning-pulse-app.cloudfunctions.net/sendScheduledNewsletter', {
+    const response = await fetch('https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/sendScheduledNewsletter', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newsletterType })
