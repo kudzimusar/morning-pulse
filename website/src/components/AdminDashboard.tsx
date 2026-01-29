@@ -28,9 +28,7 @@ import EditorialQueueTab from './admin/EditorialQueueTab';
 import PublishedContentTab from './admin/PublishedContentTab';
 import StaffManagementTab from './admin/StaffManagementTab';
 import AnalyticsTab from './admin/AnalyticsTab';
-import NewsletterTab from './admin/NewsletterTab';
-import NewsletterAnalyticsTab from './admin/NewsletterAnalyticsTab';
-import SubscriberTab from './admin/SubscriberTab';
+import NewsletterHub from './admin/NewsletterHub';
 import ImageComplianceTab from './admin/ImageComplianceTab';
 import SettingsTab from './admin/SettingsTab';
 import WriterManagementTab from './admin/WriterManagementTab';
@@ -67,9 +65,10 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter' | 'newsletter-analytics' | 'subscribers' | 'image-compliance' | 'settings' | 'integrations';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
 
 // ✅ FIX: Move tabs array to top level to prevent initialization errors
+// 📧 Newsletter Hub consolidates: Newsletter Generator, Subscribers, Newsletter History, Settings
 const ALL_TABS = [
   { id: 'dashboard' as TabId, label: 'Dashboard Overview', icon: '📊' },
   { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: '📝' },
@@ -79,11 +78,9 @@ const ALL_TABS = [
   { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
   { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
   { id: 'analytics' as TabId, label: 'Analytics', icon: '📈', superAdminOnly: true },
-  { id: 'newsletter' as TabId, label: 'Newsletter Generator', icon: '📧', superAdminOnly: true },
-  { id: 'newsletter-analytics' as TabId, label: 'Newsletter History', icon: '📊', superAdminOnly: true },
+  { id: 'newsletter-hub' as TabId, label: 'Newsletter', icon: '📧', superAdminOnly: true },
   { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️', superAdminOnly: true },
   { id: 'integrations' as TabId, label: 'Integrations', icon: '🔌', adminOnly: true },
-  { id: 'subscribers' as TabId, label: 'Subscribers', icon: '👥' },
   { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
 ];
 
@@ -468,16 +465,8 @@ const AdminDashboard: React.FC = () => {
             <AnalyticsTab firebaseInstances={firebaseInstances} isAuthorized={isAuthorized} userRoles={userRoles} />
           )}
 
-          {activeTab === 'newsletter' && (
-            <NewsletterTab />
-          )}
-
-          {activeTab === 'newsletter-analytics' && isSuperAdmin && (
-            <NewsletterAnalyticsTab />
-          )}
-
-          {activeTab === 'subscribers' && (
-            <SubscriberTab />
+          {activeTab === 'newsletter-hub' && isSuperAdmin && (
+            <NewsletterHub />
           )}
 
           {activeTab === 'image-compliance' && (
