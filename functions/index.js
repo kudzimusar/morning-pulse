@@ -10,8 +10,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 const axios = require('axios');
-const cors = require('cors');
-const corsHandler = cors({ origin: true });
 
 // --- CONFIGURATION ---
 
@@ -30,17 +28,11 @@ const NEWSLETTER_FROM_NAME = 'Morning Pulse News';
 // =======================
 // GLOBAL CORS HELPER
 // =======================
-function applyCors(req, res, methods = 'GET, POST, OPTIONS') {
+function setCorsHeaders(res) {
   res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', methods);
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.set('Access-Control-Max-Age', '3600');
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return true;
-  }
-  return false;
 }
 
 // Expected news categories from newsAggregator
@@ -725,7 +717,15 @@ try {
  * Backend has admin access, so it can list the collection
  */
 exports.getOpinions = async (req, res) => {
-  if (applyCors(req, res, 'GET, OPTIONS')) return;
+  // Handle OPTIONS preflight request
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    res.status(204).send('');
+    return;
+  }
+
+  // Set CORS headers for actual request
+  setCorsHeaders(res);
 
   if (req.method !== 'GET') {
     res.status(405).send('Method Not Allowed');
@@ -917,16 +917,23 @@ function segmentSubscribers(subscribers, interests = null) {
  * Trigger: HTTP POST with newsletter content
  */
 exports.sendNewsletter = async (req, res) => {
-  if (applyCors(req, res, 'POST, OPTIONS')) return;
-  
-  corsHandler(req, res, async () => {
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-      return;
-    }
+  // Handle OPTIONS preflight request
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    res.status(204).send('');
+    return;
+  }
 
-    try {
-      const { newsletter, interests } = req.body;
+  // Set CORS headers for actual request
+  setCorsHeaders(res);
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+    return;
+  }
+
+  try {
+    const { newsletter, interests } = req.body;
 
       if (!newsletter || !newsletter.subject || !newsletter.html) {
         res.status(400).json({ error: 'Missing required fields: newsletter.subject, newsletter.html' });
@@ -1007,14 +1014,13 @@ exports.sendNewsletter = async (req, res) => {
         }
       });
 
-    } catch (error) {
-      console.error('❌ Newsletter send error:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  });
+  } catch (error) {
+    console.error('❌ Newsletter send error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 };
 
 /**
@@ -1022,15 +1028,22 @@ exports.sendNewsletter = async (req, res) => {
  * Supports subscribe, unsubscribe, and update preferences
  */
 exports.manageSubscription = async (req, res) => {
-  if (applyCors(req, res, 'POST, OPTIONS')) return;
+  // Handle OPTIONS preflight request
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    res.status(204).send('');
+    return;
+  }
 
-  corsHandler(req, res, async () => {
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-      return;
-    }
+  // Set CORS headers for actual request
+  setCorsHeaders(res);
 
-    try {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+    return;
+  }
+
+  try {
       const { action, email, name, interests } = req.body;
 
       if (!email || !action) {
@@ -1091,14 +1104,13 @@ exports.manageSubscription = async (req, res) => {
         res.status(400).json({ error: 'Invalid action. Use: subscribe, unsubscribe, update' });
       }
 
-    } catch (error) {
-      console.error('❌ Subscription management error:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  });
+  } catch (error) {
+    console.error('❌ Subscription management error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 };
 
 /**
@@ -1219,8 +1231,17 @@ function generateNewsletterHTML({ title, currentDate, articles, ads, type }) {
  * Automatically sends newsletters on schedule (can be triggered by Cloud Scheduler)
  */
 exports.sendScheduledNewsletter = async (req, res) => {
-  corsHandler(req, res, async () => {
-    try {
+  // Handle OPTIONS preflight request
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res);
+    res.status(204).send('');
+    return;
+  }
+
+  // Set CORS headers for actual request
+  setCorsHeaders(res);
+
+  try {
       const { newsletterType = 'weekly' } = req.body || {};
 
       // Get recent published opinions (last 7 days for weekly, 1 day for daily)
@@ -1404,14 +1425,13 @@ exports.sendScheduledNewsletter = async (req, res) => {
         }
       });
 
-    } catch (error) {
-      console.error('❌ Scheduled newsletter error:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  });
+  } catch (error) {
+    console.error('❌ Scheduled newsletter error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 };
 
 
