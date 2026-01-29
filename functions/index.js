@@ -28,11 +28,19 @@ const NEWSLETTER_FROM_NAME = 'Morning Pulse News';
 // =======================
 // GLOBAL CORS HELPER
 // =======================
-function setCorsHeaders(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.set('Access-Control-Max-Age', '3600');
+function setCorsHeaders(req, res) {
+  // Set CORS headers explicitly
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '3600');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return true; // Signal that we handled OPTIONS
+  }
+  return false;
 }
 
 // Expected news categories from newsAggregator
@@ -717,15 +725,8 @@ try {
  * Backend has admin access, so it can list the collection
  */
 exports.getOpinions = async (req, res) => {
-  // Handle OPTIONS preflight request
-  if (req.method === 'OPTIONS') {
-    setCorsHeaders(res);
-    res.status(204).send('');
-    return;
-  }
-
-  // Set CORS headers for actual request
-  setCorsHeaders(res);
+  // Set CORS headers and handle preflight
+  if (setCorsHeaders(req, res)) return;
 
   if (req.method !== 'GET') {
     res.status(405).send('Method Not Allowed');
@@ -917,15 +918,8 @@ function segmentSubscribers(subscribers, interests = null) {
  * Trigger: HTTP POST with newsletter content
  */
 exports.sendNewsletter = async (req, res) => {
-  // Handle OPTIONS preflight request
-  if (req.method === 'OPTIONS') {
-    setCorsHeaders(res);
-    res.status(204).send('');
-    return;
-  }
-
-  // Set CORS headers for actual request
-  setCorsHeaders(res);
+  // Set CORS headers and handle preflight
+  if (setCorsHeaders(req, res)) return;
 
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
@@ -1028,15 +1022,8 @@ exports.sendNewsletter = async (req, res) => {
  * Supports subscribe, unsubscribe, and update preferences
  */
 exports.manageSubscription = async (req, res) => {
-  // Handle OPTIONS preflight request
-  if (req.method === 'OPTIONS') {
-    setCorsHeaders(res);
-    res.status(204).send('');
-    return;
-  }
-
-  // Set CORS headers for actual request
-  setCorsHeaders(res);
+  // Set CORS headers and handle preflight
+  if (setCorsHeaders(req, res)) return;
 
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
@@ -1231,18 +1218,11 @@ function generateNewsletterHTML({ title, currentDate, articles, ads, type }) {
  * Automatically sends newsletters on schedule (can be triggered by Cloud Scheduler)
  */
 exports.sendScheduledNewsletter = async (req, res) => {
-  // Handle OPTIONS preflight request
-  if (req.method === 'OPTIONS') {
-    setCorsHeaders(res);
-    res.status(204).send('');
-    return;
-  }
-
-  // Set CORS headers for actual request
-  setCorsHeaders(res);
+  // Set CORS headers and handle preflight
+  if (setCorsHeaders(req, res)) return;
 
   try {
-      const { newsletterType = 'weekly' } = req.body || {};
+    const { newsletterType = 'weekly' } = req.body || {};
 
       // Get recent published opinions (last 7 days for weekly, 1 day for daily)
       const cutoffDate = new Date();
