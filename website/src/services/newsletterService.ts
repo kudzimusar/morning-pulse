@@ -179,14 +179,18 @@ export const generateNewsletter = async (
 /**
  * Send newsletter immediately
  */
-export const sendNewsletter = async (
-  subject: string,
-  html: string,
-  interests?: string[]
-): Promise<{ success: boolean; message: string; stats?: any }> => {
+export const sendNewsletter = async (params: {
+  subject: string;
+  html: string;
+  interests?: string[];
+}): Promise<{ success: boolean; message: string; stats?: any }> => {
+  const { subject, html, interests } = params;
+  
   try {
     const url = 'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/sendNewsletter';
     console.log(`📧 Sending newsletter via ${url}`);
+    console.log(`📧 Subject: ${subject?.substring(0, 50)}...`);
+    console.log(`📧 HTML length: ${html?.length || 0} chars`);
     
     const response = await fetch(url, {
       method: 'POST',
