@@ -176,7 +176,6 @@ Only return valid JSON, no additional text. If no fresh news from today exists, 
     });
 
     // Filter to ensure only fresh, recent articles (additional validation)
-    const today = new Date();
     const todayStr = today.toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
