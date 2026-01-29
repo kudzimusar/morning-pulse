@@ -160,6 +160,24 @@ jobs:
             FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
             APP_ID=morning-pulse-app
 
+      - name: Deploy Send Scheduled Newsletter Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-send-scheduled-newsletter
+        with:
+          name: sendScheduledNewsletter
+          runtime: nodejs20
+          entry_point: sendScheduledNewsletter
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 512
+          timeout: 540s
+          env_vars: |
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
+            APP_ID=morning-pulse-app
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
       # Set up Cloud Scheduler for news aggregator
       - name: Setup Cloud Scheduler
         if: success() && steps.deploy-news.outputs.url != ''
@@ -212,4 +230,5 @@ jobs:
           echo "✅ Newsletter Functions Deployed:"
           echo "sendNewsletter URL: ${{ steps.deploy-send-newsletter.outputs.url }}"
           echo "manageSubscription URL: ${{ steps.deploy-manage-subscription.outputs.url }}"
+          echo "sendScheduledNewsletter URL: ${{ steps.deploy-send-scheduled-newsletter.outputs.url }}"
           echo "=========================================================================="
