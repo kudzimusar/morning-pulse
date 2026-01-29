@@ -183,6 +183,34 @@ jobs:
             APP_ID=morning-pulse-app
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 
+      # Explicitly set IAM policy for public access (backup for allow_unauthenticated)
+      - name: Set Public Access for Newsletter Functions
+        run: |
+          echo "Setting public access for newsletter functions..."
+          
+          # Allow unauthenticated access to sendNewsletter
+          gcloud functions add-iam-policy-binding sendNewsletter \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --member="allUsers" \
+            --role="roles/cloudfunctions.invoker" || true
+          
+          # Allow unauthenticated access to manageSubscription
+          gcloud functions add-iam-policy-binding manageSubscription \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --member="allUsers" \
+            --role="roles/cloudfunctions.invoker" || true
+          
+          # Allow unauthenticated access to sendScheduledNewsletter
+          gcloud functions add-iam-policy-binding sendScheduledNewsletter \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --member="allUsers" \
+            --role="roles/cloudfunctions.invoker" || true
+          
+          echo "✅ Public access configured for newsletter functions"
+
       # Set up Cloud Scheduler for news aggregator
       - name: Setup Cloud Scheduler
         if: success() && steps.deploy-news.outputs.url != ''
