@@ -1895,3 +1895,136 @@ exports.generateWriterStatements = async (req, res) => {
   }
 };
 
+/**
+ * autoPublishScheduledStories - Server-side auto-publisher for scheduled stories
+ * 
+ * HTTP Cloud Function that checks for scheduled stories and publishes them
+ * when their scheduled time has passed. This replaces client-side polling
+ * for more reliable scheduled publishing.
+ * 
+ * RECOMMENDED: Set up Cloud Scheduler to call this every 5 minutes
+ *   - Cron: */5 * * * *
+ *   - Target: HTTP
+ *   - URL: https://[region]-[project-id].cloudfunctions.net/autoPublishScheduledStories
+ * 
+ * Can also be called manually via HTTP GET/POST.
+ * 
+ * Collection: artifacts/morning-pulse-app/public/data/opinions
+ */
+exports.autoPublishScheduledStories = async (req, res) => {
+  // CORS handling
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send('');
+  }
+  
+  try {
+    console.log('🕐 Auto-publisher: Checking for scheduled stories...');
+    
+    const now = new Date();
+    
+    // Query for scheduled stories where scheduledFor has passed
+    const opinionsRef = db.collection('artifacts')
+      .doc('morning-pulse-app')
+      .collection('public')
+      .collection('data')
+      .collection('opinions');
+    
+    const scheduledQuery = opinionsRef
+      .where('status', '==', 'scheduled');
+    
+    const snapshot = await scheduledQuery.get();
+    
+    if (snapshot.empty) {
+      console.log('📭 No scheduled stories found');
+      return res.status(200).json({
+        success: true,
+        message: 'No scheduled stories to publish',
+        publishedCount: 0,
+        checkedAt: now.toISOString()
+      });
+    }
+    
+    console.log(`📋 Found ${snapshot.size} scheduled stories to check`);
+    
+    const batch = db.batch();
+    let publishedCount = 0;
+    const publishedStories = [];
+    
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      const scheduledFor = data.scheduledFor?.toDate ? data.scheduledFor.toDate() : 
+                           data.scheduledFor ? new Date(data.scheduledFor) : null;
+      
+      if (!scheduledFor) {
+        console.warn(`⚠️ Story ${docSnap.id} is scheduled but has no scheduledFor timestamp`);
+        continue;
+      }
+      
+      // Check if scheduled time has passed
+      if (scheduledFor <= now) {
+        console.log(`📰 Auto-publishing: "${data.headline}" (scheduled for ${scheduledFor.toISOString()})`);
+        
+        const docRef = opinionsRef.doc(docSnap.id);
+        
+        batch.update(docRef, {
+          status: 'published',
+          publishedAt: admin.firestore.FieldValue.serverTimestamp(),
+          autoPublished: true,
+          autoPublishedAt: admin.firestore.FieldValue.serverTimestamp(),
+          // Keep editorialMeta approval timestamp for SLA tracking
+          'editorialMeta.approvalAt': admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        publishedCount++;
+        publishedStories.push({
+          id: docSnap.id,
+          headline: data.headline || 'Untitled',
+          scheduledFor: scheduledFor.toISOString(),
+          authorName: data.authorName || 'Unknown'
+        });
+      } else {
+        const timeUntil = Math.round((scheduledFor - now) / 1000 / 60);
+        console.log(`⏰ Story "${data.headline}" scheduled for ${timeUntil} minutes from now`);
+      }
+    }
+    
+    if (publishedCount > 0) {
+      await batch.commit();
+      console.log(`✅ Auto-published ${publishedCount} stories`);
+      
+      // Log to auto-publish audit collection (optional)
+      try {
+        await db.collection('autoPublishLog').add({
+          publishedCount,
+          publishedStories,
+          executedAt: admin.firestore.FieldValue.serverTimestamp(),
+          triggeredBy: 'cloud-function'
+        });
+      } catch (logError) {
+        console.warn('Could not write to audit log:', logError.message);
+      }
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: publishedCount > 0 
+        ? `Auto-published ${publishedCount} scheduled stories`
+        : 'No stories were ready to publish',
+      publishedCount,
+      publishedStories,
+      checkedAt: now.toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Error in auto-publisher:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+

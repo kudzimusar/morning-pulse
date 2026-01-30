@@ -298,6 +298,17 @@ service cloud.firestore {
     }
     
     // ===========================================
+    // AUTO-PUBLISH AUDIT LOG (Sprint 5)
+    // ===========================================
+    // Audit log for server-side auto-publisher
+    // Written by Cloud Functions, readable by admins
+    match /autoPublishLog/{logId} {
+      allow read: if isAdmin();
+      // Cloud Functions use admin SDK for writes
+      allow write: if false;
+    }
+    
+    // ===========================================
     // DEFAULT DENY
     // ===========================================
     match /{document=**} {

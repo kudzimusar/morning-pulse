@@ -34,7 +34,6 @@ import {
   releaseStory,
   returnToWriter,
   schedulePublication,
-  checkAndPublishScheduledStories,
   createVersionSnapshot,
   getVersionHistory,
   restoreVersion,
@@ -104,6 +103,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [restoringVersion, setRestoringVersion] = useState<string | null>(null); // NEW: Version being restored
   const [storyPriority, setStoryPriorityState] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal'); // Sprint 2: Priority state
   const [savingPriority, setSavingPriority] = useState(false); // Sprint 2: Saving priority indicator
+  const [triggeringAutoPublish, setTriggeringAutoPublish] = useState(false); // Sprint 5: Manual auto-publish trigger
   
   // ✅ FIX: Move getCurrentEditor() call to useMemo to prevent top-level execution
   // This prevents "Cannot access 'E' before initialization" errors
@@ -168,40 +168,41 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     return EnhancedFirestore.getInstance(firebaseInstances.db);
   }, [firebaseInstances?.db]);
 
-  // ✅ FIX: Auto-publisher - Check for scheduled stories every 30 seconds
-  // ✅ FIX: Wrap checkAndPublishScheduledStories in try-catch to prevent initialization errors
-  useEffect(() => {
-    if (!firebaseInstances) return;
+  // ✅ SPRINT 5: Auto-publisher moved to server-side Cloud Function
+  // The autoPublishScheduledStories Cloud Function runs every 5 minutes via Cloud Scheduler
+  // Client-side polling has been removed for improved reliability
+  // See: functions/index.js -> exports.autoPublishScheduledStories
 
-    // ✅ FIX: Delay initial check to ensure all services are initialized
-    const initialCheck = setTimeout(() => {
-      try {
-        checkAndPublishScheduledStories();
-      } catch (error) {
-        console.warn('Error in initial scheduled stories check:', error);
+  // Sprint 5: Manual trigger for auto-publisher (admin use)
+  const handleManualAutoPublish = async () => {
+    setTriggeringAutoPublish(true);
+    try {
+      const functionUrl = process.env.REACT_APP_FUNCTIONS_URL || 
+        'https://us-central1-morning-pulse-f1f1b.cloudfunctions.net';
+      
+      const response = await fetch(`${functionUrl}/autoPublishScheduledStories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-    }, 1000); // Delay 1 second to ensure initialization
-
-    // Set up interval to check every 30 seconds
-    const intervalId = setInterval(() => {
-      try {
-        checkAndPublishScheduledStories().then(count => {
-          if (count > 0) {
-            showToast(`Auto-published ${count} scheduled stor${count === 1 ? 'y' : 'ies'}`, 'success');
-          }
-        }).catch(error => {
-          console.warn('Error checking scheduled stories:', error);
-        });
-      } catch (error) {
-        console.warn('Error in scheduled stories interval:', error);
+      
+      const data = await response.json();
+      
+      if (data.publishedCount > 0) {
+        showToast(`Auto-published ${data.publishedCount} scheduled stor${data.publishedCount === 1 ? 'y' : 'ies'}`, 'success');
+      } else {
+        showToast('No scheduled stories ready to publish', 'success');
       }
-    }, 30000); // 30 seconds
-
-    return () => {
-      clearTimeout(initialCheck);
-      clearInterval(intervalId);
-    };
-  }, [firebaseInstances, showToast]);
+    } catch (error: any) {
+      console.error('Manual auto-publish error:', error);
+      showToast(`Auto-publish check failed: ${error.message}`, 'error');
+    } finally {
+      setTriggeringAutoPublish(false);
+    }
+  };
 
   // ✅ FIX: Handle URL parameters to auto-select article when coming from PublishedContentTab
   // ✅ FIX: Use hash routing correctly - hash format: #dashboard?tab=editorial-queue&article=ID
@@ -1450,14 +1451,36 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 alignItems: 'center'
               }}>
                 <span>✍️ In Edit</span>
-                <span style={{
-                  backgroundColor: '#93c5fd',
-                  padding: '2px 8px',
-                  borderRadius: '10px',
-                  fontSize: '11px'
-                }}>
-                  {inReviewOpinions.length}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Sprint 5: Manual auto-publish trigger button */}
+                  <button
+                    onClick={handleManualAutoPublish}
+                    disabled={triggeringAutoPublish}
+                    title="Check scheduled stories now"
+                    style={{
+                      padding: '2px 8px',
+                      backgroundColor: triggeringAutoPublish ? '#9ca3af' : '#4f46e5',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: 'none',
+                      fontSize: '10px',
+                      cursor: triggeringAutoPublish ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {triggeringAutoPublish ? '⏳' : '🕐'} Check Scheduled
+                  </button>
+                  <span style={{
+                    backgroundColor: '#93c5fd',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    fontSize: '11px'
+                  }}>
+                    {inReviewOpinions.length}
+                  </span>
+                </div>
               </div>
               
               {inReviewOpinions.length === 0 ? (
