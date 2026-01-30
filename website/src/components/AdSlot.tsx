@@ -235,6 +235,7 @@ const AdSlot: React.FC<AdSlotProps> = ({
 
   // Error or no ads - show fallback
   if (error || ads.length === 0) {
+    console.log(`⚠️ [AdSlot] Showing fallback for slot: ${slotId}`, { error, adsLength: ads.length, currentAdIndex });
     return renderFallback();
   }
 
