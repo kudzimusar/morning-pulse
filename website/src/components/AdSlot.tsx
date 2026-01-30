@@ -61,6 +61,13 @@ const AdSlot: React.FC<AdSlotProps> = ({
               startDate: ad.startDate,
               endDate: ad.endDate
             });
+            
+            // ✅ FIX: Validate creativeUrl
+            if (!ad.creativeUrl || ad.creativeUrl.trim() === '') {
+              console.error(`❌ [AdSlot] Ad ${ad.id} has empty creativeUrl!`);
+            } else {
+              console.log(`   ✅ Creative URL is valid: ${ad.creativeUrl}`);
+            }
           });
         }
       } catch (err: any) {
@@ -234,8 +241,27 @@ const AdSlot: React.FC<AdSlotProps> = ({
   // Render actual ad
   const currentAd = ads[currentAdIndex];
   if (!currentAd) {
+    console.warn(`⚠️ [AdSlot] No current ad at index ${currentAdIndex} for slot: ${slotId}`);
     return renderFallback();
   }
+
+  // ✅ FIX: Validate creativeUrl before rendering
+  if (!currentAd.creativeUrl || currentAd.creativeUrl.trim() === '') {
+    console.error(`❌ [AdSlot] Ad ${currentAd.id} has empty or missing creativeUrl`);
+    console.error('   Full ad data:', JSON.stringify(currentAd, null, 2));
+    setError('no_creative_url');
+    return renderFallback();
+  }
+
+  console.log(`🎨 [AdSlot] Rendering ad for slot: ${slotId}`, {
+    adId: currentAd.id,
+    title: currentAd.title,
+    creativeUrl: currentAd.creativeUrl,
+    destinationUrl: currentAd.destinationUrl,
+    placement: currentAd.placement,
+    currentAdIndex,
+    totalAds: ads.length
+  });
 
   return (
     <div 
@@ -270,14 +296,18 @@ const AdSlot: React.FC<AdSlotProps> = ({
           {label}
         </div>
         <a
-          href={currentAd.creativeUrl}
+          href={currentAd.destinationUrl || currentAd.creativeUrl}
           onClick={(e) => handleAdClick(currentAd, e)}
           target="_blank"
           rel="noopener noreferrer"
           style={{
             display: 'block',
             textDecoration: 'none',
-            color: 'inherit'
+            color: 'inherit',
+            width: '100%',
+            maxHeight: slotId === 'header_banner' ? '120px' : 'none',
+            overflow: 'hidden',
+            position: 'relative'
           }}
         >
           <img
@@ -288,21 +318,40 @@ const AdSlot: React.FC<AdSlotProps> = ({
               height: 'auto',
               display: 'block',
               maxWidth: '100%',
-              maxHeight: '120px', // ✅ FIX: Constrain header ad height
-              objectFit: 'contain', // ✅ FIX: Maintain aspect ratio without cropping
-              objectPosition: 'center'
+              maxHeight: slotId === 'header_banner' ? '120px' : 'none',
+              objectFit: slotId === 'header_banner' ? 'contain' : 'cover',
+              objectPosition: 'center',
+              visibility: 'visible',
+              opacity: 1,
+              minHeight: slotId === 'header_banner' ? '60px' : 'auto'
             }}
             loading="lazy"
             onError={(e) => {
               // Fallback if image fails to load
-              console.error('❌ Ad image failed to load:', currentAd.creativeUrl);
+              const target = e.target as HTMLImageElement;
+              console.error('❌ [AdSlot] Ad image failed to load:', currentAd.creativeUrl);
               console.error('   Ad ID:', currentAd.id);
               console.error('   Ad Title:', currentAd.title);
+              console.error('   Slot ID:', slotId);
+              console.error('   Image src attempted:', target.src);
+              console.error('   Image naturalWidth:', target.naturalWidth);
+              console.error('   Image naturalHeight:', target.naturalHeight);
+              console.error('   Error event:', e);
               setError('image_load_failed');
             }}
-            onLoad={() => {
+            onLoad={(e) => {
               // ✅ FIX: Log successful image load for debugging
-              console.log('✅ Ad image loaded successfully:', currentAd.creativeUrl);
+              const target = e.target as HTMLImageElement;
+              console.log('✅ [AdSlot] Ad image loaded successfully:', {
+                slotId,
+                adId: currentAd.id,
+                creativeUrl: currentAd.creativeUrl,
+                title: currentAd.title,
+                imageWidth: target.naturalWidth,
+                imageHeight: target.naturalHeight,
+                renderedWidth: target.width,
+                renderedHeight: target.height
+              });
             }}
           />
         </a>
