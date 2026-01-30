@@ -36,6 +36,7 @@ import SubscriberManagementTab from './admin/SubscriberManagementTab';
 import AdManagementTab from './admin/AdManagementTab';
 import IntegrationSettings from './admin/IntegrationSettings';
 import PitchReviewTab from './admin/PitchReviewTab';
+import WriterPaymentsAdmin from './admin/WriterPaymentsAdmin';
 import { updateLastActive } from '../services/staffService';
 
 // Constants
@@ -66,7 +67,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'pitch-review' | 'published-content' | 'staff-management' | 'writer-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
+type TabId = 'dashboard' | 'editorial-queue' | 'pitch-review' | 'published-content' | 'staff-management' | 'writer-management' | 'writer-payments' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
 
 // ✅ FIX: Move tabs array to top level to prevent initialization errors
 // 📧 Newsletter Hub consolidates: Newsletter Generator, Subscribers, Newsletter History, Settings
@@ -77,6 +78,7 @@ const ALL_TABS = [
   { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
   { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
   { id: 'writer-management' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
+  { id: 'writer-payments' as TabId, label: 'Writer Payments', icon: '💰', adminOnly: true },
   { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
   { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
   { id: 'analytics' as TabId, label: 'Analytics', icon: '📈', superAdminOnly: true },
@@ -457,6 +459,10 @@ const AdminDashboard: React.FC = () => {
 
           {activeTab === 'writer-management' && isAdmin && (
             <WriterManagementTab userRoles={userRoles} />
+          )}
+
+          {activeTab === 'writer-payments' && isAdmin && (
+            <WriterPaymentsAdmin userRoles={userRoles} />
           )}
 
           {activeTab === 'subscriber-management' && isAdmin && (

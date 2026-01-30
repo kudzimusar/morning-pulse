@@ -91,6 +91,19 @@ export interface Writer {
     termsAccepted?: boolean;
     termsAcceptedAt?: Date;
   };
+  
+  // ============================================
+  // PAYMENT PROFILE (Sprint 4)
+  // ============================================
+  paymentProfile?: {
+    model: 'salary' | 'per-article' | 'per-word' | 'flat-fee';
+    rate?: number;           // Rate based on model (monthly salary, per-article fee, per-word rate)
+    currency?: string;       // e.g., 'USD', 'ZWL', 'ZAR'
+    payoutMethod?: 'manual' | 'bank-transfer' | 'mobile-money' | 'paypal';
+    payoutDetails?: string;  // Bank account, mobile number, etc. (encrypted in prod)
+    taxId?: string;          // Tax identification number
+    invoiceRequired?: boolean;
+  };
 }
 
 /**
@@ -171,6 +184,16 @@ const docToWriter = (snap: any): Writer => {
       lastStyleGuideAck: data.compliance.lastStyleGuideAck?.toDate?.() || undefined,
       termsAccepted: data.compliance.termsAccepted,
       termsAcceptedAt: data.compliance.termsAcceptedAt?.toDate?.() || undefined,
+    } : undefined,
+    // Payment profile (Sprint 4)
+    paymentProfile: data.paymentProfile ? {
+      model: data.paymentProfile.model || 'per-article',
+      rate: data.paymentProfile.rate,
+      currency: data.paymentProfile.currency || 'USD',
+      payoutMethod: data.paymentProfile.payoutMethod || 'manual',
+      payoutDetails: data.paymentProfile.payoutDetails,
+      taxId: data.paymentProfile.taxId,
+      invoiceRequired: data.paymentProfile.invoiceRequired,
     } : undefined,
   };
 };
@@ -636,5 +659,59 @@ export const getWritersByEditor = async (editorUid: string): Promise<Writer[]> =
   } catch (error: any) {
     console.error('Error fetching writers by editor:', error);
     throw new Error(`Failed to fetch writers by editor: ${error.message}`);
+  }
+};
+
+// ============================================
+// PAYMENT PROFILE FUNCTIONS (Sprint 4)
+// ============================================
+
+/**
+ * Update writer payment profile
+ */
+export const updateWriterPaymentProfile = async (
+  writerUid: string,
+  paymentProfile: Writer['paymentProfile']
+): Promise<void> => {
+  const db = getDb();
+  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
+  
+  try {
+    await updateDoc(writerRef, {
+      paymentProfile: paymentProfile,
+      updatedAt: serverTimestamp(),
+    });
+    
+    console.log('✅ Writer payment profile updated:', writerUid);
+  } catch (error: any) {
+    console.error('❌ Error updating payment profile:', error);
+    throw new Error(`Failed to update payment profile: ${error.message}`);
+  }
+};
+
+/**
+ * Get writers with payment profiles (for payment processing)
+ */
+export const getWritersWithPaymentProfiles = async (): Promise<Writer[]> => {
+  const db = getDb();
+  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
+  const q = query(writersRef, where('status', '==', 'approved'));
+  
+  try {
+    const snapshot = await getDocs(q);
+    const writers: Writer[] = [];
+    
+    snapshot.forEach((docSnap) => {
+      const writer = docToWriter(docSnap);
+      // Only include writers who have a payment profile set up
+      if (writer.paymentProfile?.model) {
+        writers.push(writer);
+      }
+    });
+    
+    return writers.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error: any) {
+    console.error('Error fetching writers with payment profiles:', error);
+    throw new Error(`Failed to fetch writers: ${error.message}`);
   }
 };

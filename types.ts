@@ -270,3 +270,92 @@ export interface WriterMetrics {
     };
   };
 }
+
+// ============================================
+// WRITER PAYMENTS (Sprint 4)
+// ============================================
+
+export type PaymentStatementStatus = 'draft' | 'pending' | 'approved' | 'paid' | 'disputed' | 'cancelled';
+
+export interface WriterPaymentStatement {
+  id: string;
+  writerId: string;
+  writerName: string;
+  writerEmail: string;
+  
+  // Payment period
+  periodStart: Date;
+  periodEnd: Date;
+  periodLabel?: string; // e.g., "January 2026", "Week 4, 2026"
+  
+  // Payment calculation
+  paymentModel: 'salary' | 'per-article' | 'per-word' | 'flat-fee';
+  rate: number;          // Rate used for calculation
+  currency: string;      // e.g., 'USD'
+  
+  // Article details
+  articlesCount: number;
+  articlesPublished: {
+    opinionId: string;
+    headline: string;
+    publishedAt: Date;
+    wordCount?: number;
+    amount: number;       // Amount for this article
+  }[];
+  totalWordCount?: number;
+  
+  // Payment amounts
+  grossAmount: number;    // Total before deductions
+  totalAmountDue?: number; // Alias for netAmount (Cloud Function compatibility)
+  wordsCount?: number;     // Alias for totalWordCount (Cloud Function compatibility)
+  deductions?: {
+    description: string;
+    amount: number;
+  }[];
+  netAmount: number;      // Final amount after deductions
+  
+  // Workflow
+  status: PaymentStatementStatus;
+  createdAt: Date;
+  generatedBy?: string;   // Admin UID who generated
+  generatedByName?: string;
+  
+  // Approval
+  approvedAt?: Date;
+  approvedBy?: string;
+  approvedByName?: string;
+  
+  // Payment processing
+  paidAt?: Date;
+  paidBy?: string;
+  paidByName?: string;
+  paymentReference?: string;  // Transaction ID, check number, etc.
+  paymentMethod?: string;     // How it was paid
+  
+  // Notes
+  adminNotes?: string;
+  writerNotes?: string;
+}
+
+// Summary for admin dashboard
+export interface WriterPaymentSummary {
+  writerId: string;
+  writerName: string;
+  writerEmail: string;
+  tier?: string;
+  paymentModel?: string;
+  currency?: string;
+  
+  // Current period stats
+  currentPeriodArticles: number;
+  currentPeriodAmount: number;
+  
+  // Pending payments
+  pendingStatements: number;
+  pendingAmount: number;
+  
+  // Lifetime
+  totalPaid: number;
+  totalStatements: number;
+  lastPaymentDate?: Date;
+}

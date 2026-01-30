@@ -1693,3 +1693,205 @@ exports.handleShortLink = async (req, res) => {
   }
 };
 
+/**
+ * generateWriterStatements - Generates monthly payment statements for writers
+ * 
+ * HTTP Cloud Function that creates payment statements for writers based on 
+ * their published articles in the specified period.
+ * 
+ * Query params:
+ *   - periodStart: ISO date string (required) - Start of billing period
+ *   - periodEnd: ISO date string (required) - End of billing period
+ *   - writerId: string (optional) - Generate for specific writer only
+ * 
+ * Collection: writerPayments/{writerUid}/statements/{statementId}
+ */
+exports.generateWriterStatements = async (req, res) => {
+  // CORS handling
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send('');
+  }
+  
+  try {
+    // Get period parameters
+    const { periodStart, periodEnd, writerId } = req.query;
+    
+    if (!periodStart || !periodEnd) {
+      return res.status(400).json({
+        success: false,
+        error: 'periodStart and periodEnd query parameters are required'
+      });
+    }
+    
+    const startDate = new Date(periodStart);
+    const endDate = new Date(periodEnd);
+    
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid date format. Use ISO date strings.'
+      });
+    }
+    
+    console.log(`📊 Generating statements for period: ${periodStart} to ${periodEnd}`);
+    
+    // Build query for published opinions in the period
+    let opinionsQuery = db.collection('opinions')
+      .where('status', '==', 'published')
+      .where('publishedAt', '>=', startDate)
+      .where('publishedAt', '<=', endDate);
+    
+    const opinionsSnapshot = await opinionsQuery.get();
+    
+    if (opinionsSnapshot.empty) {
+      console.log('⚠️ No published opinions found in the specified period');
+      return res.status(200).json({
+        success: true,
+        message: 'No published articles in the specified period',
+        statementsGenerated: 0
+      });
+    }
+    
+    // Group opinions by writer
+    const writerArticles = {};
+    
+    opinionsSnapshot.forEach((doc) => {
+      const opinion = doc.data();
+      const authorId = opinion.authorId;
+      
+      // Skip if filtering by specific writer and this isn't them
+      if (writerId && authorId !== writerId) {
+        return;
+      }
+      
+      if (!writerArticles[authorId]) {
+        writerArticles[authorId] = {
+          writerId: authorId,
+          writerName: opinion.authorName || 'Unknown',
+          articles: []
+        };
+      }
+      
+      // Calculate word count from body
+      const wordCount = opinion.body ? opinion.body.split(/\s+/).filter(w => w.length > 0).length : 0;
+      
+      writerArticles[authorId].articles.push({
+        opinionId: doc.id,
+        headline: opinion.headline || 'Untitled',
+        publishedAt: opinion.publishedAt?.toDate ? opinion.publishedAt.toDate() : new Date(opinion.publishedAt),
+        wordCount: wordCount
+      });
+    });
+    
+    // Fetch writer payment profiles and generate statements
+    const batch = db.batch();
+    let statementsGenerated = 0;
+    
+    for (const authorId of Object.keys(writerArticles)) {
+      const writerData = writerArticles[authorId];
+      
+      // Fetch writer's payment profile
+      const writerDoc = await db.collection('writers').doc(authorId).get();
+      let paymentProfile = {
+        model: 'per-article',
+        rate: 0,
+        currency: 'USD',
+        payoutMethod: 'manual'
+      };
+      
+      if (writerDoc.exists) {
+        const writerProfile = writerDoc.data();
+        if (writerProfile.paymentProfile) {
+          paymentProfile = {
+            ...paymentProfile,
+            ...writerProfile.paymentProfile
+          };
+        }
+        writerData.writerName = writerProfile.displayName || writerProfile.name || writerData.writerName;
+      }
+      
+      // Calculate total amounts based on payment model
+      let totalAmountDue = 0;
+      const totalWords = writerData.articles.reduce((sum, a) => sum + a.wordCount, 0);
+      const articlesCount = writerData.articles.length;
+      
+      switch (paymentProfile.model) {
+        case 'per-article':
+          totalAmountDue = articlesCount * (paymentProfile.rate || 0);
+          break;
+        case 'per-word':
+          totalAmountDue = totalWords * (paymentProfile.rate || 0);
+          break;
+        case 'salary':
+          // For salary model, rate represents monthly salary
+          totalAmountDue = paymentProfile.rate || 0;
+          break;
+        default:
+          totalAmountDue = 0;
+      }
+      
+      // Calculate per-article amounts for statement details
+      const articlesWithAmounts = writerData.articles.map(article => ({
+        ...article,
+        amount: paymentProfile.model === 'per-article' 
+          ? (paymentProfile.rate || 0)
+          : paymentProfile.model === 'per-word'
+            ? article.wordCount * (paymentProfile.rate || 0)
+            : totalAmountDue / articlesCount // Distribute salary evenly
+      }));
+      
+      // Create statement document
+      const statementId = `${periodStart.substring(0, 7)}-${Date.now()}`;
+      const statementRef = db.collection('writerPayments').doc(authorId)
+        .collection('statements').doc(statementId);
+      
+      const statement = {
+        id: statementId,
+        writerId: authorId,
+        writerName: writerData.writerName,
+        periodStart: startDate,
+        periodEnd: endDate,
+        paymentModel: paymentProfile.model,
+        rate: paymentProfile.rate || 0,
+        currency: paymentProfile.currency || 'USD',
+        articlesCount: articlesCount,
+        wordsCount: totalWords,
+        totalAmountDue: totalAmountDue,
+        status: 'pending',
+        generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        articles: articlesWithAmounts
+      };
+      
+      batch.set(statementRef, statement);
+      statementsGenerated++;
+      
+      console.log(`📝 Generated statement for ${writerData.writerName}: ${articlesCount} articles, ${paymentProfile.currency} ${totalAmountDue.toFixed(2)}`);
+    }
+    
+    await batch.commit();
+    
+    console.log(`✅ Generated ${statementsGenerated} payment statements`);
+    
+    res.status(200).json({
+      success: true,
+      message: `Generated ${statementsGenerated} payment statements`,
+      statementsGenerated: statementsGenerated,
+      period: {
+        start: periodStart,
+        end: periodEnd
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error generating writer statements:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
