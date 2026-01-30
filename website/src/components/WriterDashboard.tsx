@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getCurrentWriter, updateWriterProfile, Writer } from '../services/writerService';
 import { getPublishedOpinions, Opinion, submitForReview } from '../services/opinionsService';
+import { getWriterPitches, submitPitch, deletePitch } from '../services/pitchService';
+import { StoryPitch } from '../../types';
 import { collection, query, where, getDocs, getFirestore } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
+import PitchSubmissionForm from './writer/PitchSubmissionForm';
 
 const WriterDashboard: React.FC = () => {
   const [writer, setWriter] = useState<Writer | null>(null);
@@ -11,8 +14,10 @@ const WriterDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [drafts, setDrafts] = useState<any[]>([]); // NEW: Separate list for drafts
-  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'profile'>('overview');
+  const [pitches, setPitches] = useState<StoryPitch[]>([]); // Story pitches
+  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'pitches' | 'profile'>('overview');
   const [submittingForReview, setSubmittingForReview] = useState<string | null>(null); // NEW: Track submission in progress
+  const [showPitchForm, setShowPitchForm] = useState(false); // Toggle pitch form
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
     name: '',
@@ -52,12 +57,23 @@ const WriterDashboard: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Reload submissions when writer changes
+  // Reload submissions and pitches when writer changes
   useEffect(() => {
     if (writer && user) {
       loadSubmissions(user.uid);
+      loadPitches(user.uid);
     }
   }, [writer]);
+
+  // Load writer's pitches
+  const loadPitches = async (writerUid: string) => {
+    try {
+      const writerPitches = await getWriterPitches(writerUid);
+      setPitches(writerPitches);
+    } catch (error) {
+      console.error('Error loading pitches:', error);
+    }
+  };
 
   const loadSubmissions = async (writerUid: string) => {
     if (!writer) return;
@@ -158,6 +174,54 @@ const WriterDashboard: React.FC = () => {
     }
   };
 
+  // Handle deleting a draft pitch
+  const handleDeletePitch = async (pitchId: string) => {
+    if (!window.confirm('Delete this pitch? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deletePitch(pitchId);
+      // Reload pitches
+      if (user) {
+        loadPitches(user.uid);
+      }
+      alert('Pitch deleted.');
+    } catch (error: any) {
+      alert(`Failed to delete pitch: ${error.message}`);
+    }
+  };
+
+  // Handle submitting a draft pitch
+  const handleSubmitPitch = async (pitchId: string) => {
+    if (!window.confirm('Submit this pitch for editorial review?')) {
+      return;
+    }
+
+    try {
+      await submitPitch(pitchId);
+      alert('Pitch submitted for review!');
+      // Reload pitches
+      if (user) {
+        loadPitches(user.uid);
+      }
+    } catch (error: any) {
+      alert(`Failed to submit pitch: ${error.message}`);
+    }
+  };
+
+  // Get pitch status color
+  const getPitchStatusStyle = (status: string) => {
+    switch (status) {
+      case 'draft': return { bg: '#f3f4f6', color: '#6b7280' };
+      case 'submitted': return { bg: '#fef3c7', color: '#92400e' };
+      case 'approved': return { bg: '#d1fae5', color: '#065f46' };
+      case 'rejected': return { bg: '#fee2e2', color: '#991b1b' };
+      case 'converted': return { bg: '#dbeafe', color: '#1e40af' };
+      default: return { bg: '#f3f4f6', color: '#6b7280' };
+    }
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -214,6 +278,8 @@ const WriterDashboard: React.FC = () => {
   const pendingCount = submissions.filter(s => (s.status === 'pending' || s.status === 'in-review') && !s.isPublished).length;
   const draftCount = drafts.length; // NEW: Count drafts separately
   const hasEditorFeedback = submissions.some(s => s.editorNotes); // NEW: Check if any story has feedback
+  const approvedPitchesCount = pitches.filter(p => p.status === 'approved').length;
+  const pendingPitchesCount = pitches.filter(p => p.status === 'submitted').length;
 
   return (
     <div style={{
@@ -297,6 +363,20 @@ const WriterDashboard: React.FC = () => {
             My Submissions ({submissions.length})
           </button>
           <button
+            onClick={() => setActiveTab('pitches')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'pitches' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'pitches' ? '600' : '400',
+              color: activeTab === 'pitches' ? '#000' : '#6b7280'
+            }}
+          >
+            Story Pitches ({pitches.length})
+          </button>
+          <button
             onClick={() => setActiveTab('profile')}
             style={{
               padding: '12px 24px',
@@ -375,24 +455,71 @@ const WriterDashboard: React.FC = () => {
                   <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Editor Feedback</div>
                 </div>
               )}
+              
+              {approvedPitchesCount > 0 && (
+                <div style={{
+                  padding: '20px',
+                  backgroundColor: '#d1fae5',
+                  borderRadius: '6px',
+                  border: '1px solid #a7f3d0'
+                }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px', color: '#065f46' }}>
+                    {approvedPitchesCount}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Approved Pitches</div>
+                </div>
+              )}
+              
+              {pendingPitchesCount > 0 && (
+                <div style={{
+                  padding: '20px',
+                  backgroundColor: '#fef3c7',
+                  borderRadius: '6px',
+                  border: '1px solid #fde68a'
+                }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px', color: '#92400e' }}>
+                    {pendingPitchesCount}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Pitches Pending Review</div>
+                </div>
+              )}
             </div>
 
             <div>
               <h3 style={{ marginBottom: '16px' }}>Quick Actions</h3>
-              <a
-                href="#opinion/submit"
-                style={{
-                  display: 'inline-block',
-                  padding: '12px 24px',
-                  backgroundColor: '#000',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '500'
-                }}
-              >
-                Submit New Article
-              </a>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <a
+                  href="#opinion/submit"
+                  style={{
+                    display: 'inline-block',
+                    padding: '12px 24px',
+                    backgroundColor: '#000',
+                    color: 'white',
+                    textDecoration: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Submit New Article
+                </a>
+                <button
+                  onClick={() => {
+                    setActiveTab('pitches');
+                    setShowPitchForm(true);
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#1e40af',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  💡 Submit Story Pitch
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -569,6 +696,226 @@ const WriterDashboard: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'pitches' && (
+          <div style={{
+            backgroundColor: 'white',
+            padding: '32px',
+            borderRadius: '8px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            {showPitchForm ? (
+              <PitchSubmissionForm
+                onSuccess={(pitchId) => {
+                  setShowPitchForm(false);
+                  if (user) {
+                    loadPitches(user.uid);
+                  }
+                }}
+                onCancel={() => setShowPitchForm(false)}
+              />
+            ) : (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <h2 style={{ margin: 0 }}>Story Pitches</h2>
+                  <button
+                    onClick={() => setShowPitchForm(true)}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#000',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '500'
+                    }}
+                  >
+                    + New Pitch
+                  </button>
+                </div>
+
+                <p style={{ color: '#6b7280', marginBottom: '24px', fontSize: '0.875rem' }}>
+                  Submit story ideas for editorial approval. Approved pitches can be developed into full articles.
+                </p>
+
+                {pitches.length === 0 ? (
+                  <div style={{
+                    padding: '48px',
+                    textAlign: 'center',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>💡</div>
+                    <p style={{ color: '#6b7280', margin: '0 0 16px 0' }}>
+                      You haven't submitted any story pitches yet.
+                    </p>
+                    <button
+                      onClick={() => setShowPitchForm(true)}
+                      style={{
+                        padding: '12px 24px',
+                        backgroundColor: '#000',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Submit Your First Pitch
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {pitches.map(pitch => (
+                      <div
+                        key={pitch.id}
+                        style={{
+                          padding: '20px',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          backgroundColor: pitch.status === 'approved' ? '#f0fdf4' : 'white'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: '0 0 8px 0', fontSize: '1.125rem' }}>{pitch.title}</h3>
+                            <p style={{ margin: 0, color: '#4b5563', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                              {pitch.summary}
+                            </p>
+                          </div>
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            backgroundColor: getPitchStatusStyle(pitch.status).bg,
+                            color: getPitchStatusStyle(pitch.status).color,
+                            textTransform: 'capitalize',
+                            marginLeft: '12px',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {pitch.status}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '0.75rem', color: '#6b7280', marginBottom: '12px' }}>
+                          {pitch.proposedCategory && <span>Category: {pitch.proposedCategory}</span>}
+                          {pitch.estimatedWordCount && <span>~{pitch.estimatedWordCount} words</span>}
+                          <span>Created: {pitch.createdAt ? new Date(pitch.createdAt).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+
+                        {/* Editor Feedback */}
+                        {pitch.editorFeedback && (
+                          <div style={{
+                            padding: '12px',
+                            backgroundColor: '#d1fae5',
+                            borderRadius: '6px',
+                            marginBottom: '12px'
+                          }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#065f46', marginBottom: '4px' }}>
+                              Editor Feedback
+                            </div>
+                            <p style={{ margin: 0, color: '#065f46', fontSize: '0.875rem' }}>
+                              {pitch.editorFeedback}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Rejection Reason */}
+                        {pitch.status === 'rejected' && pitch.rejectionReason && (
+                          <div style={{
+                            padding: '12px',
+                            backgroundColor: '#fee2e2',
+                            borderRadius: '6px',
+                            marginBottom: '12px'
+                          }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
+                              Rejection Reason
+                            </div>
+                            <p style={{ margin: 0, color: '#991b1b', fontSize: '0.875rem' }}>
+                              {pitch.rejectionReason}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Actions for draft pitches */}
+                        {pitch.status === 'draft' && (
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                            <button
+                              onClick={() => handleSubmitPitch(pitch.id)}
+                              style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#1e40af',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.875rem',
+                                fontWeight: '500'
+                              }}
+                            >
+                              Submit for Review
+                            </button>
+                            <button
+                              onClick={() => handleDeletePitch(pitch.id)}
+                              style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#ef4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Approved pitch - prompt to write article */}
+                        {pitch.status === 'approved' && !pitch.convertedToOpinionId && (
+                          <div style={{ marginTop: '12px' }}>
+                            <a
+                              href="#opinion/submit"
+                              style={{
+                                display: 'inline-block',
+                                padding: '8px 16px',
+                                backgroundColor: '#16a34a',
+                                color: 'white',
+                                textDecoration: 'none',
+                                borderRadius: '6px',
+                                fontSize: '0.875rem',
+                                fontWeight: '500'
+                              }}
+                            >
+                              ✍️ Write This Article
+                            </a>
+                          </div>
+                        )}
+
+                        {/* Converted pitch */}
+                        {pitch.status === 'converted' && pitch.convertedToOpinionId && (
+                          <div style={{
+                            marginTop: '12px',
+                            padding: '8px 12px',
+                            backgroundColor: '#dbeafe',
+                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            color: '#1e40af'
+                          }}>
+                            ✅ This pitch has been converted to an article
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 

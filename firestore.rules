@@ -188,6 +188,34 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
+    // ===========================================
+    // STORY PITCHES COLLECTION (Sprint 0)
+    // ===========================================
+    match /artifacts/{appId}/public/data/storyPitches/{pitchId} {
+      // Writers can read their own pitches; editors can read all
+      allow read: if isAuthenticated() && 
+                    (resource.data.writerId == request.auth.uid || isEditor());
+      
+      // Editors can list all pitches; writers see filtered by client
+      allow list: if isAuthenticated();
+      
+      // Writers can create pitches
+      allow create: if isAuthenticated() && 
+                      request.resource.data.writerId == request.auth.uid;
+      
+      // Writers can update their own drafts; editors can update any pitch
+      allow update: if isAuthenticated() && 
+                      ((resource.data.writerId == request.auth.uid && 
+                        resource.data.status in ['draft', 'submitted', 'rejected']) || 
+                       isEditor());
+      
+      // Writers can delete their own drafts; admins can delete any
+      allow delete: if isAuthenticated() && 
+                      ((resource.data.writerId == request.auth.uid && 
+                        resource.data.status == 'draft') || 
+                       isAdmin());
+    }
+    
     // SHORT LINKS COLLECTION
     match /short_links/{shortId} {
       allow read, list: if true;

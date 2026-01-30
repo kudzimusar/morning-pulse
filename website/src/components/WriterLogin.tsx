@@ -53,6 +53,32 @@ const WriterLogin: React.FC<WriterLoginProps> = ({ onSuccess, onBack }) => {
         return;
       }
 
+      // Check if writer is suspended (Sprint 1 - Writer Governance)
+      if (writer.suspension?.isSuspended) {
+        // Check if suspension has expired
+        if (writer.suspension.suspendedUntil) {
+          const now = new Date();
+          const suspendedUntil = new Date(writer.suspension.suspendedUntil);
+          if (now <= suspendedUntil) {
+            setError(
+              `Your account has been suspended${writer.suspension.reason ? `: ${writer.suspension.reason}` : ''}. ` +
+              `Suspension ends: ${suspendedUntil.toLocaleDateString()}`
+            );
+            await auth.signOut();
+            return;
+          }
+          // If past expiration, allow login (suspension auto-clears)
+        } else {
+          // Indefinite suspension
+          setError(
+            `Your account has been suspended${writer.suspension.reason ? `: ${writer.suspension.reason}` : ''}. ` +
+            'Please contact editorial support for more information.'
+          );
+          await auth.signOut();
+          return;
+        }
+      }
+
       if (writer.status === 'approved') {
         // Success - redirect to writer dashboard
         if (onSuccess) {

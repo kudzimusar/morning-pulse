@@ -166,3 +166,50 @@ export interface AuditLog {
   metadata?: Record<string, any>; // Additional context
   ipAddress?: string; // Future: Track IP for security
 }
+
+// ============================================
+// STORY PITCHING SYSTEM (Sprint 0)
+// ============================================
+
+export type PitchStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'converted';
+
+export interface StoryPitch {
+  id: string;
+  writerId: string; // Firebase UID of the writer
+  writerName: string; // Writer display name
+  writerEmail: string; // Writer email for notifications
+  
+  // Pitch content
+  title: string; // Proposed headline
+  summary: string; // Brief description (elevator pitch)
+  angle: string; // Unique angle/perspective
+  proposedCategory?: string; // e.g., 'politics', 'culture', 'business'
+  estimatedWordCount?: number; // Proposed article length
+  proposedDeadline?: Date; // When writer can deliver
+  
+  // Supporting information
+  sources?: string; // Proposed sources/interviews
+  relevance?: string; // Why this story matters now
+  
+  // Workflow
+  status: PitchStatus;
+  submittedAt?: Date;
+  createdAt: Date;
+  updatedAt?: Date;
+  
+  // Editorial response
+  reviewedBy?: string; // Editor UID
+  reviewedByName?: string; // Editor name
+  reviewedAt?: Date;
+  editorFeedback?: string; // Notes from editor
+  rejectionReason?: string; // If rejected
+  
+  // Conversion tracking (when approved pitch becomes article)
+  convertedToOpinionId?: string; // Links to created opinion
+  convertedAt?: Date;
+  
+  // Priority/Assignment
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  assignedEditorId?: string; // Editor assigned to review
+  assignedEditorName?: string;
+}
