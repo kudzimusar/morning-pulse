@@ -31,12 +31,10 @@ import AnalyticsTab from './admin/AnalyticsTab';
 import NewsletterHub from './admin/NewsletterHub';
 import ImageComplianceTab from './admin/ImageComplianceTab';
 import SettingsTab from './admin/SettingsTab';
-import WriterManagementTab from './admin/WriterManagementTab';
 import SubscriberManagementTab from './admin/SubscriberManagementTab';
 import AdManagementTab from './admin/AdManagementTab';
 import IntegrationSettings from './admin/IntegrationSettings';
-import PitchReviewTab from './admin/PitchReviewTab';
-import WriterPaymentsAdmin from './admin/WriterPaymentsAdmin';
+import WriterHub from './admin/WriterHub';
 import { updateLastActive } from '../services/staffService';
 
 // Constants
@@ -67,18 +65,17 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'pitch-review' | 'published-content' | 'staff-management' | 'writer-management' | 'writer-payments' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
 
 // ✅ FIX: Move tabs array to top level to prevent initialization errors
 // 📧 Newsletter Hub consolidates: Newsletter Generator, Subscribers, Newsletter History, Settings
+// ✍️ Writer Hub consolidates: Writer Management, Story Pitches, Payments
 const ALL_TABS = [
   { id: 'dashboard' as TabId, label: 'Dashboard Overview', icon: '📊' },
   { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: '📝' },
-  { id: 'pitch-review' as TabId, label: 'Story Pitches', icon: '💡' },
   { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
   { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
-  { id: 'writer-management' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
-  { id: 'writer-payments' as TabId, label: 'Writer Payments', icon: '💰', adminOnly: true },
+  { id: 'writer-hub' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
   { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
   { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
   { id: 'analytics' as TabId, label: 'Analytics', icon: '📈', superAdminOnly: true },
@@ -445,10 +442,6 @@ const AdminDashboard: React.FC = () => {
             <EditorialQueueTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
           )}
 
-          {activeTab === 'pitch-review' && (
-            <PitchReviewTab userRoles={userRoles} />
-          )}
-
           {activeTab === 'published-content' && (
             <PublishedContentTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
           )}
@@ -457,12 +450,8 @@ const AdminDashboard: React.FC = () => {
             <StaffManagementTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
           )}
 
-          {activeTab === 'writer-management' && isAdmin && (
-            <WriterManagementTab userRoles={userRoles} />
-          )}
-
-          {activeTab === 'writer-payments' && isAdmin && (
-            <WriterPaymentsAdmin userRoles={userRoles} />
+          {activeTab === 'writer-hub' && isAdmin && (
+            <WriterHub userRoles={userRoles} />
           )}
 
           {activeTab === 'subscriber-management' && isAdmin && (
