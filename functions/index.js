@@ -1903,7 +1903,7 @@ exports.generateWriterStatements = async (req, res) => {
  * for more reliable scheduled publishing.
  * 
  * RECOMMENDED: Set up Cloud Scheduler to call this every 5 minutes
- *   - Cron: */5 * * * *
+ *   - Cron expression: "0/5 * * * *" (every 5 minutes)
  *   - Target: HTTP
  *   - URL: https://[region]-[project-id].cloudfunctions.net/autoPublishScheduledStories
  * 
