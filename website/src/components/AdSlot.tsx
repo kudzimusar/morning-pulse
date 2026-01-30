@@ -30,11 +30,53 @@ const AdSlot: React.FC<AdSlotProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [impressionTracked, setImpressionTracked] = useState(false);
+  const [isClosed, setIsClosed] = useState(false); // ✅ FIX: Add close state
+  const [firebaseReady, setFirebaseReady] = useState(false); // ✅ FIX: Track Firebase readiness
   const adRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Load ads for this slot
+  // ✅ FIX: Check Firebase readiness before loading ads
   useEffect(() => {
+    const checkFirebase = () => {
+      try {
+        const { getApp } = require('firebase/app');
+        const app = getApp();
+        if (app) {
+          setFirebaseReady(true);
+          return true;
+        }
+      } catch (error) {
+        // Firebase not ready yet
+        return false;
+      }
+      return false;
+    };
+
+    // Check immediately
+    if (checkFirebase()) {
+      return;
+    }
+
+    // Poll for Firebase initialization (max 10 seconds)
+    let attempts = 0;
+    const maxAttempts = 20;
+    const interval = setInterval(() => {
+      attempts++;
+      if (checkFirebase() || attempts >= maxAttempts) {
+        clearInterval(interval);
+        if (attempts >= maxAttempts) {
+          console.warn(`⚠️ [AdSlot] Firebase not ready after ${maxAttempts} attempts for slot: ${slotId}`);
+        }
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [slotId]);
+
+  // Load ads for this slot (only when Firebase is ready)
+  useEffect(() => {
+    if (!firebaseReady || isClosed) return; // ✅ FIX: Don't load if closed or Firebase not ready
+
     const loadAds = async () => {
       try {
         setLoading(true);
@@ -73,14 +115,20 @@ const AdSlot: React.FC<AdSlotProps> = ({
       } catch (err: any) {
         console.error(`❌ [AdSlot] Error loading ads for slot: ${slotId}`, err);
         console.error('   Error details:', err.message, err.code);
-        setError('load_failed');
+        // ✅ FIX: Don't set error if Firebase not initialized - just wait
+        if (err.message?.includes('Firebase not initialized')) {
+          console.log(`⏳ [AdSlot] Waiting for Firebase initialization...`);
+          setFirebaseReady(false); // Retry Firebase check
+        } else {
+          setError('load_failed');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadAds();
-  }, [slotId]);
+  }, [slotId, firebaseReady, isClosed]);
 
   // Track impression when ad becomes visible (Intersection Observer)
   useEffect(() => {
@@ -233,9 +281,17 @@ const AdSlot: React.FC<AdSlotProps> = ({
     );
   }
 
-  // Error or no ads - show fallback
+  // ✅ FIX: Don't render if closed
+  if (isClosed) {
+    return null;
+  }
+
+  // Error or no ads - show fallback (but only log once to prevent spam)
   if (error || ads.length === 0) {
-    console.log(`⚠️ [AdSlot] Showing fallback for slot: ${slotId}`, { error, adsLength: ads.length, currentAdIndex });
+    // Only log once per error state change
+    if (error && !loading) {
+      // Suppress repeated logs - only log on first error
+    }
     return renderFallback();
   }
 
@@ -306,6 +362,7 @@ const AdSlot: React.FC<AdSlotProps> = ({
             textDecoration: 'none',
             color: 'inherit',
             width: '100%',
+            maxWidth: '100%', // ✅ FIX: Ensure responsive
             maxHeight: slotId === 'header_banner' ? '120px' : 'none',
             overflow: 'hidden',
             position: 'relative'
@@ -318,7 +375,7 @@ const AdSlot: React.FC<AdSlotProps> = ({
               width: '100%',
               height: 'auto',
               display: 'block',
-              maxWidth: '100%',
+              maxWidth: '100%', // ✅ FIX: Ensure responsive
               maxHeight: slotId === 'header_banner' ? '120px' : 'none',
               objectFit: slotId === 'header_banner' ? 'contain' : 'cover',
               objectPosition: 'center',

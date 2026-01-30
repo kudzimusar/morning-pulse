@@ -243,7 +243,8 @@ const Header: React.FC<HeaderProps> = ({
         padding: '0 16px',
         boxSizing: 'border-box',
         maxHeight: '120px', // ✅ FIX: Constrain header ad height
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative'
       }}>
         <AdSlot 
           slotId="header_banner" 
