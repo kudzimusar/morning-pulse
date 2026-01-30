@@ -982,7 +982,14 @@ export const getAdsForSlot = async (
     // ✅ FIX: Add fallback logger when no ads found
     if (ads.length === 0) {
       const countryName = (window as any).__user_country?.name || 'Unknown';
-      console.log(`🔍 AdSlot [${slotId}] found 0 active ads for ${countryName}. Placement: ${placement}, Status: active, PaymentStatus: paid`);
+      console.log(`🔍 [getAdsForSlot] AdSlot [${slotId}] found 0 active ads for ${countryName}`);
+      console.log(`   Query filters: Placement=${placement}, Status=active, PaymentStatus=paid`);
+      console.log(`   Slot lookup: ${slot ? 'Found' : 'NOT FOUND'} (slotId: ${slotId})`);
+      if (slot) {
+        console.log(`   Slot config:`, { maxAds: slot.maxAds, priorityTier: slot.priorityTier });
+      }
+    } else {
+      console.log(`✅ [getAdsForSlot] AdSlot [${slotId}] found ${ads.length} active ads`);
     }
     
     // Sort by priority tier (premium first) and return limited results

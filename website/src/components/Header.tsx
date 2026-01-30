@@ -235,13 +235,15 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       )}
 
-      {/* ✅ FIX: Header Banner Ad Slot - Responsive */}
+      {/* ✅ FIX: Header Banner Ad Slot - Responsive with constrained height */}
       <div style={{
         width: '100%',
         maxWidth: '100%',
         marginTop: '8px',
         padding: '0 16px',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        maxHeight: '120px', // ✅ FIX: Constrain header ad height
+        overflow: 'hidden'
       }}>
         <AdSlot 
           slotId="header_banner" 
@@ -249,7 +251,9 @@ const Header: React.FC<HeaderProps> = ({
           style={{
             width: '100%',
             maxWidth: '100%',
-            margin: '0 auto'
+            margin: '0 auto',
+            maxHeight: '120px', // ✅ FIX: Constrain ad image height
+            objectFit: 'contain' // ✅ FIX: Maintain aspect ratio
           }}
         />
       </div>

@@ -39,14 +39,33 @@ const AdSlot: React.FC<AdSlotProps> = ({
       try {
         setLoading(true);
         setError(null);
+        console.log(`🔍 [AdSlot] Loading ads for slot: ${slotId}`);
         const slotAds = await getAdsForSlot(slotId, { limit: 3 });
+        console.log(`📊 [AdSlot] Found ${slotAds.length} ads for slot: ${slotId}`, slotAds);
         setAds(slotAds);
         
         if (slotAds.length === 0) {
+          console.warn(`⚠️ [AdSlot] No ads found for slot: ${slotId}`);
           setError('no_ads');
+        } else {
+          // ✅ FIX: Log ad details for debugging
+          slotAds.forEach((ad, index) => {
+            console.log(`📢 [AdSlot] Ad ${index + 1}:`, {
+              id: ad.id,
+              title: ad.title,
+              creativeUrl: ad.creativeUrl,
+              destinationUrl: ad.destinationUrl,
+              placement: ad.placement,
+              status: ad.status,
+              paymentStatus: ad.paymentStatus,
+              startDate: ad.startDate,
+              endDate: ad.endDate
+            });
+          });
         }
       } catch (err: any) {
-        console.error('Error loading ads for slot:', slotId, err);
+        console.error(`❌ [AdSlot] Error loading ads for slot: ${slotId}`, err);
+        console.error('   Error details:', err.message, err.code);
         setError('load_failed');
       } finally {
         setLoading(false);
@@ -229,7 +248,11 @@ const AdSlot: React.FC<AdSlotProps> = ({
         borderRadius: '8px',
         overflow: 'hidden',
         backgroundColor: '#fff',
-        position: 'relative'
+        position: 'relative',
+        maxHeight: slotId === 'header_banner' ? '120px' : 'none', // ✅ FIX: Constrain header ad height
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}>
         <div className="ad-label" style={{
           position: 'absolute',
@@ -264,13 +287,22 @@ const AdSlot: React.FC<AdSlotProps> = ({
               width: '100%',
               height: 'auto',
               display: 'block',
-              maxWidth: '100%'
+              maxWidth: '100%',
+              maxHeight: '120px', // ✅ FIX: Constrain header ad height
+              objectFit: 'contain', // ✅ FIX: Maintain aspect ratio without cropping
+              objectPosition: 'center'
             }}
             loading="lazy"
             onError={(e) => {
               // Fallback if image fails to load
-              console.error('Ad image failed to load:', currentAd.creativeUrl);
+              console.error('❌ Ad image failed to load:', currentAd.creativeUrl);
+              console.error('   Ad ID:', currentAd.id);
+              console.error('   Ad Title:', currentAd.title);
               setError('image_load_failed');
+            }}
+            onLoad={() => {
+              // ✅ FIX: Log successful image load for debugging
+              console.log('✅ Ad image loaded successfully:', currentAd.creativeUrl);
             }}
           />
         </a>
