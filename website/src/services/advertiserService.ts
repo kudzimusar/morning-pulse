@@ -851,9 +851,11 @@ export const getAdSlot = async (slotId: string): Promise<AdSlot | null> => {
   const slotRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'adSlots', slotId);
   
   try {
+    console.log(`🔍 [getAdSlot] Fetching slot: ${slotId} from path: artifacts/${APP_ID}/public/data/adSlots/${slotId}`);
     const snap = await getDoc(slotRef);
     if (snap.exists()) {
       const data = snap.data();
+      console.log(`✅ [getAdSlot] Slot found:`, { slotId: snap.id, ...data });
       return {
         slotId: snap.id,
         pageType: data.pageType || 'article',
@@ -863,9 +865,12 @@ export const getAdSlot = async (slotId: string): Promise<AdSlot | null> => {
         createdAt: data.createdAt?.toDate?.() || new Date(),
       };
     }
+    console.warn(`⚠️ [getAdSlot] Slot not found: ${slotId}`);
     return null;
   } catch (error: any) {
-    console.error('Error fetching ad slot:', error);
+    console.error(`❌ [getAdSlot] Error fetching ad slot ${slotId}:`, error);
+    console.error('   Error code:', error.code);
+    console.error('   Error message:', error.message);
     throw new Error(`Failed to fetch ad slot: ${error.message}`);
   }
 };
