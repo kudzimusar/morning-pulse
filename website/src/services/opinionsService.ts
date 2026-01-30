@@ -734,6 +734,8 @@ export const approveOpinion = async (
       finalImageUrl,
       // Keep legacy field aligned for older UIs
       imageUrl: finalImageUrl,
+      // Sprint 2: Track approval timestamp for SLA reporting
+      'editorialMeta.approvalAt': Timestamp.now(),
     };
     if (!hasValidUrl) patch.imageGeneratedAt = new Date().toISOString();
     if (editorNotes) patch.editorNotes = editorNotes;
@@ -741,7 +743,7 @@ export const approveOpinion = async (
     // Direct Firestore update with merge
     await setDoc(docRef, patch, { merge: true });
     
-    console.log('✅ Opinion approved:', opinionId);
+    console.log('✅ Opinion approved:', opinionId, '(SLA approvalAt tracked)');
   } catch (error: any) {
     console.error('❌ Error approving opinion:', error);
     throw new Error(`Failed to approve opinion: ${error.message}`);
@@ -782,6 +784,7 @@ export const rejectOpinion = async (opinionId: string, reviewedBy?: string): Pro
  * NEW: Claim a story for editing (Editor takes ownership)
  * Changes status from 'pending' to 'in-review'
  * Stores original body for reference
+ * Sprint 2: Now tracks SLA via editorialMeta.firstResponseAt
  */
 export const claimStory = async (
   storyId: string,
@@ -811,17 +814,27 @@ export const claimStory = async (
       throw new Error(`Story is already claimed by ${currentData.claimedByName || 'another editor'}`);
     }
     
-    // Claim the story
-    await setDoc(docRef, {
+    // Claim the story with SLA tracking (Sprint 2)
+    const updateData: any = {
       status: 'in-review',
       claimedBy: editorId,
       claimedByName: editorName,
       claimedAt: Timestamp.now(),
       originalBody: currentData.originalBody || currentData.body, // Preserve original if not already saved
       updatedAt: Timestamp.now(),
-    }, { merge: true });
+      // Sprint 2: SLA tracking via editorialMeta
+      'editorialMeta.assignedEditorId': editorId,
+      'editorialMeta.assignedEditorName': editorName,
+    };
     
-    console.log('✅ Story claimed by editor:', editorName);
+    // Only set firstResponseAt if not already set (first editor to claim)
+    if (!currentData.editorialMeta?.firstResponseAt) {
+      updateData['editorialMeta.firstResponseAt'] = Timestamp.now();
+    }
+    
+    await setDoc(docRef, updateData, { merge: true });
+    
+    console.log('✅ Story claimed by editor:', editorName, '(SLA tracking enabled)');
   } catch (error: any) {
     console.error('❌ Error claiming story:', error);
     throw new Error(`Failed to claim story: ${error.message}`);
@@ -873,6 +886,7 @@ export const releaseStory = async (storyId: string, editorId: string): Promise<v
 /**
  * NEW: Return story to writer with feedback
  * Changes status back to 'pending' and adds editor notes
+ * Sprint 2: Tracks return count and last return reason
  */
 export const returnToWriter = async (
   storyId: string,
@@ -889,6 +903,11 @@ export const returnToWriter = async (
     
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
     
+    // Get current data to increment return count
+    const snap = await getDoc(docRef);
+    const currentData = snap.exists() ? snap.data() : {};
+    const currentReturnCount = currentData.editorialMeta?.returnCount || 0;
+    
     await setDoc(docRef, {
       status: 'pending',
       editorNotes: editorNotes,
@@ -897,12 +916,76 @@ export const returnToWriter = async (
       claimedAt: null,
       returnedAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      // Sprint 2: Track return count and reason
+      'editorialMeta.returnCount': currentReturnCount + 1,
+      'editorialMeta.lastReturnedAt': Timestamp.now(),
+      'editorialMeta.lastReturnReason': editorNotes,
     }, { merge: true });
     
-    console.log('✅ Story returned to writer with feedback');
+    console.log('✅ Story returned to writer with feedback (return #', currentReturnCount + 1, ')');
   } catch (error: any) {
     console.error('❌ Error returning story to writer:', error);
     throw new Error(`Failed to return story: ${error.message}`);
+  }
+};
+
+/**
+ * Sprint 2: Set story priority
+ * Allows editors to mark stories as low/normal/high/urgent
+ */
+export const setStoryPriority = async (
+  storyId: string,
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    await setDoc(docRef, {
+      'editorialMeta.priority': priority,
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Story priority set to:', priority);
+  } catch (error: any) {
+    console.error('❌ Error setting story priority:', error);
+    throw new Error(`Failed to set priority: ${error.message}`);
+  }
+};
+
+/**
+ * Sprint 2: Set story SLA hours
+ * Defines target review/publish time for a story
+ */
+export const setStorySLA = async (
+  storyId: string,
+  slaHours: number
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+
+  try {
+    await ensureAuthenticated();
+    
+    const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
+    
+    await setDoc(docRef, {
+      'editorialMeta.slaHours': slaHours,
+      updatedAt: Timestamp.now(),
+    }, { merge: true });
+    
+    console.log('✅ Story SLA set to:', slaHours, 'hours');
+  } catch (error: any) {
+    console.error('❌ Error setting story SLA:', error);
+    throw new Error(`Failed to set SLA: ${error.message}`);
   }
 };
 

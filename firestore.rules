@@ -237,6 +237,25 @@ service cloud.firestore {
     }
     
     // ===========================================
+    // WRITER METRICS COLLECTION (Sprint 3)
+    // ===========================================
+    // Metrics are computed by Cloud Functions
+    // Writers can read their own metrics, admins can read all
+    match /artifacts/{appId}/public/data/writerMetrics/{writerId} {
+      // Writers can read their own metrics
+      allow read: if isAuthenticated() && request.auth.uid == writerId;
+      // Editors and admins can read all metrics
+      allow read: if isEditor();
+      // Cloud Functions use admin SDK for writes
+      allow write: if false;
+    }
+    
+    // Allow listing all metrics for editors/admins (leaderboard)
+    match /artifacts/{appId}/public/data/writerMetrics/{document=**} {
+      allow list: if isEditor();
+    }
+    
+    // ===========================================
     // ANALYTICS COLLECTION
     // ===========================================
     // Analytics are written by Cloud Functions (admin SDK)

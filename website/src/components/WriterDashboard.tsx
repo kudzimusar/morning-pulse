@@ -3,7 +3,8 @@ import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getCurrentWriter, updateWriterProfile, Writer } from '../services/writerService';
 import { getPublishedOpinions, Opinion, submitForReview } from '../services/opinionsService';
 import { getWriterPitches, submitPitch, deletePitch } from '../services/pitchService';
-import { StoryPitch } from '../../types';
+import { getWriterMetrics, calculateWriterMetricsOnTheFly } from '../services/writerMetricsService';
+import { StoryPitch, WriterMetrics } from '../../types';
 import { collection, query, where, getDocs, getFirestore } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 import PitchSubmissionForm from './writer/PitchSubmissionForm';
@@ -15,7 +16,9 @@ const WriterDashboard: React.FC = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [drafts, setDrafts] = useState<any[]>([]); // NEW: Separate list for drafts
   const [pitches, setPitches] = useState<StoryPitch[]>([]); // Story pitches
-  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'pitches' | 'profile'>('overview');
+  const [metrics, setMetrics] = useState<WriterMetrics | null>(null); // Sprint 3: Performance metrics
+  const [loadingMetrics, setLoadingMetrics] = useState(false); // Sprint 3: Loading state
+  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'pitches' | 'performance' | 'profile'>('overview');
   const [submittingForReview, setSubmittingForReview] = useState<string | null>(null); // NEW: Track submission in progress
   const [showPitchForm, setShowPitchForm] = useState(false); // Toggle pitch form
   const [editingProfile, setEditingProfile] = useState(false);
@@ -65,6 +68,13 @@ const WriterDashboard: React.FC = () => {
     }
   }, [writer]);
 
+  // Sprint 3: Load metrics when Performance tab is selected
+  useEffect(() => {
+    if (activeTab === 'performance' && user && !metrics && !loadingMetrics) {
+      loadMetrics(user.uid);
+    }
+  }, [activeTab, user]);
+
   // Load writer's pitches
   const loadPitches = async (writerUid: string) => {
     try {
@@ -72,6 +82,27 @@ const WriterDashboard: React.FC = () => {
       setPitches(writerPitches);
     } catch (error) {
       console.error('Error loading pitches:', error);
+    }
+  };
+
+  // Sprint 3: Load writer's performance metrics
+  const loadMetrics = async (writerUid: string) => {
+    setLoadingMetrics(true);
+    try {
+      // Try to get pre-computed metrics first
+      let writerMetrics = await getWriterMetrics(writerUid);
+      
+      // If no pre-computed metrics, calculate on-the-fly
+      if (!writerMetrics) {
+        console.log('📊 No pre-computed metrics, calculating on-the-fly...');
+        writerMetrics = await calculateWriterMetricsOnTheFly(writerUid);
+      }
+      
+      setMetrics(writerMetrics);
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+    } finally {
+      setLoadingMetrics(false);
     }
   };
 
@@ -375,6 +406,20 @@ const WriterDashboard: React.FC = () => {
             }}
           >
             Story Pitches ({pitches.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('performance')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              borderBottom: activeTab === 'performance' ? '2px solid #000' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'performance' ? '600' : '400',
+              color: activeTab === 'performance' ? '#000' : '#6b7280'
+            }}
+          >
+            📊 Performance
           </button>
           <button
             onClick={() => setActiveTab('profile')}
@@ -914,6 +959,210 @@ const WriterDashboard: React.FC = () => {
                     ))}
                   </div>
                 )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Sprint 3: Performance Tab */}
+        {activeTab === 'performance' && (
+          <div style={{
+            backgroundColor: 'white',
+            padding: '32px',
+            borderRadius: '8px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h2 style={{ marginTop: 0, marginBottom: '24px' }}>📊 Performance Analytics</h2>
+            
+            {loadingMetrics ? (
+              <div style={{ textAlign: 'center', padding: '48px', color: '#6b7280' }}>
+                <div style={{ fontSize: '32px', marginBottom: '16px' }}>⏳</div>
+                <p>Loading your performance data...</p>
+              </div>
+            ) : !metrics ? (
+              <div style={{ textAlign: 'center', padding: '48px', color: '#6b7280' }}>
+                <div style={{ fontSize: '32px', marginBottom: '16px' }}>📊</div>
+                <p>No performance data available yet.</p>
+                <p style={{ fontSize: '0.875rem' }}>Submit and publish articles to see your analytics here.</p>
+              </div>
+            ) : (
+              <>
+                {/* 30-Day Rolling Metrics */}
+                <div style={{ marginBottom: '32px' }}>
+                  <h3 style={{ marginBottom: '16px', color: '#374151' }}>Last 30 Days</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    <div style={{
+                      padding: '20px',
+                      backgroundColor: '#f0fdf4',
+                      borderRadius: '8px',
+                      border: '1px solid #bbf7d0',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#16a34a' }}>
+                        {metrics.rolling30d.published}
+                      </div>
+                      <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Published</div>
+                    </div>
+                    
+                    <div style={{
+                      padding: '20px',
+                      backgroundColor: '#fef3c7',
+                      borderRadius: '8px',
+                      border: '1px solid #fde68a',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#d97706' }}>
+                        {metrics.rolling30d.submitted}
+                      </div>
+                      <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Submitted</div>
+                    </div>
+                    
+                    <div style={{
+                      padding: '20px',
+                      backgroundColor: '#dbeafe',
+                      borderRadius: '8px',
+                      border: '1px solid #93c5fd',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e40af' }}>
+                        {metrics.rolling30d.avgReviewHours}h
+                      </div>
+                      <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Avg Review Time</div>
+                    </div>
+                    
+                    {metrics.rolling30d.rejected > 0 && (
+                      <div style={{
+                        padding: '20px',
+                        backgroundColor: '#fee2e2',
+                        borderRadius: '8px',
+                        border: '1px solid #fecaca',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#dc2626' }}>
+                          {metrics.rolling30d.rejectionRate}%
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Rejection Rate</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lifetime Metrics */}
+                <div style={{ marginBottom: '32px' }}>
+                  <h3 style={{ marginBottom: '16px', color: '#374151' }}>Lifetime Stats</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    <div style={{
+                      padding: '20px',
+                      backgroundColor: '#f9fafb',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                        {metrics.lifetime.totalPublished}
+                      </div>
+                      <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Total Published</div>
+                    </div>
+                    
+                    <div style={{
+                      padding: '20px',
+                      backgroundColor: '#f9fafb',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                        {metrics.lifetime.totalSubmitted}
+                      </div>
+                      <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Total Submitted</div>
+                    </div>
+                    
+                    {metrics.lifetime.firstPublishedAt && (
+                      <div style={{
+                        padding: '20px',
+                        backgroundColor: '#f9fafb',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb'
+                      }}>
+                        <div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                          {new Date(metrics.lifetime.firstPublishedAt).toLocaleDateString()}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>First Published</div>
+                      </div>
+                    )}
+                    
+                    {metrics.lifetime.lastPublishedAt && (
+                      <div style={{
+                        padding: '20px',
+                        backgroundColor: '#f9fafb',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb'
+                      }}>
+                        <div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                          {new Date(metrics.lifetime.lastPublishedAt).toLocaleDateString()}
+                        </div>
+                        <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>Last Published</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category Breakdown */}
+                {metrics.categoryBreakdown && Object.keys(metrics.categoryBreakdown).length > 0 && (
+                  <div>
+                    <h3 style={{ marginBottom: '16px', color: '#374151' }}>Articles by Category</h3>
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '12px'
+                    }}>
+                      {Object.entries(metrics.categoryBreakdown).map(([category, stats]) => (
+                        <div
+                          key={category}
+                          style={{
+                            padding: '12px 16px',
+                            backgroundColor: '#f3f4f6',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}
+                        >
+                          <span style={{ fontWeight: '600', textTransform: 'capitalize' }}>{category}</span>
+                          <span style={{
+                            backgroundColor: '#000',
+                            color: '#fff',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600'
+                          }}>
+                            {stats.published}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Metrics last computed */}
+                <div style={{
+                  marginTop: '32px',
+                  padding: '12px',
+                  backgroundColor: '#f9fafb',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  color: '#6b7280',
+                  textAlign: 'center'
+                }}>
+                  Metrics last updated: {metrics.lastComputed ? new Date(metrics.lastComputed).toLocaleString() : 'Unknown'}
+                </div>
               </>
             )}
           </div>

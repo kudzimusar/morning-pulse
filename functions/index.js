@@ -1420,6 +1420,199 @@ exports.sendScheduledNewsletter = async (req, res) => {
  * Part A: The Redirect Cloud Function (handleShortLink)
  * Handles requests from /s/** for social media unfurling and user redirection.
  */
+// ============================================
+// WRITER PERFORMANCE METRICS (Sprint 3)
+// ============================================
+
+/**
+ * Cloud Function: Compute Writer Metrics
+ * Aggregates writer performance stats from opinions collection
+ * Can be triggered by HTTP request or Cloud Scheduler
+ */
+exports.computeWriterMetrics = async (req, res) => {
+  // Set CORS headers and handle preflight
+  if (setCorsHeaders(req, res)) return;
+
+  try {
+    if (!db) {
+      res.status(500).json({ error: 'Firebase not initialized' });
+      return;
+    }
+
+    console.log('📊 Computing writer metrics...');
+
+    // Get all opinions to aggregate stats
+    const opinionsRef = db.collection('artifacts')
+      .doc(APP_ID)
+      .collection('public')
+      .doc('data')
+      .collection('opinions');
+
+    const opinionsSnap = await opinionsRef.get();
+    
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    // Aggregate by writerId (authorId)
+    const writerStats = {};
+    
+    opinionsSnap.forEach(docSnap => {
+      const data = docSnap.data();
+      const writerId = data.authorId;
+      
+      // Skip if no authorId (anonymous submissions)
+      if (!writerId) return;
+      
+      // Initialize writer stats if needed
+      if (!writerStats[writerId]) {
+        writerStats[writerId] = {
+          writerId,
+          writerName: data.authorName || 'Unknown',
+          rolling30d: {
+            submitted: 0,
+            published: 0,
+            rejected: 0,
+            totalReviewHours: 0,
+            reviewedCount: 0,
+            totalViews: 0,
+          },
+          lifetime: {
+            totalSubmitted: 0,
+            totalPublished: 0,
+            totalRejected: 0,
+            totalViews: 0,
+            firstPublishedAt: null,
+            lastPublishedAt: null,
+          },
+          categoryBreakdown: {}
+        };
+      }
+      
+      const stats = writerStats[writerId];
+      const submittedAt = data.submittedAt?.toDate?.() || new Date();
+      const publishedAt = data.publishedAt?.toDate?.();
+      const status = data.status;
+      const category = data.category || 'general';
+      
+      // Update writer name if newer
+      if (data.authorName) stats.writerName = data.authorName;
+      
+      // Lifetime stats
+      stats.lifetime.totalSubmitted++;
+      
+      if (status === 'published') {
+        stats.lifetime.totalPublished++;
+        
+        // Track first/last published dates
+        if (publishedAt) {
+          if (!stats.lifetime.firstPublishedAt || publishedAt < stats.lifetime.firstPublishedAt) {
+            stats.lifetime.firstPublishedAt = publishedAt;
+          }
+          if (!stats.lifetime.lastPublishedAt || publishedAt > stats.lifetime.lastPublishedAt) {
+            stats.lifetime.lastPublishedAt = publishedAt;
+          }
+        }
+        
+        // Category breakdown
+        if (!stats.categoryBreakdown[category]) {
+          stats.categoryBreakdown[category] = { published: 0, views: 0 };
+        }
+        stats.categoryBreakdown[category].published++;
+        
+        // Calculate review time
+        if (publishedAt && submittedAt) {
+          const reviewHours = (publishedAt.getTime() - submittedAt.getTime()) / (1000 * 60 * 60);
+          stats.rolling30d.totalReviewHours += reviewHours;
+          stats.rolling30d.reviewedCount++;
+        }
+      } else if (status === 'rejected') {
+        stats.lifetime.totalRejected++;
+      }
+      
+      // 30-day stats
+      if (submittedAt >= thirtyDaysAgo) {
+        stats.rolling30d.submitted++;
+        if (status === 'published') stats.rolling30d.published++;
+        if (status === 'rejected') stats.rolling30d.rejected++;
+      }
+    });
+    
+    // Calculate derived metrics and save
+    const metricsRef = db.collection('artifacts')
+      .doc(APP_ID)
+      .collection('public')
+      .doc('data')
+      .collection('writerMetrics');
+    
+    const batch = db.batch();
+    let processedCount = 0;
+    
+    for (const writerId in writerStats) {
+      const stats = writerStats[writerId];
+      
+      // Calculate averages and rates
+      const avgReviewHours = stats.rolling30d.reviewedCount > 0 
+        ? stats.rolling30d.totalReviewHours / stats.rolling30d.reviewedCount 
+        : 0;
+      
+      const rejectionRate = stats.lifetime.totalSubmitted > 0 
+        ? (stats.lifetime.totalRejected / stats.lifetime.totalSubmitted) * 100 
+        : 0;
+      
+      const avgViewsPerArticle = stats.lifetime.totalPublished > 0 
+        ? stats.lifetime.totalViews / stats.lifetime.totalPublished 
+        : 0;
+      
+      const metricsDoc = {
+        writerId,
+        writerName: stats.writerName,
+        rolling30d: {
+          submitted: stats.rolling30d.submitted,
+          published: stats.rolling30d.published,
+          rejected: stats.rolling30d.rejected,
+          avgReviewHours: Math.round(avgReviewHours * 10) / 10,
+          rejectionRate: Math.round((stats.rolling30d.rejected / Math.max(stats.rolling30d.submitted, 1)) * 1000) / 10,
+          totalViews: stats.rolling30d.totalViews,
+          avgViewsPerArticle: 0 // Views tracking not implemented yet
+        },
+        lifetime: {
+          totalSubmitted: stats.lifetime.totalSubmitted,
+          totalPublished: stats.lifetime.totalPublished,
+          totalRejected: stats.lifetime.totalRejected,
+          totalViews: stats.lifetime.totalViews,
+          avgViewsPerArticle: Math.round(avgViewsPerArticle * 10) / 10,
+          firstPublishedAt: stats.lifetime.firstPublishedAt || null,
+          lastPublishedAt: stats.lifetime.lastPublishedAt || null,
+        },
+        lastComputed: admin.firestore.FieldValue.serverTimestamp(),
+        categoryBreakdown: stats.categoryBreakdown
+      };
+      
+      const writerMetricRef = metricsRef.doc(writerId);
+      batch.set(writerMetricRef, metricsDoc, { merge: true });
+      processedCount++;
+    }
+    
+    await batch.commit();
+    
+    console.log(`✅ Writer metrics computed for ${processedCount} writers`);
+    
+    res.status(200).json({
+      success: true,
+      message: `Computed metrics for ${processedCount} writers`,
+      writersProcessed: processedCount,
+      computedAt: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Error computing writer metrics:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 exports.handleShortLink = async (req, res) => {
   // Extract the ID from the URL (e.g., /s/Abc123 -> Abc123)
   const pathParts = req.path.split('/');

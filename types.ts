@@ -89,6 +89,21 @@ export interface Opinion {
     previousImageUrl?: string;
     newImageUrl: string;
   };
+  
+  // ============================================
+  // EDITORIAL META - SLA & Ownership (Sprint 2)
+  // ============================================
+  editorialMeta?: {
+    assignedEditorId?: string;      // Editor responsible for this story
+    assignedEditorName?: string;    // Editor display name
+    priority?: 'low' | 'normal' | 'high' | 'urgent';  // Story priority
+    slaHours?: number;              // Target review time (e.g., 24, 48, 72)
+    firstResponseAt?: Date;         // When editor first claimed/responded
+    approvalAt?: Date;              // When approved/published
+    returnCount?: number;           // Number of times returned to writer
+    lastReturnedAt?: Date;          // When last returned to writer
+    lastReturnReason?: string;      // Why it was returned
+  };
 }
 
 export interface OpinionSubmissionData {
@@ -212,4 +227,46 @@ export interface StoryPitch {
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   assignedEditorId?: string; // Editor assigned to review
   assignedEditorName?: string;
+}
+
+// ============================================
+// WRITER PERFORMANCE METRICS (Sprint 3)
+// ============================================
+
+export interface WriterMetrics {
+  writerId: string;  // Firebase UID
+  writerName: string;
+  
+  // Rolling 30-day metrics
+  rolling30d: {
+    submitted: number;        // Articles submitted
+    published: number;        // Articles published
+    rejected: number;         // Articles rejected
+    avgReviewHours: number;   // Average time from submission to publish
+    rejectionRate: number;    // Percentage (0-100)
+    totalViews: number;       // Total article views
+    avgViewsPerArticle: number;
+  };
+  
+  // Lifetime metrics
+  lifetime: {
+    totalSubmitted: number;
+    totalPublished: number;
+    totalRejected: number;
+    totalViews: number;
+    avgViewsPerArticle: number;
+    firstPublishedAt?: Date;
+    lastPublishedAt?: Date;
+  };
+  
+  // Computed at
+  lastComputed: Date;
+  
+  // Optional: Category breakdown
+  categoryBreakdown?: {
+    [category: string]: {
+      published: number;
+      views: number;
+    };
+  };
 }

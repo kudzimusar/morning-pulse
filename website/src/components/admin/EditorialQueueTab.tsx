@@ -37,7 +37,9 @@ import {
   checkAndPublishScheduledStories,
   createVersionSnapshot,
   getVersionHistory,
-  restoreVersion
+  restoreVersion,
+  setStoryPriority,
+  setStorySLA
 } from '../../services/opinionsService';
 import { compressImage, validateImage } from '../../utils/imageCompression';
 import { getImageByTopic } from '../../utils/imageGenerator';
@@ -100,6 +102,8 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [versionHistory, setVersionHistory] = useState<OpinionVersion[]>([]); // NEW: List of versions
   const [loadingHistory, setLoadingHistory] = useState(false); // NEW: Loading history
   const [restoringVersion, setRestoringVersion] = useState<string | null>(null); // NEW: Version being restored
+  const [storyPriority, setStoryPriorityState] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal'); // Sprint 2: Priority state
+  const [savingPriority, setSavingPriority] = useState(false); // Sprint 2: Saving priority indicator
   
   // ✅ FIX: Move getCurrentEditor() call to useMemo to prevent top-level execution
   // This prevents "Cannot access 'E' before initialization" errors
@@ -118,6 +122,45 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   // ✅ FIX: Check if user is admin/editor to force render image section
   const isAdmin = userRoles.includes('admin') || userRoles.includes('super_admin');
   const isEditor = userRoles.includes('editor') || isAdmin;
+
+  // Sprint 2: Helper to calculate elapsed time since submission or claim
+  const getElapsedTime = (startDate: Date | null | undefined): string => {
+    if (!startDate) return '';
+    const now = new Date();
+    const diffMs = now.getTime() - startDate.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`;
+    if (diffHours > 0) return `${diffHours}h`;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    return `${diffMins}m`;
+  };
+
+  // Sprint 2: Helper to get priority badge color
+  const getPriorityColor = (priority: string | undefined): { bg: string; text: string } => {
+    switch (priority) {
+      case 'urgent': return { bg: '#fecaca', text: '#991b1b' };
+      case 'high': return { bg: '#fed7aa', text: '#c2410c' };
+      case 'low': return { bg: '#e5e7eb', text: '#4b5563' };
+      default: return { bg: '#dbeafe', text: '#1e40af' };
+    }
+  };
+
+  // Sprint 2: Handle priority change
+  const handlePriorityChange = async (newPriority: 'low' | 'normal' | 'high' | 'urgent') => {
+    if (!selectedOpinionId) return;
+    setSavingPriority(true);
+    try {
+      await setStoryPriority(selectedOpinionId, newPriority);
+      setStoryPriorityState(newPriority);
+      showToast(`Priority set to ${newPriority}`, 'success');
+    } catch (error: any) {
+      showToast(`Failed to set priority: ${error.message}`, 'error');
+    } finally {
+      setSavingPriority(false);
+    }
+  };
 
   // ✅ FIX: Move Firestore service initialization out of render path using useMemo
   const firestoreService = useMemo(() => {
@@ -367,6 +410,8 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setShowSchedulePicker(false);
       setScheduleDate('');
       setScheduleTime('');
+      // Sprint 2: Load priority from editorialMeta
+      setStoryPriorityState((opinion as any).editorialMeta?.priority || 'normal');
     }
   }, [selectedOpinionId, draftOpinions, pendingOpinions, inReviewOpinions, isNewArticle]);
 
@@ -1305,7 +1350,13 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   No pending submissions
                 </div>
               ) : (
-                pendingOpinions.map((opinion) => (
+                pendingOpinions.map((opinion) => {
+                  const priority = (opinion as any).editorialMeta?.priority;
+                  const priorityColors = getPriorityColor(priority);
+                  const returnCount = (opinion as any).editorialMeta?.returnCount || 0;
+                  const elapsedTime = getElapsedTime(opinion.submittedAt);
+                  
+                  return (
                   <div
                     key={opinion.id}
                     onClick={() => {
@@ -1315,13 +1366,29 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     style={{
                       padding: '12px',
                       marginBottom: '8px',
-                      border: selectedOpinionId === opinion.id ? '2px solid #000' : '1px solid #e5e5e5',
+                      border: selectedOpinionId === opinion.id ? '2px solid #000' : priority === 'urgent' ? '2px solid #ef4444' : '1px solid #e5e5e5',
                       borderRadius: '4px',
                       cursor: 'pointer',
-                      backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : 'white',
+                      backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : priority === 'urgent' ? '#fef2f2' : 'white',
                       transition: 'all 0.2s'
                     }}
                   >
+                    {/* Sprint 2: Priority badge */}
+                    {priority && priority !== 'normal' && (
+                      <div style={{
+                        fontSize: '9px',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                        padding: '2px 6px',
+                        borderRadius: '2px',
+                        backgroundColor: priorityColors.bg,
+                        color: priorityColors.text,
+                        display: 'inline-block',
+                        marginBottom: '6px'
+                      }}>
+                        {priority === 'urgent' ? '🔥 ' : priority === 'high' ? '⬆️ ' : '⬇️ '}{priority}
+                      </div>
+                    )}
                     <div style={{
                       fontSize: '13px',
                       fontWeight: '600',
@@ -1337,11 +1404,18 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     }}>
                       {opinion.authorName}
                     </div>
+                    {/* Sprint 2: Show elapsed time and return count */}
                     <div style={{
                       fontSize: '10px',
-                      color: '#999'
+                      color: '#999',
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center'
                     }}>
-                      {opinion.submittedAt?.toLocaleDateString() || 'Recently'}
+                      <span>⏱️ {elapsedTime} waiting</span>
+                      {returnCount > 0 && (
+                        <span style={{ color: '#f59e0b' }}>↩️ {returnCount}x returned</span>
+                      )}
                     </div>
                     {opinion.editorNotes && (
                       <div style={{
@@ -1356,7 +1430,8 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       </div>
                     )}
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
 
@@ -1698,6 +1773,66 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     <option value="Published">Published</option>
                     <option value="Rejected">Rejected</option>
                   </select>
+                </div>
+              )}
+
+              {/* Sprint 2: Priority Selector (hidden for new articles) */}
+              {!isNewArticle && selectedOpinion && (
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    Priority
+                    {selectedOpinion.editorialMeta?.firstResponseAt && (
+                      <span style={{ 
+                        marginLeft: '8px', 
+                        fontSize: '11px', 
+                        color: '#6b7280',
+                        fontWeight: '400'
+                      }}>
+                        ⏱️ In review for {getElapsedTime((selectedOpinion as any).editorialMeta?.firstResponseAt)}
+                      </span>
+                    )}
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <select
+                      value={storyPriority}
+                      onChange={(e) => handlePriorityChange(e.target.value as 'low' | 'normal' | 'high' | 'urgent')}
+                      disabled={savingPriority}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        fontSize: '14px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontFamily: 'monospace',
+                        backgroundColor: savingPriority ? '#f3f4f6' : '#fff'
+                      }}
+                    >
+                      <option value="low">⬇️ Low</option>
+                      <option value="normal">➡️ Normal</option>
+                      <option value="high">⬆️ High</option>
+                      <option value="urgent">🔥 Urgent</option>
+                    </select>
+                    {savingPriority && (
+                      <span style={{ fontSize: '12px', color: '#6b7280' }}>Saving...</span>
+                    )}
+                  </div>
+                  {(selectedOpinion as any).editorialMeta?.returnCount > 0 && (
+                    <div style={{
+                      marginTop: '8px',
+                      fontSize: '11px',
+                      color: '#f59e0b',
+                      backgroundColor: '#fef3c7',
+                      padding: '4px 8px',
+                      borderRadius: '4px'
+                    }}>
+                      ↩️ This story has been returned {(selectedOpinion as any).editorialMeta.returnCount} time(s)
+                    </div>
+                  )}
                 </div>
               )}
 
