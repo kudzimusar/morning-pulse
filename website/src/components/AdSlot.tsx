@@ -323,9 +323,49 @@ const AdSlot: React.FC<AdSlotProps> = ({
   return (
     <div 
       className={`ad-slot ${className}`} 
-      style={style}
+      style={{
+        ...style,
+        position: 'relative',
+        width: '100%',
+        maxWidth: '100%'
+      }}
       ref={adRef}
     >
+      {/* ✅ FIX: Close button */}
+      <button
+        onClick={() => setIsClosed(true)}
+        style={{
+          position: 'absolute',
+          top: '4px',
+          right: '4px',
+          zIndex: 10,
+          background: 'rgba(0, 0, 0, 0.6)',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '50%',
+          width: '24px',
+          height: '24px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          lineHeight: '1',
+          padding: 0,
+          transition: 'background 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+        }}
+        aria-label="Close ad"
+        title="Close ad"
+      >
+        ×
+      </button>
       <div className="ad-slot-content" style={{
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
@@ -333,6 +373,8 @@ const AdSlot: React.FC<AdSlotProps> = ({
         backgroundColor: '#fff',
         position: 'relative',
         maxHeight: slotId === 'header_banner' ? '120px' : 'none', // ✅ FIX: Constrain header ad height
+        maxWidth: '100%', // ✅ FIX: Ensure responsive width
+        width: '100%', // ✅ FIX: Full width but constrained
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -340,7 +382,7 @@ const AdSlot: React.FC<AdSlotProps> = ({
         <div className="ad-label" style={{
           position: 'absolute',
           top: '4px',
-          right: '4px',
+          left: '4px', // ✅ FIX: Move label to left to avoid close button
           fontSize: '9px',
           fontWeight: 'bold',
           textTransform: 'uppercase',
