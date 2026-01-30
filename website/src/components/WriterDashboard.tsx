@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getCurrentWriter, updateWriterProfile, Writer } from '../services/writerService';
+import { getCurrentWriter, updateWriterProfile, Writer, acknowledgeStyleGuide } from '../services/writerService';
 import { getPublishedOpinions, Opinion, submitForReview } from '../services/opinionsService';
 import { getWriterPitches, submitPitch, deletePitch } from '../services/pitchService';
 import { getWriterMetrics, calculateWriterMetricsOnTheFly } from '../services/writerMetricsService';
@@ -8,6 +8,7 @@ import { StoryPitch, WriterMetrics } from '../../types';
 import { collection, query, where, getDocs, getFirestore } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 import PitchSubmissionForm from './writer/PitchSubmissionForm';
+import StyleGuideModal from './writer/StyleGuideModal';
 
 const WriterDashboard: React.FC = () => {
   const [writer, setWriter] = useState<Writer | null>(null);
@@ -26,6 +27,9 @@ const WriterDashboard: React.FC = () => {
     name: '',
     bio: '',
   });
+  // Sprint 6: Style Guide compliance
+  const [showStyleGuideModal, setShowStyleGuideModal] = useState(false);
+  const [styleGuideChecked, setStyleGuideChecked] = useState(false);
 
   useEffect(() => {
     const auth = getAuth();
@@ -74,6 +78,47 @@ const WriterDashboard: React.FC = () => {
       loadMetrics(user.uid);
     }
   }, [activeTab, user]);
+
+  // Sprint 6: Check if style guide acknowledgement is needed
+  useEffect(() => {
+    if (writer && !styleGuideChecked) {
+      setStyleGuideChecked(true);
+      
+      const lastAck = writer.compliance?.lastStyleGuideAck;
+      const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+      
+      // Show modal if: never acknowledged OR acknowledged more than 30 days ago
+      if (!lastAck) {
+        console.log('📝 Style guide never acknowledged, showing modal');
+        setShowStyleGuideModal(true);
+      } else {
+        const daysSinceAck = (Date.now() - lastAck.getTime()) / THIRTY_DAYS_MS;
+        if (daysSinceAck > 1) { // More than 30 days
+          console.log('📝 Style guide acknowledgement expired, showing modal');
+          setShowStyleGuideModal(true);
+        }
+      }
+    }
+  }, [writer, styleGuideChecked]);
+
+  // Sprint 6: Handle style guide acceptance
+  const handleStyleGuideAccept = async () => {
+    if (!user) return;
+    
+    await acknowledgeStyleGuide(user.uid);
+    setShowStyleGuideModal(false);
+    
+    // Update local writer state with new compliance timestamp
+    if (writer) {
+      setWriter({
+        ...writer,
+        compliance: {
+          ...writer.compliance,
+          lastStyleGuideAck: new Date()
+        }
+      });
+    }
+  };
 
   // Load writer's pitches
   const loadPitches = async (writerUid: string) => {
@@ -317,6 +362,14 @@ const WriterDashboard: React.FC = () => {
       minHeight: '100vh',
       backgroundColor: '#fafafa'
     }}>
+      {/* Sprint 6: Style Guide Modal */}
+      <StyleGuideModal
+        isOpen={showStyleGuideModal}
+        onAccept={handleStyleGuideAccept}
+        onClose={() => setShowStyleGuideModal(false)}
+        writerName={writer?.displayName || writer?.name}
+        isRequired={!writer?.compliance?.lastStyleGuideAck} // Required on first acknowledgement
+      />
       {/* Header */}
       <div style={{
         backgroundColor: '#000',
@@ -1289,6 +1342,77 @@ const WriterDashboard: React.FC = () => {
                     <div style={{ fontSize: '1rem', lineHeight: '1.6' }}>{writer.bio}</div>
                   </div>
                 )}
+                
+                {/* Sprint 6: Style Guide Compliance Section */}
+                <div style={{ 
+                  marginTop: '32px', 
+                  paddingTop: '24px', 
+                  borderTop: '1px solid #e5e7eb' 
+                }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '16px', color: '#374151' }}>
+                    📋 Compliance & Guidelines
+                  </h3>
+                  
+                  <div style={{ 
+                    padding: '16px', 
+                    backgroundColor: '#f9fafb', 
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Style Guide Acknowledgement</span>
+                      {writer.compliance?.lastStyleGuideAck ? (
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          color: '#059669', 
+                          backgroundColor: '#d1fae5', 
+                          padding: '2px 8px', 
+                          borderRadius: '12px' 
+                        }}>
+                          ✓ Acknowledged
+                        </span>
+                      ) : (
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          color: '#dc2626', 
+                          backgroundColor: '#fee2e2', 
+                          padding: '2px 8px', 
+                          borderRadius: '12px' 
+                        }}>
+                          ⚠️ Not acknowledged
+                        </span>
+                      )}
+                    </div>
+                    
+                    {writer.compliance?.lastStyleGuideAck && (
+                      <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: '0 0 12px 0' }}>
+                        Last acknowledged: {new Date(writer.compliance.lastStyleGuideAck).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    )}
+                    
+                    <button
+                      onClick={() => setShowStyleGuideModal(true)}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      📝 View Style Guide
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -103,11 +103,46 @@ service cloud.firestore {
       // FIX: Allow list for everyone, but filter results in query
       allow read, list: if true;
       
-      // Writers can create opinions (submissions)
-      allow create: if isAuthenticated();
+      // ========================================
+      // Sprint 6: Content Validation Functions
+      // ========================================
       
-      // Only editors can update opinions (review, edit, publish)
-      allow update: if isEditor() || (isAuthenticated() && request.auth.uid == resource.data.authorId);
+      // Validate headline: must exist and be at least 5 characters
+      function hasValidHeadline(data) {
+        return data.keys().hasAny(['headline']) && 
+               data.headline is string && 
+               data.headline.size() >= 5;
+      }
+      
+      // Validate body: must exist and be at least 50 characters
+      function hasValidBody(data) {
+        return data.keys().hasAny(['body']) && 
+               data.body is string && 
+               data.body.size() >= 50;
+      }
+      
+      // Validate authorName: must exist and be at least 2 characters
+      function hasValidAuthorName(data) {
+        return data.keys().hasAny(['authorName']) && 
+               data.authorName is string && 
+               data.authorName.size() >= 2;
+      }
+      
+      // Combined content validation for submissions
+      function isValidOpinionContent(data) {
+        return hasValidHeadline(data) && 
+               hasValidBody(data) && 
+               hasValidAuthorName(data);
+      }
+      
+      // Writers can create opinions (submissions) with valid content
+      allow create: if isAuthenticated() && isValidOpinionContent(request.resource.data);
+      
+      // Editors can update any opinion; writers can update their own (with valid content)
+      allow update: if isEditor() || 
+                      (isAuthenticated() && 
+                       request.auth.uid == resource.data.authorId && 
+                       isValidOpinionContent(request.resource.data));
       
       // Only admins can delete opinions
       allow delete: if isAdmin();
