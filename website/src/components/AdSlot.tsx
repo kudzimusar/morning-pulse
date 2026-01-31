@@ -214,7 +214,50 @@ const AdSlot: React.FC<AdSlotProps> = ({
         : 'Partner with Morning Pulse - Global advertising opportunities');
     
     return (
-      <div className="ad-slot" style={style}>
+      <div 
+        className="ad-slot" 
+        style={{
+          ...style,
+          position: 'relative',
+          width: '100%',
+          maxWidth: '100%'
+        }}
+      >
+        {/* ✅ FIX: Close button on fallback too */}
+        <button
+          onClick={() => setIsClosed(true)}
+          style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            zIndex: 10,
+            background: 'rgba(0, 0, 0, 0.6)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '50%',
+            width: '24px',
+            height: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            lineHeight: '1',
+            padding: 0,
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+          }}
+          aria-label="Close ad"
+          title="Close ad"
+        >
+          ×
+        </button>
         <div className="ad-slot-content" style={{
           padding: '16px',
           border: '1px solid #e5e7eb',
@@ -222,6 +265,8 @@ const AdSlot: React.FC<AdSlotProps> = ({
           backgroundColor: '#f9fafb',
           textAlign: 'center',
           minHeight: '100px',
+          maxWidth: '100%',
+          width: '100%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
