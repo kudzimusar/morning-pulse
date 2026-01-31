@@ -7,6 +7,7 @@ import {
   Ad 
 } from '../services/advertiserService';
 import { getAuth } from 'firebase/auth';
+import { getApp } from 'firebase/app';
 
 interface AdSlotProps {
   slotId: string;
@@ -39,14 +40,16 @@ const AdSlot: React.FC<AdSlotProps> = ({
   useEffect(() => {
     const checkFirebase = () => {
       try {
-        const { getApp } = require('firebase/app');
         const app = getApp();
-        if (app) {
+        if (app && app.name) {
           setFirebaseReady(true);
           return true;
         }
-      } catch (error) {
-        // Firebase not ready yet
+      } catch (error: any) {
+        // Firebase not ready yet - this is expected initially
+        if (error.code !== 'app/no-app') {
+          console.log(`⏳ [AdSlot] Firebase check: ${error.message}`);
+        }
         return false;
       }
       return false;
@@ -64,20 +67,26 @@ const AdSlot: React.FC<AdSlotProps> = ({
       attempts++;
       if (checkFirebase() || attempts >= maxAttempts) {
         clearInterval(interval);
-        if (attempts >= maxAttempts) {
-          console.warn(`⚠️ [AdSlot] Firebase not ready after ${maxAttempts} attempts for slot: ${slotId}`);
+        if (attempts >= maxAttempts && !firebaseReady) {
+          // ✅ FIX: Still try to load ads even if check fails (Firebase might be ready but check failed)
+          console.log(`⚠️ [AdSlot] Firebase check timed out, but will attempt to load ads anyway for slot: ${slotId}`);
+          setFirebaseReady(true); // Set to true to allow ad loading attempt
         }
       }
     }, 500);
 
     return () => clearInterval(interval);
-  }, [slotId]);
+  }, [slotId, firebaseReady]);
 
-  // Load ads for this slot (only when Firebase is ready)
+  // Load ads for this slot (try even if Firebase check failed)
   useEffect(() => {
-    if (!firebaseReady || isClosed) return; // ✅ FIX: Don't load if closed or Firebase not ready
+    if (isClosed) return; // ✅ FIX: Don't load if closed
 
+    // ✅ FIX: Add small delay to ensure Firebase is ready, then try loading
     const loadAds = async () => {
+      // Wait a bit for Firebase to initialize
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       try {
         setLoading(true);
         setError(null);
@@ -115,20 +124,15 @@ const AdSlot: React.FC<AdSlotProps> = ({
       } catch (err: any) {
         console.error(`❌ [AdSlot] Error loading ads for slot: ${slotId}`, err);
         console.error('   Error details:', err.message, err.code);
-        // ✅ FIX: Don't set error if Firebase not initialized - just wait
-        if (err.message?.includes('Firebase not initialized')) {
-          console.log(`⏳ [AdSlot] Waiting for Firebase initialization...`);
-          setFirebaseReady(false); // Retry Firebase check
-        } else {
-          setError('load_failed');
-        }
+        // ✅ FIX: Set error but don't prevent fallback from showing
+        setError('load_failed');
       } finally {
         setLoading(false);
       }
     };
 
     loadAds();
-  }, [slotId, firebaseReady, isClosed]);
+  }, [slotId, isClosed]);
 
   // Track impression when ad becomes visible (Intersection Observer)
   useEffect(() => {
@@ -264,13 +268,58 @@ const AdSlot: React.FC<AdSlotProps> = ({
   // Loading state
   if (loading) {
     return (
-      <div className={`ad-slot ${className}`} style={style}>
+      <div 
+        className={`ad-slot ${className}`} 
+        style={{
+          ...style,
+          position: 'relative',
+          width: '100%',
+          maxWidth: '100%'
+        }}
+      >
+        {/* ✅ FIX: Close button on loading state too */}
+        <button
+          onClick={() => setIsClosed(true)}
+          style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            zIndex: 10,
+            background: 'rgba(0, 0, 0, 0.6)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '50%',
+            width: '24px',
+            height: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            lineHeight: '1',
+            padding: 0,
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+          }}
+          aria-label="Close ad"
+          title="Close ad"
+        >
+          ×
+        </button>
         <div className="ad-slot-content" style={{
           padding: '16px',
           border: '1px solid #e5e7eb',
           borderRadius: '8px',
           backgroundColor: '#f9fafb',
           minHeight: '100px',
+          maxWidth: '100%',
+          width: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
