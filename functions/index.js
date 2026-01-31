@@ -801,11 +801,13 @@ try {
  * Send single email via Brevo REST API
  */
 async function sendBrevoEmail({ toEmail, toName, subject, html }) {
-  if (!BREVO_API_KEY) {
-    throw new Error('Brevo API key not configured');
+  if (!BREVO_API_KEY || BREVO_API_KEY.length < 10) {
+    console.error('❌ CRITICAL: Brevo API key is missing or invalid.');
+    return { success: false, error: 'Brevo API key not configured' };
   }
 
   try {
+    console.log(`📡 Attempting Brevo API call to: ${toEmail}`);
     const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
       sender: { 
         email: NEWSLETTER_FROM_EMAIL,  
@@ -815,7 +817,7 @@ async function sendBrevoEmail({ toEmail, toName, subject, html }) {
       subject,
       htmlContent: html,
       headers: {
-        'List-Unsubscribe': '<https://kudzimusar.github.io/morning-pulse/?action=unsubscribe>, <mailto:news@morningpulse.net?subject=Unsubscribe>',
+        'List-Unsubscribe': `<https://kudzimusar.github.io/morning-pulse/?action=unsubscribe>, <mailto:${NEWSLETTER_FROM_EMAIL}?subject=Unsubscribe>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
       }
     }, {
@@ -823,14 +825,19 @@ async function sendBrevoEmail({ toEmail, toName, subject, html }) {
         'api-key': BREVO_API_KEY,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-      }
+      },
+      timeout: 10000 // 10 second timeout
     });
 
+    console.log(`✅ Brevo success for ${toEmail}: MessageID ${response.data.messageId}`);
     return { success: true, result: response.data };
   } catch (error) {
-    const errorData = error.response ? JSON.stringify(error.response.data) : error.message;
-    console.error(`❌ Brevo error for ${toEmail}:`, errorData);
-    return { success: false, error: errorData };
+    let errorDetail = error.message;
+    if (error.response) {
+      errorDetail = `Status ${error.response.status}: ${JSON.stringify(error.response.data)}`;
+    }
+    console.error(`❌ Brevo API Failure for ${toEmail}:`, errorDetail);
+    return { success: false, error: errorDetail };
   }
 }
 
