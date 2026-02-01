@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morning Pulse Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #000;
+            margin-bottom: 20px;
+        }
+        .preview {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .icon-preview {
+            text-align: center;
+        }
+        .icon-preview canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .icon-preview label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+        }
+        button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #333;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Morning Pulse Icon Generator</h1>
+        <div class="info">
+            <strong>Instructions:</strong> This tool generates placeholder icons for your PWA. 
+            For production, replace these with your actual branded logo. Click "Generate Icons" 
+            to create placeholder icons, then right-click each canvas to save the image.
+        </div>
+        
+        <div class="preview">
+            <div class="icon-preview">
+                <canvas id="icon192" width="192" height="192"></canvas>
+                <label>192x192 (Android)</label>
+            </div>
+            <div class="icon-preview">
+                <canvas id="icon512" width="512" height="512"></canvas>
+                <label>512x512 (Splash)</label>
+            </div>
+            <div class="icon-preview">
+                <canvas id="icon180" width="180" height="180"></canvas>
+                <label>180x180 (Apple)</label>
+            </div>
+        </div>
+        
+        <button onclick="generateIcons()">Generate Icons</button>
+        <button onclick="downloadAll()">Download All Icons</button>
+        
+        <div class="info" style="margin-top: 30px;">
+            <strong>Next Steps:</strong>
+            <ol>
+                <li>Generate icons using this tool</li>
+                <li>Right-click each canvas and "Save image as..."</li>
+                <li>Save as: icon-192x192.png, icon-512x512.png, apple-touch-icon.png</li>
+                <li>Place files in the <code>/public/</code> directory</li>
+                <li>For production, replace with your actual branded icons</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Background
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Text "MP" for Morning Pulse
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${size * 0.4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('MP', size / 2, size / 2);
+            
+            // Optional: Add a subtle border for maskable icons
+            ctx.strokeStyle = '#333333';
+            ctx.lineWidth = size * 0.02;
+            const padding = size * 0.1; // 10% padding for safe zone
+            ctx.strokeRect(padding, padding, size - padding * 2, size - padding * 2);
+        }
+        
+        function generateIcons() {
+            const canvas192 = document.getElementById('icon192');
+            const canvas512 = document.getElementById('icon512');
+            const canvas180 = document.getElementById('icon180');
+            
+            drawIcon(canvas192, 192);
+            drawIcon(canvas512, 512);
+            drawIcon(canvas180, 180);
+            
+            alert('Icons generated! Right-click each canvas to save, or click "Download All Icons"');
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        function downloadAll() {
+            const canvas192 = document.getElementById('icon192');
+            const canvas512 = document.getElementById('icon512');
+            const canvas180 = document.getElementById('icon180');
+            
+            // Generate if not already generated
+            if (canvas192.getContext('2d').getImageData(0, 0, 1, 1).data[3] === 0) {
+                generateIcons();
+                setTimeout(() => {
+                    downloadCanvas(canvas192, 'icon-192x192.png');
+                    setTimeout(() => {
+                        downloadCanvas(canvas512, 'icon-512x512.png');
+                        setTimeout(() => {
+                            downloadCanvas(canvas180, 'apple-touch-icon.png');
+                        }, 200);
+                    }, 200);
+                }, 200);
+            } else {
+                downloadCanvas(canvas192, 'icon-192x192.png');
+                setTimeout(() => {
+                    downloadCanvas(canvas512, 'icon-512x512.png');
+                    setTimeout(() => {
+                        downloadCanvas(canvas180, 'apple-touch-icon.png');
+                    }, 200);
+                }, 200);
+            }
+        }
+        
+        // Auto-generate on load
+        window.addEventListener('load', () => {
+            generateIcons();
+        });
+    </script>
+</body>
+</html>

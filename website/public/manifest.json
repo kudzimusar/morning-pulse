@@ -1,0 +1,110 @@
+{
+  "name": "Morning Pulse - Multi-Dimensional News",
+  "short_name": "Morning Pulse",
+  "description": "Morning Pulse - Multi-Dimensional News covering Local, Business, African Focus, Global, Sports, Tech, and General News. AI-powered news platform for Zimbabwean readers.",
+  "id": "morning-pulse-app",
+  "start_url": "/morning-pulse/",
+  "scope": "/morning-pulse/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["news", "magazines", "lifestyle"],
+  "icons": [
+    {
+      "src": "/morning-pulse/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/morning-pulse/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/morning-pulse/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/morning-pulse/screenshots/desktop-1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Morning Pulse Desktop View"
+    },
+    {
+      "src": "/morning-pulse/screenshots/mobile-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Morning Pulse Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Latest News",
+      "short_name": "News",
+      "description": "View the latest news headlines",
+      "url": "/morning-pulse/",
+      "icons": [
+        {
+          "src": "/morning-pulse/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Opinions",
+      "short_name": "Opinions",
+      "description": "Read editorial opinions",
+      "url": "/morning-pulse/opinion",
+      "icons": [
+        {
+          "src": "/morning-pulse/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/morning-pulse/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+morningpulse",
+      "url": "/morning-pulse/?url=%s"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "file_handlers": [
+    {
+      "action": "/morning-pulse/",
+      "accept": {
+        "text/*": [".txt", ".md"],
+        "application/pdf": [".pdf"]
+      }
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "related_applications": [],
+  "prefer_related_applications": false
+}
