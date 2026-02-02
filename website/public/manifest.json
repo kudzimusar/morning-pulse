@@ -6,7 +6,7 @@
   "start_url": "/morning-pulse/",
   "scope": "/morning-pulse/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "display_override": ["window-controls-overlay", "tabbed", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "theme_color": "#000000",
   "background_color": "#ffffff",
@@ -104,7 +104,5 @@
   ],
   "edge_side_panel": {
     "preferred_width": 400
-  },
-  "related_applications": [],
-  "prefer_related_applications": false
+  }
 }
