@@ -1,41 +1,40 @@
 /**
  * Lazy Loading Utility for Mobile Images
  * Implements intersection observer for efficient image loading
+ * Supports both <img> elements and divs with background images
  */
 
-export const lazyLoadImage = (imgElement: HTMLImageElement): () => void => {
+export const lazyLoadImage = (
+  element: HTMLElement,
+  onLoad?: () => void
+): IntersectionObserver | null => {
   if (!('IntersectionObserver' in window)) {
-    // Fallback for browsers without IntersectionObserver
-    imgElement.src = imgElement.dataset.src || '';
-    imgElement.classList.add('loaded');
-    return () => {};
+    // Fallback for browsers without IntersectionObserver - load immediately
+    if (onLoad) {
+      onLoad();
+    }
+    return null;
   }
 
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          const img = entry.target as HTMLImageElement;
-          const src = img.dataset.src;
-          if (src) {
-            img.src = src;
-            img.classList.add('loaded');
-            img.classList.remove('mobile-image-lazy');
-            observer.unobserve(img);
+          if (onLoad) {
+            onLoad();
           }
+          observer.unobserve(element);
         }
       });
     },
     {
-      rootMargin: '50px', // Start loading 50px before image enters viewport
+      rootMargin: '50px', // Start loading 50px before element enters viewport
     }
   );
 
-  observer.observe(imgElement);
+  observer.observe(element);
 
-  return () => {
-    observer.unobserve(imgElement);
-  };
+  return observer;
 };
 
 export const initLazyLoading = (container?: HTMLElement): () => void => {

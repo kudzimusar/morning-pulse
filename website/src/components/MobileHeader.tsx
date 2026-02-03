@@ -18,9 +18,6 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
         onClick={onMenuClick}
         className="mobile-header-icon mobile-touch-target"
         aria-label="Menu"
-        style={{
-          marginRight: 'auto',
-        }}
       >
         <Menu size={20} />
       </button>
@@ -33,8 +30,6 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
           border: 'none',
           cursor: 'pointer',
           padding: 0,
-          flex: 1,
-          textAlign: 'center',
         }}
       >
         Morning Pulse

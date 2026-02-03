@@ -763,6 +763,34 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
             </div>
             <div className="drop-cap mobile-article-body" style={{ fontSize: '1.3rem', lineHeight: '1.8', whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
             
+            {/* Article Footer with Related Links */}
+            <ArticleFooter
+              article={{
+                id: selectedOpinion.id,
+                headline: selectedOpinion.headline,
+                detail: selectedOpinion.subHeadline || '',
+                category: selectedOpinion.category || 'Opinion',
+                source: selectedOpinion.authorName || 'Editorial Team',
+                timestamp: selectedOpinion.publishedAt?.getTime() || selectedOpinion.submittedAt.getTime() || Date.now(),
+                imageUrl: selectedOpinion.finalImageUrl || selectedOpinion.suggestedImageUrl || selectedOpinion.imageUrl,
+                url: selectedOpinion.slug ? `#opinion/${selectedOpinion.slug}` : undefined,
+              }}
+              relatedArticles={opinions
+                .filter(op => op.id !== selectedOpinion.id && op.category === selectedOpinion.category)
+                .slice(0, 3)
+                .map(op => ({
+                  id: op.id,
+                  headline: op.headline,
+                  detail: op.subHeadline || '',
+                  category: op.category || 'Opinion',
+                  source: op.authorName || 'Editorial Team',
+                  timestamp: op.publishedAt?.getTime() || op.submittedAt.getTime() || Date.now(),
+                  imageUrl: op.finalImageUrl || op.suggestedImageUrl || op.imageUrl,
+                  url: op.slug ? `#opinion/${op.slug}` : undefined,
+                }))}
+              authorBio={`${selectedOpinion.authorName} is a contributor to Morning Pulse.`}
+            />
+            
             {/* NEW: Reactions Section */}
             <div style={{ 
               marginTop: '60px', 

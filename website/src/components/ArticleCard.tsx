@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NewsStory } from '../../types';
 import { CountryInfo } from '../services/locationService';
 import { getCachedUnsplashImageUrl } from '../services/imageService';
+import { lazyLoadImage } from '../utils/lazyLoadImages';
 
 interface ArticleCardProps {
   article: NewsStory;
@@ -13,6 +14,8 @@ interface ArticleCardProps {
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', userCountry, opinionSlug, isEditorial }) => {
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const imageRef = useRef<HTMLDivElement>(null);
 
   // Fetch image URL on mount
   useEffect(() => {
@@ -52,6 +55,21 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
       isMounted = false;
     };
   }, [article.id, article.urlToImage, article.category, article.headline]);
+
+  // Lazy load image when it enters viewport
+  useEffect(() => {
+    if (!imageRef.current || !imageUrl) return;
+
+    const observer = lazyLoadImage(imageRef.current, () => {
+      setImageLoaded(true);
+    });
+
+    return () => {
+      if (observer && imageRef.current) {
+        observer.unobserve(imageRef.current);
+      }
+    };
+  }, [imageUrl]);
 
   const handleClick = () => {
     // NEW: Route to opinion detail page if this is an editorial/opinion
@@ -124,13 +142,16 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
       onClick={handleClick}
     >
       <div 
-        className="article-image"
+        ref={imageRef}
+        className={`article-image ${imageLoaded ? 'loaded' : 'lazy'}`}
         style={{ 
-          backgroundImage: imageUrl 
+          backgroundImage: (imageUrl && imageLoaded)
             ? `url(${imageUrl})` 
             : getCategoryGradient(article.category),
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          opacity: imageLoaded ? 1 : 0.7,
+          transition: 'opacity 0.3s ease',
         }}
       >
         {/* Glassmorphism overlay with tags */}

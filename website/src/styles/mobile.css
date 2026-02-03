@@ -38,23 +38,18 @@
   --mobile-inline-ratio: 3 / 2;
   --mobile-avatar-ratio: 1 / 1;
   
-  /* Mobile Colors (Strict Usage) */
-  --mobile-bg-primary: #ffffff;
-  --mobile-bg-section: #f3f4f6;
-  --mobile-text-headline: #000000;
-  --mobile-text-body: #1a1a1a;
-  --mobile-text-meta: #666666;
-  --mobile-border: #e0e0e0;
-  --mobile-accent-breaking: #dc2626;
+  /* Mobile Colors - Use Desktop Color System (Single Source of Truth) */
+  /* Reference desktop variables from premium.css to maintain brand consistency */
+  --mobile-bg-primary: var(--card-bg, #ffffff);
+  --mobile-bg-section: var(--section-bg, #f3f4f6);
+  --mobile-text-headline: var(--text-color, #1a1a1a);
+  --mobile-text-body: var(--secondary-color, #333333);
+  --mobile-text-meta: var(--light-text, #666666);
+  --mobile-border: var(--border-color, #e0e0e0);
+  --mobile-accent-breaking: var(--breaking-news, #dc2626);
   
-  /* Category Colors for Section Headers */
-  --local-color: #1e3a8a;
-  --business-color: #065f46;
-  --african-color: #b45309;
-  --global-color: #991b1b;
-  --sports-color: #1e40af;
-  --tech-color: #6b21a8;
-  --general-color: #0c4a6e;
+  /* Category Colors - Use Desktop Variables Directly */
+  /* These are already defined in premium.css, no need to duplicate */
   
   /* Mobile Navigation */
   --mobile-nav-height: 56px;
@@ -802,14 +797,14 @@
   .hero-image {
     aspect-ratio: var(--mobile-hero-ratio) !important;
     height: auto !important;
-    max-height: 40vh !important;
+    max-height: 25vh !important; /* Reduced from 40vh */
     border-radius: 0;
   }
   
   /* Override desktop fixed heights with !important */
   .hero-card .hero-image {
     height: auto !important;
-    max-height: 40vh !important;
+    max-height: 25vh !important; /* Reduced from 40vh */
   }
   
   .hero-content {
@@ -879,10 +874,10 @@
     width: 100% !important;
     aspect-ratio: var(--mobile-feed-ratio) !important;
     height: auto !important;
-    max-height: 30vh !important;
+    max-height: 20vh !important; /* Reduced from 30vh */
     margin-bottom: var(--mobile-spacing-sm);
     border-radius: 0;
-    min-height: 150px;
+    min-height: 120px; /* Reduced from 150px */
     position: relative;
   }
   

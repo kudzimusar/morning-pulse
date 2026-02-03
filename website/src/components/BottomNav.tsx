@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Grid3x3, Bookmark, User } from 'lucide-react';
+import { Home, Grid3x3, Bookmark, User, PenTool, MessageCircle, BarChart3 } from 'lucide-react';
 
 interface BottomNavProps {
   currentPage?: string;
@@ -49,6 +49,11 @@ const BottomNav: React.FC<BottomNavProps> = ({
     ? '#advertiser/dashboard'
     : '#profile';
 
+  // Determine if user can write (writer, editor, admin)
+  const canWrite = userRole && Array.isArray(userRole) && 
+    (userRole.includes('writer') || userRole.includes('editor') || 
+     userRole.includes('admin') || userRole.includes('super_admin'));
+
   return (
     <nav className="mobile-bottom-nav mobile-only">
       <button
@@ -58,6 +63,26 @@ const BottomNav: React.FC<BottomNavProps> = ({
       >
         <Home className="mobile-bottom-nav-icon" />
         <span>Home</span>
+      </button>
+      
+      {canWrite && (
+        <button
+          onClick={() => handleNavClick('write', '#writer/submit')}
+          className={`mobile-bottom-nav-item ${isActive('write') ? 'active' : ''}`}
+          aria-label="Write"
+        >
+          <PenTool className="mobile-bottom-nav-icon" />
+          <span>Write</span>
+        </button>
+      )}
+      
+      <button
+        onClick={() => handleNavClick('comments', '#opinion')}
+        className={`mobile-bottom-nav-item ${isActive('comments') ? 'active' : ''}`}
+        aria-label="Comments"
+      >
+        <MessageCircle className="mobile-bottom-nav-icon" />
+        <span>Comments</span>
       </button>
       
       <button
@@ -71,7 +96,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
           }
         }}
         className={`mobile-bottom-nav-item ${isActive('categories') ? 'active' : ''}`}
-        aria-label="Categories"
+        aria-label="Menu"
       >
         <Grid3x3 className="mobile-bottom-nav-icon" />
         <span>Menu</span>
