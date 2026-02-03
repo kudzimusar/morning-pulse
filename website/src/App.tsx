@@ -5,6 +5,8 @@ import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
 import Header from './components/Header';
 import MobileHeader from './components/MobileHeader';
 import BottomNav from './components/BottomNav';
+import MobileMenuDrawer from './components/MobileMenuDrawer';
+import MobileSearch from './components/MobileSearch';
 
 // ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
 const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {
@@ -190,6 +192,14 @@ const App: React.FC = () => {
 
     // Initialize Google Analytics 4
     initAnalytics();
+    
+    // Listen for menu open event from BottomNav
+    const handleMenuOpen = () => setMobileMenuOpen(true);
+    window.addEventListener('openMobileMenu', handleMenuOpen as EventListener);
+    
+    return () => {
+      window.removeEventListener('openMobileMenu', handleMenuOpen as EventListener);
+    };
   }, []); // Empty deps = run only once per session
 
   // Regular state declarations
@@ -205,6 +215,8 @@ const App: React.FC = () => {
   });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [opinionSlug, setOpinionSlug] = useState<string | null>(null); // NEW: Current opinion slug for routing
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Initialize country: check for manual selection first, then auto-detect
   useEffect(() => {
@@ -773,9 +785,27 @@ const App: React.FC = () => {
                   window.location.hash = 'news';
                   setCurrentPage('news');
                 }}
-                onSearchClick={() => {
-                  // TODO: Implement search
-                  console.log('Search clicked');
+                onSearchClick={() => setMobileSearchOpen(true)}
+                onMenuClick={() => setMobileMenuOpen(true)}
+              />
+              
+              {/* Mobile Menu Drawer */}
+              <MobileMenuDrawer
+                isOpen={mobileMenuOpen}
+                onClose={() => setMobileMenuOpen(false)}
+                userRole={userRole}
+                currentPage={currentPage}
+              />
+              
+              {/* Mobile Search */}
+              <MobileSearch
+                isOpen={mobileSearchOpen}
+                onClose={() => setMobileSearchOpen(false)}
+                newsData={newsData}
+                onArticleClick={(article) => {
+                  if (article.url) {
+                    window.open(article.url, '_blank', 'noopener,noreferrer');
+                  }
                 }}
               />
             </>

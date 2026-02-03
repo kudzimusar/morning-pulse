@@ -143,6 +143,11 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
           <HeroCard article={heroArticle} userCountry={userCountry} />
         </section>
       )}
+      
+      {/* Editorial Section Separator - After Hero */}
+      {heroArticle && (
+        <div className="mobile-section-separator mobile-only" />
+      )}
 
       {/* Advertising Slot - Homepage Sidebar */}
       <AdSlot 
@@ -227,9 +232,9 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
             />
           ))}
         </div>
-        {/* Mobile Card Stack */}
+        {/* Mobile Card Stack - Limited to 10 articles initially */}
         <div className="mobile-card-stack mobile-only">
-          {gridArticles.map((article, index) => (
+          {gridArticles.slice(0, 10).map((article, index) => (
             <ArticleCard 
               key={`${userCountry || 'default'}-${article.id}-${index}`}
               article={article} 
@@ -237,6 +242,34 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
               userCountry={userCountry}
             />
           ))}
+          {/* Editorial Separator after 6 stories */}
+          {gridArticles.length > 6 && (
+            <div className="mobile-section-separator" />
+          )}
+          {/* Load More Button */}
+          {gridArticles.length > 6 && (
+            <button
+              onClick={() => {
+                // TODO: Implement load more / infinite scroll
+                console.log('Load more articles');
+              }}
+              className="mobile-load-more-button"
+              style={{
+                width: '100%',
+                padding: '16px',
+                marginTop: '16px',
+                background: 'transparent',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: '#1a1a1a',
+                cursor: 'pointer',
+              }}
+            >
+              View More Stories ({gridArticles.length - 6} remaining) →
+            </button>
+          )}
         </div>
       </section>
     </main>

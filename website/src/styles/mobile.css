@@ -486,6 +486,108 @@
 }
 
 /* ============================================
+   EDITORIAL DENSITY CONTROLS
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Section Break Markers */
+  .mobile-section-divider {
+    margin: var(--mobile-spacing-xl) 0;
+    padding: var(--mobile-spacing-md) var(--mobile-container-padding);
+    border-top: 1px solid var(--mobile-border);
+    border-bottom: 1px solid var(--mobile-border);
+    background: var(--mobile-bg-section);
+  }
+  
+  .mobile-section-divider-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--mobile-text-meta);
+    margin-bottom: var(--mobile-spacing-xs);
+  }
+  
+  /* Story count caps - visual breathing space */
+  .mobile-card-stack .premium-article-card:nth-child(6)::after {
+    content: '';
+    display: block;
+    height: var(--mobile-spacing-lg);
+    border-bottom: 1px solid var(--mobile-border);
+    margin-top: var(--mobile-spacing-md);
+  }
+  
+  /* Editorial separators between sections */
+  .mobile-section-separator {
+    height: 1px;
+    background: var(--mobile-border);
+    margin: var(--mobile-spacing-xl) 0;
+    position: relative;
+  }
+  
+  .mobile-section-separator::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 60px;
+    height: 2px;
+    background: var(--mobile-accent-breaking);
+  }
+}
+
+/* ============================================
+   ARTICLE READING OPTIMIZATION
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Reading width clamp for long-form content */
+  .mobile-article-body,
+  .opinion-page .drop-cap,
+  .opinion-page article > div[style*="font-size"] {
+    max-width: 42ch !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 0 var(--mobile-container-padding);
+  }
+  
+  /* Line-height tuning for body copy */
+  .mobile-article-body p,
+  .opinion-page .drop-cap p,
+  .opinion-page article p {
+    line-height: 1.65 !important;
+    margin-bottom: 1.5em !important;
+  }
+  
+  /* Paragraph spacing - space between paragraphs */
+  .mobile-article-body p + p,
+  .opinion-page .drop-cap p + p {
+    margin-top: 1.5em;
+  }
+  
+  /* Inline reading anchors (h2/h3) */
+  .mobile-article-h2,
+  .mobile-article-h3,
+  .opinion-page h2,
+  .opinion-page h3 {
+    font-family: var(--font-heading) !important;
+    font-weight: 600 !important;
+    margin-top: 2em !important;
+    margin-bottom: 1em !important;
+    padding-left: 1rem !important;
+    border-left: 3px solid var(--mobile-text-headline) !important;
+    font-size: 1.2rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  .mobile-article-h3,
+  .opinion-page h3 {
+    font-size: 1.1rem !important;
+    border-left-width: 2px !important;
+  }
+}
+
+/* ============================================
    MOBILE PAGE SPECIFIC LAYOUTS
    ============================================ */
 
@@ -698,25 +800,48 @@
   }
   
   .hero-image {
-    aspect-ratio: var(--mobile-hero-ratio);
-    height: auto;
+    aspect-ratio: var(--mobile-hero-ratio) !important;
+    height: auto !important;
+    max-height: 40vh !important;
     border-radius: 0;
+  }
+  
+  /* Override desktop fixed heights with !important */
+  .hero-card .hero-image {
+    height: auto !important;
+    max-height: 40vh !important;
   }
   
   .hero-content {
     padding: var(--mobile-spacing-md) 0;
   }
   
-  .hero-headline {
-    font-size: var(--mobile-hero-headline);
-    line-height: 1.2;
+  .hero-headline,
+  .hero-card .hero-headline {
+    font-size: var(--mobile-hero-headline) !important;
+    line-height: 1.2 !important;
     margin-bottom: var(--mobile-spacing-sm);
   }
   
-  .hero-summary {
-    font-size: var(--mobile-body-text);
-    line-height: var(--mobile-body-line-height);
+  .hero-summary,
+  .hero-card .hero-summary {
+    font-size: var(--mobile-body-text) !important;
+    line-height: var(--mobile-body-line-height) !important;
     margin-bottom: var(--mobile-spacing-md);
+  }
+  
+  /* Override desktop article typography */
+  .article-headline,
+  .premium-article-card .article-headline {
+    font-size: var(--mobile-article-headline) !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+  }
+  
+  .article-detail,
+  .premium-article-card .article-detail {
+    font-size: var(--mobile-body-text) !important;
+    line-height: var(--mobile-body-line-height) !important;
   }
   
   /* News Grid Container - Mobile Card Stack */
@@ -748,14 +873,16 @@
     border-bottom: none;
   }
   
-  /* Article Image in Mobile Stack */
-  .mobile-card-stack .article-image {
-    width: 100%;
-    aspect-ratio: var(--mobile-feed-ratio);
+  /* Article Image in Mobile Stack - Override desktop fixed heights */
+  .mobile-card-stack .article-image,
+  .premium-article-card .article-image {
+    width: 100% !important;
+    aspect-ratio: var(--mobile-feed-ratio) !important;
+    height: auto !important;
+    max-height: 30vh !important;
     margin-bottom: var(--mobile-spacing-sm);
     border-radius: 0;
-    height: auto;
-    min-height: 200px;
+    min-height: 150px;
     position: relative;
   }
   

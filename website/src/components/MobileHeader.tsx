@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Search, Menu } from 'lucide-react';
 
 interface MobileHeaderProps {
   onLogoClick?: () => void;
   onSearchClick?: () => void;
   onMenuClick?: () => void;
-  showMenu?: boolean;
 }
 
 const MobileHeader: React.FC<MobileHeaderProps> = ({
   onLogoClick,
   onSearchClick,
   onMenuClick,
-  showMenu = false,
 }) => {
   return (
     <header className="mobile-header mobile-only">
+      <button
+        onClick={onMenuClick}
+        className="mobile-header-icon mobile-touch-target"
+        aria-label="Menu"
+        style={{
+          marginRight: 'auto',
+        }}
+      >
+        <Menu size={20} />
+      </button>
+      
       <button
         onClick={onLogoClick}
         className="mobile-header-logo"
@@ -24,6 +33,8 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
           border: 'none',
           cursor: 'pointer',
           padding: 0,
+          flex: 1,
+          textAlign: 'center',
         }}
       >
         Morning Pulse
@@ -37,16 +48,6 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
             aria-label="Search"
           >
             <Search size={20} />
-          </button>
-        )}
-        
-        {onMenuClick && (
-          <button
-            onClick={onMenuClick}
-            className="mobile-header-icon mobile-touch-target"
-            aria-label="Menu"
-          >
-            <Menu size={20} />
           </button>
         )}
       </div>

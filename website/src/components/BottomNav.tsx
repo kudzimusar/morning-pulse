@@ -61,12 +61,20 @@ const BottomNav: React.FC<BottomNavProps> = ({
       </button>
       
       <button
-        onClick={() => handleNavClick('categories', '#news')}
+        onClick={() => {
+          // Open menu drawer for categories - this will be handled by parent
+          if (onNavigate) {
+            onNavigate('menu');
+          } else {
+            // Trigger menu via custom event
+            window.dispatchEvent(new CustomEvent('openMobileMenu'));
+          }
+        }}
         className={`mobile-bottom-nav-item ${isActive('categories') ? 'active' : ''}`}
         aria-label="Categories"
       >
         <Grid3x3 className="mobile-bottom-nav-icon" />
-        <span>Categories</span>
+        <span>Menu</span>
       </button>
       
       <button
