@@ -58,7 +58,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
 
   // Lazy load image when it enters viewport
   useEffect(() => {
-    if (!imageRef.current || !imageUrl) return;
+    if (!imageRef.current || !imageUrl) {
+      // If no image URL, mark as loaded to show gradient
+      setImageLoaded(true);
+      return;
+    }
 
     const observer = lazyLoadImage(imageRef.current, () => {
       setImageLoaded(true);

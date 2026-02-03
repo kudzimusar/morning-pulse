@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../types';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
 import SEOHeader from './SEOHeader';
+import ArticleFooter from './ArticleFooter';
 import { trackArticleView, trackArticleEngagement } from '../services/analyticsService';
 import { X, PenTool, Share2, Check, Heart, Lightbulb, ThumbsDown, MessageCircle } from 'lucide-react';
 import { getImageByTopic } from '../utils/imageGenerator';
