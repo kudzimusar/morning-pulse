@@ -127,6 +127,7 @@ export const generateNewsletter = async (
     const q = query(
       adsRef, 
       where('status', '==', 'active'),
+      where('paymentStatus', '==', 'paid'), // ✅ PHASE 4: Enforce paid status for newsletter ads
       where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
     );
     
