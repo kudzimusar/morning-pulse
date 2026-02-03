@@ -514,9 +514,15 @@ export const approveAd = async (adId: string, paymentId?: string): Promise<void>
   const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
   
   try {
+    const adSnap = await getDoc(adRef);
+    if (!adSnap.exists()) throw new Error('Ad not found');
+    const adData = adSnap.data();
+
+    const isPaid = paymentId || adData.isHouseAd;
+    
     await updateDoc(adRef, {
       status: 'approved',
-      paymentStatus: paymentId ? 'paid' : 'pending',
+      paymentStatus: isPaid ? 'paid' : 'pending',
       paymentId: paymentId || null,
       updatedAt: serverTimestamp(),
     });
@@ -566,6 +572,13 @@ export const activateAd = async (adId: string): Promise<void> => {
     // ✅ BUSINESS RULE: Only PAID ads can be activated (unless it's a House Ad)
     if (adData.paymentStatus !== 'paid' && !adData.isHouseAd) {
       throw new Error('Cannot activate ad: Payment status must be "paid".');
+    }
+
+    // ✅ BUSINESS RULE: Check for expiry before activation
+    const now = new Date();
+    const endDate = adData.endDate?.toDate?.() || new Date(adData.endDate);
+    if (endDate < now) {
+      throw new Error('Cannot activate ad: The end date has already passed.');
     }
 
     await updateDoc(adRef, {
@@ -942,6 +955,7 @@ export const getAdsForSlot = async (
         
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
         
+        // ✅ PHASE 2: Strict Expiry Check
         if (startDate <= now && endDate >= now) {
           results.push({
             id: docSnap.id,
@@ -961,6 +975,9 @@ export const getAdsForSlot = async (
             createdAt: data.createdAt?.toDate?.() || new Date(),
             updatedAt: data.updatedAt?.toDate?.() || undefined,
           });
+        } else if (endDate < now && data.status === 'active') {
+          // Auto-cleanup: if an ad is active but expired, we should log it for future auto-archiving
+          console.log(`🧹 [Auto-Cleanup] Ad ${docSnap.id} is active but expired. Ignoring in results.`);
         }
       });
       return results;
