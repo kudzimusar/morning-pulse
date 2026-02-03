@@ -670,6 +670,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Clicks</th>
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>CTR</th>
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Revenue</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Payment</th>
                       <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Status</th>
                     </tr>
                   </thead>
@@ -677,10 +678,15 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                     {activeAds.map((ad) => {
                       const ctr = ad.views > 0 ? (ad.clicks / ad.views) * 100 : 0;
                       const revenue = ad.clicks * 0.50; // Mock rate of $0.50 per click
+                      const isPaid = ad.paymentStatus === 'paid' || ad.isHouseAd;
+                      
                       return (
                         <tr key={ad.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                           <td style={{ padding: '12px 16px' }}>
-                            <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#111827' }}>{ad.title}</div>
+                            <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#111827' }}>
+                              {ad.title}
+                              {ad.isHouseAd && <span style={{ marginLeft: '8px', fontSize: '10px', backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: '4px' }}>HOUSE</span>}
+                            </div>
                             <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>ID: {ad.id.substring(0, 8)}</div>
                           </td>
                           <td style={{ padding: '12px 16px', fontSize: '0.875rem', color: '#374151' }}>
@@ -699,16 +705,31 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                             ${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            <span style={{ 
+                              padding: '4px 10px', 
+                              backgroundColor: isPaid ? '#d1fae5' : '#fee2e2', 
+                              color: isPaid ? '#065f46' : '#991b1b', 
+                              borderRadius: '12px', 
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              textTransform: 'uppercase'
+                            }}>
+                              {ad.isHouseAd ? 'EXEMPT' : ad.paymentStatus}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                             {ad.status === 'approved' ? (
                               <button
                                 onClick={() => handleActivateAd(ad.id)}
+                                disabled={!isPaid}
+                                title={!isPaid ? 'Payment must be marked as PAID before activation' : 'Activate this ad'}
                                 style={{
                                   padding: '4px 12px',
-                                  backgroundColor: '#000',
+                                  backgroundColor: isPaid ? '#000' : '#ccc',
                                   color: 'white',
                                   border: 'none',
                                   borderRadius: '4px',
-                                  cursor: 'pointer',
+                                  cursor: isPaid ? 'pointer' : 'not-allowed',
                                   fontSize: '0.75rem',
                                   fontWeight: '600'
                                 }}
@@ -718,8 +739,8 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                             ) : (
                               <span style={{ 
                                 padding: '4px 10px', 
-                                backgroundColor: '#d1fae5', 
-                                color: '#065f46', 
+                                backgroundColor: ad.status === 'active' ? '#dcfce7' : '#f3f4f6', 
+                                color: ad.status === 'active' ? '#166534' : '#374151', 
                                 borderRadius: '12px', 
                                 fontSize: '0.7rem',
                                 fontWeight: '600',

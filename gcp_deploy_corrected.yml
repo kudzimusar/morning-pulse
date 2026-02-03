@@ -1,0 +1,132 @@
+name: Deploy WhatsApp Bot to Google Cloud Functions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Function Dependencies
+        run: |
+          cd functions
+          npm install
+
+      - name: Authenticate Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Setup gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      # 1. Webhook Function
+      - name: Deploy Webhook Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        with:
+          name: webhook
+          runtime: nodejs20
+          entry_point: webhook
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          env_vars: |
+            WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+            WHATSAPP_PHONE_ID=${{ secrets.WHATSAPP_PHONE_ID }}
+            WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            APP_ID=morning-pulse-app
+
+      # 2. News Aggregator Function
+      - name: Deploy News Aggregator Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        with:
+          name: newsAggregator
+          runtime: nodejs20
+          entry_point: newsAggregator
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          env_vars: |
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            APP_ID=morning-pulse-app
+
+      # 3. Send Newsletter Function (Requires Public Access)
+      - name: Deploy Send Newsletter Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        with:
+          name: sendNewsletter
+          runtime: nodejs20
+          entry_point: sendNewsletter
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          allow_unauthenticated: true
+          env_vars: |
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            NEWSLETTER_FROM_EMAIL=${{ secrets.NEWSLETTER_FROM_EMAIL }}
+            APP_ID=morning-pulse-app
+
+      # 4. Manage Subscription Function (Requires Public Access)
+      - name: Deploy Manage Subscription Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        with:
+          name: manageSubscription
+          runtime: nodejs20
+          entry_point: manageSubscription
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          allow_unauthenticated: true
+          env_vars: |
+            APP_ID=morning-pulse-app
+
+      # 5. Send Scheduled Newsletter Function (New)
+      - name: Deploy Scheduled Newsletter Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        with:
+          name: sendScheduledNewsletter
+          runtime: nodejs20
+          entry_point: sendScheduledNewsletter
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          allow_unauthenticated: true
+          env_vars: |
+            MORNING_PULSE_BREVO=${{ secrets.MORNING_PULSE_BREVO }}
+            APP_ID=morning-pulse-app
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+      # 6. Set IAM Policies for Public Access (Ensures browser CORS works)
+      - name: Set Public Access
+        run: |
+          for func in sendNewsletter manageSubscription sendScheduledNewsletter; do
+            gcloud functions add-iam-policy-binding $func \
+              --region=${{ env.REGION }} \
+              --project=${{ env.PROJECT_ID }} \
+              --member="allUsers" \
+              --role="roles/cloudfunctions.invoker" || true
+          done

@@ -148,12 +148,15 @@ const AdSlot: React.FC<AdSlotProps> = ({
           if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
             // Ad is at least 50% visible
             if (!impressionTracked && currentAd) {
-              trackAdImpression(currentAd.id, slotId, {
-                userAgent: navigator.userAgent,
-                referrer: document.referrer,
-              }).catch((err) => {
-                console.error('Failed to track impression:', err);
-              });
+              // ✅ FIX: Only track impressions for PAID ads
+              if (currentAd.paymentStatus === 'paid') {
+                trackAdImpression(currentAd.id, slotId, {
+                  userAgent: navigator.userAgent,
+                  referrer: document.referrer,
+                }).catch((err) => {
+                  console.error('Failed to track impression:', err);
+                });
+              }
               setImpressionTracked(true);
             }
           }
@@ -175,11 +178,13 @@ const AdSlot: React.FC<AdSlotProps> = ({
   const handleAdClick = async (ad: Ad, e: React.MouseEvent) => {
     e.preventDefault();
     
-    // Track click
-    await trackAdClickDetailed(ad.id, slotId, {
-      userAgent: navigator.userAgent,
-      referrer: document.referrer,
-    });
+    // ✅ FIX: Only track clicks for PAID ads (Client or House)
+    if (ad.paymentStatus === 'paid') {
+      await trackAdClickDetailed(ad.id, slotId, {
+        userAgent: navigator.userAgent,
+        referrer: document.referrer,
+      });
+    }
 
     // Open ad destination URL (preferred) or fallback to advertiser website
     const destinationUrl = ad.destinationUrl || ad.creativeUrl;

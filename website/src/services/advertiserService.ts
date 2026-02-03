@@ -63,6 +63,8 @@ export interface Ad {
   creativeUrl: string;
   destinationUrl?: string;
   placement: 'header' | 'sidebar' | 'inline' | 'newsletter_top' | 'newsletter_inline' | 'newsletter_footer';
+  slotId?: string; // Specific slot ID mapping
+  isHouseAd?: boolean; // Flag for internal promotions
   status: 'pending' | 'approved' | 'active' | 'expired' | 'rejected';
   startDate: Date;
   endDate: Date;
@@ -296,12 +298,14 @@ export const submitAd = async (
       destinationUrl: adData.destinationUrl || '',
       creativeUrl: adData.creativeUrl,
       placement: adData.placement,
+      slotId: (adData as any).slotId || '',
+      isHouseAd: (adData as any).isHouseAd || false,
       status: 'pending',
-      startDate: serverTimestamp(),
-      endDate: serverTimestamp(),
+      startDate: adData.startDate ? serverTimestamp() : serverTimestamp(),
+      endDate: adData.endDate ? serverTimestamp() : serverTimestamp(),
       clicks: 0,
       views: 0,
-      paymentStatus: 'pending',
+      paymentStatus: (adData as any).isHouseAd ? 'paid' : 'pending',
       createdAt: serverTimestamp(),
     });
     
@@ -552,6 +556,18 @@ export const activateAd = async (adId: string): Promise<void> => {
   const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
   
   try {
+    const adSnap = await getDoc(adRef);
+    if (!adSnap.exists()) {
+      throw new Error('Ad not found');
+    }
+    
+    const adData = adSnap.data();
+    
+    // ✅ BUSINESS RULE: Only PAID ads can be activated (unless it's a House Ad)
+    if (adData.paymentStatus !== 'paid' && !adData.isHouseAd) {
+      throw new Error('Cannot activate ad: Payment status must be "paid".');
+    }
+
     await updateDoc(adRef, {
       status: 'active',
       updatedAt: serverTimestamp(),
@@ -560,7 +576,7 @@ export const activateAd = async (adId: string): Promise<void> => {
     console.log('✅ Ad activated:', adId);
   } catch (error: any) {
     console.error('❌ Error activating ad:', error);
-    throw new Error(`Failed to activate ad: ${error.message}`);
+    throw new Error(error.message || `Failed to activate ad`);
   }
 };
 
@@ -894,107 +910,117 @@ export const getAdsForSlot = async (
       return [];
     }
     
-    // Map slotId to placement (FIXED - use full slotId)
-    const placementMap: Record<string, 'header' | 'sidebar' | 'inline'> = {
-      'header_banner': 'header',
-      'homepage_sidebar_1': 'sidebar',
-      'homepage_sidebar_2': 'sidebar',
-      'article_inline_1': 'inline',
-      'article_inline_2': 'inline',
-      'article_sidebar_1': 'sidebar',
-      'footer_1': 'sidebar',
-    };
-    
-    const placement = placementMap[slotId] || 'sidebar';
     const limit = options?.limit || slot.maxAds || 1;
-    
-    // Get active ads matching placement, payment status, and date range
     const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
     const now = new Date();
     
-    // Query active ads with paid status
-    const activeAdsQuery = query(
+    /**
+     * Helper to parse and filter ads from snapshot
+     */
+    const parseAndFilterAds = (snapshot: any) => {
+      const results: Ad[] = [];
+      snapshot.forEach((docSnap: any) => {
+        const data = docSnap.data();
+        let startDate: Date;
+        let endDate: Date;
+        
+        if (data.startDate && typeof data.startDate.toDate === 'function') {
+          startDate = data.startDate.toDate();
+        } else if (data.startDate && data.startDate.seconds) {
+          startDate = new Date(data.startDate.seconds * 1000);
+        } else {
+          startDate = new Date(data.startDate || 0);
+        }
+        
+        if (data.endDate && typeof data.endDate.toDate === 'function') {
+          endDate = data.endDate.toDate();
+        } else if (data.endDate && data.endDate.seconds) {
+          endDate = new Date(data.endDate.seconds * 1000);
+        } else {
+          endDate = new Date(data.endDate || Date.now() + 31536000000);
+        }
+        
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
+        
+        if (startDate <= now && endDate >= now) {
+          results.push({
+            id: docSnap.id,
+            advertiserId: data.advertiserId,
+            title: data.title || '',
+            description: data.description,
+            creativeUrl: data.creativeUrl || '',
+            destinationUrl: data.destinationUrl,
+            placement: data.placement || 'sidebar',
+            status: data.status || 'active',
+            startDate,
+            endDate,
+            clicks: data.clicks || 0,
+            views: data.views || 0,
+            paymentStatus: data.paymentStatus || 'pending',
+            paymentId: data.paymentId,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || undefined,
+          });
+        }
+      });
+      return results;
+    };
+
+    // 🌊 WATERFALL STEP 1: Look for Paid Client Ads specifically for this Slot ID
+    console.log(`🌊 [Waterfall] Step 1: Searching for PAID ads for Slot [${slotId}]`);
+    const clientAdsQuery = query(
       adsRef,
       where('status', '==', 'active'),
-      where('placement', '==', placement),
-      where('paymentStatus', '==', 'paid')
+      where('slotId', '==', slotId),
+      where('paymentStatus', '==', 'paid'),
+      where('isHouseAd', '==', false)
     );
     
-    const snapshot = await getDocs(activeAdsQuery);
-    const ads: Ad[] = [];
+    let snapshot = await getDocs(clientAdsQuery);
+    let ads = parseAndFilterAds(snapshot);
     
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      
-      // ✅ FIX: Harden date filtering - ensure proper Timestamp conversion
-      let startDate: Date;
-      let endDate: Date;
-      
-      // Handle Firestore Timestamp objects
-      if (data.startDate && typeof data.startDate.toDate === 'function') {
-        startDate = data.startDate.toDate();
-      } else if (data.startDate && data.startDate.seconds) {
-        // Handle Timestamp object with seconds property
-        startDate = new Date(data.startDate.seconds * 1000);
-      } else if (data.startDate) {
-        // Handle string or number timestamps
-        startDate = new Date(data.startDate);
-      } else {
-        startDate = new Date(0); // Default to epoch if missing
-      }
-      
-      if (data.endDate && typeof data.endDate.toDate === 'function') {
-        endDate = data.endDate.toDate();
-      } else if (data.endDate && data.endDate.seconds) {
-        // Handle Timestamp object with seconds property
-        endDate = new Date(data.endDate.seconds * 1000);
-      } else if (data.endDate) {
-        // Handle string or number timestamps
-        endDate = new Date(data.endDate);
-      } else {
-        endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Default to 1 year from now if missing
-      }
-      
-      // Validate dates are valid
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        console.warn(`⚠️ Invalid date range for ad ${docSnap.id}, skipping`);
-        return;
-      }
-      
-      // Filter by date range
-      if (startDate <= now && endDate >= now) {
-        ads.push({
-          id: docSnap.id,
-          advertiserId: data.advertiserId,
-          title: data.title || '',
-          description: data.description,
-          creativeUrl: data.creativeUrl || '',
-          destinationUrl: data.destinationUrl,
-          placement: data.placement || 'sidebar',
-          status: 'active',
-          startDate,
-          endDate,
-          clicks: data.clicks || 0,
-          views: data.views || 0,
-          paymentStatus: data.paymentStatus || 'pending',
-          paymentId: data.paymentId,
-          createdAt: data.createdAt?.toDate?.() || new Date(),
-          updatedAt: data.updatedAt?.toDate?.() || undefined,
-        });
-      }
-    });
-    
-    // ✅ FIX: Add fallback logger when no ads found
+    // 🌊 WATERFALL STEP 2: Fallback to General Placement Ads (Legacy Support)
     if (ads.length === 0) {
-      const countryName = (window as any).__user_country?.name || 'Unknown';
-      console.log(`🔍 [getAdsForSlot] AdSlot [${slotId}] found 0 active ads for ${countryName}`);
-      console.log(`   Query filters: Placement=${placement}, Status=active, PaymentStatus=paid`);
-      console.log(`   Slot lookup: ${slot ? 'Found' : 'NOT FOUND'} (slotId: ${slotId})`);
-      if (slot) {
-        console.log(`   Slot config:`, { maxAds: slot.maxAds, priorityTier: slot.priorityTier });
-      }
+      const placementMap: Record<string, string> = {
+        'header_banner': 'header',
+        'homepage_sidebar_1': 'sidebar',
+        'homepage_sidebar_2': 'sidebar',
+        'article_inline_1': 'inline',
+        'article_inline_2': 'inline',
+        'article_sidebar_1': 'sidebar',
+        'footer_1': 'sidebar',
+      };
+      const placement = placementMap[slotId] || 'sidebar';
+      
+      console.log(`🌊 [Waterfall] Step 2: Fallback to Placement [${placement}] for Slot [${slotId}]`);
+      const placementAdsQuery = query(
+        adsRef,
+        where('status', '==', 'active'),
+        where('placement', '==', placement),
+        where('paymentStatus', '==', 'paid'),
+        where('isHouseAd', '==', false)
+      );
+      snapshot = await getDocs(placementAdsQuery);
+      ads = parseAndFilterAds(snapshot);
+    }
+
+    // 🌊 WATERFALL STEP 3: Fallback to House Ads (Internal Promotions)
+    if (ads.length === 0) {
+      console.log(`🌊 [Waterfall] Step 3: No client ads found. Fetching HOUSE ADS for Slot [${slotId}]`);
+      const houseAdsQuery = query(
+        adsRef,
+        where('status', '==', 'active'),
+        where('isHouseAd', '==', true),
+        where('paymentStatus', '==', 'paid')
+      );
+      snapshot = await getDocs(houseAdsQuery);
+      ads = parseAndFilterAds(snapshot);
+    }
+    
+    if (ads.length === 0) {
+      console.log(`❌ [getAdsForSlot] No ads found for Slot [${slotId}] after all waterfall steps.`);
     } else {
-      console.log(`✅ [getAdsForSlot] AdSlot [${slotId}] found ${ads.length} active ads`);
+      console.log(`✅ [getAdsForSlot] Found ${ads.length} ads for Slot [${slotId}]`);
     }
     
     // Sort by priority tier (premium first) and return limited results
