@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
 import Header from './components/Header';
+import MobileHeader from './components/MobileHeader';
+import BottomNav from './components/BottomNav';
 
 // ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
 const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {
@@ -88,6 +90,7 @@ import {
 import { NewsStory } from '../types';
 import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
 import { initAnalytics, trackPageView, trackArticleView } from './services/analyticsService';
+import { setupScrollMemory, saveScrollPosition, restoreScrollPosition } from './utils/scrollMemory';
 
 // Helper function to get page title for analytics
 const getPageTitle = (hash: string): string => {
@@ -283,12 +286,21 @@ const App: React.FC = () => {
         return; // Already on dashboard, don't process again
       }
 
+      // Scroll Memory - Save position when navigating away from news
+      if (currentPage === 'news' && path !== 'news' && path !== '') {
+        saveScrollPosition('news-feed');
+      }
+      
       // Track page view in Google Analytics
       const pageTitle = getPageTitle(path);
       trackPageView(pageTitle, `/${path || 'news'}`);
       
       // Handle category parameter for news page
       if (path === 'news' || path === '') {
+        // Restore scroll position when returning to news feed
+        setTimeout(() => {
+          restoreScrollPosition('news-feed');
+        }, 100);
         const categoryParam = params.get('category');
         if (categoryParam) {
           const mappedCategory = mapFooterCategoryToDataCategory(categoryParam);
@@ -741,17 +753,32 @@ const App: React.FC = () => {
       ) : (
         <>
           {/* Public Site View */}
-          {/* Only show Header when NOT on admin page */}
+          {/* Desktop Header - Hidden on Mobile */}
           {currentPage !== 'admin' && (
-            <Header 
-              onCategorySelect={handleCategorySelect}
-              currentCountry={currentCountry}
-              onCountryChange={handleCountryChange}
-              topHeadlines={topHeadlines}
-              onSubscribeClick={handleSubscribeClick}
-              userRole={userRole}
-              onDashboardClick={() => handleViewSwitch('admin')}
-            />
+            <>
+              <div className="desktop-only">
+                <Header 
+                  onCategorySelect={handleCategorySelect}
+                  currentCountry={currentCountry}
+                  onCountryChange={handleCountryChange}
+                  topHeadlines={topHeadlines}
+                  onSubscribeClick={handleSubscribeClick}
+                  userRole={userRole}
+                  onDashboardClick={() => handleViewSwitch('admin')}
+                />
+              </div>
+              {/* Mobile Header - Shown on Mobile Only */}
+              <MobileHeader
+                onLogoClick={() => {
+                  window.location.hash = 'news';
+                  setCurrentPage('news');
+                }}
+                onSearchClick={() => {
+                  // TODO: Implement search
+                  console.log('Search clicked');
+                }}
+              />
+            </>
           )}
           
           {/* Admin Login - Full Page View (like other pages) */}
@@ -1007,8 +1034,20 @@ const App: React.FC = () => {
         </>
       )}
 
-          {/* Footer - only show when NOT on admin page */}
-          {currentPage !== 'admin' && <Footer />}
+          {/* Footer - only show when NOT on admin page - Hidden on Mobile */}
+          {currentPage !== 'admin' && (
+            <div className="desktop-only">
+              <Footer />
+            </div>
+          )}
+          
+          {/* Mobile Bottom Navigation - Shown on Mobile Only */}
+          {currentPage !== 'admin' && view === 'public' && (
+            <BottomNav
+              currentPage={currentPage}
+              userRole={userRole}
+            />
+          )}
         </>
       )}
     </div>

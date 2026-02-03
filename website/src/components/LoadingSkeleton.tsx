@@ -1,13 +1,23 @@
 import React from 'react';
+import MobileSkeleton from './MobileSkeleton';
 
 /**
  * LoadingSkeleton Component
  * Displays skeleton loaders while content is being fetched
+ * Uses MobileSkeleton on mobile devices
  */
 
 const LoadingSkeleton: React.FC = () => {
   return (
-    <div className="loading-skeleton">
+    <>
+      {/* Mobile Skeleton - Shown on Mobile */}
+      <div className="mobile-only">
+        <MobileSkeleton variant="hero" count={1} />
+        <MobileSkeleton variant="list" count={5} />
+      </div>
+      
+      {/* Desktop Skeleton - Shown on Desktop */}
+      <div className="desktop-only loading-skeleton">
       {/* Hero skeleton */}
       <div className="skeleton-hero">
         <div className="skeleton-image" style={{
@@ -85,7 +95,8 @@ const LoadingSkeleton: React.FC = () => {
           }
         }
       `}</style>
-    </div>
+      </div>
+    </>
   );
 };
 

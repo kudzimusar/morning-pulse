@@ -136,10 +136,10 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
   }
 
   return (
-    <main className="premium-news-grid">
+    <main className="premium-news-grid mobile-content-with-nav">
       {/* Hero Section */}
       {heroArticle && (
-        <section className="hero-section">
+        <section className="hero-section mobile-hero-story">
           <HeroCard article={heroArticle} userCountry={userCountry} />
         </section>
       )}
@@ -202,18 +202,38 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
       )}
 
       {/* Grid Section */}
-      <section className="news-grid-section">
+      <section className="news-grid-section mobile-category-section">
         {selectedCategory && (
           <div className="section-header">
-            <h2 className="section-title">{selectedCategory}</h2>
+            <h2 
+              className="section-title mobile-section-label desktop-only"
+              data-category={selectedCategory}
+            >
+              {selectedCategory}
+            </h2>
+            {/* Mobile Editorial Section Header */}
+            <div className="mobile-section-label mobile-only" data-category={selectedCategory}>
+              {selectedCategory.toUpperCase()}
+            </div>
           </div>
         )}
-        <div className="news-grid-container">
+        <div className="news-grid-container desktop-only">
           {gridArticles.map((article, index) => (
             <ArticleCard 
               key={`${userCountry || 'default'}-${article.id}-${index}`}
               article={article} 
               variant="grid"
+              userCountry={userCountry}
+            />
+          ))}
+        </div>
+        {/* Mobile Card Stack */}
+        <div className="mobile-card-stack mobile-only">
+          {gridArticles.map((article, index) => (
+            <ArticleCard 
+              key={`${userCountry || 'default'}-${article.id}-${index}`}
+              article={article} 
+              variant="compact"
               userCountry={userCountry}
             />
           ))}

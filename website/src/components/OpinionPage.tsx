@@ -9,8 +9,8 @@ interface OpinionPageProps {
 
 const OpinionPage: React.FC<OpinionPageProps> = ({ onBack, onNavigateToSubmit, slug }) => {
   return (
-    <div className="opinion-page">
-      <div className="opinion-page-header" style={{
+    <div className="opinion-page mobile-content-with-nav">
+      <div className="opinion-page-header mobile-category-header" style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
