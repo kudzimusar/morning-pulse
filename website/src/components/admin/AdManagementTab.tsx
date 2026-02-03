@@ -670,6 +670,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Clicks</th>
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>CTR</th>
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Revenue</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Schedule</th>
                       <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Payment</th>
                       <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Status</th>
                     </tr>
@@ -680,8 +681,13 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                       const revenue = ad.clicks * 0.50; // Mock rate of $0.50 per click
                       const isPaid = ad.paymentStatus === 'paid' || ad.isHouseAd;
                       
+                      const now = new Date();
+                      const endDate = ad.endDate?.toDate?.() || new Date(ad.endDate);
+                      const isExpired = endDate < now;
+                      const isExpiringSoon = !isExpired && (endDate.getTime() - now.getTime()) < (48 * 60 * 60 * 1000); // 48 hours
+                      
                       return (
-                        <tr key={ad.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                        <tr key={ad.id} style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: isExpired ? '#fff1f2' : 'transparent' }}>
                           <td style={{ padding: '12px 16px' }}>
                             <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#111827' }}>
                               {ad.title}
@@ -705,6 +711,13 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                             ${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.75rem', color: isExpired ? '#ef4444' : (isExpiringSoon ? '#f59e0b' : '#374151') }}>
+                              {endDate.toLocaleDateString()}
+                              {isExpired && <div style={{ fontSize: '10px', fontWeight: 'bold' }}>EXPIRED</div>}
+                              {isExpiringSoon && <div style={{ fontSize: '10px', fontWeight: 'bold' }}>EXPIRING SOON</div>}
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                             <span style={{ 
                               padding: '4px 10px', 
                               backgroundColor: isPaid ? '#d1fae5' : '#fee2e2', 
@@ -721,15 +734,15 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                             {ad.status === 'approved' ? (
                               <button
                                 onClick={() => handleActivateAd(ad.id)}
-                                disabled={!isPaid}
-                                title={!isPaid ? 'Payment must be marked as PAID before activation' : 'Activate this ad'}
+                                disabled={!isPaid || isExpired}
+                                title={isExpired ? 'Cannot activate expired ad' : (!isPaid ? 'Payment must be marked as PAID before activation' : 'Activate this ad')}
                                 style={{
                                   padding: '4px 12px',
-                                  backgroundColor: isPaid ? '#000' : '#ccc',
+                                  backgroundColor: (isPaid && !isExpired) ? '#000' : '#ccc',
                                   color: 'white',
                                   border: 'none',
                                   borderRadius: '4px',
-                                  cursor: isPaid ? 'pointer' : 'not-allowed',
+                                  cursor: (isPaid && !isExpired) ? 'pointer' : 'not-allowed',
                                   fontSize: '0.75rem',
                                   fontWeight: '600'
                                 }}
@@ -739,14 +752,14 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                             ) : (
                               <span style={{ 
                                 padding: '4px 10px', 
-                                backgroundColor: ad.status === 'active' ? '#dcfce7' : '#f3f4f6', 
-                                color: ad.status === 'active' ? '#166534' : '#374151', 
+                                backgroundColor: ad.status === 'active' ? (isExpired ? '#fecaca' : '#dcfce7') : '#f3f4f6', 
+                                color: ad.status === 'active' ? (isExpired ? '#b91c1c' : '#166534') : '#374151', 
                                 borderRadius: '12px', 
                                 fontSize: '0.7rem',
                                 fontWeight: '600',
                                 textTransform: 'uppercase'
                               }}>
-                                {ad.status}
+                                {isExpired && ad.status === 'active' ? 'EXPIRED' : ad.status}
                               </span>
                             )}
                           </td>
