@@ -120,9 +120,10 @@ Format your response as a JSON array with this structure:
 ]
 
 CRITICAL FORMATTING RULES:
-- Return ONLY the JSON array, no markdown code blocks (no ```json or ```)
+- Return ONLY the JSON array, no markdown code blocks
 - Do NOT wrap the response in markdown
 - Do NOT include any explanatory text before or after the JSON
+- Do NOT include markdown syntax or code block markers anywhere in the response
 - Escape all special characters in string values (newlines as \\n, quotes as \\")
 - Return valid JSON that can be parsed directly with JSON.parse()
 
@@ -166,10 +167,6 @@ If no fresh news from today exists, return an empty array [].`;
       }
     }
     
-    // Clean up any markdown that might be inside string values
-    // Remove ```json or ``` that appear in the middle of the text
-    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '');
-    
     // Remove any explanatory text before or after the JSON
     // Find the first [ and last ] to extract just the array
     const firstBracket = jsonText.indexOf('[');
@@ -177,6 +174,27 @@ If no fresh news from today exists, return an empty array [].`;
     if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
       jsonText = jsonText.substring(firstBracket, lastBracket + 1);
     }
+    
+    // CRITICAL: Fix markdown code blocks embedded INSIDE string values
+    // Gemini sometimes puts ```json inside the detail field, breaking JSON
+    // Pattern: "text```json\n[...]" should become "text"
+    // We'll use regex to find and fix these patterns
+    // Match: "..." followed by ```json or ``` and anything until the next "
+    jsonText = jsonText.replace(/"([^"]*?)```json[\s\S]*?"/g, (match, content) => {
+      // Return the content before markdown, properly closed
+      return '"' + content.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+    });
+    jsonText = jsonText.replace(/"([^"]*?)```[\s\S]*?"/g, (match, content) => {
+      return '"' + content.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+    });
+    
+    // Also handle cases where markdown breaks a string and continues
+    // Find patterns like: "text```json and close the string immediately
+    jsonText = jsonText.replace(/("([^"]*?))```json[^"]*/g, '$1"');
+    jsonText = jsonText.replace(/("([^"]*?))```[^"]*/g, '$1"');
+    
+    // Final cleanup: remove any remaining markdown markers
+    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '');
 
     // Function to properly escape control characters in JSON strings
     function fixControlCharactersInJson(jsonStr) {
