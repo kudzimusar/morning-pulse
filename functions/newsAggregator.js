@@ -202,6 +202,11 @@ Only return valid JSON, no additional text. If no fresh news from today exists, 
     return freshArticles;
   } catch (error) {
     console.error(`Error fetching news for ${category}:`, error.message);
+    console.error(`Full error details:`, JSON.stringify({
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    }, null, 2));
     // Return empty array on error to continue with other categories
     return [];
   }

@@ -311,21 +311,21 @@ jobs:
             gcloud scheduler jobs update http $SCHEDULER_NAME \
               --location=$REGION \
               --project=${{ env.PROJECT_ID }} \
-              --schedule="0 2 * * *" \
+              --schedule="0 2,14 * * *" \
               --time-zone="UTC" \
               --uri="$FUNCTION_URL" \
               --http-method=GET \
-              --description="Daily news aggregation for Morning Pulse"
+              --description="Twice daily news aggregation for Morning Pulse (2 AM and 2 PM UTC)"
           else
             echo "Creating new scheduler job..."
             gcloud scheduler jobs create http $SCHEDULER_NAME \
               --location=$REGION \
               --project=${{ env.PROJECT_ID }} \
-              --schedule="0 2 * * *" \
+              --schedule="0 2,14 * * *" \
               --time-zone="UTC" \
               --uri="$FUNCTION_URL" \
               --http-method=GET \
-              --description="Daily news aggregation for Morning Pulse"
+              --description="Twice daily news aggregation for Morning Pulse (2 AM and 2 PM UTC)"
           fi
           echo "✅ Cloud Scheduler configured for news aggregation!"
 

@@ -14,14 +14,29 @@ const GITHUB_PAGES_URL = process.env.GITHUB_PAGES_URL || 'https://kudzimusar.git
 const BASE_URL = `${GITHUB_PAGES_URL}/morning-pulse`;
 
 // Initialize Firebase Admin
+// Handle base64-encoded config or plain JSON (same as generateStaticSite.js)
 let db;
 try {
-  const serviceAccountJson = process.env.FIREBASE_ADMIN_CONFIG;
-  if (!serviceAccountJson) {
+  const configStr = process.env.FIREBASE_ADMIN_CONFIG;
+  if (!configStr) {
     throw new Error('FIREBASE_ADMIN_CONFIG environment variable is required');
   }
 
-  const serviceAccount = JSON.parse(serviceAccountJson);
+  // Try to decode as base64 first, then parse as JSON
+  let decoded = configStr;
+  try {
+    // Check if it's base64 encoded (starts with common base64 chars and no {)
+    if (!configStr.trim().startsWith('{') && !configStr.trim().startsWith('***')) {
+      decoded = Buffer.from(configStr, 'base64').toString('utf-8');
+    }
+  } catch (e) {
+    // Not base64, use as-is
+    decoded = configStr;
+  }
+  // Remove any leading *** characters
+  decoded = decoded.replace(/^\*\*\*+/, '').trim();
+  
+  const serviceAccount = JSON.parse(decoded);
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
   });
@@ -29,6 +44,7 @@ try {
   console.log('✅ Firebase Admin initialized');
 } catch (error) {
   console.error('❌ Failed to initialize Firebase Admin:', error.message);
+  console.error('Config starts with:', process.env.FIREBASE_ADMIN_CONFIG?.substring(0, 50));
   process.exit(1);
 }
 
