@@ -7,6 +7,7 @@ import MobileHeader from './components/MobileHeader';
 import BottomNav from './components/BottomNav';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
 import MobileSearch from './components/MobileSearch';
+import MobileNotifications from './components/MobileNotifications';
 
 // ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
 const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {
