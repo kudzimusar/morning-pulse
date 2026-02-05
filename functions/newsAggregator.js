@@ -144,7 +144,104 @@ Only return valid JSON, no additional text. If no fresh news from today exists, 
       jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '');
     }
 
-    const articles = JSON.parse(jsonText);
+    // Try to extract JSON array if text contains other content
+    const jsonArrayMatch = jsonText.match(/\[[\s\S]*\]/);
+    if (jsonArrayMatch) {
+      jsonText = jsonArrayMatch[0];
+    }
+
+    // Function to properly escape control characters in JSON strings
+    function fixControlCharactersInJson(jsonStr) {
+      let result = '';
+      let inString = false;
+      let escapeNext = false;
+      
+      for (let i = 0; i < jsonStr.length; i++) {
+        const char = jsonStr[i];
+        
+        if (escapeNext) {
+          result += char;
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\') {
+          result += char;
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"') {
+          inString = !inString;
+          result += char;
+          continue;
+        }
+        
+        if (inString) {
+          // Inside a string - escape control characters
+          if (char.charCodeAt(0) < 32 && char !== '\n' && char !== '\r' && char !== '\t') {
+            // Control character that's not already handled
+            const code = char.charCodeAt(0);
+            result += '\\u' + ('0000' + code.toString(16)).slice(-4);
+          } else if (char === '\n' && jsonStr[i-1] !== '\\') {
+            result += '\\n';
+          } else if (char === '\r' && jsonStr[i-1] !== '\\') {
+            result += '\\r';
+          } else if (char === '\t' && jsonStr[i-1] !== '\\') {
+            result += '\\t';
+          } else {
+            result += char;
+          }
+        } else {
+          // Outside string - keep as is
+          result += char;
+        }
+      }
+      
+      return result;
+    }
+
+    let articles;
+    try {
+      // First attempt: try parsing as-is
+      articles = JSON.parse(jsonText);
+    } catch (parseError) {
+      // If parsing fails, try fixing control characters
+      console.warn(`First JSON parse attempt failed for ${category}, fixing control characters...`);
+      
+      try {
+        const fixedJson = fixControlCharactersInJson(jsonText);
+        articles = JSON.parse(fixedJson);
+      } catch (secondError) {
+        // If still failing, try extracting just the array and aggressive cleanup
+        console.warn(`Second attempt failed, trying aggressive cleanup for ${category}...`);
+        
+        // Extract just the JSON array
+        const firstBracket = jsonText.indexOf('[');
+        const lastBracket = jsonText.lastIndexOf(']');
+        if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+          jsonText = jsonText.substring(firstBracket, lastBracket + 1);
+        }
+        
+        // Fix common JSON issues
+        let cleanedJson = jsonText
+          .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+          .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');  // Quote unquoted keys
+        
+        // Fix control characters again
+        cleanedJson = fixControlCharactersInJson(cleanedJson);
+        
+        try {
+          articles = JSON.parse(cleanedJson);
+        } catch (thirdError) {
+          console.error(`JSON parsing failed after all cleanup attempts for ${category}:`, thirdError.message);
+          console.error(`JSON text preview (first 500 chars):`, jsonText.substring(0, 500));
+          console.error(`Cleaned JSON preview (first 500 chars):`, cleanedJson.substring(0, 500));
+          // Return empty array instead of throwing to allow other categories to succeed
+          return [];
+        }
+      }
+    }
 
     // Extract sources from grounding metadata if available
     const candidate = response.candidates?.[0];
