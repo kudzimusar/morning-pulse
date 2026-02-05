@@ -119,7 +119,14 @@ Format your response as a JSON array with this structure:
   }
 ]
 
-Only return valid JSON, no additional text. If no fresh news from today exists, return an empty array [].`;
+CRITICAL FORMATTING RULES:
+- Return ONLY the JSON array, no markdown code blocks (no ```json or ```)
+- Do NOT wrap the response in markdown
+- Do NOT include any explanatory text before or after the JSON
+- Escape all special characters in string values (newlines as \\n, quotes as \\")
+- Return valid JSON that can be parsed directly with JSON.parse()
+
+If no fresh news from today exists, return an empty array [].`;
 
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
@@ -136,18 +143,39 @@ Only return valid JSON, no additional text. If no fresh news from today exists, 
     const response = await result.response;
     const text = response.text();
 
-    // Extract JSON from response (handle markdown code blocks if present)
+    // Extract JSON from response - handle multiple markdown code block scenarios
     let jsonText = text.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '');
-    }
-
+    
+    // Remove markdown code blocks from the entire response (handles nested cases)
+    jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    
+    // Remove any remaining markdown code block markers
+    jsonText = jsonText.replace(/^```json\n?/m, '').replace(/\n?```$/m, '');
+    jsonText = jsonText.replace(/^```\n?/m, '').replace(/\n?```$/m, '');
+    
     // Try to extract JSON array if text contains other content
-    const jsonArrayMatch = jsonText.match(/\[[\s\S]*\]/);
+    // Use a more robust regex that finds the first complete JSON array
+    const jsonArrayMatch = jsonText.match(/\[\s*\{[\s\S]*\}\s*\]/);
     if (jsonArrayMatch) {
       jsonText = jsonArrayMatch[0];
+    } else {
+      // Fallback: find any array structure
+      const simpleArrayMatch = jsonText.match(/\[[\s\S]*\]/);
+      if (simpleArrayMatch) {
+        jsonText = simpleArrayMatch[0];
+      }
+    }
+    
+    // Clean up any markdown that might be inside string values
+    // Remove ```json or ``` that appear in the middle of the text
+    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '');
+    
+    // Remove any explanatory text before or after the JSON
+    // Find the first [ and last ] to extract just the array
+    const firstBracket = jsonText.indexOf('[');
+    const lastBracket = jsonText.lastIndexOf(']');
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+      jsonText = jsonText.substring(firstBracket, lastBracket + 1);
     }
 
     // Function to properly escape control characters in JSON strings
@@ -364,47 +392,76 @@ exports.newsAggregator = async (req, res) => {
     // Fetch news for all categories in parallel
     const categoryPromises = NEWS_CATEGORIES.map(async (category) => {
       console.log(`Fetching news for category: ${category}`);
-      const articles = await fetchNewsForCategory(category);
-      
-      // Add category and IDs to each article
-      const articlesWithMetadata = articles.map((article, index) => {
-        const categoryPrefix = category.substring(0, 1).toUpperCase();
-        const id = `${categoryPrefix}${String(index + 1).padStart(2, '0')}`;
+      try {
+        const articles = await fetchNewsForCategory(category);
         
-        return {
-          id: id,
-          category: category,
-          headline: article.headline,
-          detail: article.detail,
-          source: article.source,
-          url: article.url || '',
-          date: dateString,
-          timestamp: Date.now()
-        };
-      });
+        if (articles && articles.length > 0) {
+          console.log(`✅ Successfully fetched ${articles.length} articles for ${category}`);
+        } else {
+          console.warn(`⚠️ No articles returned for ${category}`);
+        }
+        
+        // Add category and IDs to each article
+        const articlesWithMetadata = articles.map((article, index) => {
+          const categoryPrefix = category.substring(0, 1).toUpperCase();
+          const id = `${categoryPrefix}${String(index + 1).padStart(2, '0')}`;
+          
+          return {
+            id: id,
+            category: category,
+            headline: article.headline,
+            detail: article.detail,
+            source: article.source,
+            url: article.url || '',
+            date: dateString,
+            timestamp: Date.now()
+          };
+        });
 
-      return {
-        category: category,
-        articles: articlesWithMetadata
-      };
+        return {
+          category: category,
+          articles: articlesWithMetadata
+        };
+      } catch (error) {
+        console.error(`❌ Failed to fetch news for ${category}:`, error.message);
+        return {
+          category: category,
+          articles: []
+        };
+      }
     });
 
     const categoryResults = await Promise.all(categoryPromises);
 
-    // Organize news by category
+    // Organize news by category and log results
     const newsByCategory = {};
+    const successCategories = [];
+    const failedCategories = [];
+    
     categoryResults.forEach(result => {
       if (result.articles.length > 0) {
         newsByCategory[result.category] = result.articles;
+        successCategories.push(`${result.category} (${result.articles.length} articles)`);
+      } else {
+        failedCategories.push(result.category);
       }
     });
+
+    // Log summary
+    console.log(`📊 Category Summary:`);
+    if (successCategories.length > 0) {
+      console.log(`✅ Successful categories: ${successCategories.join(', ')}`);
+    }
+    if (failedCategories.length > 0) {
+      console.log(`❌ Failed/Empty categories: ${failedCategories.join(', ')}`);
+    }
 
     // Store in Firestore
     await storeNewsInFirestore(newsByCategory, dateString);
 
     const totalArticles = Object.values(newsByCategory).reduce((sum, articles) => sum + articles.length, 0);
     
-    console.log(`✅ News aggregation complete. Total articles: ${totalArticles}`);
+    console.log(`✅ News aggregation complete. Total articles: ${totalArticles} across ${Object.keys(newsByCategory).length} categories`);
 
     // Return success response
     if (req.method === 'GET' || req.method === 'POST') {
