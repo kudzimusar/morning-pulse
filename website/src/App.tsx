@@ -217,6 +217,8 @@ const App: React.FC = () => {
   const [opinionSlug, setOpinionSlug] = useState<string | null>(null); // NEW: Current opinion slug for routing
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileActiveTab, setMobileActiveTab] = useState<'latest' | 'foryou' | 'askai'>('latest');
+  const [mobileNotificationsOpen, setMobileNotificationsOpen] = useState(false);
 
   // Initialize country: check for manual selection first, then auto-detect
   useEffect(() => {
@@ -287,11 +289,20 @@ const App: React.FC = () => {
     return categoryMap[footerCategory] || null;
   };
 
-  // Handle hash-based routing
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      const { path, params } = parseHashParams(hash);
+      // Handle hash-based routing
+      useEffect(() => {
+        const handleHashChange = () => {
+          const hash = window.location.hash.replace('#', '');
+          const { path, params } = parseHashParams(hash);
+          
+          // Update mobile active tab based on hash
+          if (path === 'news' || path === '' || !path) {
+            setMobileActiveTab('latest');
+          } else if (path === 'foryou') {
+            setMobileActiveTab('foryou');
+          } else if (path === 'askai') {
+            setMobileActiveTab('askai');
+          }
 
       // ✅ FIX: Guard clause - prevent processing if already on dashboard
       if (path === 'dashboard' && view === 'admin' && requireEditor(userRole)) {
