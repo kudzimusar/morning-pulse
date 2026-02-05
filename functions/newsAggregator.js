@@ -122,15 +122,15 @@ Format your response as a JSON array with this structure:
 Only return valid JSON, no additional text. If no fresh news from today exists, return an empty array [].`;
 
     const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
-  tools: [{ googleSearch: {} }],
-  generationConfig: {
-    temperature: 0.1,
-    topK: 1,
-    topP: 1,
-    maxOutputTokens: 2048,
-  }
-});
+      model: 'gemini-2.5-flash',
+      tools: [{ googleSearch: {} }],
+      generationConfig: {
+        temperature: 0.1,
+        topK: 1,
+        topP: 1,
+        maxOutputTokens: 2048,
+      }
+    });
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
