@@ -126,6 +126,7 @@ CRITICAL FORMATTING RULES:
 - Do NOT include markdown syntax or code block markers anywhere in the response
 - Escape all special characters in string values (newlines as \\n, quotes as \\")
 - Return valid JSON that can be parsed directly with JSON.parse()
+- You must return ONLY a valid JSON array. Do not include any markdown formatting, explanations, or code blocks. Start with [ and end with ].
 
 If no fresh news from today exists, return an empty array [].`;
 
@@ -144,36 +145,34 @@ If no fresh news from today exists, return an empty array [].`;
     const response = await result.response;
     const text = response.text();
 
-    // Extract JSON from response - handle multiple markdown code block scenarios
-    let jsonText = text.trim();
-    
-    // Remove markdown code blocks from the entire response (handles nested cases)
-    jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-    
-    // Remove any remaining markdown code block markers
-    jsonText = jsonText.replace(/^```json\n?/m, '').replace(/\n?```$/m, '');
-    jsonText = jsonText.replace(/^```\n?/m, '').replace(/\n?```$/m, '');
-    
-    // Try to extract JSON array if text contains other content
-    // Use a more robust regex that finds the first complete JSON array
-    const jsonArrayMatch = jsonText.match(/\[\s*\{[\s\S]*\}\s*\]/);
-    if (jsonArrayMatch) {
-      jsonText = jsonArrayMatch[0];
-    } else {
-      // Fallback: find any array structure
-      const simpleArrayMatch = jsonText.match(/\[[\s\S]*\]/);
-      if (simpleArrayMatch) {
-        jsonText = simpleArrayMatch[0];
+    // Robust cleanup function for AI responses
+    function cleanAIResponse(text) {
+      // Remove markdown code blocks
+      text = text.replace(/```json\s*/g, '');
+      text = text.replace(/```\s*/g, '');
+      
+      // Remove any text before first [
+      const firstBracket = text.indexOf('[');
+      if (firstBracket > 0) {
+        text = text.substring(firstBracket);
       }
+      
+      // Remove any text after last ]
+      const lastBracket = text.lastIndexOf(']');
+      if (lastBracket > 0 && lastBracket < text.length - 1) {
+        text = text.substring(0, lastBracket + 1);
+      }
+      
+      // Fix common JSON issues
+      text = text.replace(/\n/g, ' ');
+      text = text.replace(/\r/g, '');
+      text = text.trim();
+      
+      return text;
     }
-    
-    // Remove any explanatory text before or after the JSON
-    // Find the first [ and last ] to extract just the array
-    const firstBracket = jsonText.indexOf('[');
-    const lastBracket = jsonText.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-      jsonText = jsonText.substring(firstBracket, lastBracket + 1);
-    }
+
+    // Extract JSON from response using robust cleanup
+    let jsonText = cleanAIResponse(text);
     
     // CRITICAL: Fix markdown code blocks embedded INSIDE string values
     // Gemini sometimes puts ```json inside the detail field, breaking JSON
