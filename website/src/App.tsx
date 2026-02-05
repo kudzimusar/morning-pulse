@@ -324,6 +324,7 @@ const App: React.FC = () => {
         setTimeout(() => {
           restoreScrollPosition('news-feed');
         }, 100);
+        setMobileActiveTab('latest');
         const categoryParam = params.get('category');
         if (categoryParam) {
           const mappedCategory = mapFooterCategoryToDataCategory(categoryParam);
@@ -335,6 +336,12 @@ const App: React.FC = () => {
         } else {
           setSelectedCategory(null);
         }
+      } else if (path === 'foryou') {
+        setMobileActiveTab('foryou');
+        setSelectedCategory(null);
+      } else if (path === 'askai') {
+        setMobileActiveTab('askai');
+        setSelectedCategory(null);
       } else {
         // Clear category when navigating away from news page
         setSelectedCategory(null);
