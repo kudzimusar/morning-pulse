@@ -817,7 +817,15 @@ const App: React.FC = () => {
                   if (article.url) {
                     window.open(article.url, '_blank', 'noopener,noreferrer');
                   }
+                  setMobileSearchOpen(false);
                 }}
+              />
+              
+              {/* Mobile Notifications */}
+              <MobileNotifications
+                isOpen={mobileNotificationsOpen}
+                onClose={() => setMobileNotificationsOpen(false)}
+                notificationCount={0} // TODO: Implement real notification count
               />
             </>
           )}
@@ -871,9 +879,19 @@ const App: React.FC = () => {
         />
       )}
       
+      {currentPage === 'foryou' && (
+        <ForYouFeed 
+          newsData={newsData}
+          userCountry={currentCountry}
+        />
+      )}
+      
+      {currentPage === 'askai' && (
+        <AskPulseAI />
+      )}
+      
       {currentPage === 'opinion' && (
         <OpinionPage 
-          onBack={handleBackToNews}
           onNavigateToSubmit={handleNavigateToSubmit}
           slug={opinionSlug} // NEW: Pass slug for single opinion view
         />
