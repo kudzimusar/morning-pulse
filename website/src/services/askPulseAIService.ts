@@ -144,6 +144,9 @@ export const generateAskPulseAIResponse = async (
     // Construct prompt
     const prompt = constructPrompt(userQuestion, relevantArticles);
     
+    // Log API key status (first 10 chars only for security)
+    console.log('🔑 Gemini API key found:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
+    
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
