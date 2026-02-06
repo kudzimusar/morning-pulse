@@ -325,6 +325,7 @@ const App: React.FC = () => {
         setTimeout(() => {
           restoreScrollPosition('news-feed');
         }, 100);
+        setCurrentPage('news');
         setMobileActiveTab('latest');
         const categoryParam = params.get('category');
         if (categoryParam) {
@@ -338,9 +339,11 @@ const App: React.FC = () => {
           setSelectedCategory(null);
         }
       } else if (path === 'foryou') {
+        setCurrentPage('foryou');
         setMobileActiveTab('foryou');
         setSelectedCategory(null);
       } else if (path === 'askai') {
+        setCurrentPage('askai');
         setMobileActiveTab('askai');
         setSelectedCategory(null);
       } else {
