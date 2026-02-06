@@ -149,10 +149,10 @@ export const generateAskPulseAIResponse = async (
     
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-pro as it's the most stable and widely available model
-    // Alternative: 'gemini-1.5-pro' or 'gemini-1.5-flash' if available in your API tier
+    // Try gemini-1.5-pro first (more capable), fallback to gemini-pro if needed
+    // Note: Model availability depends on API key tier and region
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-pro' // Stable model name that works with @google/generative-ai
+      model: 'gemini-1.5-pro' // More capable model, supports longer context
     });
 
     // Generate response
