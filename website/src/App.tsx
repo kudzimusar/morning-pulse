@@ -340,14 +340,6 @@ const App: React.FC = () => {
         } else {
           setSelectedCategory(null);
         }
-      } else if (path === 'foryou') {
-        setCurrentPage('foryou');
-        setMobileActiveTab('foryou');
-        setSelectedCategory(null);
-      } else if (path === 'askai') {
-        setCurrentPage('askai');
-        setMobileActiveTab('askai');
-        setSelectedCategory(null);
       } else {
         // Clear category when navigating away from news page
         setSelectedCategory(null);
@@ -423,7 +415,12 @@ const App: React.FC = () => {
         setView('public');
         setShowAdminLogin(false);
         console.log('🔗 [ROUTING] Join page detected, hash:', hash);
-      } else {
+      } else if (path === 'foryou' || path === 'askai') {
+        // ✅ FIX: Don't reset foryou/askai routes - they're already handled above
+        // This prevents the else block from overriding them
+        // Do nothing - already handled in the earlier if/else chain
+      } else if (!path || path === '') {
+        // Only default to news if path is empty or undefined
         setCurrentPage('news');
         setShowAdminLogin(false);
         // ✅ FIX: Don't reset view if editor is logged in - let them stay in admin view
@@ -438,6 +435,8 @@ const App: React.FC = () => {
           console.log('✅ Auto-switching to admin view for logged-in editor');
         }
       }
+      // ✅ FIX: Removed catch-all else that was resetting to 'news'
+      // Unknown routes will now preserve their currentPage state
     };
 
     // Check URL path for /admin
