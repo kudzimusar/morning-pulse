@@ -891,6 +891,8 @@ const App: React.FC = () => {
         <ForYouFeed 
           newsData={newsData}
           userCountry={currentCountry}
+          userId={userRole && Array.isArray(userRole) && userRole.length > 0 ? 'authenticated' : null}
+          isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
         />
       )}
       

@@ -362,11 +362,11 @@
     background: rgba(255, 255, 255, 0.1);
   }
   
-  /* Row 2: Navigation Tabs (White Background) */
+  /* Row 2: Navigation Tabs (White Background) - Reduced Height */
   .mobile-header-nav-tabs {
     background: #ffffff;
     border-bottom: 1px solid var(--mobile-border);
-    height: 48px;
+    height: 44px; /* Reduced from 48px */
     display: flex;
     align-items: center;
     overflow-x: auto;
@@ -380,8 +380,8 @@
   }
   
   .mobile-header-nav-tab {
-    padding: 0 20px;
-    font-size: 0.9375rem;
+    padding: 0 18px; /* Reduced from 20px */
+    font-size: 0.875rem; /* Reduced from 0.9375rem */
     font-weight: 500;
     color: var(--light-text); /* #666666 */
     white-space: nowrap;
@@ -406,12 +406,14 @@
     border-bottom-color: var(--primary-color);
   }
   
-  /* Breaking News Ticker (Red #dc2626) */
+  /* Breaking News Ticker (Red #dc2626) - Row 3, Lightweight, Single-Line */
   .mobile-header-ticker {
     background: var(--breaking-news); /* #dc2626 */
-    height: 40px;
+    height: 32px; /* Reduced from 40px - single line only */
     position: relative;
     overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .mobile-ticker-content {
@@ -423,22 +425,24 @@
   .mobile-ticker-label {
     background: var(--breaking-news); /* #dc2626 */
     color: white;
-    padding: 0 12px;
+    padding: 0 10px;
     font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
+    font-size: 0.6875rem; /* 11px - smallest readable */
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     height: 100%;
     display: flex;
     align-items: center;
     flex-shrink: 0;
     z-index: 2;
+    min-width: 70px; /* Fixed width for BREAKING label */
   }
   
   .mobile-ticker-wrapper {
     flex: 1;
     overflow: hidden;
     position: relative;
+    cursor: pointer;
   }
   
   .mobile-ticker-scroll {
@@ -447,6 +451,10 @@
     white-space: nowrap;
     animation: mobile-scroll-ticker 60s linear infinite;
     will-change: transform;
+  }
+  
+  .mobile-ticker-scroll.paused {
+    animation-play-state: paused;
   }
   
   @keyframes mobile-scroll-ticker {
@@ -461,14 +469,21 @@
   .mobile-ticker-item {
     display: inline;
     color: white;
-    font-size: 0.8125rem;
+    font-size: 0.6875rem; /* 11px - smallest readable */
     font-weight: 500;
-    padding-right: 8px;
+    padding-right: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .mobile-ticker-item:active {
+    opacity: 0.7;
   }
   
   .mobile-ticker-separator {
-    color: rgba(255, 255, 255, 0.6);
-    padding: 0 8px;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 0 6px;
+    font-size: 0.6875rem;
   }
   
   /* Tablet Enhancements (481px - 768px) */

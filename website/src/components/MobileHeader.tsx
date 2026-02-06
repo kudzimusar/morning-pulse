@@ -22,6 +22,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
   onNotificationsClick,
   onSignInClick,
   onTabChange,
+  onTickerClick,
   activeTab = 'latest',
   userRole,
   isAuthenticated = false,
@@ -75,6 +76,15 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
         </button>
         
         <div className="mobile-header-top-right">
+          {onSearchClick && (
+            <button
+              onClick={onSearchClick}
+              className="mobile-header-icon mobile-touch-target"
+              aria-label="Search"
+            >
+              <Search size={22} />
+            </button>
+          )}
           {isAuthenticated ? (
             <button
               onClick={onSignInClick}
@@ -117,22 +127,62 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
         </button>
       </div>
 
-      {/* Breaking News Ticker (Red #dc2626) */}
+      {/* Breaking News Ticker (Red #dc2626) - Row 3, Lightweight */}
       {topHeadlines.length > 0 && (
         <div className="mobile-header-ticker">
           <div className="mobile-ticker-content">
             <span className="mobile-ticker-label">BREAKING:</span>
-            <div className="mobile-ticker-wrapper">
+            <div 
+              className="mobile-ticker-wrapper"
+              onMouseEnter={(e) => {
+                const scroll = e.currentTarget.querySelector('.mobile-ticker-scroll') as HTMLElement;
+                if (scroll) scroll.style.animationPlayState = 'paused';
+              }}
+              onMouseLeave={(e) => {
+                const scroll = e.currentTarget.querySelector('.mobile-ticker-scroll') as HTMLElement;
+                if (scroll) scroll.style.animationPlayState = 'running';
+              }}
+              onTouchStart={(e) => {
+                const scroll = e.currentTarget.querySelector('.mobile-ticker-scroll') as HTMLElement;
+                if (scroll) scroll.style.animationPlayState = 'paused';
+              }}
+              onTouchEnd={(e) => {
+                const scroll = e.currentTarget.querySelector('.mobile-ticker-scroll') as HTMLElement;
+                if (scroll) scroll.style.animationPlayState = 'running';
+              }}
+            >
               <div className="mobile-ticker-scroll">
                 {topHeadlines.map((headline, index) => (
-                  <span key={index} className="mobile-ticker-item">
+                  <span 
+                    key={index} 
+                    className="mobile-ticker-item"
+                    onClick={() => {
+                      if (onTickerClick) {
+                        onTickerClick(headline);
+                      } else if (onTabChange) {
+                        onTabChange('latest');
+                        window.location.hash = 'news';
+                      }
+                    }}
+                  >
                     {headline}
                     {index < topHeadlines.length - 1 && <span className="mobile-ticker-separator"> • </span>}
                   </span>
                 ))}
                 {/* Duplicate for seamless loop */}
                 {topHeadlines.map((headline, index) => (
-                  <span key={`dup-${index}`} className="mobile-ticker-item">
+                  <span 
+                    key={`dup-${index}`} 
+                    className="mobile-ticker-item"
+                    onClick={() => {
+                      if (onTickerClick) {
+                        onTickerClick(headline);
+                      } else if (onTabChange) {
+                        onTabChange('latest');
+                        window.location.hash = 'news';
+                      }
+                    }}
+                  >
                     {headline}
                     {index < topHeadlines.length - 1 && <span className="mobile-ticker-separator"> • </span>}
                   </span>
