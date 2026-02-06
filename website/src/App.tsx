@@ -846,6 +846,9 @@ const App: React.FC = () => {
                 isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
                 notificationCount={0} // TODO: Implement notification count
                 topHeadlines={topHeadlines}
+                onSubscribeClick={() => {
+                  window.location.hash = 'join';
+                }}
                 onTickerClick={(headline) => {
                   // Find article by headline and navigate to it
                   const allArticles: NewsStory[] = [];
@@ -892,6 +895,8 @@ const App: React.FC = () => {
                 isOpen={mobileNotificationsOpen}
                 onClose={() => setMobileNotificationsOpen(false)}
                 notificationCount={0} // TODO: Implement real notification count
+                isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
+                userRole={userRole}
               />
             </>
           )}
@@ -955,7 +960,7 @@ const App: React.FC = () => {
       )}
       
       {currentPage === 'askai' && (
-        <AskPulseAI />
+        <AskPulseAI newsData={newsData} />
       )}
       
       {currentPage === 'opinion' && (

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Bell } from 'lucide-react';
+import { getAuth } from 'firebase/auth';
+import { getCurrentEditor } from '../services/authService';
 
 interface Notification {
   id: string;
@@ -15,40 +17,65 @@ interface MobileNotificationsProps {
   isOpen: boolean;
   onClose: () => void;
   notificationCount?: number;
+  isAuthenticated?: boolean;
+  userRole?: string[] | null;
 }
 
 const MobileNotifications: React.FC<MobileNotificationsProps> = ({
   isOpen,
   onClose,
   notificationCount = 0,
+  isAuthenticated = false,
+  userRole = null,
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [authState, setAuthState] = useState<boolean>(false);
+
+  // Detect auth state
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const auth = getAuth();
+        const currentUser = auth.currentUser;
+        const editor = getCurrentEditor();
+        setAuthState(!!(currentUser || editor || isAuthenticated));
+      } catch (e) {
+        setAuthState(isAuthenticated || false);
+      }
+    };
+    checkAuth();
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!authState) {
+      setNotifications([]);
+      return;
+    }
+
     // TODO: Fetch real notifications from backend
-    // For now, use mock data
+    // For now, use mock data for logged-in users
     const mockNotifications: Notification[] = [
       {
         id: '1',
-        title: 'Breaking News',
-        message: 'New developments in the latest story',
-        timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+        title: 'Supreme Court clears way for California voting map that bolsters Democrats',
+        message: 'Breaking News',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // Yesterday
         read: false,
         type: 'breaking',
         link: '#news',
       },
       {
         id: '2',
-        title: 'Your Opinion Published',
-        message: 'Your opinion piece has been published and is now live.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+        title: 'Border czar Tom Homan says 700 ICE and CBP officers are leaving Minneapolis',
+        message: 'Breaking News',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // Yesterday
         read: false,
-        type: 'personal',
-        link: '#opinion',
+        type: 'breaking',
+        link: '#news',
       },
     ];
     setNotifications(mockNotifications);
-  }, []);
+  }, [authState]);
 
   const handleNotificationClick = (notification: Notification) => {
     if (notification.link) {
@@ -79,30 +106,32 @@ const MobileNotifications: React.FC<MobileNotificationsProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
+          background: 'rgba(0, 0, 0, 0.3)',
           zIndex: 1998,
           animation: 'fadeIn 0.2s ease',
         }}
       />
 
-      {/* Notifications Panel */}
+      {/* Notifications Panel - Slide Down */}
       <div
         className="mobile-notifications-panel"
         style={{
           position: 'fixed',
-          top: 0,
-          right: isOpen ? 0 : '-100%',
-          width: '85%',
-          maxWidth: '360px',
-          height: '100vh',
+          top: isOpen ? '0' : '-100%',
+          left: 0,
+          right: 0,
+          width: '100%',
+          maxHeight: '70vh',
           background: '#ffffff',
           zIndex: 1999,
-          boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.15)',
-          transition: 'right 0.3s ease',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          transition: 'top 0.3s ease',
           overflowY: 'auto',
           paddingTop: 'env(safe-area-inset-top)',
           display: 'flex',
           flexDirection: 'column',
+          borderBottomLeftRadius: '12px',
+          borderBottomRightRadius: '12px',
         }}
       >
         {/* Header */}
@@ -118,11 +147,10 @@ const MobileNotifications: React.FC<MobileNotificationsProps> = ({
           zIndex: 1,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Bell size={24} color="var(--primary-color)" />
-            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#000' }}>
-              Notifications
+            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              News Alerts
             </h2>
-            {notificationCount > 0 && (
+            {authState && notificationCount > 0 && (
               <span style={{
                 background: 'var(--breaking-news)',
                 color: 'white',
@@ -150,13 +178,54 @@ const MobileNotifications: React.FC<MobileNotificationsProps> = ({
             }}
             aria-label="Close notifications"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* Notifications List */}
+        {/* Content - Different for logged-in vs guest */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {notifications.length === 0 ? (
+          {!authState ? (
+            // Guest User - Subscribe CTA
+            <div style={{
+              padding: '32px 24px',
+              textAlign: 'center',
+            }}>
+              <p style={{
+                fontSize: '1rem',
+                color: 'var(--text-color)',
+                marginBottom: '20px',
+                lineHeight: 1.5
+              }}>
+                Get breaking news alerts and newsletters.
+              </p>
+              <button
+                onClick={() => {
+                  window.location.hash = 'join';
+                  onClose();
+                }}
+                style={{
+                  padding: '12px 24px',
+                  background: 'var(--primary-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                Subscribe
+              </button>
+            </div>
+          ) : notifications.length === 0 ? (
+            // Logged-in but no notifications
             <div style={{
               padding: '48px 24px',
               textAlign: 'center',
@@ -164,14 +233,15 @@ const MobileNotifications: React.FC<MobileNotificationsProps> = ({
             }}>
               <Bell size={48} color="#e0e0e0" style={{ marginBottom: '16px', opacity: 0.5 }} />
               <div style={{ fontSize: '1rem', marginBottom: '8px', fontWeight: 500 }}>
-                No notifications
+                No alerts
               </div>
               <div style={{ fontSize: '0.875rem' }}>
                 You're all caught up!
               </div>
             </div>
           ) : (
-            <div style={{ padding: '8px 0' }}>
+            // Logged-in with notifications - Clean list layout
+            <div style={{ padding: '0' }}>
               {notifications.map((notification) => (
                 <button
                   key={notification.id}
@@ -182,63 +252,66 @@ const MobileNotifications: React.FC<MobileNotificationsProps> = ({
                   style={{
                     width: '100%',
                     padding: '16px',
-                    background: notification.read ? '#ffffff' : '#f9fafb',
+                    background: '#ffffff',
                     border: 'none',
                     borderBottom: '1px solid #e0e0e0',
                     textAlign: 'left',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '4px',
+                    gap: '6px',
                     transition: 'background 0.2s',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f3f4f6';
+                    e.currentTarget.style.background = '#f9fafb';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = notification.read ? '#ffffff' : '#f9fafb';
+                    e.currentTarget.style.background = '#ffffff';
                   }}
                 >
                   <div style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
                     alignItems: 'flex-start',
                     gap: '12px',
                   }}>
+                    {notification.type === 'breaking' && (
+                      <div style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: 'var(--breaking-news)',
+                        flexShrink: 0,
+                        marginTop: '6px',
+                      }} />
+                    )}
                     <div style={{ flex: 1 }}>
                       <div style={{
                         fontSize: '0.875rem',
-                        fontWeight: 600,
+                        fontWeight: 500,
                         color: 'var(--text-color)',
+                        lineHeight: 1.4,
                         marginBottom: '4px',
                       }}>
                         {notification.title}
                       </div>
                       <div style={{
-                        fontSize: '0.8125rem',
+                        fontSize: '0.75rem',
                         color: 'var(--light-text)',
-                        lineHeight: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
                       }}>
-                        {notification.message}
+                        <span>{formatTimestamp(notification.timestamp)}</span>
+                        {notification.type === 'breaking' && (
+                          <>
+                            <span>•</span>
+                            <span style={{ color: 'var(--breaking-news)', fontWeight: 600 }}>
+                              Breaking News
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
-                    {!notification.read && (
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        background: 'var(--primary-color)',
-                        flexShrink: 0,
-                        marginTop: '4px',
-                      }} />
-                    )}
-                  </div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--lighter-text)',
-                    marginTop: '4px',
-                  }}>
-                    {formatTimestamp(notification.timestamp)}
                   </div>
                 </button>
               ))}

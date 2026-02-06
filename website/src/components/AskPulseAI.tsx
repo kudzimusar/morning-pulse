@@ -1,30 +1,60 @@
 import React, { useState } from 'react';
-import { Send, Sparkles, Loader2 } from 'lucide-react';
+import { Send, Sparkles, Loader2, ArrowUp } from 'lucide-react';
 
 interface AskPulseAIProps {
   onClose?: () => void;
+  newsData?: {
+    [category: string]: any[];
+  };
 }
 
-const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose }) => {
+const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   const [query, setQuery] = useState('');
-  const [response, setResponse] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'ai'; content: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  // Suggested prompts (editorial, not system instructions)
+  const suggestedPrompts = [
+    "What are today's top stories?",
+    "What does this mean for Zimbabwe?",
+    "What should I know this morning?",
+    "Tell me about the latest business news",
+  ];
 
+  const handlePromptClick = (prompt: string) => {
+    setQuery(prompt);
+    handleSubmit(prompt);
+  };
+
+  const handleSubmit = async (e?: React.FormEvent, promptText?: string) => {
+    if (e) e.preventDefault();
+    const queryText = promptText || query;
+    if (!queryText.trim()) return;
+
+    setHasInteracted(true);
     setLoading(true);
     setError(null);
-    setResponse(null);
+
+    // Add user message
+    const userMessage = { role: 'user' as const, content: queryText };
+    setMessages(prev => [...prev, userMessage]);
 
     try {
       // TODO: Integrate with Gemini API or similar AI service
-      // For now, simulate a response
+      // For now, simulate a response with editorial tone
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      setResponse(`I understand you're asking about "${query}". This feature is currently in development. We're working on integrating AI-powered news insights to help you understand the stories that matter most to you.`);
+      // Simulate editorial response (grounded in Morning Pulse reporting)
+      const aiResponse = `Based on current Morning Pulse reporting, ${queryText.toLowerCase().includes('top') || queryText.toLowerCase().includes('stories') 
+        ? 'here are the key developments you should know today. Our coverage spans local Zimbabwe news, regional African affairs, and global business trends. Each story is verified by our editorial team before publication.'
+        : queryText.toLowerCase().includes('zimbabwe')
+        ? 'our reporting focuses on economic developments, political updates, and social issues affecting Zimbabwe. Our journalists on the ground provide firsthand accounts of events as they unfold.'
+        : 'our newsroom is tracking multiple developing stories. I can help you understand the context and significance of current events based on our published reporting. What specific topic would you like to explore?'}`;
+      
+      setMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
+      setQuery(''); // Clear input after sending
     } catch (err) {
       setError('Sorry, I encountered an error. Please try again.');
       console.error('AI query error:', err);
@@ -33,75 +63,196 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose }) => {
     }
   };
 
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <div className="mobile-content-with-nav" style={{ 
       minHeight: 'calc(100vh - 200px)',
-      padding: '16px',
-      maxWidth: '100%'
+      padding: '0',
+      maxWidth: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%'
     }}>
-      <div style={{
-        marginBottom: '24px',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '64px',
-          height: '64px',
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, var(--primary-color) 0%, #1a1a3a 100%)',
-          marginBottom: '16px'
-        }}>
-          <Sparkles size={32} color="white" />
-        </div>
-        <h1 style={{
-          fontSize: '1.5rem',
-          fontWeight: 700,
-          color: 'var(--text-color)',
-          marginBottom: '8px'
-        }}>
-          Ask The Pulse AI
-        </h1>
-        <p style={{
-          fontSize: '0.9375rem',
-          color: 'var(--light-text)',
-          lineHeight: 1.6
-        }}>
-          Get AI-powered insights about the news that matters to you
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} style={{ marginBottom: '24px' }}>
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          alignItems: 'flex-end'
-        }}>
-          <div style={{ flex: 1 }}>
-            <label htmlFor="ai-query" style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
+      {/* Pre-Interaction Screen */}
+      {!hasInteracted && (
+        <div style={{ padding: '24px 16px', flex: 1 }}>
+          {/* Greeting */}
+          <div style={{ marginBottom: '32px' }}>
+            <h1 style={{
+              fontSize: 'clamp(1.75rem, 5vw, 2.25rem)',
+              fontWeight: 700,
               color: 'var(--text-color)',
-              marginBottom: '8px'
+              marginBottom: '8px',
+              lineHeight: 1.2
             }}>
-              What would you like to know?
-            </label>
-            <textarea
-              id="ai-query"
+              {getGreeting()}
+            </h1>
+            <p style={{
+              fontSize: '1rem',
+              color: 'var(--light-text)',
+              lineHeight: 1.5
+            }}>
+              Ask us about today's news.
+            </p>
+          </div>
+
+          {/* Suggested Prompts */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              {suggestedPrompts.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePromptClick(prompt)}
+                  style={{
+                    padding: '16px',
+                    background: '#ffffff',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '0.9375rem',
+                    color: 'var(--text-color)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s',
+                    fontFamily: 'var(--font-body)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--primary-color)';
+                    e.currentTarget.style.background = '#f9fafb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.background = '#ffffff';
+                  }}
+                >
+                  <Sparkles size={18} color="var(--primary-color)" style={{ flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{prompt}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Disclaimer - Bottom Aligned */}
+          <div style={{
+            marginTop: 'auto',
+            paddingTop: '24px',
+            fontSize: '0.6875rem', /* 11px */
+            color: '#666666',
+            lineHeight: 1.5
+          }}>
+            <em>Ask Pulse AI delivers AI-generated answers from published Morning Pulse reporting. This is an experiment. Please verify by consulting the provided articles.</em>
+          </div>
+        </div>
+      )}
+
+      {/* Conversation View */}
+      {hasInteracted && (
+        <div style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          padding: '16px',
+          overflowY: 'auto'
+        }}>
+          {/* Messages */}
+          <div style={{ flex: 1, marginBottom: '16px' }}>
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: message.role === 'user' ? 'flex-end' : 'flex-start'
+                }}
+              >
+                <div style={{
+                  maxWidth: '85%',
+                  padding: '12px 16px',
+                  background: message.role === 'user' 
+                    ? 'var(--primary-color)' 
+                    : '#f3f4f6',
+                  color: message.role === 'user' ? 'white' : 'var(--text-color)',
+                  borderRadius: message.role === 'user' 
+                    ? '16px 16px 4px 16px' 
+                    : '16px 16px 16px 4px',
+                  fontSize: '0.9375rem',
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                  fontFamily: 'var(--font-body)'
+                }}>
+                  {message.content}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: 'var(--light-text)',
+                fontSize: '0.875rem',
+                marginBottom: '24px'
+              }}>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Thinking...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Disclaimer - Always visible in conversation */}
+          <div style={{
+            padding: '12px 0',
+            fontSize: '0.6875rem', /* 11px */
+            color: '#666666',
+            lineHeight: 1.5,
+            textAlign: 'center',
+            borderTop: '1px solid var(--border-color)'
+          }}>
+            <em>Answers are AI generated from Morning Pulse reporting. Because AI can make mistakes, verify information by referencing provided sources for each answer.</em>
+          </div>
+        </div>
+      )}
+
+      {/* Input Field - Always visible, pinned to bottom */}
+      <div style={{
+        padding: '16px',
+        borderTop: '1px solid var(--border-color)',
+        background: '#ffffff',
+        position: 'sticky',
+        bottom: 0
+      }}>
+        <form onSubmit={(e) => handleSubmit(e)}>
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center'
+          }}>
+            <input
+              type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask about current events, news topics, or get context on breaking stories..."
+              placeholder="What do you want to know?"
               style={{
-                width: '100%',
-                minHeight: '120px',
-                padding: '12px',
+                flex: 1,
+                padding: '12px 16px',
                 border: '1px solid var(--border-color)',
-                borderRadius: '8px',
+                borderRadius: '24px',
                 fontSize: '0.9375rem',
                 fontFamily: 'var(--font-body)',
-                resize: 'vertical',
                 outline: 'none',
                 transition: 'border-color 0.2s'
               }}
@@ -112,104 +263,48 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose }) => {
                 e.target.style.borderColor = 'var(--border-color)';
               }}
             />
+            <button
+              type="submit"
+              disabled={loading || !query.trim()}
+              style={{
+                width: '44px',
+                height: '44px',
+                background: loading || !query.trim() 
+                  ? 'var(--border-color)' 
+                  : 'var(--primary-color)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                cursor: loading || !query.trim() ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'opacity 0.2s',
+                flexShrink: 0
+              }}
+              aria-label="Send message"
+            >
+              {loading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <ArrowUp size={20} />
+              )}
+            </button>
           </div>
-        </div>
-        <button
-          type="submit"
-          disabled={loading || !query.trim()}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: loading || !query.trim() 
-              ? 'var(--border-color)' 
-              : 'linear-gradient(135deg, var(--primary-color) 0%, #1a1a3a 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: 600,
-            cursor: loading || !query.trim() ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            marginTop: '12px',
-            transition: 'opacity 0.2s'
-          }}
-        >
-          {loading ? (
-            <>
-              <Loader2 size={20} className="animate-spin" />
-              <span>Thinking...</span>
-            </>
-          ) : (
-            <>
-              <Send size={20} />
-              <span>Ask AI</span>
-            </>
-          )}
-        </button>
-      </form>
-
-      {error && (
-        <div style={{
-          padding: '16px',
-          background: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '8px',
-          color: '#991b1b',
-          marginBottom: '24px',
-          fontSize: '0.9375rem'
-        }}>
-          {error}
-        </div>
-      )}
-
-      {response && (
-        <div style={{
-          padding: '20px',
-          background: 'var(--section-bg)',
-          borderRadius: '8px',
-          border: '1px solid var(--border-color)',
-          marginTop: '24px'
-        }}>
+        </form>
+        {error && (
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '12px'
+            marginTop: '8px',
+            padding: '8px 12px',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '6px',
+            color: '#991b1b',
+            fontSize: '0.8125rem'
           }}>
-            <Sparkles size={20} color="var(--primary-color)" />
-            <h3 style={{
-              fontSize: '1rem',
-              fontWeight: 600,
-              color: 'var(--text-color)'
-            }}>
-              AI Response
-            </h3>
+            {error}
           </div>
-          <p style={{
-            fontSize: '0.9375rem',
-            color: 'var(--text-color)',
-            lineHeight: 1.7,
-            whiteSpace: 'pre-wrap'
-          }}>
-            {response}
-          </p>
-        </div>
-      )}
-
-      <div style={{
-        marginTop: '32px',
-        padding: '16px',
-        background: 'var(--section-bg)',
-        borderRadius: '8px',
-        fontSize: '0.875rem',
-        color: 'var(--light-text)',
-        lineHeight: 1.6
-      }}>
-        <strong style={{ color: 'var(--text-color)' }}>Note:</strong> This feature is currently in development. 
-        We're working on integrating advanced AI capabilities to provide you with personalized news insights.
+        )}
       </div>
     </div>
   );

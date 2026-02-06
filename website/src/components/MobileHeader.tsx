@@ -23,6 +23,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
   onSignInClick,
   onTabChange,
   onTickerClick,
+  onSubscribeClick,
   activeTab = 'latest',
   userRole,
   isAuthenticated = false,
@@ -125,6 +126,29 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
         >
           Ask The Pulse AI
         </button>
+        {/* Subscribe Button - Only for guests, far right */}
+        {!isAuthenticated && onSubscribeClick && (
+          <button
+            onClick={onSubscribeClick}
+            className="mobile-header-subscribe-btn"
+            style={{
+              marginLeft: 'auto',
+              padding: '0 12px',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: 'var(--primary-color)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            Subscribe
+          </button>
+        )}
       </div>
 
       {/* Breaking News Ticker (Red #dc2626) - Row 3, Lightweight */}

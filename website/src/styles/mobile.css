@@ -405,6 +405,27 @@
     font-weight: 600;
     border-bottom-color: var(--primary-color);
   }
+
+  /* Subscribe Button in Row 2 */
+  .mobile-header-subscribe-btn {
+    margin-left: auto;
+    padding: 0 12px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s;
+  }
+
+  .mobile-header-subscribe-btn:active {
+    opacity: 0.7;
+  }
   
   /* Breaking News Ticker (Red #dc2626) - Row 3, Lightweight, Single-Line */
   .mobile-header-ticker {
