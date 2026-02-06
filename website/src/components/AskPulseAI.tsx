@@ -25,7 +25,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
 
   const handlePromptClick = (prompt: string) => {
     setQuery(prompt);
-    handleSubmit(prompt);
+    // Call handleSubmit with undefined for event (since it's a button click, not form submit)
+    handleSubmit(undefined, prompt);
   };
 
   const handleSubmit = async (e?: React.FormEvent, promptText?: string) => {
