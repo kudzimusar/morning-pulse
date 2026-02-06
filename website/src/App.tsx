@@ -298,13 +298,23 @@ const App: React.FC = () => {
           const hash = window.location.hash.replace('#', '');
           const { path, params } = parseHashParams(hash);
           
+          // ✅ FIX: Early return for foryou/askai to prevent race conditions
+          if (path === 'foryou') {
+            setCurrentPage('foryou');
+            setMobileActiveTab('foryou');
+            setSelectedCategory(null);
+            return; // Early return to prevent further processing
+          }
+          if (path === 'askai') {
+            setCurrentPage('askai');
+            setMobileActiveTab('askai');
+            setSelectedCategory(null);
+            return; // Early return to prevent further processing
+          }
+          
           // Update mobile active tab based on hash
           if (path === 'news' || path === '' || !path) {
             setMobileActiveTab('latest');
-          } else if (path === 'foryou') {
-            setMobileActiveTab('foryou');
-          } else if (path === 'askai') {
-            setMobileActiveTab('askai');
           }
 
       // ✅ FIX: Guard clause - prevent processing if already on dashboard
@@ -448,7 +458,9 @@ const App: React.FC = () => {
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [view, userRole]); // Add view and userRole to prevent stale closures
+    // ✅ FIX: Use function refs to access latest view/userRole without re-running effect
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run on mount, hash changes handled by event listener
 
   // ✅ EMERGENCY FIX: Single useEffect for admin view switching with STRICT GUARD
   useEffect(() => {
