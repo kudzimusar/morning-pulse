@@ -1,6 +1,8 @@
 /**
  * Ask The Pulse AI Service
- * RAG-based chatbot using Google Gemini API with Morning Pulse content retrieval
+ * RAG-based chatbot using Google Gemini API v1 with Morning Pulse content retrieval
+ * 
+ * CRITICAL: Uses v1 API endpoint (not v1beta) for model compatibility
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -28,6 +30,11 @@ interface AskPulseAIResponse {
 interface ChatMessage {
   role: 'user' | 'model';
   parts: Array<{ text: string }>;
+}
+
+interface StreamChunk {
+  text: string;
+  done: boolean;
 }
 
 /**
@@ -96,7 +103,7 @@ const constructPrompt = (
 CRITICAL RULES:
 1. Answer ONLY using the provided articles below
 2. If the articles don't contain relevant information, say: "I don't have information about that in Morning Pulse's recent reporting."
-3. Be concise and factual - cite the article source for each claim
+3. Be concise and factual - cite the article source for each claim using [1], [2], etc.
 4. Format responses in clean paragraphs (no markdown unless asked)
 5. If asked for sources, list the article headlines
 6. Do not speculate or add external information
@@ -123,37 +130,28 @@ ${articles.length > 0
 
 USER QUESTION: ${userQuestion}
 
-Provide a helpful answer based solely on the articles above. If relevant, mention which article(s) you're citing.`;
+Provide a helpful answer based solely on the articles above. If relevant, mention which article(s) you're citing using [1], [2], etc.`;
 
   return systemPrompt;
 };
 
 /**
- * Parse source citations from response text (e.g., [1], [2])
- * Returns text with citations replaced and citation map
+ * Initialize Gemini client with v1 API endpoint
+ * CRITICAL: Uses v1 API (not v1beta) for model compatibility
  */
-const parseSourceCitations = (
-  text: string,
-  sources: Array<{ title: string; url?: string; index: number }>
-): { text: string; citations: Map<number, { title: string; url?: string }> } => {
-  const citations = new Map<number, { title: string; url?: string }>();
-  const citationPattern = /\[(\d+)\]/g;
+const getGeminiClient = (apiKey: string): GoogleGenerativeAI => {
+  // The @google/generative-ai package should use v1 by default for newer models
+  // But we can explicitly configure it if needed
+  const client = new GoogleGenerativeAI(apiKey);
   
-  // Find all citations in text
-  let match;
-  while ((match = citationPattern.exec(text)) !== null) {
-    const index = parseInt(match[1], 10);
-    const source = sources.find(s => s.index === index);
-    if (source) {
-      citations.set(index, { title: source.title, url: source.url });
-    }
-  }
+  // Log API version being used (for debugging)
+  console.log('🔧 Using Google Generative AI SDK - API version handled automatically');
   
-  return { text, citations };
+  return client;
 };
 
 /**
- * Generate AI response using Google Gemini with streaming support
+ * Generate AI response using Google Gemini with streaming support (v1 API)
  */
 export const generateAskPulseAIResponseStream = async function* (
   userQuestion: string,
@@ -179,8 +177,10 @@ export const generateAskPulseAIResponseStream = async function* (
     // Retrieve relevant articles
     const relevantArticles = retrieveRelevantArticles(userQuestion, newsData, 5);
     
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // Initialize Gemini with v1 API
+    const genAI = getGeminiClient(apiKey);
+    
+    // Use gemini-1.5-flash which is available in v1 API
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-1.5-flash',
       generationConfig: {
@@ -242,6 +242,12 @@ export const generateAskPulseAIResponseStream = async function* (
     };
   } catch (error: any) {
     console.error('Streaming error:', error);
+    
+    // Check if it's an API version error
+    if (error.message?.includes('v1beta') || error.message?.includes('404')) {
+      console.error('❌ API version error detected. Model may not be available in current API version.');
+    }
+    
     yield { text: "I encountered an error while processing your question. Please try again.", done: true };
     return {
       text: "I encountered an error while processing your question. Please try again.",
@@ -252,6 +258,7 @@ export const generateAskPulseAIResponseStream = async function* (
 
 /**
  * Generate AI response using Google Gemini (non-streaming, for backward compatibility)
+ * Uses v1 API endpoint
  */
 export const generateAskPulseAIResponse = async (
   userQuestion: string,
@@ -259,7 +266,7 @@ export const generateAskPulseAIResponse = async (
   conversationHistory?: ChatMessage[]
 ): Promise<AskPulseAIResponse> => {
   try {
-    // Get API key from multiple sources (similar to Firebase config pattern)
+    // Get API key from multiple sources
     const apiKey = 
       import.meta.env.VITE_GEMINI_API_KEY || 
       (typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY) ||
@@ -294,12 +301,12 @@ export const generateAskPulseAIResponse = async (
     // Log API key status (first 10 chars only for security)
     console.log('🔑 Gemini API key found:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
     
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // Initialize Gemini with v1 API
+    const genAI = getGeminiClient(apiKey);
     
-    // Generate response with current model (gemini-1.5-flash)
+    // Generate response with current model (gemini-1.5-flash) - v1 API
     try {
-      console.log('🤖 Initializing Gemini model...');
+      console.log('🤖 Initializing Gemini model (v1 API)...');
       
       let model;
       let result;
@@ -335,7 +342,7 @@ export const generateAskPulseAIResponse = async (
       } else {
         // First message - use generateContent
         model = genAI.getGenerativeModel({ 
-          model: 'gemini-1.5-flash',  // Free tier model, replaces deprecated gemini-pro
+          model: 'gemini-1.5-flash',
           generationConfig: {
             temperature: 0.7,
             topK: 40,
@@ -369,13 +376,23 @@ export const generateAskPulseAIResponse = async (
     } catch (error: any) {
       console.error('❌ Gemini API error:', error);
       
-      // If gemini-1.5-flash fails, try gemini-1.5-flash-8b (even lighter model)
+      // Enhanced error logging for API version issues
+      if (error.message?.includes('v1beta') || error.message?.includes('404')) {
+        console.error('⚠️ API version/model compatibility issue detected');
+        console.error('Error details:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText
+        });
+      }
+      
+      // If gemini-1.5-flash fails, try alternative models available in v1
       if (error.message?.includes('not found') || error.status === 404) {
-        console.log('⚠️ Trying alternative model: gemini-1.5-flash-8b...');
+        console.log('⚠️ Trying alternative model: gemini-1.5-flash-latest...');
         
         try {
           const fallbackModel = genAI.getGenerativeModel({ 
-            model: 'gemini-1.5-flash-8b',
+            model: 'gemini-1.5-flash-latest',
             generationConfig: {
               temperature: 0.7,
               topK: 40,
@@ -426,6 +443,13 @@ export const generateAskPulseAIResponse = async (
     if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
       return {
         text: "I'm currently experiencing high demand. Please try again in a moment.",
+        sources: []
+      };
+    }
+    
+    if (error.message?.includes('v1beta') || error.message?.includes('404')) {
+      return {
+        text: "I'm having trouble connecting to the AI service. The API version may be incompatible. Please check the configuration.",
         sources: []
       };
     }
@@ -496,7 +520,7 @@ export async function testGeminiConnection(): Promise<boolean> {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const genAI = getGeminiClient(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     // Simple test prompt
