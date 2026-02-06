@@ -8,6 +8,8 @@ interface MobileHeaderProps {
   onNotificationsClick?: () => void;
   onSignInClick?: () => void;
   onTabChange?: (tab: 'latest' | 'foryou' | 'askai') => void;
+  onTickerClick?: (headline: string) => void;
+  onSubscribeClick?: () => void;
   activeTab?: 'latest' | 'foryou' | 'askai';
   userRole?: string[] | null;
   isAuthenticated?: boolean;
