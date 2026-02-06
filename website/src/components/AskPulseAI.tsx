@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Send, Sparkles, Loader2, ArrowUp } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Sparkles, Loader2, ArrowUp, ExternalLink } from 'lucide-react';
+import { generateAskPulseAIResponseStream, convertToChatHistory, formatResponseWithCitations } from '../services/askPulseAIService';
 
 interface AskPulseAIProps {
   onClose?: () => void;
@@ -8,12 +9,21 @@ interface AskPulseAIProps {
   };
 }
 
+interface MessageWithSources {
+  role: 'user' | 'ai';
+  content: string;
+  sources?: Array<{ title: string; url?: string; index?: number }>;
+  citations?: Map<number, { title: string; url?: string }>;
+}
+
 const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'ai'; content: string }>>([]);
+  const [messages, setMessages] = useState<MessageWithSources[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Suggested prompts (editorial, not system instructions)
   const suggestedPrompts = [
@@ -29,6 +39,11 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
     handleSubmit(undefined, prompt);
   };
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingText]);
+
   const handleSubmit = async (e?: React.FormEvent, promptText?: string) => {
     if (e && e.preventDefault) {
       e.preventDefault();
@@ -39,31 +54,61 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
     setHasInteracted(true);
     setLoading(true);
     setError(null);
+    setStreamingText('');
 
     // Add user message
-    const userMessage = { role: 'user' as const, content: queryText };
+    const userMessage: MessageWithSources = { role: 'user', content: queryText };
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // Import the service dynamically to avoid issues if API key is not configured
-      const { generateAskPulseAIResponse } = await import('../services/askPulseAIService');
+      // Convert previous messages to chat history (excluding current user message)
+      const previousMessages = messages.filter(m => m.role === 'ai' || (m.role === 'user' && m.content !== queryText));
+      const chatHistory = convertToChatHistory(previousMessages);
       
-      // Generate real AI response using Gemini with RAG
-      const response = await generateAskPulseAIResponse(
+      // Create streaming generator
+      const streamGenerator = generateAskPulseAIResponseStream(
         queryText,
-        newsData || {}
+        newsData || {},
+        chatHistory.length > 0 ? chatHistory : undefined
       );
       
-      // Format response with sources if available
-      let formattedResponse = response.text;
-      if (response.sources && response.sources.length > 0) {
-        formattedResponse += '\n\n**Sources:**\n' + 
-          response.sources.map((source, idx) => 
-            `${idx + 1}. ${source.title}${source.url ? ` (${source.url})` : ''}`
-          ).join('\n');
+      let accumulatedText = '';
+      let finalResponse: { text: string; sources?: Array<{ title: string; url?: string; index?: number }> } | null = null;
+      
+      // Stream the response
+      for await (const chunk of streamGenerator) {
+        if (chunk.text) {
+          accumulatedText += chunk.text;
+          setStreamingText(accumulatedText);
+        }
       }
       
-      setMessages(prev => [...prev, { role: 'ai', content: formattedResponse }]);
+      // Get final response from generator return value
+      // The generator returns the final response when done
+      const generatorResult = await streamGenerator.next();
+      if (generatorResult.done && generatorResult.value) {
+        finalResponse = generatorResult.value;
+      }
+      
+      // Format response with citations
+      const responseText = finalResponse?.text || accumulatedText;
+      const responseSources = finalResponse?.sources || [];
+      
+      const { formattedText, citations } = formatResponseWithCitations(
+        responseText,
+        responseSources
+      );
+      
+      const aiMessage: MessageWithSources = {
+        role: 'ai',
+        content: formattedText,
+        sources: responseSources,
+        citations
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      setStreamingText('');
+      
       setQuery(''); // Clear input after sending
     } catch (err: any) {
       const errorMessage = err?.message || 'Sorry, I encountered an error. Please try again.';
@@ -75,6 +120,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         role: 'ai', 
         content: `I'm sorry, I encountered an error: ${errorMessage}. Please try again.` 
       }]);
+      setStreamingText('');
     } finally {
       setLoading(false);
     }
@@ -211,11 +257,117 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                   whiteSpace: 'pre-wrap',
                   fontFamily: 'var(--font-body)'
                 }}>
-                  {message.content}
+                  {/* Render message with clickable citations */}
+                  {message.role === 'ai' ? (
+                    <div>
+                      {message.content.split(/(\[CITATION:\d+\])/).map((part, idx) => {
+                        const citationMatch = part.match(/\[CITATION:(\d+)\]/);
+                        if (citationMatch) {
+                          const citationIndex = parseInt(citationMatch[1], 10);
+                          const citation = message.citations?.get(citationIndex);
+                          if (citation) {
+                            return (
+                              <span
+                                key={idx}
+                                style={{
+                                  color: 'var(--primary-color)',
+                                  textDecoration: 'underline',
+                                  cursor: 'pointer',
+                                  fontWeight: 500
+                                }}
+                                onClick={() => {
+                                  if (citation.url) {
+                                    window.open(citation.url, '_blank', 'noopener,noreferrer');
+                                  }
+                                }}
+                                title={citation.title}
+                              >
+                                [{citationIndex}]
+                              </span>
+                            );
+                          }
+                          return <span key={idx}>[{citationIndex}]</span>;
+                        }
+                        return <span key={idx}>{part}</span>;
+                      })}
+                      
+                      {/* Sources list */}
+                      {message.sources && message.sources.length > 0 && (
+                        <div style={{
+                          marginTop: '12px',
+                          paddingTop: '12px',
+                          borderTop: '1px solid rgba(0,0,0,0.1)',
+                          fontSize: '0.8125rem'
+                        }}>
+                          <div style={{ fontWeight: 600, marginBottom: '8px' }}>Sources:</div>
+                          {message.sources.map((source, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                marginBottom: '4px',
+                                cursor: source.url ? 'pointer' : 'default'
+                              }}
+                              onClick={() => {
+                                if (source.url) {
+                                  window.open(source.url, '_blank', 'noopener,noreferrer');
+                                }
+                              }}
+                            >
+                              <span style={{ fontWeight: 500 }}>[{source.index || idx + 1}]</span>
+                              <span>{source.title}</span>
+                              {source.url && (
+                                <ExternalLink size={12} style={{ flexShrink: 0 }} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    message.content
+                  )}
                 </div>
               </div>
             ))}
-            {loading && (
+            
+            {/* Streaming text display */}
+            {loading && streamingText && (
+              <div
+                style={{
+                  marginBottom: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start'
+                }}
+              >
+                <div style={{
+                  maxWidth: '85%',
+                  padding: '12px 16px',
+                  background: '#f3f4f6',
+                  color: 'var(--text-color)',
+                  borderRadius: '16px 16px 16px 4px',
+                  fontSize: '0.9375rem',
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                  fontFamily: 'var(--font-body)'
+                }}>
+                  {streamingText}
+                  <span style={{ 
+                    display: 'inline-block',
+                    width: '8px',
+                    height: '16px',
+                    background: 'var(--primary-color)',
+                    marginLeft: '2px',
+                    animation: 'blink 1s infinite'
+                  }} />
+                </div>
+              </div>
+            )}
+            
+            {loading && !streamingText && (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -228,6 +380,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                 <span>Thinking...</span>
               </div>
             )}
+            
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Disclaimer - Always visible in conversation */}

@@ -22,7 +22,12 @@ Rules:
 
 interface AskPulseAIResponse {
   text: string;
-  sources?: Array<{ title: string; url?: string }>;
+  sources?: Array<{ title: string; url?: string; index?: number }>;
+}
+
+interface ChatMessage {
+  role: 'user' | 'model';
+  parts: Array<{ text: string }>;
 }
 
 /**
@@ -124,11 +129,134 @@ Provide a helpful answer based solely on the articles above. If relevant, mentio
 };
 
 /**
- * Generate AI response using Google Gemini
+ * Parse source citations from response text (e.g., [1], [2])
+ * Returns text with citations replaced and citation map
+ */
+const parseSourceCitations = (
+  text: string,
+  sources: Array<{ title: string; url?: string; index: number }>
+): { text: string; citations: Map<number, { title: string; url?: string }> } => {
+  const citations = new Map<number, { title: string; url?: string }>();
+  const citationPattern = /\[(\d+)\]/g;
+  
+  // Find all citations in text
+  let match;
+  while ((match = citationPattern.exec(text)) !== null) {
+    const index = parseInt(match[1], 10);
+    const source = sources.find(s => s.index === index);
+    if (source) {
+      citations.set(index, { title: source.title, url: source.url });
+    }
+  }
+  
+  return { text, citations };
+};
+
+/**
+ * Generate AI response using Google Gemini with streaming support
+ */
+export const generateAskPulseAIResponseStream = async function* (
+  userQuestion: string,
+  newsData: { [category: string]: NewsStory[] },
+  conversationHistory?: ChatMessage[]
+): AsyncGenerator<StreamChunk, AskPulseAIResponse, unknown> {
+  try {
+    // Get API key from multiple sources
+    const apiKey = 
+      import.meta.env.VITE_GEMINI_API_KEY || 
+      (typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY) ||
+      (typeof window !== 'undefined' && (window as any).__firebase_config?.geminiApiKey) ||
+      '';
+    
+    if (!apiKey) {
+      yield { text: "I'm having trouble connecting to the AI service. Please check the configuration. The API key is missing.", done: true };
+      return {
+        text: "I'm having trouble connecting to the AI service. Please check the configuration. The API key is missing.",
+        sources: []
+      };
+    }
+
+    // Retrieve relevant articles
+    const relevantArticles = retrieveRelevantArticles(userQuestion, newsData, 5);
+    
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      }
+    });
+
+    let fullText = '';
+
+    // Construct prompt with articles
+    const constructedPrompt = constructPrompt(userQuestion, relevantArticles);
+
+    // Use conversation history if available
+    if (conversationHistory && conversationHistory.length > 0) {
+      const chat = model.startChat({
+        history: conversationHistory,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      });
+      
+      const result = await chat.sendMessageStream(constructedPrompt);
+      
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        fullText += chunkText;
+        yield { text: chunkText, done: false };
+      }
+    } else {
+      // First message - use generateContentStream
+      const result = await model.generateContentStream(constructedPrompt);
+      
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        fullText += chunkText;
+        yield { text: chunkText, done: false };
+      }
+    }
+
+    // Extract sources with indices
+    const sources = relevantArticles
+      .filter(article => article.headline && article.url)
+      .map((article, idx) => ({
+        title: article.headline!,
+        url: article.url,
+        index: idx + 1
+      }));
+
+    // Return final response
+    return {
+      text: fullText,
+      sources
+    };
+  } catch (error: any) {
+    console.error('Streaming error:', error);
+    yield { text: "I encountered an error while processing your question. Please try again.", done: true };
+    return {
+      text: "I encountered an error while processing your question. Please try again.",
+      sources: []
+    };
+  }
+};
+
+/**
+ * Generate AI response using Google Gemini (non-streaming, for backward compatibility)
  */
 export const generateAskPulseAIResponse = async (
   userQuestion: string,
-  newsData: { [category: string]: NewsStory[] }
+  newsData: { [category: string]: NewsStory[] },
+  conversationHistory?: ChatMessage[]
 ): Promise<AskPulseAIResponse> => {
   try {
     // Get API key from multiple sources (similar to Firebase config pattern)
@@ -173,30 +301,64 @@ export const generateAskPulseAIResponse = async (
     try {
       console.log('🤖 Initializing Gemini model...');
       
-      // Use the current free-tier model available in Google AI Studio
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',  // Free tier model, replaces deprecated gemini-pro
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        }
-      });
+      let model;
+      let result;
+      let response;
+      let text: string;
 
-      console.log('✅ Model initialized, generating response...');
-      const result = await model.generateContent(constructedPrompt);
-      const response = await result.response;
-      const text = response.text();
+      // Use conversation history if available
+      if (conversationHistory && conversationHistory.length > 0) {
+        model = genAI.getGenerativeModel({ 
+          model: 'gemini-1.5-flash',
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        });
+        
+        const chat = model.startChat({
+          history: conversationHistory,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        });
+        
+        console.log('✅ Model initialized with conversation history, generating response...');
+        result = await chat.sendMessage(constructedPrompt);
+        response = await result.response;
+        text = response.text();
+      } else {
+        // First message - use generateContent
+        model = genAI.getGenerativeModel({ 
+          model: 'gemini-1.5-flash',  // Free tier model, replaces deprecated gemini-pro
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        });
+
+        console.log('✅ Model initialized, generating response...');
+        result = await model.generateContent(constructedPrompt);
+        response = await result.response;
+        text = response.text();
+      }
 
       console.log('✅ Response received from Gemini');
 
-      // Extract sources from relevant articles
+      // Extract sources with indices for citation parsing
       const sources = relevantArticles
         .filter(article => article.headline && article.url)
-        .map(article => ({
+        .map((article, idx) => ({
           title: article.headline!,
-          url: article.url
+          url: article.url,
+          index: idx + 1
         }));
 
       return {
@@ -228,12 +390,13 @@ export const generateAskPulseAIResponse = async (
           
           console.log('✅ Fallback model response received');
           
-          // Extract sources from relevant articles
+          // Extract sources with indices for citation parsing
           const sources = relevantArticles
             .filter(article => article.headline && article.url)
-            .map(article => ({
+            .map((article, idx) => ({
               title: article.headline!,
-              url: article.url
+              url: article.url,
+              index: idx + 1
             }));
 
           return {
@@ -273,6 +436,48 @@ export const generateAskPulseAIResponse = async (
     };
   }
 };
+
+/**
+ * Convert component messages to Gemini chat history format
+ */
+export function convertToChatHistory(
+  messages: Array<{ role: 'user' | 'ai'; content: string }>
+): ChatMessage[] {
+  return messages
+    .filter(msg => msg.role === 'user' || msg.role === 'ai')
+    .map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
+}
+
+/**
+ * Parse source citations from response text and return formatted text with clickable links
+ */
+export function formatResponseWithCitations(
+  text: string,
+  sources: Array<{ title: string; url?: string; index?: number }>
+): { formattedText: string; citations: Map<number, { title: string; url?: string }> } {
+  const citations = new Map<number, { title: string; url?: string }>();
+  const citationPattern = /\[(\d+)\]/g;
+  
+  // Find all citations in text
+  let match;
+  while ((match = citationPattern.exec(text)) !== null) {
+    const index = parseInt(match[1], 10);
+    const source = sources.find(s => s.index === index);
+    if (source && !citations.has(index)) {
+      citations.set(index, { title: source.title, url: source.url });
+    }
+  }
+  
+  // Replace citations with formatted markers (will be handled in component)
+  const formattedText = text.replace(citationPattern, (match, index) => {
+    return `[CITATION:${index}]`;
+  });
+  
+  return { formattedText, citations };
+}
 
 /**
  * Test Gemini API connection and model availability
