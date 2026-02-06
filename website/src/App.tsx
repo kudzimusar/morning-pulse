@@ -953,7 +953,7 @@ const App: React.FC = () => {
         />
       )}
       
-      {currentPage === 'foryou' && (
+      {currentPage === 'foryou' && view === 'public' && !requireEditor(userRole) && (
         <ForYouFeed 
           newsData={newsData}
           userCountry={currentCountry}
@@ -962,7 +962,7 @@ const App: React.FC = () => {
         />
       )}
       
-      {currentPage === 'askai' && (
+      {currentPage === 'askai' && view === 'public' && !requireEditor(userRole) && (
         <AskPulseAI newsData={newsData} />
       )}
       
