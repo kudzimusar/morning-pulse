@@ -29,7 +29,9 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   };
 
   const handleSubmit = async (e?: React.FormEvent, promptText?: string) => {
-    if (e) e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
     const queryText = promptText || query;
     if (!queryText.trim()) return;
 

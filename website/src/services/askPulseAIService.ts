@@ -119,15 +119,21 @@ export const generateAskPulseAIResponse = async (
   newsData: { [category: string]: NewsStory[] }
 ): Promise<AskPulseAIResponse> => {
   try {
-    // Get API key from environment
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 
-                   (window as any).__GEMINI_API_KEY ||
-                   '';
+    // Get API key from multiple sources (similar to Firebase config pattern)
+    const apiKey = 
+      import.meta.env.VITE_GEMINI_API_KEY || 
+      (typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY) ||
+      (typeof window !== 'undefined' && (window as any).__firebase_config?.geminiApiKey) ||
+      '';
     
     if (!apiKey) {
-      console.error('Gemini API key not found');
+      console.error('Gemini API key not found. Checked:', {
+        env: !!import.meta.env.VITE_GEMINI_API_KEY,
+        window: !!(typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY),
+        firebaseConfig: !!(typeof window !== 'undefined' && (window as any).__firebase_config?.geminiApiKey)
+      });
       return {
-        text: "I'm having trouble connecting to the AI service. Please check the configuration.",
+        text: "I'm having trouble connecting to the AI service. Please check the configuration. The API key is missing.",
         sources: []
       };
     }
