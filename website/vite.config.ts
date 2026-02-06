@@ -49,7 +49,8 @@ export default defineConfig(({ mode }) => {
     // Expose environment variables to the client
     define: {
       'import.meta.env.VITE_FIREBASE_CONFIG': configValue,
-      'import.meta.env.VITE_APP_ID': JSON.stringify('morning-pulse-app')
+      'import.meta.env.VITE_APP_ID': JSON.stringify('morning-pulse-app'),
+      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(process.env.VITE_GEMINI_API_KEY || '')
     }
   };
 });
