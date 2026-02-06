@@ -14,3 +14,6 @@ window.__firebase_config = window.__firebase_config || {
   messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
+
+// Gemini API Key for Ask The Pulse AI
+window.__GEMINI_API_KEY = window.__GEMINI_API_KEY || "AIzaSyAJhrE1DcCo7ndG28AmRYIZozx9z4IzwRg";
