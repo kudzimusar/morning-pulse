@@ -149,16 +149,37 @@ export const generateAskPulseAIResponse = async (
     
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Try gemini-1.5-pro first (more capable), fallback to gemini-pro if needed
-    // Note: Model availability depends on API key tier and region
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-pro' // More capable model, supports longer context
-    });
-
-    // Generate response
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    
+    // Generate response with model fallback
+    // Try gemini-1.5-pro first, fallback to gemini-pro if not available
+    let result;
+    let response;
+    let text: string;
+    
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      result = await model.generateContent(prompt);
+      response = await result.response;
+      text = response.text();
+    } catch (modelError: any) {
+      // If model not found (404), try fallback to gemini-pro
+      if (modelError.message?.includes('not found') || 
+          modelError.message?.includes('404') ||
+          modelError.message?.includes('not supported')) {
+        console.log('⚠️ gemini-1.5-pro not available, trying gemini-pro...');
+        try {
+          const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
+          result = await fallbackModel.generateContent(prompt);
+          response = await result.response;
+          text = response.text();
+        } catch (fallbackError: any) {
+          console.error('❌ Both models failed:', fallbackError);
+          throw new Error(`AI model unavailable: ${fallbackError.message}`);
+        }
+      } else {
+        throw modelError; // Re-throw if it's a different error
+      }
+    }
 
     // Extract sources from relevant articles
     const sources = relevantArticles
