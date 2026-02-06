@@ -42,22 +42,36 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // TODO: Integrate with Gemini API or similar AI service
-      // For now, simulate a response with editorial tone
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Import the service dynamically to avoid issues if API key is not configured
+      const { generateAskPulseAIResponse } = await import('../services/askPulseAIService');
       
-      // Simulate editorial response (grounded in Morning Pulse reporting)
-      const aiResponse = `Based on current Morning Pulse reporting, ${queryText.toLowerCase().includes('top') || queryText.toLowerCase().includes('stories') 
-        ? 'here are the key developments you should know today. Our coverage spans local Zimbabwe news, regional African affairs, and global business trends. Each story is verified by our editorial team before publication.'
-        : queryText.toLowerCase().includes('zimbabwe')
-        ? 'our reporting focuses on economic developments, political updates, and social issues affecting Zimbabwe. Our journalists on the ground provide firsthand accounts of events as they unfold.'
-        : 'our newsroom is tracking multiple developing stories. I can help you understand the context and significance of current events based on our published reporting. What specific topic would you like to explore?'}`;
+      // Generate real AI response using Gemini with RAG
+      const response = await generateAskPulseAIResponse(
+        queryText,
+        newsData || {}
+      );
       
-      setMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
+      // Format response with sources if available
+      let formattedResponse = response.text;
+      if (response.sources && response.sources.length > 0) {
+        formattedResponse += '\n\n**Sources:**\n' + 
+          response.sources.map((source, idx) => 
+            `${idx + 1}. ${source.title}${source.url ? ` (${source.url})` : ''}`
+          ).join('\n');
+      }
+      
+      setMessages(prev => [...prev, { role: 'ai', content: formattedResponse }]);
       setQuery(''); // Clear input after sending
-    } catch (err) {
-      setError('Sorry, I encountered an error. Please try again.');
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Sorry, I encountered an error. Please try again.';
+      setError(errorMessage);
       console.error('AI query error:', err);
+      
+      // Add error message to chat for user visibility
+      setMessages(prev => [...prev, { 
+        role: 'ai', 
+        content: `I'm sorry, I encountered an error: ${errorMessage}. Please try again.` 
+      }]);
     } finally {
       setLoading(false);
     }
