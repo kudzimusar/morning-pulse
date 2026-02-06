@@ -803,9 +803,67 @@ const App: React.FC = () => {
                 onLogoClick={() => {
                   window.location.hash = 'news';
                   setCurrentPage('news');
+                  setMobileActiveTab('latest');
                 }}
                 onSearchClick={() => setMobileSearchOpen(true)}
                 onMenuClick={() => setMobileMenuOpen(true)}
+                onNotificationsClick={() => setMobileNotificationsOpen(true)}
+                onSignInClick={() => {
+                  // Connect to existing auth system
+                  if (userRole && Array.isArray(userRole) && userRole.length > 0) {
+                    // User is logged in - navigate to appropriate dashboard/profile
+                    if (userRole.includes('editor') || userRole.includes('admin') || userRole.includes('super_admin')) {
+                      window.location.hash = 'dashboard';
+                    } else if (userRole.includes('writer')) {
+                      window.location.hash = 'writer/dashboard';
+                    } else if (userRole.includes('advertiser')) {
+                      window.location.hash = 'advertiser/dashboard';
+                    } else if (userRole.includes('subscriber')) {
+                      window.location.hash = 'subscriber/dashboard';
+                    } else {
+                      window.location.hash = 'profile';
+                    }
+                  } else {
+                    // User not logged in - navigate to join page (existing auth entry point)
+                    window.location.hash = 'join';
+                  }
+                }}
+                onTabChange={(tab) => {
+                  setMobileActiveTab(tab);
+                  if (tab === 'latest') {
+                    window.location.hash = 'news';
+                    setCurrentPage('news');
+                  } else if (tab === 'foryou') {
+                    window.location.hash = 'foryou';
+                    setCurrentPage('foryou');
+                  } else if (tab === 'askai') {
+                    window.location.hash = 'askai';
+                    setCurrentPage('askai');
+                  }
+                }}
+                activeTab={mobileActiveTab}
+                userRole={userRole}
+                isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
+                notificationCount={0} // TODO: Implement notification count
+                topHeadlines={topHeadlines}
+                onTickerClick={(headline) => {
+                  // Find article by headline and navigate to it
+                  const allArticles: NewsStory[] = [];
+                  Object.values(newsData).forEach(categoryArticles => {
+                    allArticles.push(...categoryArticles);
+                  });
+                  const matchingArticle = allArticles.find(article => 
+                    article.headline === headline || article.headline.includes(headline)
+                  );
+                  if (matchingArticle && matchingArticle.url) {
+                    window.open(matchingArticle.url, '_blank', 'noopener,noreferrer');
+                  } else {
+                    // Fallback: navigate to news feed
+                    window.location.hash = 'news';
+                    setCurrentPage('news');
+                    setMobileActiveTab('latest');
+                  }
+                }}
               />
               
               {/* Mobile Menu Drawer */}
