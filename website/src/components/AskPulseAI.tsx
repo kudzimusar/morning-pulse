@@ -76,18 +76,21 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
       let finalResponse: { text: string; sources?: Array<{ title: string; url?: string; index?: number }> } | null = null;
       
       // Stream the response
-      for await (const chunk of streamGenerator) {
-        if (chunk.text) {
-          accumulatedText += chunk.text;
+      // The generator yields chunks and returns the final response when done
+      let generator = streamGenerator;
+      let result = await generator.next();
+      
+      while (!result.done) {
+        if (result.value && result.value.text) {
+          accumulatedText += result.value.text;
           setStreamingText(accumulatedText);
         }
+        result = await generator.next();
       }
       
       // Get final response from generator return value
-      // The generator returns the final response when done
-      const generatorResult = await streamGenerator.next();
-      if (generatorResult.done && generatorResult.value) {
-        finalResponse = generatorResult.value;
+      if (result.done && result.value) {
+        finalResponse = result.value;
       }
       
       // Format response with citations
