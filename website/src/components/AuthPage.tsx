@@ -200,7 +200,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#f9fafb', // var(--bg-color)
-      padding: '24px',
+      padding: '20px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -213,11 +213,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
         {/* Logo */}
         <div style={{ 
           textAlign: 'center', 
-          marginBottom: '40px' 
+          marginBottom: '32px' 
         }}>
           <h1 style={{
             fontFamily: 'var(--font-heading, "Playfair Display", Georgia, serif)',
-            fontSize: 'clamp(2rem, 5vw, 2.5rem)',
+            fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
             fontWeight: 900,
             color: '#000033', // var(--primary-color)
             margin: 0,
@@ -232,8 +232,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
             Morning Pulse
           </h1>
           <p style={{
-            margin: '8px 0 0 0',
-            fontSize: '16px',
+            margin: '6px 0 0 0',
+            fontSize: '14px',
             color: '#666666', // var(--light-text)
             fontWeight: 400
           }}>
@@ -246,16 +246,16 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
           backgroundColor: '#ffffff', // var(--card-bg)
           borderRadius: '12px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          padding: '40px',
-          marginBottom: '24px'
+          padding: '32px',
+          marginBottom: '16px'
         }}>
           {/* Mode Toggle */}
           <div style={{
             display: 'flex',
             gap: '8px',
-            marginBottom: '32px',
+            marginBottom: '24px',
             borderBottom: '2px solid #e0e0e0', // var(--border-color)
-            paddingBottom: '16px'
+            paddingBottom: '12px'
           }}>
             <button
               onClick={() => {
@@ -266,8 +266,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
               }}
               style={{
                 flex: 1,
-                padding: '12px',
-                fontSize: '16px',
+                padding: '10px',
+                fontSize: '15px',
                 fontWeight: mode === 'signin' ? 600 : 500,
                 color: mode === 'signin' ? '#000033' : '#666666',
                 backgroundColor: 'transparent',
@@ -275,8 +275,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                 borderBottom: mode === 'signin' ? '3px solid #000033' : '3px solid transparent',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                marginBottom: '-16px',
-                paddingBottom: '19px'
+                marginBottom: '-12px',
+                paddingBottom: '15px'
               }}
             >
               Sign In
@@ -290,8 +290,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
               }}
               style={{
                 flex: 1,
-                padding: '12px',
-                fontSize: '16px',
+                padding: '10px',
+                fontSize: '15px',
                 fontWeight: mode === 'signup' ? 600 : 500,
                 color: mode === 'signup' ? '#000033' : '#666666',
                 backgroundColor: 'transparent',
@@ -299,8 +299,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                 borderBottom: mode === 'signup' ? '3px solid #000033' : '3px solid transparent',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                marginBottom: '-16px',
-                paddingBottom: '19px'
+                marginBottom: '-12px',
+                paddingBottom: '15px'
               }}
             >
               Create Account
@@ -310,11 +310,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
           {/* Sign In Form */}
           {mode === 'signin' && (
             <form onSubmit={handleSignIn}>
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
+                  marginBottom: '6px',
+                  fontSize: '13px',
                   fontWeight: 500,
                   color: '#1a1a1a' // var(--text-color)
                 }}>
@@ -329,8 +329,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                   disabled={loading}
                   style={{
                     width: '100%',
-                    padding: '14px 16px',
-                    fontSize: '16px',
+                    padding: '12px 14px',
+                    fontSize: '15px',
                     border: '1px solid #e0e0e0',
                     borderRadius: '8px',
                     boxSizing: 'border-box',
@@ -343,11 +343,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                 />
               </div>
 
-              <div style={{ marginBottom: '24px' }}>
+              <div style={{ marginBottom: '20px' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
+                  marginBottom: '6px',
+                  fontSize: '13px',
                   fontWeight: 500,
                   color: '#1a1a1a'
                 }}>
@@ -362,8 +362,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                   disabled={loading}
                   style={{
                     width: '100%',
-                    padding: '14px 16px',
-                    fontSize: '16px',
+                    padding: '12px 14px',
+                    fontSize: '15px',
                     border: '1px solid #e0e0e0',
                     borderRadius: '8px',
                     boxSizing: 'border-box',
@@ -378,12 +378,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
 
               {error && (
                 <div style={{
-                  marginBottom: '20px',
-                  padding: '12px 16px',
+                  marginBottom: '16px',
+                  padding: '10px 14px',
                   backgroundColor: '#fee',
                   color: '#c33',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   border: '1px solid #fcc'
                 }}>
                   {error}
@@ -395,8 +395,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '14px',
-                  fontSize: '16px',
+                  padding: '12px',
+                  fontSize: '15px',
                   fontWeight: 600,
                   color: 'white',
                   backgroundColor: loading ? '#9ca3af' : '#000033',
@@ -404,7 +404,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                   borderRadius: '8px',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   transition: 'background-color 0.2s',
-                  marginBottom: '16px'
+                  marginBottom: '12px'
                 }}
               >
                 {loading ? 'Signing in...' : 'Sign In'}
@@ -415,11 +415,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
           {/* Sign Up Form */}
           {mode === 'signup' && (
             <form onSubmit={handleSignUp}>
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
+                  marginBottom: '6px',
+                  fontSize: '13px',
                   fontWeight: 500,
                   color: '#1a1a1a'
                 }}>
@@ -434,8 +434,41 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                   disabled={loading}
                   style={{
                     width: '100%',
-                    padding: '14px 16px',
-                    fontSize: '16px',
+                    padding: '12px 14px',
+                    fontSize: '15px',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                    fontFamily: 'inherit'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#000033'}
+                  onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '6px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: '#1a1a1a'
+                }}>
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    fontSize: '15px',
                     border: '1px solid #e0e0e0',
                     borderRadius: '8px',
                     boxSizing: 'border-box',
@@ -451,41 +484,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: '#1a1a1a'
-                }}>
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '14px 16px',
-                    fontSize: '16px',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    boxSizing: 'border-box',
-                    outline: 'none',
-                    transition: 'border-color 0.2s',
-                    fontFamily: 'inherit'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#000033'}
-                  onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
-                />
-              </div>
-
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
+                  marginBottom: '6px',
+                  fontSize: '13px',
                   fontWeight: 500,
                   color: '#1a1a1a'
                 }}>
@@ -500,8 +500,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                   disabled={loading}
                   style={{
                     width: '100%',
-                    padding: '14px 16px',
-                    fontSize: '16px',
+                    padding: '12px 14px',
+                    fontSize: '15px',
                     border: '1px solid #e0e0e0',
                     borderRadius: '8px',
                     boxSizing: 'border-box',
@@ -516,12 +516,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
 
               {error && (
                 <div style={{
-                  marginBottom: '20px',
-                  padding: '12px 16px',
+                  marginBottom: '16px',
+                  padding: '10px 14px',
                   backgroundColor: '#fee',
                   color: '#c33',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   border: '1px solid #fcc'
                 }}>
                   {error}
@@ -530,12 +530,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
 
               {successMessage && (
                 <div style={{
-                  marginBottom: '20px',
-                  padding: '12px 16px',
+                  marginBottom: '16px',
+                  padding: '10px 14px',
                   backgroundColor: '#d1f2eb',
                   color: '#059669',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   border: '1px solid #10b981'
                 }}>
                   {successMessage}
@@ -547,8 +547,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '14px',
-                  fontSize: '16px',
+                  padding: '12px',
+                  fontSize: '15px',
                   fontWeight: 600,
                   color: 'white',
                   backgroundColor: loading ? '#9ca3af' : '#000033',
@@ -556,7 +556,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
                   borderRadius: '8px',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   transition: 'background-color 0.2s',
-                  marginBottom: '16px'
+                  marginBottom: '12px'
                 }}
               >
                 {loading ? 'Creating account...' : 'Create Account'}
@@ -568,11 +568,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            marginTop: '24px',
-            marginBottom: '24px'
+            marginTop: '20px',
+            marginBottom: '20px'
           }}>
             <div style={{ flex: 1, height: '1px', backgroundColor: '#e0e0e0' }} />
-            <span style={{ padding: '0 16px', fontSize: '14px', color: '#666666' }}>or</span>
+            <span style={{ padding: '0 12px', fontSize: '13px', color: '#666666' }}>or</span>
             <div style={{ flex: 1, height: '1px', backgroundColor: '#e0e0e0' }} />
           </div>
 
@@ -581,8 +581,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
             onClick={handleGuestContinue}
             style={{
               width: '100%',
-              padding: '14px',
-              fontSize: '16px',
+              padding: '12px',
+              fontSize: '15px',
               fontWeight: 500,
               color: '#000033',
               backgroundColor: 'transparent',
@@ -602,106 +602,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
           </button>
         </div>
 
-        {/* Create Account Link (underneath main box) */}
-        {mode === 'signin' && (
-          <div style={{
-            textAlign: 'center',
-            padding: '20px',
-            backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
-          }}>
-            <p style={{
-              margin: '0 0 12px 0',
-              fontSize: '14px',
-              color: '#666666'
-            }}>
-              Don't have an account?
-            </p>
-            <button
-              onClick={() => {
-                setMode('signup');
-                setError(null);
-                setPassword('');
-                setName('');
-              }}
-              style={{
-                padding: '10px 24px',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#000033',
-                backgroundColor: 'transparent',
-                border: '1px solid #000033',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#000033';
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#000033';
-              }}
-            >
-              Create Account
-            </button>
-          </div>
-        )}
-
-        {/* Sign In Link (underneath main box) */}
-        {mode === 'signup' && (
-          <div style={{
-            textAlign: 'center',
-            padding: '20px',
-            backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
-          }}>
-            <p style={{
-              margin: '0 0 12px 0',
-              fontSize: '14px',
-              color: '#666666'
-            }}>
-              Already have an account?
-            </p>
-            <button
-              onClick={() => {
-                setMode('signin');
-                setError(null);
-                setPassword('');
-                setName('');
-              }}
-              style={{
-                padding: '10px 24px',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#000033',
-                backgroundColor: 'transparent',
-                border: '1px solid #000033',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#000033';
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#000033';
-              }}
-            >
-              Sign In
-            </button>
-          </div>
-        )}
-
         {/* Guest Writer Solicitation */}
         <div style={{
-          marginTop: '24px',
-          padding: '24px',
+          marginTop: '16px',
+          padding: '20px',
           backgroundColor: '#f3f4f6', // var(--section-bg)
           borderRadius: '12px',
           border: '1px solid #e0e0e0',
@@ -711,13 +615,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            gap: '10px',
-            marginBottom: '12px'
+            gap: '8px',
+            marginBottom: '10px'
           }}>
-            <PenTool size={22} color="#000033" />
+            <PenTool size={20} color="#000033" />
             <h3 style={{ 
               margin: 0, 
-              fontSize: '18px', 
+              fontSize: '16px', 
               fontWeight: 600,
               color: '#1a1a1a'
             }}>
@@ -725,8 +629,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
             </h3>
           </div>
           <p style={{ 
-            margin: '0 0 16px 0', 
-            fontSize: '14px', 
+            margin: '0 0 12px 0', 
+            fontSize: '13px', 
             color: '#666666',
             lineHeight: '1.5'
           }}>
@@ -735,8 +639,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
           <button
             onClick={() => window.location.hash = 'opinion/submit'}
             style={{
-              padding: '12px 28px',
-              fontSize: '14px',
+              padding: '10px 24px',
+              fontSize: '13px',
               fontWeight: 600,
               color: 'white',
               backgroundColor: '#000033',
@@ -745,13 +649,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
               transition: 'opacity 0.2s'
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
-            <PenTool size={16} />
+            <PenTool size={14} />
             Submit Essay
           </button>
         </div>

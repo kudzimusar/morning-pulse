@@ -650,6 +650,8 @@ const App: React.FC = () => {
   };
 
   const handleSubscribeClick = () => {
+    // Navigate to newsletter subscription page
+    window.location.hash = 'subscribe';
     window.location.hash = 'subscribe';
   };
 
