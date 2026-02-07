@@ -178,35 +178,28 @@ Use this analysis to answer user questions accurately and comprehensively.
 `;
 
 /**
- * Construct grounded prompt with retrieved articles and opinions
- * Uses comprehensive AI rules for intelligent, contextual responses
+ * Build system instruction with comprehensive AI rules
  */
-function constructPrompt(userQuestion, articles, opinions, conversationHistory, previousEntities) {
-  let prompt = AI_SYSTEM_PROMPT;
-
-  // Add conversation context if available
-  if (conversationHistory && conversationHistory.length > 0) {
-    // Convert to readable format
-    const recentContext = conversationHistory.slice(-3);
-    const contextText = recentContext.map(msg => {
-      const role = msg.role === 'user' ? 'user' : 'assistant';
-      const text = msg.parts && msg.parts[0] ? msg.parts[0].text : '';
-      return `${role}: ${text}`;
-    }).join('\n');
-    prompt += `\n\nRECENT CONVERSATION:\n${contextText}`;
-  }
-
-  // Add entity tracking
-  if (previousEntities && previousEntities.length > 0) {
-    prompt += `\n\nENTITIES MENTIONED IN CONVERSATION: ${previousEntities.join(', ')}`;
-    prompt += `\nWhen user uses pronouns, these may refer to the above entities.`;
-  }
+function buildSystemInstruction(articles, opinions, conversationHistory, previousEntities) {
+  let systemInstruction = AI_SYSTEM_PROMPT;
 
   // Add article analysis prompt
-  prompt += `\n\n${AI_ARTICLE_ANALYSIS_PROMPT}`;
+  systemInstruction += `\n\n${AI_ARTICLE_ANALYSIS_PROMPT}`;
 
-  // Add articles
-  prompt += `\n\nAVAILABLE ARTICLES (Use ONLY these for your answer):\n\n`;
+  // Add entity tracking if available
+  if (previousEntities && previousEntities.length > 0) {
+    systemInstruction += `\n\nENTITIES MENTIONED IN CONVERSATION: ${previousEntities.join(', ')}`;
+    systemInstruction += `\nWhen user uses pronouns, these may refer to the above entities.`;
+  }
+
+  return systemInstruction;
+}
+
+/**
+ * Build context with articles and opinions for the user message
+ */
+function buildContext(articles, opinions) {
+  let context = `AVAILABLE ARTICLES (Use ONLY these for your answer):\n\n`;
   
   articles.forEach((article, index) => {
     const title = article.headline || 'Untitled';
@@ -217,11 +210,11 @@ function constructPrompt(userQuestion, articles, opinions, conversationHistory, 
       ? new Date(article.timestamp).toLocaleDateString()
       : 'Recent');
     
-    prompt += `[${index + 1}] ${title}\n`;
-    prompt += `Category: ${category}\n`;
-    if (source) prompt += `Source: ${source}\n`;
-    prompt += `Content: ${detail}\n`;
-    prompt += `Date: ${date}\n\n`;
+    context += `[${index + 1}] ${title}\n`;
+    context += `Category: ${category}\n`;
+    if (source) context += `Source: ${source}\n`;
+    context += `Content: ${detail}\n`;
+    context += `Date: ${date}\n\n`;
   });
 
   // Add opinions section (top 3 most recent)
@@ -236,27 +229,50 @@ function constructPrompt(userQuestion, articles, opinions, conversationHistory, 
       .slice(0, 3); // Top 3 most recent
 
     if (publishedOpinions.length > 0) {
-      prompt += `\n\nPUBLISHED OPINIONS & EDITORIALS:\n\n`;
+      context += `\n\nPUBLISHED OPINIONS & EDITORIALS:\n\n`;
       publishedOpinions.forEach((opinion, idx) => {
-        prompt += `[OPINION ${idx + 1}] ${opinion.headline}\n`;
-        prompt += `Category: ${opinion.category || 'Opinion'}\n`;
-        prompt += `Summary: ${opinion.subHeadline || ''}\n`;
-        prompt += `Author: ${opinion.authorName || 'Editorial Team'}\n`;
-        if (opinion.authorTitle) prompt += `Author Title: ${opinion.authorTitle}\n`;
+        context += `[OPINION ${idx + 1}] ${opinion.headline}\n`;
+        context += `Category: ${opinion.category || 'Opinion'}\n`;
+        context += `Summary: ${opinion.subHeadline || ''}\n`;
+        context += `Author: ${opinion.authorName || 'Editorial Team'}\n`;
+        if (opinion.authorTitle) context += `Author Title: ${opinion.authorTitle}\n`;
         const pubDate = opinion.publishedAt ? new Date(opinion.publishedAt).toLocaleDateString() : 'Recent';
-        prompt += `Published: ${pubDate}\n`;
+        context += `Published: ${pubDate}\n`;
         const bodyPreview = opinion.body ? opinion.body.substring(0, 500) : '';
-        prompt += `Content: ${bodyPreview}${opinion.body && opinion.body.length > 500 ? '...' : ''}\n\n`;
+        context += `Content: ${bodyPreview}${opinion.body && opinion.body.length > 500 ? '...' : ''}\n\n`;
       });
-      prompt += `\nNote: When citing opinions, use [OPINION 1], [OPINION 2], etc. to distinguish from news articles.\n`;
+      context += `\nNote: When citing opinions, use [OPINION 1], [OPINION 2], etc. to distinguish from news articles.\n`;
     }
   }
 
+  return context;
+}
+
+/**
+ * Build user message with question and context
+ */
+function buildUserMessage(userQuestion, articles, opinions, conversationHistory) {
+  let userMessage = '';
+
+  // Add conversation context if available
+  if (conversationHistory && conversationHistory.length > 0) {
+    const recentContext = conversationHistory.slice(-3);
+    const contextText = recentContext.map(msg => {
+      const role = msg.role === 'user' ? 'user' : 'assistant';
+      const text = msg.parts && msg.parts[0] ? msg.parts[0].text : '';
+      return `${role}: ${text}`;
+    }).join('\n');
+    userMessage += `RECENT CONVERSATION:\n${contextText}\n\n`;
+  }
+
+  // Add articles and opinions context
+  userMessage += buildContext(articles, opinions);
+
   // Add the user's question
-  prompt += `\n\nUSER QUESTION: ${userQuestion}\n\n`;
+  userMessage += `\n\nUSER QUESTION: ${userQuestion}\n\n`;
   
   // Add response instructions
-  prompt += `INSTRUCTIONS FOR YOUR RESPONSE:
+  userMessage += `INSTRUCTIONS FOR YOUR RESPONSE:
 1. Analyze the question to understand what type of information is needed (who, what, where, when, why, how)
 2. Search through ALL articles and opinions for relevant information
 3. Extract specific details that answer the question
@@ -269,7 +285,7 @@ function constructPrompt(userQuestion, articles, opinions, conversationHistory, 
 
 YOUR ANSWER:`;
 
-  return prompt;
+  return userMessage;
 }
 
 /**
@@ -319,18 +335,24 @@ exports.askPulseAIProxy = async (req, res) => {
     const relevantArticles = retrieveRelevantArticles(question, newsData || {}, 10);
     console.log(`📰 Found ${relevantArticles.length} relevant articles`);
 
-    // Construct prompt with comprehensive AI rules
-    const constructedPrompt = constructPrompt(question, relevantArticles, opinions, conversationHistory, previousEntities);
+    // Build system instruction and user message separately
+    const systemInstruction = buildSystemInstruction(relevantArticles, opinions, conversationHistory, previousEntities);
+    const userMessage = buildUserMessage(question, relevantArticles, opinions, conversationHistory);
 
-    // Initialize Gemini
+    console.log(`📝 System instruction length: ${systemInstruction.length}`);
+    console.log(`📝 User message length: ${userMessage.length}`);
+    console.log(`📝 User question: "${question.substring(0, 100)}..."`);
+
+    // Initialize Gemini with system instruction
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash',
+      systemInstruction: systemInstruction,
       generationConfig: {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048, // Increased for more comprehensive responses
       }
     });
 
@@ -352,12 +374,12 @@ exports.askPulseAIProxy = async (req, res) => {
               temperature: 0.7,
               topK: 40,
               topP: 0.95,
-              maxOutputTokens: 1024,
+              maxOutputTokens: 2048,
             }
           });
-          result = await chat.sendMessageStream(constructedPrompt);
+          result = await chat.sendMessageStream(userMessage);
         } else {
-          result = await model.generateContentStream(constructedPrompt);
+          result = await model.generateContentStream(userMessage);
         }
 
         for await (const chunk of result.stream) {
@@ -395,14 +417,14 @@ exports.askPulseAIProxy = async (req, res) => {
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
           }
         });
-        result = await chat.sendMessage(constructedPrompt);
+        result = await chat.sendMessage(userMessage);
         response = await result.response;
         text = response.text();
       } else {
-        result = await model.generateContent(constructedPrompt);
+        result = await model.generateContent(userMessage);
         response = await result.response;
         text = response.text();
       }
