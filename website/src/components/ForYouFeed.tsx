@@ -14,6 +14,7 @@ interface ForYouFeedProps {
   userCountry?: CountryInfo;
   userId?: string | null;
   isAuthenticated?: boolean;
+  userRole?: string[] | null;
 }
 
 const ForYouFeed: React.FC<ForYouFeedProps> = ({ 
@@ -21,6 +22,7 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
   userCountry,
   userId = null,
   isAuthenticated = false,
+  userRole = null,
 }) => {
   const [loading, setLoading] = useState(true);
   const [personalizedArticles, setPersonalizedArticles] = useState<NewsStory[]>([]);
@@ -71,14 +73,41 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
     return () => unsubscribe();
   }, [isAuthenticated, userId]);
 
-  // Get user's preferred categories from localStorage (only for authenticated users)
+  // Get user's preferred categories (Firestore for readers, localStorage for others)
+  const [firestorePreferences, setFirestorePreferences] = useState<{ categories: string[] } | null>(null);
+  
+  // Load Firestore preferences for readers
+  useEffect(() => {
+    if (authState.isAuthenticated && authState.userId && userRole?.includes('reader')) {
+      const loadPrefs = async () => {
+        try {
+          const { loadReaderPreferences } = await import('../services/userPreferences');
+          const prefs = await loadReaderPreferences(authState.userId!);
+          if (prefs) {
+            setFirestorePreferences(prefs);
+          }
+        } catch (e) {
+          console.error('Error loading reader preferences:', e);
+        }
+      };
+      loadPrefs();
+    } else {
+      setFirestorePreferences(null);
+    }
+  }, [authState.isAuthenticated, authState.userId, userRole]);
+
   const preferredCategories = useMemo(() => {
     // Guest users: Use editorial fallback (trending categories)
     if (!authState.isAuthenticated || !authState.userId) {
       return ['Local (Zim)', 'Business (Zim)', 'World News', 'Sports', 'Tech & AI'];
     }
 
-    // Signed-in users: Use stored preferences
+    // Readers: Use Firestore preferences
+    if (userRole?.includes('reader') && firestorePreferences?.categories.length) {
+      return firestorePreferences.categories.slice(0, 5);
+    }
+
+    // Other signed-in users: Use localStorage preferences
     try {
       const stored = localStorage.getItem('userCategoryPreferences');
       if (stored) {
@@ -99,7 +128,7 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
     
     // Fallback to default categories if no preferences found
     return ['Local (Zim)', 'Business (Zim)', 'World News'];
-  }, [authState.isAuthenticated, authState.userId]);
+  }, [authState.isAuthenticated, authState.userId, userRole, firestorePreferences]);
 
   useEffect(() => {
     setLoading(true);

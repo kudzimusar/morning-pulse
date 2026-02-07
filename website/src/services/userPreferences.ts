@@ -1,9 +1,25 @@
 /**
  * User Preferences Service
  * Tracks user preferences like category interests and provides personalized ordering
+ * Now supports Firestore sync for logged-in readers
  */
 
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { getApp } from 'firebase/app';
+
 const STORAGE_KEY_PREFIX = 'morning-pulse-';
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
+
+// Get Firestore instance
+const getDb = () => {
+  try {
+    const app = getApp();
+    return getFirestore(app);
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+    return null;
+  }
+};
 
 /**
  * Clean up old category preference entries
@@ -146,5 +162,56 @@ export const resetCategoryPreferences = (): void => {
     console.log('✅ Reset category preferences');
   } catch (e) {
     console.error('Failed to reset category preferences:', e);
+  }
+};
+
+/**
+ * Save reader preferences to Firestore
+ */
+export const saveReaderPreferences = async (
+  uid: string, 
+  preferences: { categories: string[] }
+): Promise<void> => {
+  const db = getDb();
+  if (!db) {
+    console.warn('Firestore not available, skipping preference save');
+    return;
+  }
+
+  try {
+    const prefRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid, 'preferences', 'settings');
+    await setDoc(prefRef, {
+      categories: preferences.categories,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    console.log('✅ Reader preferences saved to Firestore');
+  } catch (error: any) {
+    console.error('❌ Failed to save reader preferences:', error);
+    throw new Error(`Failed to save preferences: ${error.message}`);
+  }
+};
+
+/**
+ * Load reader preferences from Firestore
+ */
+export const loadReaderPreferences = async (
+  uid: string
+): Promise<{ categories: string[] } | null> => {
+  const db = getDb();
+  if (!db) {
+    return null;
+  }
+
+  try {
+    const prefRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid, 'preferences', 'settings');
+    const snap = await getDoc(prefRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      return { categories: data.categories || [] };
+    }
+    return null;
+  } catch (error: any) {
+    console.error('Error loading reader preferences:', error);
+    return null;
   }
 };

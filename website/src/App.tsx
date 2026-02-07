@@ -83,6 +83,7 @@ import AdvertiserLogin from './components/AdvertiserLogin';
 import AdvertiserDashboard from './components/AdvertiserDashboard';
 import AdSubmissionForm from './components/AdSubmissionForm';
 import JoinPage from './components/JoinPage';
+import AuthPage from './components/AuthPage';
 // Import admin auth service (will only be used when admin mode is enabled)
 import { 
   getCurrentEditor, 
@@ -111,6 +112,9 @@ const getPageTitle = (hash: string): string => {
     'advertise': 'Morning Pulse - Advertise With Us',
     'editorial': 'Morning Pulse - Editorial Standards',
     'join': 'Morning Pulse - Join Our Team',
+    'auth': 'Morning Pulse - Sign In',
+    'signin': 'Morning Pulse - Sign In',
+    'signup': 'Morning Pulse - Sign Up',
     'writer-register': 'Morning Pulse - Writer Registration',
     'writer-login': 'Morning Pulse - Writer Login',
     'writer-dashboard': 'Morning Pulse - Writer Dashboard',
@@ -839,9 +843,12 @@ const App: React.FC = () => {
                     } else {
                       window.location.hash = 'profile';
                     }
+                  } else if (userRole && Array.isArray(userRole) && userRole.includes('reader')) {
+                    // Reader - stay on news feed with personalized content
+                    window.location.hash = 'news';
                   } else {
-                    // User not logged in - navigate to join page (existing auth entry point)
-                    window.location.hash = 'join';
+                    // User not logged in - navigate to unified auth page
+                    window.location.hash = 'auth';
                   }
                 }}
                 onTabChange={(tab) => {
@@ -1022,6 +1029,20 @@ const App: React.FC = () => {
 
       {currentPage === 'editorial' && (
         <EditorialPage onBack={handleBackToNews} />
+      )}
+
+      {currentPage === 'auth' && (
+        <AuthPage 
+          onSuccess={() => {
+            // Refresh user role and redirect
+            window.location.hash = 'news';
+            window.location.reload();
+          }}
+          onBack={() => {
+            window.location.hash = 'news';
+            setCurrentPage('news');
+          }}
+        />
       )}
 
       {currentPage === 'join' && (

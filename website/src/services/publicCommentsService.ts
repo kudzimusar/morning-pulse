@@ -149,6 +149,21 @@ export const addPublicComment = async (
   
   // Determine author role if not provided
   let finalAuthorRole: 'user' | 'editor' | 'admin' = authorRole || 'user';
+  let finalAuthorName = authorName.trim() || 'Anonymous';
+  
+  // Check if user is a reader and get their name
+  if (!authorName.trim()) {
+    try {
+      const { getCurrentReader } = await import('./readerService');
+      const reader = await getCurrentReader();
+      if (reader) {
+        finalAuthorName = reader.name || 'Reader';
+      }
+    } catch (error) {
+      console.warn('Could not fetch reader name:', error);
+    }
+  }
+  
   if (isEditorialReply) {
     // Check if user is staff member (editor/admin)
     try {
@@ -171,7 +186,7 @@ export const addPublicComment = async (
   const commentData = {
     opinionId,
     userId,
-    authorName: authorName.trim() || 'Anonymous',
+    authorName: finalAuthorName,
     authorRole: finalAuthorRole,
     content: content.trim(),
     parentId: parentId || null,

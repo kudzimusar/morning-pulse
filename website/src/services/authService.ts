@@ -268,6 +268,31 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
 };
 
 /**
+ * Get reader role for a user UID
+ * Checks Firestore: artifacts/{appId}/public/data/readers/{uid}
+ */
+export const getReaderRole = async (uid: string): Promise<string[] | null> => {
+  try {
+    const dbInstance = getDbInstance();
+    const appId = (window as any).__app_id || 'morning-pulse-app';
+    
+    const readerRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'readers', uid);
+    const snap = await getDoc(readerRef);
+    
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data?.role === 'reader') {
+        return ['reader'];
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Error fetching reader role:', error);
+    return null;
+  }
+};
+
+/**
  * Check if user has editor, admin, or super_admin role
  * Supports roles array (new format) with backward compatibility
  */

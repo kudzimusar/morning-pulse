@@ -33,9 +33,9 @@ const JoinPage: React.FC = () => {
       console.log('🔍 [JOIN] Extracted token:', tokenParam ? 'Found' : 'Not found');
       
       if (!tokenParam) {
-        console.error('❌ [JOIN] No token found in URL hash');
-        setError('No invitation token found in URL. Please check the invitation link.');
-        setLoading(false);
+        console.log('⚠️ [JOIN] No token found - redirecting to auth page');
+        // No token - redirect to unified auth page for regular users
+        window.location.hash = 'auth';
         return;
       }
       
