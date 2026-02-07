@@ -110,9 +110,20 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
                   window.location.hash = 'auth';
                 }
               }}
+              onTouchStart={(e) => {
+                // Ensure touch events work on mobile
+                e.stopPropagation();
+              }}
               className="mobile-sign-in-btn"
               aria-label="Sign In"
               type="button"
+              style={{
+                position: 'relative',
+                zIndex: 11,
+                pointerEvents: 'auto',
+                cursor: 'pointer',
+                touchAction: 'manipulation'
+              }}
             >
               Sign In
             </button>
