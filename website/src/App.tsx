@@ -426,6 +426,13 @@ const App: React.FC = () => {
           setView('admin');
           setCurrentPage('news'); // Keep currentPage for context
         }
+      } else if (path === 'auth' || path === 'signin' || path === 'signup') {
+        // ✅ NEW: Unified authentication page for regular readers
+        setCurrentPage('auth');
+        setMobileActiveTab('latest');
+        setView('public');
+        setShowAdminLogin(false);
+        console.log('🔗 [ROUTING] Auth page detected, hash:', hash);
       } else if (path === 'join' || hash.startsWith('join?')) {
         // ✅ NEW: Staff invitation join page
         // Handle both #join?token=... and #join
