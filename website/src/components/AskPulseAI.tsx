@@ -382,8 +382,9 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         return;
       }
       
-      // Regular paragraph - process citations
-      const parts = trimmed.split(/(\[CITATION:\d+\]|\[\d+\])/);
+      // Regular paragraph - process citations and remove any remaining markdown
+      const cleanLine = trimmed.replace(/\*\*\*/g, '').replace(/---+/g, '').replace(/___+/g, '');
+      const parts = cleanLine.split(/(\[CITATION:\d+\]|\[\d+\])/);
       elements.push(
         <div key={idx} style={{ marginBottom: '8px', lineHeight: 1.6 }}>
           {parts.map((part, partIdx) => {
@@ -418,8 +419,9 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
               }
               return <span key={partIdx}>[{citationIndex}]</span>;
             }
-            // Remove any remaining markdown bold markers
-            return <span key={partIdx}>{part.replace(/\*\*/g, '')}</span>;
+            // Remove any remaining markdown artifacts
+            const cleanPart = part.replace(/\*\*/g, '').trim();
+            return cleanPart ? <span key={partIdx}>{cleanPart}</span> : null;
           })}
         </div>
       );
