@@ -180,9 +180,9 @@ export const generateAskPulseAIResponseStream = async function* (
     // Initialize Gemini with v1 API
     const genAI = getGeminiClient(apiKey);
     
-    // Use gemini-1.5-flash which is available in v1 API
+    // Use gemini-2.5-flash which is available in v1beta API (FREE tier)
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -304,9 +304,9 @@ export const generateAskPulseAIResponse = async (
     // Initialize Gemini with v1 API
     const genAI = getGeminiClient(apiKey);
     
-    // Generate response with current model (gemini-1.5-flash) - v1 API
+    // Generate response with current model (gemini-2.5-flash) - v1beta API
     try {
-      console.log('🤖 Initializing Gemini model (v1 API)...');
+      console.log('🤖 Initializing Gemini model (v1beta API)...');
       
       let model;
       let result;
@@ -316,7 +316,7 @@ export const generateAskPulseAIResponse = async (
       // Use conversation history if available
       if (conversationHistory && conversationHistory.length > 0) {
         model = genAI.getGenerativeModel({ 
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
           generationConfig: {
             temperature: 0.7,
             topK: 40,
@@ -342,7 +342,7 @@ export const generateAskPulseAIResponse = async (
       } else {
         // First message - use generateContent
         model = genAI.getGenerativeModel({ 
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
           generationConfig: {
             temperature: 0.7,
             topK: 40,
@@ -386,13 +386,13 @@ export const generateAskPulseAIResponse = async (
         });
       }
       
-      // If gemini-1.5-flash fails, try alternative models available in v1
+      // If gemini-2.5-flash fails, try alternative models available in v1beta
       if (error.message?.includes('not found') || error.status === 404) {
-        console.log('⚠️ Trying alternative model: gemini-1.5-flash-latest...');
+        console.log('⚠️ Trying alternative model: gemini-pro...');
         
         try {
           const fallbackModel = genAI.getGenerativeModel({ 
-            model: 'gemini-1.5-flash-latest',
+            model: 'gemini-pro',
             generationConfig: {
               temperature: 0.7,
               topK: 40,
@@ -521,7 +521,7 @@ export async function testGeminiConnection(): Promise<boolean> {
 
   try {
     const genAI = getGeminiClient(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
     // Simple test prompt
     const result = await model.generateContent('Say "OK" if you can read this.');
