@@ -98,9 +98,21 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
             </button>
           ) : (
             <button
-              onClick={onSignInClick}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔘 Sign In button clicked', { onSignInClick: !!onSignInClick });
+                if (onSignInClick) {
+                  onSignInClick();
+                } else {
+                  console.warn('⚠️ onSignInClick handler is not provided');
+                  // Fallback: navigate directly
+                  window.location.hash = 'auth';
+                }
+              }}
               className="mobile-sign-in-btn"
               aria-label="Sign In"
+              type="button"
             >
               Sign In
             </button>

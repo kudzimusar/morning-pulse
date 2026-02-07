@@ -363,8 +363,10 @@
     white-space: nowrap;
     transition: background 0.2s;
     position: relative;
-    z-index: 11; /* Ensure Sign In button is above everything */
-    pointer-events: auto; /* Explicitly enable pointer events */
+    z-index: 11 !important; /* Ensure Sign In button is above everything */
+    pointer-events: auto !important; /* Explicitly enable pointer events */
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1); /* iOS tap highlight */
+    touch-action: manipulation; /* Disable double-tap zoom on mobile */
   }
   
   .mobile-sign-in-btn:active {

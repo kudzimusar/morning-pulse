@@ -833,6 +833,7 @@ const App: React.FC = () => {
                 onMenuClick={() => setMobileMenuOpen(true)}
                 onNotificationsClick={() => setMobileNotificationsOpen(true)}
                 onSignInClick={() => {
+                  console.log('🔐 Sign In clicked', { userRole, isAuthenticated: !!userRole });
                   // Connect to existing auth system
                   if (userRole && Array.isArray(userRole) && userRole.length > 0) {
                     // User is logged in - navigate to appropriate dashboard/profile
@@ -844,14 +845,15 @@ const App: React.FC = () => {
                       window.location.hash = 'advertiser/dashboard';
                     } else if (userRole.includes('subscriber')) {
                       window.location.hash = 'subscriber/dashboard';
+                    } else if (userRole.includes('reader')) {
+                      // Reader - stay on news feed with personalized content
+                      window.location.hash = 'news';
                     } else {
                       window.location.hash = 'profile';
                     }
-                  } else if (userRole && Array.isArray(userRole) && userRole.includes('reader')) {
-                    // Reader - stay on news feed with personalized content
-                    window.location.hash = 'news';
                   } else {
                     // User not logged in - navigate to unified auth page
+                    console.log('➡️ Navigating to #auth');
                     window.location.hash = 'auth';
                   }
                 }}
