@@ -17,6 +17,7 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
   User
 } from 'firebase/auth';
 import { getApp } from 'firebase/app';

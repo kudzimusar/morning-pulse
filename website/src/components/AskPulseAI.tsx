@@ -236,7 +236,166 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
     return 'Good evening';
   };
 
-  // Article Card Component
+  // Format AI response text - remove markdown artifacts and format nicely
+  const formatAIResponse = (text: string): string => {
+    // Remove markdown-style separators (***)
+    let formatted = text.replace(/\*\*\*/g, '');
+    
+    // Remove excessive line breaks (more than 2 consecutive)
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+    
+    // Clean up spacing around citations
+    formatted = formatted.replace(/\s+\[(\d+)\]/g, ' [$1]');
+    formatted = formatted.replace(/\[(\d+)\]\s+/g, '[$1] ');
+    
+    return formatted.trim();
+  };
+
+  // Compact Article List Item Component (replaces large card boxes)
+  const ArticleListItem: React.FC<{ article: NewsStory; index: number }> = ({ article, index }) => {
+    const handleClick = () => {
+      // Track click analytics
+      trackArticleClick({
+        articleId: article.id,
+        articleTitle: article.headline,
+        category: article.category,
+        position: index,
+        source: 'ai-response',
+      });
+
+      if (article.url) {
+        if (article.url.startsWith('#')) {
+          window.location.hash = article.url.substring(1);
+        } else if (article.url.startsWith('http')) {
+          window.open(article.url, '_blank', 'noopener,noreferrer');
+        } else {
+          window.location.href = article.url;
+        }
+      }
+    };
+
+    return (
+      <div
+        onClick={handleClick}
+        style={{
+          padding: '12px 0',
+          borderBottom: '1px solid #e5e7eb',
+          cursor: article.url ? 'pointer' : 'default',
+          transition: 'background-color 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          if (article.url) {
+            e.currentTarget.style.backgroundColor = '#f9fafb';
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        {/* Header Row: Category + Time */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '6px',
+          gap: '12px'
+        }}>
+          <span style={{
+            background: 'var(--primary-color)',
+            color: 'white',
+            padding: '2px 8px',
+            borderRadius: '6px',
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            flexShrink: 0
+          }}>
+            {article.category}
+          </span>
+          {article.timestamp && (
+            <span style={{
+              fontSize: '0.7rem',
+              color: '#6b7280',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              flexShrink: 0
+            }}>
+              <Clock size={10} />
+              {getTimeAgo(article.timestamp)}
+            </span>
+          )}
+        </div>
+
+        {/* Headline */}
+        <h4 style={{
+          margin: '0 0 6px 0',
+          fontSize: '0.95rem',
+          fontWeight: 700,
+          color: '#111827',
+          lineHeight: 1.4
+        }}>
+          {article.headline}
+        </h4>
+
+        {/* Summary */}
+        <p style={{
+          margin: '0 0 8px 0',
+          fontSize: '0.85rem',
+          color: '#6b7280',
+          lineHeight: 1.5,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden'
+        }}>
+          {article.detail}
+        </p>
+
+        {/* Footer: Read time + Actions */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <span style={{
+            fontSize: '0.75rem',
+            color: '#6b7280',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <BookOpen size={12} />
+            {estimateReadTime(article.detail)} min read
+          </span>
+          
+          <div style={{
+            display: 'flex',
+            gap: '6px',
+            alignItems: 'center'
+          }}>
+            <BookmarkButton
+              articleId={article.id}
+              articleTitle={article.headline}
+              compact
+            />
+            <ShareButtons
+              article={{
+                id: article.id,
+                title: article.headline,
+                url: article.url || `#article/${article.id}`,
+                excerpt: article.detail,
+              }}
+              compact
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Article Card Component (kept for backward compatibility, but not used)
   const ArticleCard: React.FC<{ article: NewsStory; index: number }> = ({ article, index }) => {
     const handleClick = () => {
       // Track click analytics
@@ -635,7 +794,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                   {/* Render message with clickable citations */}
                   {message.role === 'ai' ? (
                     <div>
-                      {message.content.split(/(\[CITATION:\d+\])/).map((part, idx) => {
+                      {/* Format and render AI response text */}
+                      {formatAIResponse(message.content).split(/(\[CITATION:\d+\])/).map((part, idx) => {
                         const citationMatch = part.match(/\[CITATION:(\d+)\]/);
                         if (citationMatch) {
                           const citationIndex = parseInt(citationMatch[1], 10);
@@ -670,12 +830,32 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                         return <span key={idx}>{part}</span>;
                       })}
                       
-                      {/* Enhanced: Article Cards */}
+                      {/* Compact Article List (replaces large card boxes) */}
                       {message.articles && message.articles.length > 0 && (
-                        <div style={{ marginTop: '16px' }}>
-                          {message.articles.map((article, idx) => (
-                            <ArticleCard key={idx} article={article} index={idx} />
-                          ))}
+                        <div style={{ 
+                          marginTop: '20px',
+                          paddingTop: '16px',
+                          borderTop: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#6b7280',
+                            marginBottom: '12px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>
+                            📰 Related Articles ({message.articles.length})
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0'
+                          }}>
+                            {message.articles.map((article, idx) => (
+                              <ArticleListItem key={idx} article={article} index={idx} />
+                            ))}
+                          </div>
                         </div>
                       )}
 
@@ -764,7 +944,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                   whiteSpace: 'pre-wrap',
                   fontFamily: 'var(--font-body)'
                 }}>
-                  {streamingText}
+                  {formatAIResponse(streamingText)}
                   <span style={{ 
                     display: 'inline-block',
                     width: '8px',

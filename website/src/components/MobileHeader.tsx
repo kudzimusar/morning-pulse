@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, Bell, Search, LogIn, User } from 'lucide-react';
+import UserProfileDropdown from './UserProfileDropdown';
 
 interface MobileHeaderProps {
   onLogoClick?: () => void;
@@ -7,6 +8,7 @@ interface MobileHeaderProps {
   onSearchClick?: () => void;
   onNotificationsClick?: () => void;
   onSignInClick?: () => void;
+  onSignOut?: () => void;
   onTabChange?: (tab: 'latest' | 'foryou' | 'askai') => void;
   onTickerClick?: (headline: string) => void;
   onSubscribeClick?: () => void;
@@ -15,6 +17,8 @@ interface MobileHeaderProps {
   isAuthenticated?: boolean;
   notificationCount?: number;
   topHeadlines?: string[];
+  userName?: string;
+  userEmail?: string;
 }
 
 const MobileHeader: React.FC<MobileHeaderProps> = ({
@@ -31,6 +35,9 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
   isAuthenticated = false,
   notificationCount = 0,
   topHeadlines = [],
+  userName = '',
+  userEmail = '',
+  onSignOut
 }) => {
   const handleTabClick = (tab: 'latest' | 'foryou' | 'askai') => {
     if (onTabChange) {
@@ -88,14 +95,19 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
               <Search size={22} />
             </button>
           )}
-          {isAuthenticated ? (
-            <button
-              onClick={onSignInClick}
-              className="mobile-header-icon mobile-touch-target"
-              aria-label="Profile"
-            >
-              <User size={22} />
-            </button>
+          {isAuthenticated && userName && userEmail ? (
+            <UserProfileDropdown
+              userName={userName}
+              userEmail={userEmail}
+              userRole={userRole || []}
+              onSignOut={onSignOut || (() => {})}
+              onProfileClick={() => {
+                window.location.hash = 'profile';
+              }}
+              onPreferencesClick={() => {
+                window.location.hash = 'preferences';
+              }}
+            />
           ) : (
             <button
               onClick={(e) => {

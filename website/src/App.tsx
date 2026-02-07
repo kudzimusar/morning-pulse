@@ -1,7 +1,7 @@
 // Deployment fix attempt 2
 import React, { useState, useEffect } from 'react';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
+import { getAuth, signInAnonymously, Auth, onAuthStateChanged } from 'firebase/auth';
 import Header from './components/Header';
 import MobileHeader from './components/MobileHeader';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
