@@ -8,6 +8,8 @@ import { trackBookmark } from '../../services/analyticsService';
 interface BookmarkButtonProps {
   articleId: string;
   articleTitle: string;
+  articleUrl?: string;
+  articleCategory?: string;
   onBookmark?: (articleId: string, isBookmarked: boolean) => void;
   compact?: boolean;
 }
@@ -15,6 +17,8 @@ interface BookmarkButtonProps {
 export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   articleId,
   articleTitle,
+  articleUrl,
+  articleCategory,
   onBookmark,
   compact = false,
 }) => {
@@ -34,7 +38,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
     setIsBookmarked(newBookmarkedState);
 
     if (newBookmarkedState) {
-      addBookmark(articleId, articleTitle);
+      addBookmark(articleId, articleTitle, articleUrl, articleCategory);
       showToastMessage('Saved for later!');
     } else {
       removeBookmark(articleId);

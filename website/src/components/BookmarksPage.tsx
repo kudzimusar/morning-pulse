@@ -34,9 +34,16 @@ const BookmarksPage: React.FC<BookmarksPageProps> = ({ onBack }) => {
         window.location.hash = bookmark.url.substring(1);
       } else if (bookmark.url.startsWith('http')) {
         window.open(bookmark.url, '_blank', 'noopener,noreferrer');
+      } else if (bookmark.url.startsWith('/')) {
+        // Handle relative paths
+        window.location.hash = bookmark.url.substring(1);
       } else {
-        window.location.href = bookmark.url;
+        // Try to construct URL from article ID if no URL
+        window.location.hash = `article/${bookmark.id}`;
       }
+    } else {
+      // Fallback: try to navigate using article ID
+      window.location.hash = `article/${bookmark.id}`;
     }
   };
 

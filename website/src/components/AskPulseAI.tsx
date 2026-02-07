@@ -185,10 +185,48 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         responseSources
       );
 
-      // Enhanced: Get full article data and related opinions
-      const articleData = responseSources
+      // Enhanced: Get full article data for cited sources
+      const citedArticles = responseSources
         .map(source => getArticleFromSource(source))
         .filter((article): article is NewsStory => article !== null);
+      
+      // Get additional related articles (NOT already cited) for more content variety
+      const citedArticleIds = new Set(citedArticles.map(a => a.id));
+      const allArticles: NewsStory[] = [];
+      Object.values(newsData || {}).forEach(categoryArticles => {
+        allArticles.push(...categoryArticles);
+      });
+      
+      // Find related articles that are NOT already cited (to avoid duplicates)
+      const additionalArticles = allArticles
+        .filter(article => {
+          // Exclude already cited articles (CRITICAL: no duplicates)
+          if (citedArticleIds.has(article.id)) return false;
+          
+          // Also exclude articles with same headline (might be duplicates)
+          const citedHeadlines = new Set(citedArticles.map(a => a.headline?.toLowerCase()));
+          if (article.headline && citedHeadlines.has(article.headline.toLowerCase())) {
+            return false;
+          }
+          
+          // Find articles related to the query topic
+          const queryLower = queryText.toLowerCase();
+          const headlineLower = (article.headline || '').toLowerCase();
+          const detailLower = (article.detail || '').toLowerCase();
+          
+          // Check if article relates to query keywords
+          const queryWords = queryLower.split(/\s+/).filter(w => w.length > 3);
+          const hasMatch = queryWords.some(word => 
+            headlineLower.includes(word) || detailLower.includes(word)
+          );
+          
+          return hasMatch;
+        })
+        .slice(0, 5); // Get up to 5 additional articles for more content variety
+      
+      // Only show additional articles (NOT cited ones) to avoid duplicates
+      // If no additional articles found, show empty list rather than duplicates
+      const articleData = additionalArticles;
       
       const relatedOpinions = getRelatedOpinions(responseSources, 2);
 
@@ -238,8 +276,11 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
 
   // Format AI response text - remove markdown artifacts and format nicely
   const formatAIResponse = (text: string): string => {
-    // Remove markdown-style separators (***)
-    let formatted = text.replace(/\*\*\*/g, '');
+    // Remove markdown-style separators (***, ---, etc.)
+    let formatted = text
+      .replace(/\*\*\*/g, '')
+      .replace(/---+/g, '')
+      .replace(/___+/g, '');
     
     // Remove excessive line breaks (more than 2 consecutive)
     formatted = formatted.replace(/\n{3,}/g, '\n\n');
@@ -249,6 +290,142 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
     formatted = formatted.replace(/\[(\d+)\]\s+/g, '[$1] ');
     
     return formatted.trim();
+  };
+
+  // Render formatted AI response with proper styling
+  const renderFormattedResponse = (text: string, citations?: Map<number, { title: string; url?: string }>): React.ReactNode => {
+    const formatted = formatAIResponse(text);
+    const lines = formatted.split('\n');
+    const elements: React.ReactNode[] = [];
+    
+    lines.forEach((line, idx) => {
+      const trimmed = line.trim();
+      
+      // Skip empty lines (but keep spacing)
+      if (!trimmed) {
+        if (idx > 0 && idx < lines.length - 1 && lines[idx - 1]?.trim()) {
+          elements.push(<div key={`spacer-${idx}`} style={{ height: '8px' }} />);
+        }
+        return;
+      }
+      
+      // Format numbered sections with bold headers (1. **Header**:)
+      const numberedBoldMatch = trimmed.match(/^(\d+)\.\s+\*\*(.+?)\*\*:\s*(.+)$/);
+      if (numberedBoldMatch) {
+        const [, num, header, content] = numberedBoldMatch;
+        elements.push(
+          <div key={idx} style={{ marginTop: idx > 0 ? '16px' : '0', marginBottom: '8px' }}>
+            <strong style={{ fontSize: '1rem', color: '#111827', fontWeight: 700 }}>
+              {num}. {header}
+            </strong>
+          </div>
+        );
+        // Process content with citations
+        const contentParts = content.split(/(\[CITATION:\d+\]|\[\d+\])/);
+        elements.push(
+          <div key={`${idx}-content`} style={{ marginBottom: '12px', lineHeight: 1.6 }}>
+            {contentParts.map((part, partIdx) => {
+              const citationMatch = part.match(/\[CITATION:(\d+)\]|\[(\d+)\]/);
+              if (citationMatch) {
+                const citationIndex = parseInt(citationMatch[1] || citationMatch[2], 10);
+                const citation = citations?.get(citationIndex);
+                if (citation) {
+                  return (
+                    <span
+                      key={partIdx}
+                      style={{
+                        color: 'var(--primary-color)',
+                        textDecoration: 'underline',
+                        cursor: 'pointer',
+                        fontWeight: 500
+                      }}
+                      onClick={() => {
+                        if (citation.url) {
+                          if (citation.url.startsWith('#')) {
+                            window.location.hash = citation.url.substring(1);
+                          } else {
+                            window.open(citation.url, '_blank', 'noopener,noreferrer');
+                          }
+                        }
+                      }}
+                      title={citation.title}
+                    >
+                      [{citationIndex}]
+                    </span>
+                  );
+                }
+                return <span key={partIdx}>[{citationIndex}]</span>;
+              }
+              // Remove any remaining markdown artifacts
+              const cleanPart = part.replace(/\*\*/g, '').trim();
+              return cleanPart ? <span key={partIdx}>{cleanPart}</span> : null;
+            })}
+          </div>
+        );
+        return;
+      }
+      
+      // Format bold headers (text with ** around it ending with :)
+      if (/^\*\*/.test(trimmed) && trimmed.endsWith('**:')) {
+        const boldText = trimmed.replace(/\*\*/g, '').replace(':', '');
+        elements.push(
+          <div key={idx} style={{ 
+            marginTop: idx > 0 ? '16px' : '0',
+            marginBottom: '8px',
+            fontWeight: 700,
+            fontSize: '1rem',
+            color: '#111827'
+          }}>
+            {boldText}
+          </div>
+        );
+        return;
+      }
+      
+      // Regular paragraph - process citations
+      const parts = trimmed.split(/(\[CITATION:\d+\]|\[\d+\])/);
+      elements.push(
+        <div key={idx} style={{ marginBottom: '8px', lineHeight: 1.6 }}>
+          {parts.map((part, partIdx) => {
+            const citationMatch = part.match(/\[CITATION:(\d+)\]|\[(\d+)\]/);
+            if (citationMatch) {
+              const citationIndex = parseInt(citationMatch[1] || citationMatch[2], 10);
+              const citation = citations?.get(citationIndex);
+              if (citation) {
+                return (
+                  <span
+                    key={partIdx}
+                    style={{
+                      color: 'var(--primary-color)',
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                    onClick={() => {
+                      if (citation.url) {
+                        if (citation.url.startsWith('#')) {
+                          window.location.hash = citation.url.substring(1);
+                        } else {
+                          window.open(citation.url, '_blank', 'noopener,noreferrer');
+                        }
+                      }
+                    }}
+                    title={citation.title}
+                  >
+                    [{citationIndex}]
+                  </span>
+                );
+              }
+              return <span key={partIdx}>[{citationIndex}]</span>;
+            }
+            // Remove any remaining markdown bold markers
+            return <span key={partIdx}>{part.replace(/\*\*/g, '')}</span>;
+          })}
+        </div>
+      );
+    });
+    
+    return <div>{elements}</div>;
   };
 
   // Compact Article List Item Component (replaces large card boxes)
@@ -378,6 +555,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
             <BookmarkButton
               articleId={article.id}
               articleTitle={article.headline}
+              articleUrl={article.url}
+              articleCategory={article.category}
               compact
             />
             <ShareButtons
@@ -561,6 +740,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
             <BookmarkButton
               articleId={article.id}
               articleTitle={article.headline}
+              articleUrl={article.url}
+              articleCategory={article.category}
               compact
             />
             <ShareButtons
@@ -794,41 +975,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                   {/* Render message with clickable citations */}
                   {message.role === 'ai' ? (
                     <div>
-                      {/* Format and render AI response text */}
-                      {formatAIResponse(message.content).split(/(\[CITATION:\d+\])/).map((part, idx) => {
-                        const citationMatch = part.match(/\[CITATION:(\d+)\]/);
-                        if (citationMatch) {
-                          const citationIndex = parseInt(citationMatch[1], 10);
-                          const citation = message.citations?.get(citationIndex);
-                          if (citation) {
-                            return (
-                              <span
-                                key={idx}
-                                style={{
-                                  color: 'var(--primary-color)',
-                                  textDecoration: 'underline',
-                                  cursor: 'pointer',
-                                  fontWeight: 500
-                                }}
-                                onClick={() => {
-                                  if (citation.url) {
-                                    if (citation.url.startsWith('#')) {
-                                      window.location.hash = citation.url.substring(1);
-                                    } else {
-                                      window.open(citation.url, '_blank', 'noopener,noreferrer');
-                                    }
-                                  }
-                                }}
-                                title={citation.title}
-                              >
-                                [{citationIndex}]
-                              </span>
-                            );
-                          }
-                          return <span key={idx}>[{citationIndex}]</span>;
-                        }
-                        return <span key={idx}>{part}</span>;
-                      })}
+                      {/* Format and render AI response text with proper formatting */}
+                      {renderFormattedResponse(message.content, message.citations)}
                       
                       {/* Compact Article List (replaces large card boxes) */}
                       {message.articles && message.articles.length > 0 && (
@@ -949,7 +1097,15 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                   whiteSpace: 'pre-wrap',
                   fontFamily: 'var(--font-body)'
                 }}>
-                  {formatAIResponse(streamingText)}
+                  {streamingText.split(/(\[CITATION:\d+\]|\[\d+\])/).map((part, idx) => {
+                    const citationMatch = part.match(/\[CITATION:(\d+)\]|\[(\d+)\]/);
+                    if (citationMatch) {
+                      const citationIndex = parseInt(citationMatch[1] || citationMatch[2], 10);
+                      return <span key={idx}>[{citationIndex}]</span>;
+                    }
+                    // Remove markdown separators from streaming text
+                    return <span key={idx}>{part.replace(/\*\*\*/g, '').replace(/---+/g, '')}</span>;
+                  })}
                   <span style={{ 
                     display: 'inline-block',
                     width: '8px',
