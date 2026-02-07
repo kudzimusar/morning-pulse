@@ -200,11 +200,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#f9fafb', // var(--bg-color)
-      padding: '20px',
+      padding: '20px 20px 40px 20px', // Extra bottom padding to ensure Submit Essay is visible
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: 'var(--font-body, system-ui, -apple-system, sans-serif)'
+      fontFamily: 'var(--font-body, system-ui, -apple-system, sans-serif)',
+      paddingBottom: '40px' // Ensure bottom content is not cut off
     }}>
       <div style={{
         width: '100%',

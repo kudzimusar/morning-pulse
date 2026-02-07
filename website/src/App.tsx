@@ -4,7 +4,6 @@ import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, signInAnonymously, Auth } from 'firebase/auth';
 import Header from './components/Header';
 import MobileHeader from './components/MobileHeader';
-import BottomNav from './components/BottomNav';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
 import MobileSearch from './components/MobileSearch';
 import MobileNotifications from './components/MobileNotifications';
@@ -201,13 +200,6 @@ const App: React.FC = () => {
     // Initialize Google Analytics 4
     initAnalytics();
     
-    // Listen for menu open event from BottomNav
-    const handleMenuOpen = () => setMobileMenuOpen(true);
-    window.addEventListener('openMobileMenu', handleMenuOpen as EventListener);
-    
-    return () => {
-      window.removeEventListener('openMobileMenu', handleMenuOpen as EventListener);
-    };
   }, []); // Empty deps = run only once per session
 
   // Regular state declarations
@@ -1230,13 +1222,6 @@ const App: React.FC = () => {
             </div>
           )}
           
-          {/* Mobile Bottom Navigation - Shown on Mobile Only */}
-          {currentPage !== 'admin' && view === 'public' && (
-            <BottomNav
-              currentPage={currentPage}
-              userRole={userRole}
-            />
-          )}
         </>
       )}
     </div>
