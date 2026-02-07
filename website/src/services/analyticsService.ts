@@ -270,6 +270,408 @@ export const trackComment = (
   });
 };
 
+// ============================================
+// ENHANCED ANALYTICS: CTR, Sessions, Export
+// ============================================
+
+// Session Management
+export interface SessionData {
+  sessionId: string;
+  startTime: number;
+  pageViews: number;
+  articlesViewed: number;
+  queriesMade: number;
+  timeOnSite: number;
+}
+
+// Click-Through Rate Tracking
+interface CTRData {
+  impressions: number;
+  clicks: number;
+}
+
+// Article Click Event
+export interface ArticleClickEvent {
+  articleId: string;
+  articleTitle: string;
+  category: string;
+  position: number;
+  source: 'ai-response' | 'trending' | 'related' | 'search' | 'opinion' | 'news';
+  sessionId?: string;
+}
+
+// Share Event
+export interface ShareEvent {
+  articleId: string;
+  platform: string;
+  sessionId?: string;
+}
+
+// Bookmark Event
+export interface BookmarkEvent {
+  articleId: string;
+  action: 'add' | 'remove';
+  sessionId?: string;
+}
+
+// AI Query Event
+export interface AIQueryEvent {
+  query: string;
+  responseTime: number;
+  articlesReturned: number;
+  sessionId?: string;
+}
+
+// Local Storage Keys
+const SESSION_KEY = 'morning-pulse-session';
+const ANALYTICS_STORAGE_KEY = 'morning-pulse-analytics';
+const CTR_STORAGE_PREFIX = 'morning-pulse-ctr-';
+
+// Get or create session ID
+export const getOrCreateSessionId = (): string => {
+  let sessionId = sessionStorage.getItem(SESSION_KEY);
+  
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem(SESSION_KEY, sessionId);
+  }
+  
+  return sessionId;
+};
+
+// Track article click with CTR calculation
+export const trackArticleClick = (event: ArticleClickEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('article_click', {
+    article_id: event.articleId,
+    article_title: event.articleTitle,
+    category: event.category,
+    position: event.position,
+    source: event.source,
+    session_id: sessionId,
+  });
+  
+  // Update CTR
+  updateCTR(event.source);
+  
+  // Store in local analytics
+  storeLocalEvent('article_click', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track share event
+export const trackShare = (event: ShareEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('share', {
+    article_id: event.articleId,
+    platform: event.platform,
+    session_id: sessionId,
+  });
+  
+  // Also track as engagement
+  trackArticleEngagement(event.articleId, 'share', {
+    platform: event.platform,
+    session_id: sessionId,
+  });
+  
+  // Store in local analytics
+  storeLocalEvent('share', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track bookmark event
+export const trackBookmark = (event: BookmarkEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('bookmark', {
+    article_id: event.articleId,
+    action: event.action,
+    session_id: sessionId,
+  });
+  
+  // Also track as engagement
+  trackArticleEngagement(event.articleId, 'bookmark', {
+    action: event.action,
+    session_id: sessionId,
+  });
+  
+  // Store in local analytics
+  storeLocalEvent('bookmark', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track AI query
+export const trackAIQuery = (event: AIQueryEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('ai_query', {
+    query: event.query,
+    response_time: event.responseTime,
+    articles_returned: event.articlesReturned,
+    session_id: sessionId,
+  });
+  
+  // Store in local analytics
+  storeLocalEvent('ai_query', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track impression (for CTR calculation)
+export const trackImpression = (source: string): void => {
+  try {
+    const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
+    const stored = localStorage.getItem(ctrKey);
+    const ctrData: CTRData = stored ? JSON.parse(stored) : { impressions: 0, clicks: 0 };
+    
+    ctrData.impressions += 1;
+    localStorage.setItem(ctrKey, JSON.stringify(ctrData));
+  } catch (error) {
+    console.error('Error tracking impression:', error);
+  }
+};
+
+// Update CTR when click occurs
+const updateCTR = (source: string): void => {
+  try {
+    const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
+    const stored = localStorage.getItem(ctrKey);
+    const ctrData: CTRData = stored ? JSON.parse(stored) : { impressions: 0, clicks: 0 };
+    
+    ctrData.clicks += 1;
+    localStorage.setItem(ctrKey, JSON.stringify(ctrData));
+  } catch (error) {
+    console.error('Error updating CTR:', error);
+  }
+};
+
+// Get CTR for a source
+export const getCTR = (source: string): number => {
+  try {
+    const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
+    const stored = localStorage.getItem(ctrKey);
+    
+    if (!stored) return 0;
+    
+    const ctrData: CTRData = JSON.parse(stored);
+    
+    if (ctrData.impressions === 0) return 0;
+    
+    return (ctrData.clicks / ctrData.impressions) * 100;
+  } catch (error) {
+    return 0;
+  }
+};
+
+// Local event storage
+interface LocalEvent {
+  eventType: string;
+  timestamp: number;
+  data: Record<string, any>;
+}
+
+const storeLocalEvent = (eventType: string, data: Record<string, any>): void => {
+  try {
+    const events = loadLocalEvents();
+    events.push({
+      eventType,
+      timestamp: Date.now(),
+      data,
+    });
+    
+    // Keep only last 1000 events
+    const recentEvents = events.slice(-1000);
+    localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(recentEvents));
+  } catch (error) {
+    console.error('Error storing local event:', error);
+  }
+};
+
+const loadLocalEvents = (): LocalEvent[] => {
+  try {
+    const stored = localStorage.getItem(ANALYTICS_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+// Get session data
+export const getSessionData = (): SessionData => {
+  const sessionId = getOrCreateSessionId();
+  const sessionStart = sessionStorage.getItem(`${SESSION_KEY}-start`);
+  const startTime = sessionStart ? parseInt(sessionStart, 10) : Date.now();
+  
+  // Load events from local storage
+  const events = loadLocalEvents();
+  const articleClicks = events.filter(e => e.eventType === 'article_click').length;
+  const pageViews = events.filter(e => e.eventType === 'page_view').length;
+  const queries = events.filter(e => e.eventType === 'ai_query').length;
+  
+  return {
+    sessionId,
+    startTime,
+    pageViews,
+    articlesViewed: articleClicks,
+    queriesMade: queries,
+    timeOnSite: Date.now() - startTime,
+  };
+};
+
+// Get top articles by clicks
+export const getTopArticles = (limit: number = 10): Array<{ articleId: string; clicks: number }> => {
+  const events = loadLocalEvents();
+  const clicks = events
+    .filter(e => e.eventType === 'article_click')
+    .map(e => e.data.articleId)
+    .filter(Boolean);
+  
+  const counts = clicks.reduce((acc, id) => {
+    acc[id] = (acc[id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  return Object.entries(counts)
+    .map(([articleId, clicks]) => ({ articleId, clicks }))
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, limit);
+};
+
+// Get popular categories
+export const getPopularCategories = (): Array<{ category: string; views: number }> => {
+  const events = loadLocalEvents();
+  const categories = events
+    .filter(e => e.eventType === 'article_click')
+    .map(e => e.data.category)
+    .filter(Boolean);
+  
+  const counts = categories.reduce((acc, cat) => {
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  return Object.entries(counts)
+    .map(([category, views]) => ({ category, views }))
+    .sort((a, b) => b.views - a.views);
+};
+
+// Get engagement metrics
+export const getEngagementMetrics = (): {
+  totalSessions: number;
+  avgSessionDuration: number;
+  avgQueriesPerSession: number;
+  avgArticlesPerSession: number;
+  ctrBySource: Record<string, number>;
+} => {
+  const sources = ['ai-response', 'trending', 'related', 'search', 'opinion', 'news'];
+  const ctrBySource = sources.reduce((acc, source) => {
+    acc[source] = getCTR(source);
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const sessionData = getSessionData();
+  
+  return {
+    totalSessions: 1, // Current session
+    avgSessionDuration: sessionData.timeOnSite,
+    avgQueriesPerSession: sessionData.queriesMade,
+    avgArticlesPerSession: sessionData.articlesViewed,
+    ctrBySource,
+  };
+};
+
+// Export analytics data
+export const exportAnalyticsData = (): string => {
+  const data = {
+    session: getSessionData(),
+    events: loadLocalEvents(),
+    metrics: getEngagementMetrics(),
+    topArticles: getTopArticles(20),
+    categories: getPopularCategories(),
+    ctrBySource: getEngagementMetrics().ctrBySource,
+  };
+  
+  return JSON.stringify(data, null, 2);
+};
+
+// Download analytics report
+export const downloadAnalyticsReport = (): void => {
+  const data = exportAnalyticsData();
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `morning-pulse-analytics-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// React hook for analytics
+export const useAnalytics = () => {
+  const trackClick = (event: ArticleClickEvent) => {
+    trackArticleClick(event);
+  };
+  
+  const trackShareEvent = (event: ShareEvent) => {
+    trackShare(event);
+  };
+  
+  const trackBookmarkEvent = (event: BookmarkEvent) => {
+    trackBookmark(event);
+  };
+  
+  const trackQuery = (event: AIQueryEvent) => {
+    trackAIQuery(event);
+  };
+  
+  const getMetrics = () => {
+    return getEngagementMetrics();
+  };
+  
+  return {
+    trackClick,
+    trackShare: trackShareEvent,
+    trackBookmark: trackBookmarkEvent,
+    trackQuery,
+    getMetrics,
+    exportData: exportAnalyticsData,
+    downloadReport: downloadAnalyticsReport,
+    getSessionData,
+  };
+};
+
+// Initialize session on page load
+if (typeof window !== 'undefined') {
+  const sessionId = getOrCreateSessionId();
+  if (!sessionStorage.getItem(`${SESSION_KEY}-start`)) {
+    sessionStorage.setItem(`${SESSION_KEY}-start`, Date.now().toString());
+  }
+  
+  // Track page view
+  storeLocalEvent('page_view', {
+    sessionId,
+    page: window.location.pathname,
+    timestamp: Date.now(),
+  });
+}
+
 // Initialize analytics on page load
 export const initAnalytics = (): void => {
   // Only initialize if GA_MEASUREMENT_ID is configured
@@ -388,6 +790,408 @@ export const getAnalyticsSummary = async (db: any, period: 'day' | 'week' | 'mon
 
   return getMockAnalytics();
 };
+
+// ============================================
+// ENHANCED ANALYTICS: CTR, Sessions, Export
+// ============================================
+
+// Session Management
+interface SessionData {
+  sessionId: string;
+  startTime: number;
+  pageViews: number;
+  articlesViewed: number;
+  queriesMade: number;
+  timeOnSite: number;
+}
+
+// Click-Through Rate Tracking
+interface CTRData {
+  impressions: number;
+  clicks: number;
+}
+
+// Article Click Event
+export interface ArticleClickEvent {
+  articleId: string;
+  articleTitle: string;
+  category: string;
+  position: number;
+  source: 'ai-response' | 'trending' | 'related' | 'search' | 'opinion' | 'news';
+  sessionId?: string;
+}
+
+// Share Event
+export interface ShareEvent {
+  articleId: string;
+  platform: string;
+  sessionId?: string;
+}
+
+// Bookmark Event
+export interface BookmarkEvent {
+  articleId: string;
+  action: 'add' | 'remove';
+  sessionId?: string;
+}
+
+// AI Query Event
+export interface AIQueryEvent {
+  query: string;
+  responseTime: number;
+  articlesReturned: number;
+  sessionId?: string;
+}
+
+// Local Storage Keys
+const SESSION_KEY = 'morning-pulse-session';
+const ANALYTICS_STORAGE_KEY = 'morning-pulse-analytics';
+const CTR_STORAGE_PREFIX = 'morning-pulse-ctr-';
+
+// Get or create session ID
+export const getOrCreateSessionId = (): string => {
+  let sessionId = sessionStorage.getItem(SESSION_KEY);
+  
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem(SESSION_KEY, sessionId);
+  }
+  
+  return sessionId;
+};
+
+// Track article click with CTR calculation
+export const trackArticleClick = (event: ArticleClickEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('article_click', {
+    article_id: event.articleId,
+    article_title: event.articleTitle,
+    category: event.category,
+    position: event.position,
+    source: event.source,
+    session_id: sessionId,
+  });
+  
+  // Update CTR
+  updateCTR(event.source);
+  
+  // Store in local analytics
+  storeLocalEvent('article_click', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track share event
+export const trackShare = (event: ShareEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('share', {
+    article_id: event.articleId,
+    platform: event.platform,
+    session_id: sessionId,
+  });
+  
+  // Also track as engagement
+  trackArticleEngagement(event.articleId, 'share', {
+    platform: event.platform,
+    session_id: sessionId,
+  });
+  
+  // Store in local analytics
+  storeLocalEvent('share', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track bookmark event
+export const trackBookmark = (event: BookmarkEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('bookmark', {
+    article_id: event.articleId,
+    action: event.action,
+    session_id: sessionId,
+  });
+  
+  // Also track as engagement
+  trackArticleEngagement(event.articleId, 'bookmark', {
+    action: event.action,
+    session_id: sessionId,
+  });
+  
+  // Store in local analytics
+  storeLocalEvent('bookmark', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track AI query
+export const trackAIQuery = (event: AIQueryEvent): void => {
+  const sessionId = event.sessionId || getOrCreateSessionId();
+  
+  // Track in GA4
+  trackEvent('ai_query', {
+    query: event.query,
+    response_time: event.responseTime,
+    articles_returned: event.articlesReturned,
+    session_id: sessionId,
+  });
+  
+  // Store in local analytics
+  storeLocalEvent('ai_query', {
+    ...event,
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+// Track impression (for CTR calculation)
+export const trackImpression = (source: string): void => {
+  try {
+    const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
+    const stored = localStorage.getItem(ctrKey);
+    const ctrData: CTRData = stored ? JSON.parse(stored) : { impressions: 0, clicks: 0 };
+    
+    ctrData.impressions += 1;
+    localStorage.setItem(ctrKey, JSON.stringify(ctrData));
+  } catch (error) {
+    console.error('Error tracking impression:', error);
+  }
+};
+
+// Update CTR when click occurs
+const updateCTR = (source: string): void => {
+  try {
+    const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
+    const stored = localStorage.getItem(ctrKey);
+    const ctrData: CTRData = stored ? JSON.parse(stored) : { impressions: 0, clicks: 0 };
+    
+    ctrData.clicks += 1;
+    localStorage.setItem(ctrKey, JSON.stringify(ctrData));
+  } catch (error) {
+    console.error('Error updating CTR:', error);
+  }
+};
+
+// Get CTR for a source
+export const getCTR = (source: string): number => {
+  try {
+    const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
+    const stored = localStorage.getItem(ctrKey);
+    
+    if (!stored) return 0;
+    
+    const ctrData: CTRData = JSON.parse(stored);
+    
+    if (ctrData.impressions === 0) return 0;
+    
+    return (ctrData.clicks / ctrData.impressions) * 100;
+  } catch (error) {
+    return 0;
+  }
+};
+
+// Get session data
+export const getSessionData = (): SessionData => {
+  const sessionId = getOrCreateSessionId();
+  const sessionStart = sessionStorage.getItem(`${SESSION_KEY}-start`);
+  const startTime = sessionStart ? parseInt(sessionStart, 10) : Date.now();
+  
+  // Load events from local storage
+  const events = loadLocalEvents();
+  const articleClicks = events.filter(e => e.eventType === 'article_click').length;
+  const pageViews = events.filter(e => e.eventType === 'page_view').length;
+  const queries = events.filter(e => e.eventType === 'ai_query').length;
+  
+  return {
+    sessionId,
+    startTime,
+    pageViews,
+    articlesViewed: articleClicks,
+    queriesMade: queries,
+    timeOnSite: Date.now() - startTime,
+  };
+};
+
+// Local event storage
+interface LocalEvent {
+  eventType: string;
+  timestamp: number;
+  data: Record<string, any>;
+}
+
+const storeLocalEvent = (eventType: string, data: Record<string, any>): void => {
+  try {
+    const events = loadLocalEvents();
+    events.push({
+      eventType,
+      timestamp: Date.now(),
+      data,
+    });
+    
+    // Keep only last 1000 events
+    const recentEvents = events.slice(-1000);
+    localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(recentEvents));
+  } catch (error) {
+    console.error('Error storing local event:', error);
+  }
+};
+
+const loadLocalEvents = (): LocalEvent[] => {
+  try {
+    const stored = localStorage.getItem(ANALYTICS_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+// Get top articles by clicks
+export const getTopArticles = (limit: number = 10): Array<{ articleId: string; clicks: number }> => {
+  const events = loadLocalEvents();
+  const clicks = events
+    .filter(e => e.eventType === 'article_click')
+    .map(e => e.data.articleId)
+    .filter(Boolean);
+  
+  const counts = clicks.reduce((acc, id) => {
+    acc[id] = (acc[id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  return Object.entries(counts)
+    .map(([articleId, clicks]) => ({ articleId, clicks }))
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, limit);
+};
+
+// Get popular categories
+export const getPopularCategories = (): Array<{ category: string; views: number }> => {
+  const events = loadLocalEvents();
+  const categories = events
+    .filter(e => e.eventType === 'article_click')
+    .map(e => e.data.category)
+    .filter(Boolean);
+  
+  const counts = categories.reduce((acc, cat) => {
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  return Object.entries(counts)
+    .map(([category, views]) => ({ category, views }))
+    .sort((a, b) => b.views - a.views);
+};
+
+// Get engagement metrics
+export const getEngagementMetrics = (): {
+  totalSessions: number;
+  avgSessionDuration: number;
+  avgQueriesPerSession: number;
+  avgArticlesPerSession: number;
+  ctrBySource: Record<string, number>;
+} => {
+  const sources = ['ai-response', 'trending', 'related', 'search', 'opinion', 'news'];
+  const ctrBySource = sources.reduce((acc, source) => {
+    acc[source] = getCTR(source);
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const sessionData = getSessionData();
+  
+  return {
+    totalSessions: 1, // Current session
+    avgSessionDuration: sessionData.timeOnSite,
+    avgQueriesPerSession: sessionData.queriesMade,
+    avgArticlesPerSession: sessionData.articlesViewed,
+    ctrBySource,
+  };
+};
+
+// Export analytics data
+export const exportAnalyticsData = (): string => {
+  const data = {
+    session: getSessionData(),
+    events: loadLocalEvents(),
+    metrics: getEngagementMetrics(),
+    topArticles: getTopArticles(20),
+    categories: getPopularCategories(),
+    ctrBySource: getEngagementMetrics().ctrBySource,
+  };
+  
+  return JSON.stringify(data, null, 2);
+};
+
+// Download analytics report
+export const downloadAnalyticsReport = (): void => {
+  const data = exportAnalyticsData();
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `morning-pulse-analytics-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// React hook for analytics
+export const useAnalytics = () => {
+  const trackClick = (event: ArticleClickEvent) => {
+    trackArticleClick(event);
+  };
+  
+  const trackShare = (event: ShareEvent) => {
+    trackShare(event);
+  };
+  
+  const trackBookmark = (event: BookmarkEvent) => {
+    trackBookmark(event);
+  };
+  
+  const trackQuery = (event: AIQueryEvent) => {
+    trackAIQuery(event);
+  };
+  
+  const getMetrics = () => {
+    return getEngagementMetrics();
+  };
+  
+  return {
+    trackClick,
+    trackShare,
+    trackBookmark,
+    trackQuery,
+    getMetrics,
+    exportData: exportAnalyticsData,
+    downloadReport: downloadAnalyticsReport,
+    getSessionData,
+  };
+};
+
+// Initialize session on page load
+if (typeof window !== 'undefined') {
+  const sessionId = getOrCreateSessionId();
+  if (!sessionStorage.getItem(`${SESSION_KEY}-start`)) {
+    sessionStorage.setItem(`${SESSION_KEY}-start`, Date.now().toString());
+  }
+  
+  // Track page view
+  storeLocalEvent('page_view', {
+    sessionId,
+    page: window.location.pathname,
+    timestamp: Date.now(),
+  });
+}
 
 /**
  * Generate high-quality mock analytics data for "Pre-Flight" demo

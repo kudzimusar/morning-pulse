@@ -3,6 +3,9 @@ import { Send, Sparkles, Loader2, ArrowUp, ExternalLink, Clock, BookOpen } from 
 import { generateAskPulseAIResponseStream, convertToChatHistory, formatResponseWithCitations } from '../services/askPulseAIService';
 import { subscribeToPublishedOpinions } from '../services/opinionsService';
 import { NewsStory, Opinion } from '../../types';
+import { BookmarkButton } from './AskPulseAI/BookmarkButton';
+import { ShareButtons } from './AskPulseAI/ShareButtons';
+import { trackArticleClick, trackAIQuery, getOrCreateSessionId } from '../services/analyticsService';
 
 interface AskPulseAIProps {
   onClose?: () => void;
@@ -137,6 +140,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
     const userMessage: MessageWithSources = { role: 'user', content: queryText };
     setMessages(prev => [...prev, userMessage]);
 
+    const startTime = Date.now();
+
     try {
       // Convert previous messages to chat history (excluding current user message)
       const previousMessages = messages.filter(m => m.role === 'ai' || (m.role === 'user' && m.content !== queryText));
@@ -186,6 +191,13 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
       
       const relatedOpinions = getRelatedOpinions(responseSources, 2);
 
+      // Track AI query analytics
+      trackAIQuery({
+        query: queryText,
+        responseTime: Date.now() - startTime,
+        articlesReturned: articleData.length,
+      });
+
       const aiMessage: MessageWithSources = {
         role: 'ai',
         content: formattedText,
@@ -226,6 +238,15 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   // Article Card Component
   const ArticleCard: React.FC<{ article: NewsStory; index: number }> = ({ article, index }) => {
     const handleClick = () => {
+      // Track click analytics
+      trackArticleClick({
+        articleId: article.id,
+        articleTitle: article.headline,
+        category: article.category,
+        position: index,
+        source: 'ai-response',
+      });
+
       if (article.url) {
         // Open in same tab to drive traffic to main site
         if (article.url.startsWith('#')) {
@@ -366,6 +387,31 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                 Read full story <ExternalLink size={14} />
               </span>
             )}
+          </div>
+          
+          {/* Action Buttons: Bookmark and Share */}
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            marginTop: '12px',
+            paddingTop: '12px',
+            borderTop: '1px solid #e5e7eb',
+            justifyContent: 'flex-end'
+          }}>
+            <BookmarkButton
+              articleId={article.id}
+              articleTitle={article.headline}
+              compact
+            />
+            <ShareButtons
+              article={{
+                id: article.id,
+                title: article.headline,
+                url: article.url || `#article/${article.id}`,
+                excerpt: article.detail,
+              }}
+              compact
+            />
           </div>
         </div>
       </div>

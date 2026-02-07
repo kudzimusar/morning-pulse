@@ -283,12 +283,16 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    position: relative;
+    z-index: 10; /* Ensure left buttons are above the logo */
   }
   
   .mobile-header-top-right {
     display: flex;
     align-items: center;
     gap: 8px;
+    position: relative;
+    z-index: 10; /* Ensure buttons are above the logo */
   }
   
   .mobile-header-logo {
@@ -305,6 +309,8 @@
     cursor: pointer;
     padding: 0;
     white-space: nowrap;
+    z-index: 1; /* Logo should be behind buttons */
+    pointer-events: auto; /* Ensure logo is still clickable */
   }
   
   .mobile-header-icon {
@@ -356,10 +362,17 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.2s;
+    position: relative;
+    z-index: 11; /* Ensure Sign In button is above everything */
+    pointer-events: auto; /* Explicitly enable pointer events */
   }
   
   .mobile-sign-in-btn:active {
     background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .mobile-sign-in-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
   }
   
   /* Row 2: Navigation Tabs (White Background) - Reduced Height */
