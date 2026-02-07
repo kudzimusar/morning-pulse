@@ -1,26 +1,14 @@
 /**
  * Ask The Pulse AI Service
  * RAG-based chatbot using backend proxy for secure Gemini API access
+ * Enhanced with comprehensive AI rules and conversation tracking
  * 
  * CRITICAL: All API calls go through askPulseAIProxy Cloud Function
  * API key is never exposed in frontend code
  */
 
-import { NewsStory } from '../../types';
-
-// Editorial System Prompt (Non-negotiable)
-const EDITORIAL_SYSTEM_PROMPT = `You are "Ask The Pulse AI," an editorial assistant for Morning Pulse.
-
-Rules:
-- You ONLY answer using Morning Pulse reporting provided below.
-- If reporting does not exist, say: "Morning Pulse has not yet published reporting on this topic."
-- Maintain a newsroom editorial tone: factual, concise, contextual.
-- Do NOT speculate.
-- Do NOT invent sources.
-- Do NOT speak like a generic AI assistant.
-- Refer to Morning Pulse as "we" or "our newsroom" when appropriate.
-- Keep responses concise and focused on the user's question.
-- If the user asks about topics not covered in the provided articles, clearly state that Morning Pulse has not yet published on that topic.`;
+import { NewsStory, Opinion } from '../../../types';
+import { AI_SYSTEM_PROMPT, AI_ARTICLE_ANALYSIS_PROMPT, updateConversationContext, ConversationContext } from './aiPromptRules';
 
 interface AskPulseAIResponse {
   text: string;
@@ -37,19 +25,73 @@ interface StreamChunk {
   done: boolean;
 }
 
+interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+// Conversation state manager
+class ConversationManager {
+  private context: ConversationContext = {
+    entities: new Set(),
+    topics: new Set(),
+    articles: new Set(),
+  };
+
+  private history: ConversationMessage[] = [];
+
+  updateContext(userMessage: string, aiResponse: string): void {
+    this.context = updateConversationContext(this.context, userMessage, aiResponse);
+  }
+
+  addToHistory(role: 'user' | 'assistant', content: string): void {
+    this.history.push({ role, content });
+    
+    // Keep only last 10 messages (5 exchanges)
+    if (this.history.length > 10) {
+      this.history = this.history.slice(-10);
+    }
+  }
+
+  getContext(): ConversationContext {
+    return this.context;
+  }
+
+  getHistory(): ConversationMessage[] {
+    return this.history;
+  }
+
+  getPreviousEntities(): string[] {
+    return Array.from(this.context.entities);
+  }
+
+  reset(): void {
+    this.context = {
+      entities: new Set(),
+      topics: new Set(),
+      articles: new Set(),
+    };
+    this.history = [];
+  }
+}
+
+// Global conversation manager (one per session)
+const conversationManager = new ConversationManager();
+
 /**
  * Retrieve relevant articles from newsData based on user query
- * Improved keyword-based retrieval with better scoring
+ * Enhanced with question-based retrieval and category variety (2 per category)
  */
 const retrieveRelevantArticles = (
   query: string,
   newsData: { [category: string]: NewsStory[] },
-  topK: number = 5
+  topK: number = 10
 ): NewsStory[] => {
   const queryLower = query.toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
   
-  const allArticles: (NewsStory & { score: number })[] = [];
+  // Step 1: Score all articles based on question relevance
+  const allArticles: (NewsStory & { score: number; category: string })[] = [];
   
   Object.entries(newsData).forEach(([category, articles]) => {
     articles.forEach(article => {
@@ -64,11 +106,12 @@ const retrieveRelevantArticles = (
         score += 10;
       }
       
-      // Word matches in headline
+      // Word matches in headline (prioritize question intent)
       queryWords.forEach(word => {
         if (headlineLower.includes(word)) score += 3;
         if (detailLower.includes(word)) score += 1;
-        if (categoryLower.includes(word)) score += 2;
+        // Category match is less important than content match
+        if (categoryLower.includes(word)) score += 1;
       });
       
       // Recency boost
@@ -79,60 +122,132 @@ const retrieveRelevantArticles = (
       }
       
       if (score > 0) {
-        allArticles.push({ ...article, score });
+        allArticles.push({ ...article, score, category });
       }
     });
   });
   
-  // Sort by score and return top K
-  return allArticles
+  // Step 2: Group by category
+  const articlesByCategory = new Map<string, (NewsStory & { score: number })[]>();
+  allArticles.forEach(article => {
+    const cat = article.category || 'Other';
+    if (!articlesByCategory.has(cat)) {
+      articlesByCategory.set(cat, []);
+    }
+    articlesByCategory.get(cat)!.push(article);
+  });
+  
+  // Step 3: Take top 2 from each category (ensuring variety)
+  const diverseArticles: (NewsStory & { score: number })[] = [];
+  articlesByCategory.forEach((categoryArticles, category) => {
+    // Sort by score within category
+    const sorted = categoryArticles.sort((a, b) => b.score - a.score);
+    // Take top 2 from each category
+    const topFromCategory = sorted.slice(0, 2);
+    diverseArticles.push(...topFromCategory);
+  });
+  
+  // Step 4: Sort by score and return top K
+  return diverseArticles
     .sort((a, b) => b.score - a.score)
     .slice(0, topK)
     .map(({ score, ...article }) => article);
 };
 
 /**
- * Construct grounded prompt with retrieved articles
+ * Construct grounded prompt with retrieved articles and opinions
+ * Uses comprehensive AI rules for intelligent, contextual responses
  */
 const constructPrompt = (
   userQuestion: string,
-  articles: NewsStory[]
+  articles: NewsStory[],
+  opinions?: Opinion[],
+  conversationHistory?: ConversationMessage[],
+  previousEntities?: string[]
 ): string => {
-  const systemPrompt = `You are Ask The Pulse AI, an editorial assistant for Morning Pulse news.
+  let prompt = AI_SYSTEM_PROMPT;
 
-CRITICAL RULES:
-1. Answer ONLY using the provided articles below
-2. If the articles don't contain relevant information, say: "I don't have information about that in Morning Pulse's recent reporting."
-3. Be concise and factual - cite the article source for each claim using [1], [2], etc.
-4. Format responses in clean paragraphs (no markdown unless asked)
-5. If asked for sources, list the article headlines
-6. Do not speculate or add external information
+  // Add conversation context if available
+  if (conversationHistory && conversationHistory.length > 0) {
+    const recentContext = conversationHistory.slice(-3); // Last 3 exchanges
+    prompt += `\n\nRECENT CONVERSATION:\n${recentContext.map(msg => 
+      `${msg.role}: ${msg.content}`
+    ).join('\n')}`;
+  }
 
-AVAILABLE ARTICLES:
-${articles.length > 0
-  ? articles.map((article, idx) => {
-      const title = article.headline || 'Untitled';
-      const detail = article.detail || '';
-      const category = article.category || '';
-      const source = article.source || '';
-      const date = article.date || (article.timestamp 
-        ? new Date(article.timestamp).toLocaleDateString()
-        : 'Recent');
-      
-      return `[${idx + 1}] ${title}
-   Category: ${category}
-   Details: ${detail}
-   Source: ${source}
-   Date: ${date}
-   ---`;
-    }).join('\n')
-  : 'No relevant Morning Pulse articles found for this query.'}
+  // Add entity tracking
+  if (previousEntities && previousEntities.length > 0) {
+    prompt += `\n\nENTITIES MENTIONED IN CONVERSATION: ${previousEntities.join(', ')}`;
+    prompt += `\nWhen user uses pronouns, these may refer to the above entities.`;
+  }
 
-USER QUESTION: ${userQuestion}
+  // Add article analysis prompt
+  prompt += `\n\n${AI_ARTICLE_ANALYSIS_PROMPT}`;
 
-Provide a helpful answer based solely on the articles above. If relevant, mention which article(s) you're citing using [1], [2], etc.`;
+  // Add articles
+  prompt += `\n\nAVAILABLE ARTICLES (Use ONLY these for your answer):\n\n`;
+  
+  articles.forEach((article, index) => {
+    const title = article.headline || 'Untitled';
+    const detail = article.detail || '';
+    const category = article.category || '';
+    const source = article.source || '';
+    const date = article.date || (article.timestamp 
+      ? new Date(article.timestamp).toLocaleDateString()
+      : 'Recent');
+    
+    prompt += `[${index + 1}] ${title}\n`;
+    prompt += `Category: ${category}\n`;
+    if (source) prompt += `Source: ${source}\n`;
+    prompt += `Content: ${detail}\n`;
+    prompt += `Date: ${date}\n\n`;
+  });
 
-  return systemPrompt;
+  // Add opinions section (top 3 most recent)
+  if (opinions && opinions.length > 0) {
+    const publishedOpinions = opinions
+      .filter(op => op.isPublished && op.publishedAt)
+      .sort((a, b) => {
+        const dateA = a.publishedAt?.getTime() || 0;
+        const dateB = b.publishedAt?.getTime() || 0;
+        return dateB - dateA; // Newest first
+      })
+      .slice(0, 3); // Top 3 most recent
+
+    if (publishedOpinions.length > 0) {
+      prompt += `\n\nPUBLISHED OPINIONS & EDITORIALS:\n\n`;
+      publishedOpinions.forEach((opinion, idx) => {
+        const articleIndex = articles.length + idx + 1;
+        prompt += `[OPINION ${idx + 1}] ${opinion.headline}\n`;
+        prompt += `Category: ${opinion.category || 'Opinion'}\n`;
+        prompt += `Summary: ${opinion.subHeadline || ''}\n`;
+        prompt += `Author: ${opinion.authorName || 'Editorial Team'}\n`;
+        if (opinion.authorTitle) prompt += `Author Title: ${opinion.authorTitle}\n`;
+        prompt += `Published: ${opinion.publishedAt?.toLocaleDateString() || 'Recent'}\n`;
+        prompt += `Content: ${opinion.body.substring(0, 500)}${opinion.body.length > 500 ? '...' : ''}\n\n`;
+      });
+      prompt += `\nNote: When citing opinions, use [OPINION 1], [OPINION 2], etc. to distinguish from news articles.\n`;
+    }
+  }
+
+  // Add the user's question
+  prompt += `\n\nUSER QUESTION: ${userQuestion}\n\n`;
+  
+  // Add response instructions
+  prompt += `INSTRUCTIONS FOR YOUR RESPONSE:
+1. Analyze the question to understand what type of information is needed (who, what, where, when, why, how)
+2. Search through ALL articles and opinions for relevant information
+3. Extract specific details that answer the question
+4. Cite sources using [1], [2], etc. for articles and [OPINION 1], [OPINION 2], etc. for opinions
+5. If the question references previous conversation, use that context
+6. If pronouns are used (he, she, they), determine who they refer to from context
+7. Provide a comprehensive, accurate answer based on user intent, not just categories
+8. If information is not available, say so clearly
+9. When multiple categories are available, provide a balanced summary across categories
+
+YOUR ANSWER:`;
+
+  return prompt;
 };
 
 /**
@@ -148,17 +263,23 @@ const getProxyUrl = (): string => {
 /**
  * Generate AI response using backend proxy (secure - no API key in frontend)
  * Streaming support via Server-Sent Events
+ * Enhanced with conversation tracking and opinions support
  */
 export const generateAskPulseAIResponseStream = async function* (
   userQuestion: string,
   newsData: { [category: string]: NewsStory[] },
-  conversationHistory?: ChatMessage[]
+  conversationHistory?: ChatMessage[],
+  opinions?: Opinion[]
 ): AsyncGenerator<StreamChunk, AskPulseAIResponse, unknown> {
   try {
     const proxyUrl = getProxyUrl();
 
-    // Retrieve relevant articles (for sources)
-    const relevantArticles = retrieveRelevantArticles(userQuestion, newsData, 5);
+    // Retrieve relevant articles with category variety (2 per category)
+    const relevantArticles = retrieveRelevantArticles(userQuestion, newsData, 10);
+
+    // Get conversation context
+    const convHistory = conversationManager.getHistory();
+    const previousEntities = conversationManager.getPreviousEntities();
 
     // Call backend proxy
     const response = await fetch(proxyUrl, {
@@ -169,7 +290,12 @@ export const generateAskPulseAIResponseStream = async function* (
       body: JSON.stringify({
         question: userQuestion,
         newsData,
-        conversationHistory,
+        conversationHistory: conversationHistory || convertToChatHistory(convHistory.map(msg => ({
+          role: msg.role === 'assistant' ? 'ai' : 'user',
+          content: msg.content
+        }))),
+        opinions: opinions || [],
+        previousEntities,
         stream: true
       })
     });
@@ -206,6 +332,10 @@ export const generateAskPulseAIResponseStream = async function* (
                 text: data.fullText || fullText,
                 sources: data.sources || []
               };
+              // Update conversation context after response
+              conversationManager.addToHistory('user', userQuestion);
+              conversationManager.addToHistory('assistant', data.fullText || fullText);
+              conversationManager.updateContext(userQuestion, data.fullText || fullText);
             } else if (data.text) {
               fullText += data.text;
               yield { text: data.text, done: false };
@@ -254,19 +384,31 @@ export const generateAskPulseAIResponseStream = async function* (
 /**
  * Generate AI response using backend proxy (non-streaming, for backward compatibility)
  * Secure - no API key in frontend
+ * Enhanced with conversation tracking and opinions support
  */
 export const generateAskPulseAIResponse = async (
   userQuestion: string,
   newsData: { [category: string]: NewsStory[] },
-  conversationHistory?: ChatMessage[]
+  conversationHistory?: ChatMessage[],
+  opinions?: Opinion[]
 ): Promise<AskPulseAIResponse> => {
   try {
     const proxyUrl = getProxyUrl();
 
+    // Retrieve relevant articles with category variety
+    const relevantArticles = retrieveRelevantArticles(userQuestion, newsData, 10);
+
+    // Get conversation context
+    const convHistory = conversationManager.getHistory();
+    const previousEntities = conversationManager.getPreviousEntities();
+
     // Log request details
     console.log('🔍 Ask Pulse AI Request:', {
       question: userQuestion,
-      articlesAvailable: Object.keys(newsData || {}).length
+      articlesAvailable: Object.keys(newsData || {}).length,
+      relevantArticles: relevantArticles.length,
+      opinionsAvailable: opinions?.length || 0,
+      conversationHistory: convHistory.length
     });
 
     // Call backend proxy
@@ -278,7 +420,12 @@ export const generateAskPulseAIResponse = async (
       body: JSON.stringify({
         question: userQuestion,
         newsData,
-        conversationHistory,
+        conversationHistory: conversationHistory || convertToChatHistory(convHistory.map(msg => ({
+          role: msg.role === 'assistant' ? 'ai' : 'user',
+          content: msg.content
+        }))),
+        opinions: opinions || [],
+        previousEntities,
         stream: false
       })
     });
@@ -290,8 +437,15 @@ export const generateAskPulseAIResponse = async (
 
     const data = await response.json();
 
+    const responseText = data.text || "I'm sorry, I couldn't generate a response.";
+    
+    // Update conversation context
+    conversationManager.addToHistory('user', userQuestion);
+    conversationManager.addToHistory('assistant', responseText);
+    conversationManager.updateContext(userQuestion, responseText);
+
     return {
-      text: data.text || "I'm sorry, I couldn't generate a response.",
+      text: responseText,
       sources: data.sources || []
     };
   } catch (error: any) {
@@ -325,6 +479,35 @@ export function convertToChatHistory(
       parts: [{ text: msg.content }]
     }));
 }
+
+/**
+ * Reset conversation context
+ */
+export const resetConversation = (): void => {
+  conversationManager.reset();
+  console.log('🔄 [resetConversation] Conversation context cleared');
+};
+
+/**
+ * Get current conversation context
+ */
+export const getConversationContext = (): ConversationContext => {
+  return conversationManager.getContext();
+};
+
+/**
+ * Get conversation history
+ */
+export const getConversationHistory = (): ConversationMessage[] => {
+  return conversationManager.getHistory();
+};
+
+/**
+ * Get entities mentioned in conversation
+ */
+export const getEntitiesMentioned = (): string[] => {
+  return conversationManager.getPreviousEntities();
+};
 
 /**
  * Parse source citations from response text and return formatted text with clickable links

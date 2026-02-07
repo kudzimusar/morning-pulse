@@ -31,11 +31,13 @@ const setCorsHeaders = (res) => {
 
 /**
  * Retrieve relevant articles from newsData based on user query
+ * Enhanced with category variety (2 per category) and question-based retrieval
  */
-function retrieveRelevantArticles(query, newsData, topK = 5) {
+function retrieveRelevantArticles(query, newsData, topK = 10) {
   const queryLower = query.toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
   
+  // Step 1: Score all articles based on question relevance
   const allArticles = [];
   
   Object.entries(newsData || {}).forEach(([category, articles]) => {
@@ -51,11 +53,12 @@ function retrieveRelevantArticles(query, newsData, topK = 5) {
         score += 10;
       }
       
-      // Word matches
+      // Word matches (prioritize question intent over category)
       queryWords.forEach(word => {
         if (headlineLower.includes(word)) score += 3;
         if (detailLower.includes(word)) score += 1;
-        if (categoryLower.includes(word)) score += 2;
+        // Category match is less important than content match
+        if (categoryLower.includes(word)) score += 1;
       });
       
       // Recency boost
@@ -66,57 +69,207 @@ function retrieveRelevantArticles(query, newsData, topK = 5) {
       }
       
       if (score > 0) {
-        allArticles.push({ ...article, score });
+        allArticles.push({ ...article, score, category });
       }
     });
   });
   
-  // Sort by score and return top K
-  return allArticles
+  // Step 2: Group by category
+  const articlesByCategory = {};
+  allArticles.forEach(article => {
+    const cat = article.category || 'Other';
+    if (!articlesByCategory[cat]) {
+      articlesByCategory[cat] = [];
+    }
+    articlesByCategory[cat].push(article);
+  });
+  
+  // Step 3: Take top 2 from each category (ensuring variety)
+  const diverseArticles = [];
+  Object.keys(articlesByCategory).forEach(category => {
+    // Sort by score within category
+    const sorted = articlesByCategory[category].sort((a, b) => b.score - a.score);
+    // Take top 2 from each category
+    const topFromCategory = sorted.slice(0, 2);
+    diverseArticles.push(...topFromCategory);
+  });
+  
+  // Step 4: Sort by score and return top K
+  return diverseArticles
     .sort((a, b) => b.score - a.score)
     .slice(0, topK)
-    .map(({ score, ...article }) => article);
+    .map(({ score, category, ...article }) => article);
 }
 
 /**
- * Construct grounded prompt with retrieved articles
+ * Comprehensive AI System Prompt (from aiPromptRules.ts)
  */
-function constructPrompt(userQuestion, articles) {
-  const systemPrompt = `You are Ask The Pulse AI, an editorial assistant for Morning Pulse news.
+const AI_SYSTEM_PROMPT = `You are "Pulse AI", an intelligent news assistant for Morning Pulse. Your role is to help users understand news stories by answering questions about specific articles, people, events, and topics.
 
 CRITICAL RULES:
-1. Answer ONLY using the provided articles below
-2. If the articles don't contain relevant information, say: "I don't have information about that in Morning Pulse's recent reporting."
-3. Be concise and factual - cite the article source for each claim using [1], [2], etc.
-4. Format responses in clean paragraphs (no markdown unless asked)
-5. If asked for sources, list the article headlines
-6. Do not speculate or add external information
 
-AVAILABLE ARTICLES:
-${articles.length > 0
-  ? articles.map((article, idx) => {
-      const title = article.headline || 'Untitled';
-      const detail = article.detail || '';
-      const category = article.category || '';
-      const source = article.source || '';
-      const date = article.date || (article.timestamp 
-        ? new Date(article.timestamp).toLocaleDateString()
-        : 'Recent');
-      
-      return `[${idx + 1}] ${title}
-   Category: ${category}
-   Details: ${detail}
-   Source: ${source}
-   Date: ${date}
-   ---`;
-    }).join('\n')
-  : 'No relevant Morning Pulse articles found for this query.'}
+1. ANSWER BASED ON USER INTENT, NOT JUST CATEGORIES
+   - If user asks "Who is mentioned in the climate article?", identify people in that specific article
+   - If user asks "What did the president say?", find quotes and statements from the president across all articles
+   - If user asks about a specific event, focus on that event even if it spans multiple categories
+   - If user asks "What happened in Nigeria?", focus on Nigeria-related news regardless of category
+   - Understand context: "What else did he do?" requires you to track who "he" refers to from previous conversation
 
-USER QUESTION: ${userQuestion}
+2. ANSWER SPECIFIC QUESTIONS ABOUT ARTICLES
+   - WHO questions: Identify all people mentioned, their roles, and what they did
+   - WHAT questions: Explain events, actions, decisions, and outcomes
+   - WHERE questions: Identify locations, regions, and geographic context
+   - WHEN questions: Provide timeline, dates, and temporal context
+   - WHY questions: Explain causes, motivations, and reasons
+   - HOW questions: Describe methods, processes, and mechanisms
 
-Provide a helpful answer based solely on the articles above. If relevant, mention which article(s) you're citing using [1], [2], etc.`;
+3. HANDLE FOLLOW-UP QUESTIONS INTELLIGENTLY
+   - Track conversation context
+   - Understand pronouns (he, she, they, it) from previous messages
+   - Connect related questions
 
-  return systemPrompt;
+4. CITE SOURCES PROPERLY
+   - Use [1], [2], [3] notation for each claim
+   - Reference the specific article where information came from
+   - When combining information from multiple sources, cite each
+   - For opinions, use [OPINION 1], [OPINION 2], etc.
+
+5. EXTRACT SPECIFIC DETAILS FROM ARTICLES
+   - Names of people and their titles/roles
+   - Exact quotes (use quotation marks)
+   - Numbers, statistics, percentages
+   - Dates and times
+   - Locations and places
+   - Organizations and institutions
+
+6. PROVIDE COMPREHENSIVE ANSWERS
+   - For broad questions, summarize across multiple relevant articles
+   - For specific questions, dive deep into the relevant article
+   - Balance breadth and depth based on question type
+   - Include context when helpful
+
+7. LIMITATIONS AND BOUNDARIES
+   - ONLY use information from the provided articles and opinions
+   - DO NOT speculate or add external information
+   - DO NOT make predictions beyond what articles state
+   - DO NOT provide opinions - only report what sources say
+   - If articles don't have the information: "I don't have information about that in Morning Pulse's recent reporting."
+
+8. OPINION pieces:
+   - Clearly identify as opinion
+   - Attribute views to the author
+   - Example: "In an opinion piece, columnist Sarah Jones argues that... [OPINION 1]"
+
+Remember: Your goal is to help users deeply understand the news by providing accurate, detailed, contextual information from Morning Pulse articles. Be intelligent, helpful, and precise.`;
+
+const AI_ARTICLE_ANALYSIS_PROMPT = `
+ARTICLE ANALYSIS INSTRUCTIONS:
+
+Before answering, analyze each article for:
+
+1. PEOPLE mentioned: Extract all names, titles/roles, actions/statements, affiliations
+2. ORGANIZATIONS mentioned: Extract names, role in story, statements/actions
+3. LOCATIONS mentioned: Extract place names, geographic context, relevance
+4. KEY FACTS: Numbers, statistics, dates, quotes, policy details, financial information
+5. MAIN EVENTS: What, when, where, who, why, how
+6. THEMES/TOPICS: Primary topic, secondary topics, related issues
+
+Use this analysis to answer user questions accurately and comprehensively.
+`;
+
+/**
+ * Construct grounded prompt with retrieved articles and opinions
+ * Uses comprehensive AI rules for intelligent, contextual responses
+ */
+function constructPrompt(userQuestion, articles, opinions, conversationHistory, previousEntities) {
+  let prompt = AI_SYSTEM_PROMPT;
+
+  // Add conversation context if available
+  if (conversationHistory && conversationHistory.length > 0) {
+    // Convert to readable format
+    const recentContext = conversationHistory.slice(-3);
+    const contextText = recentContext.map(msg => {
+      const role = msg.role === 'user' ? 'user' : 'assistant';
+      const text = msg.parts && msg.parts[0] ? msg.parts[0].text : '';
+      return `${role}: ${text}`;
+    }).join('\n');
+    prompt += `\n\nRECENT CONVERSATION:\n${contextText}`;
+  }
+
+  // Add entity tracking
+  if (previousEntities && previousEntities.length > 0) {
+    prompt += `\n\nENTITIES MENTIONED IN CONVERSATION: ${previousEntities.join(', ')}`;
+    prompt += `\nWhen user uses pronouns, these may refer to the above entities.`;
+  }
+
+  // Add article analysis prompt
+  prompt += `\n\n${AI_ARTICLE_ANALYSIS_PROMPT}`;
+
+  // Add articles
+  prompt += `\n\nAVAILABLE ARTICLES (Use ONLY these for your answer):\n\n`;
+  
+  articles.forEach((article, index) => {
+    const title = article.headline || 'Untitled';
+    const detail = article.detail || '';
+    const category = article.category || '';
+    const source = article.source || '';
+    const date = article.date || (article.timestamp 
+      ? new Date(article.timestamp).toLocaleDateString()
+      : 'Recent');
+    
+    prompt += `[${index + 1}] ${title}\n`;
+    prompt += `Category: ${category}\n`;
+    if (source) prompt += `Source: ${source}\n`;
+    prompt += `Content: ${detail}\n`;
+    prompt += `Date: ${date}\n\n`;
+  });
+
+  // Add opinions section (top 3 most recent)
+  if (opinions && opinions.length > 0) {
+    const publishedOpinions = opinions
+      .filter(op => op.isPublished && op.publishedAt)
+      .sort((a, b) => {
+        const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+        const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+        return dateB - dateA; // Newest first
+      })
+      .slice(0, 3); // Top 3 most recent
+
+    if (publishedOpinions.length > 0) {
+      prompt += `\n\nPUBLISHED OPINIONS & EDITORIALS:\n\n`;
+      publishedOpinions.forEach((opinion, idx) => {
+        prompt += `[OPINION ${idx + 1}] ${opinion.headline}\n`;
+        prompt += `Category: ${opinion.category || 'Opinion'}\n`;
+        prompt += `Summary: ${opinion.subHeadline || ''}\n`;
+        prompt += `Author: ${opinion.authorName || 'Editorial Team'}\n`;
+        if (opinion.authorTitle) prompt += `Author Title: ${opinion.authorTitle}\n`;
+        const pubDate = opinion.publishedAt ? new Date(opinion.publishedAt).toLocaleDateString() : 'Recent';
+        prompt += `Published: ${pubDate}\n`;
+        const bodyPreview = opinion.body ? opinion.body.substring(0, 500) : '';
+        prompt += `Content: ${bodyPreview}${opinion.body && opinion.body.length > 500 ? '...' : ''}\n\n`;
+      });
+      prompt += `\nNote: When citing opinions, use [OPINION 1], [OPINION 2], etc. to distinguish from news articles.\n`;
+    }
+  }
+
+  // Add the user's question
+  prompt += `\n\nUSER QUESTION: ${userQuestion}\n\n`;
+  
+  // Add response instructions
+  prompt += `INSTRUCTIONS FOR YOUR RESPONSE:
+1. Analyze the question to understand what type of information is needed (who, what, where, when, why, how)
+2. Search through ALL articles and opinions for relevant information
+3. Extract specific details that answer the question
+4. Cite sources using [1], [2], etc. for articles and [OPINION 1], [OPINION 2], etc. for opinions
+5. If the question references previous conversation, use that context
+6. If pronouns are used (he, she, they), determine who they refer to from context
+7. Provide a comprehensive, accurate answer based on user intent, not just categories
+8. If information is not available, say so clearly
+9. When multiple categories are available, provide a balanced summary across categories
+
+YOUR ANSWER:`;
+
+  return prompt;
 }
 
 /**
@@ -151,7 +304,7 @@ exports.askPulseAIProxy = async (req, res) => {
     }
 
     // Parse request body
-    const { question, newsData, conversationHistory, stream = false } = req.body;
+    const { question, newsData, conversationHistory, stream = false, opinions = [], previousEntities = [] } = req.body;
 
     if (!question || typeof question !== 'string') {
       res.status(400).json({ error: 'Missing or invalid "question" parameter' });
@@ -159,13 +312,15 @@ exports.askPulseAIProxy = async (req, res) => {
     }
 
     console.log(`🤖 Ask Pulse AI request: "${question.substring(0, 50)}..."`);
+    console.log(`📰 Opinions available: ${opinions.length || 0}`);
+    console.log(`💬 Conversation history: ${conversationHistory?.length || 0} messages`);
 
-    // Retrieve relevant articles
-    const relevantArticles = retrieveRelevantArticles(question, newsData || {}, 5);
+    // Retrieve relevant articles with category variety (2 per category)
+    const relevantArticles = retrieveRelevantArticles(question, newsData || {}, 10);
     console.log(`📰 Found ${relevantArticles.length} relevant articles`);
 
-    // Construct prompt
-    const constructedPrompt = constructPrompt(question, relevantArticles);
+    // Construct prompt with comprehensive AI rules
+    const constructedPrompt = constructPrompt(question, relevantArticles, opinions, conversationHistory, previousEntities);
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);

@@ -161,12 +161,14 @@ const BookmarksPage: React.FC<BookmarksPageProps> = ({ onBack }) => {
           {filteredBookmarks.map(bookmark => (
             <div
               key={bookmark.id}
+              onClick={() => handleArticleClick(bookmark)}
               style={{
                 background: 'white',
                 border: '2px solid #e5e7eb',
                 borderRadius: '12px',
                 padding: '16px',
                 transition: 'all 0.2s',
+                cursor: bookmark.url ? 'pointer' : 'default',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--primary-color)';
@@ -185,14 +187,12 @@ const BookmarksPage: React.FC<BookmarksPageProps> = ({ onBack }) => {
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3
-                    onClick={() => handleArticleClick(bookmark)}
                     style={{
                       margin: '0 0 8px 0',
                       fontSize: '1.1rem',
                       fontWeight: 700,
                       color: '#111827',
                       lineHeight: 1.4,
-                      cursor: bookmark.url ? 'pointer' : 'default',
                     }}
                   >
                     {bookmark.title}
@@ -246,7 +246,10 @@ const BookmarksPage: React.FC<BookmarksPageProps> = ({ onBack }) => {
 
                 {/* Remove Button */}
                 <button
-                  onClick={() => handleRemove(bookmark.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemove(bookmark.id);
+                  }}
                   aria-label="Remove bookmark"
                   style={{
                     padding: '8px',

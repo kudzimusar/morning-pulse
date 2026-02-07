@@ -50,7 +50,13 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
   const encodedTitle = encodeURIComponent(article.title);
   const encodedText = encodeURIComponent(article.excerpt || article.title);
 
-  const handleShare = (platform: string, url: string) => {
+  const handleShare = (platform: string, url: string, e?: React.MouseEvent) => {
+    // Stop event propagation to prevent parent click handlers
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     // Track analytics
     trackShare({
       articleId: article.id,
@@ -77,7 +83,13 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
     setShowMenu(false);
   };
 
-  const handleCopyLink = async () => {
+  const handleCopyLink = async (e?: React.MouseEvent) => {
+    // Stop event propagation to prevent parent click handlers
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     try {
       await navigator.clipboard.writeText(fullUrl);
       setShowCopied(true);
@@ -126,7 +138,10 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
     return (
       <div style={{ position: 'relative' }}>
         <button 
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMenu(!showMenu);
+          }}
           aria-label="Share article"
           style={{
             padding: '0.5rem 1rem',
@@ -170,7 +185,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
               }}
             >
               <button
-                onClick={() => handleShare('twitter', shareLinks.twitter)}
+                onClick={(e) => handleShare('twitter', shareLinks.twitter, e)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -196,7 +211,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
                 Twitter
               </button>
               <button
-                onClick={() => handleShare('whatsapp', shareLinks.whatsapp)}
+                onClick={(e) => handleShare('whatsapp', shareLinks.whatsapp, e)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -222,7 +237,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
                 WhatsApp
               </button>
               <button
-                onClick={() => handleShare('facebook', shareLinks.facebook)}
+                onClick={(e) => handleShare('facebook', shareLinks.facebook, e)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -248,7 +263,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
                 Facebook
               </button>
               <button
-                onClick={handleCopyLink}
+                onClick={(e) => handleCopyLink(e)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -283,7 +298,10 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
                 bottom: 0,
                 zIndex: 99,
               }}
-              onClick={() => setShowMenu(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(false);
+              }}
             />
           </>
         )}
@@ -294,7 +312,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
   return (
     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
       <button
-        onClick={() => handleShare('twitter', shareLinks.twitter)}
+        onClick={(e) => handleShare('twitter', shareLinks.twitter, e)}
         className="share-btn twitter"
         aria-label="Share on Twitter"
         style={{
@@ -328,7 +346,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
       </button>
 
       <button
-        onClick={() => handleShare('facebook', shareLinks.facebook)}
+        onClick={(e) => handleShare('facebook', shareLinks.facebook, e)}
         className="share-btn facebook"
         aria-label="Share on Facebook"
         style={{
@@ -362,7 +380,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
       </button>
 
       <button
-        onClick={() => handleShare('whatsapp', shareLinks.whatsapp)}
+        onClick={(e) => handleShare('whatsapp', shareLinks.whatsapp, e)}
         className="share-btn whatsapp"
         aria-label="Share on WhatsApp"
         style={{
@@ -396,7 +414,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
       </button>
 
       <button
-        onClick={() => handleShare('linkedin', shareLinks.linkedin)}
+        onClick={(e) => handleShare('linkedin', shareLinks.linkedin, e)}
         className="share-btn linkedin"
         aria-label="Share on LinkedIn"
         style={{
@@ -430,7 +448,7 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({
       </button>
 
       <button
-        onClick={handleCopyLink}
+        onClick={(e) => handleCopyLink(e)}
         className="share-btn copy"
         aria-label="Copy link"
         style={{

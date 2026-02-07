@@ -147,11 +147,12 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
       const previousMessages = messages.filter(m => m.role === 'ai' || (m.role === 'user' && m.content !== queryText));
       const chatHistory = convertToChatHistory(previousMessages);
       
-      // Create streaming generator
+      // Create streaming generator with opinions support
       const streamGenerator = generateAskPulseAIResponseStream(
         queryText,
         newsData || {},
-        chatHistory.length > 0 ? chatHistory : undefined
+        chatHistory.length > 0 ? chatHistory : undefined,
+        opinions // Pass opinions to service
       );
       
       let accumulatedText = '';

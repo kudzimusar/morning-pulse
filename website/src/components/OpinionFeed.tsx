@@ -695,22 +695,6 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
             >
               <X size={24} />
             </button>
-            <div style={{ 
-              position: 'fixed', 
-              top: '20px', 
-              left: '20px',
-              zIndex: 1000,
-            }}>
-              <ShareButtons
-                article={{
-                  id: selectedOpinion.id,
-                  title: selectedOpinion.headline,
-                  url: selectedOpinion.slug ? `/opinion/${selectedOpinion.slug}` : `#opinion/${selectedOpinion.id}`,
-                  excerpt: selectedOpinion.subHeadline,
-                }}
-                compact
-              />
-            </div>
             <header style={{ textAlign: 'center', marginBottom: '40px' }}>
               <div style={{ color: '#991b1b', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', marginBottom: '20px' }}>{selectedOpinion.category}</div>
               <h1 style={{ fontSize: 'clamp(2.5rem, 7vw, 4rem)', fontWeight: '900', lineHeight: '0.95', marginBottom: '24px' }}>{selectedOpinion.headline}</h1>
