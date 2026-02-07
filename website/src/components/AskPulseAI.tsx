@@ -252,7 +252,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   };
 
   // Compact Article List Item Component (replaces large card boxes)
-  const ArticleListItem: React.FC<{ article: NewsStory; index: number }> = ({ article, index }) => {
+  const ArticleListItem: React.FC<{ article: NewsStory; index: number; isLast?: boolean }> = ({ article, index, isLast = false }) => {
     const handleClick = () => {
       // Track click analytics
       trackArticleClick({
@@ -279,7 +279,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         onClick={handleClick}
         style={{
           padding: '12px 0',
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: isLast ? 'none' : '1px solid #e5e7eb',
           cursor: article.url ? 'pointer' : 'default',
           transition: 'background-color 0.2s',
         }}
@@ -853,7 +853,12 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                             gap: '0'
                           }}>
                             {message.articles.map((article, idx) => (
-                              <ArticleListItem key={idx} article={article} index={idx} />
+                              <ArticleListItem 
+                                key={idx} 
+                                article={article} 
+                                index={idx} 
+                                isLast={idx === message.articles.length - 1}
+                              />
                             ))}
                           </div>
                         </div>
