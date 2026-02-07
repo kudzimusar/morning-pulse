@@ -19,6 +19,17 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
 /**
+ * Set CORS headers for the response
+ * Allows requests from your GitHub Pages domain
+ */
+const setCorsHeaders = (res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins (can restrict to specific domain in production)
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '3600');
+};
+
+/**
  * Retrieve relevant articles from newsData based on user query
  */
 function retrieveRelevantArticles(query, newsData, topK = 5) {
@@ -113,15 +124,12 @@ Provide a helpful answer based solely on the articles above. If relevant, mentio
  * Handles streaming and non-streaming requests
  */
 exports.askPulseAIProxy = async (req, res) => {
-  // Enable CORS for all origins
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.set('Access-Control-Max-Age', '3600');
+  // Set CORS headers FIRST - before any other logic
+  setCorsHeaders(res);
 
-  // Handle CORS preflight
+  // Handle CORS preflight - return immediately with 204
   if (req.method === 'OPTIONS') {
-    res.status(204).send('');
+    res.status(204).end();
     return;
   }
 

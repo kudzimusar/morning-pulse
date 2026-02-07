@@ -2035,3 +2035,17 @@ exports.autoPublishScheduledStories = async (req, res) => {
   }
 };
 
+
+// Export Ask Pulse AI Proxy function
+try {
+  const askPulseAIProxyModule = require('./askPulseAIProxy');
+  if (askPulseAIProxyModule && askPulseAIProxyModule.askPulseAIProxy) {
+    exports.askPulseAIProxy = askPulseAIProxyModule.askPulseAIProxy;
+    console.log('✅ askPulseAIProxy function exported successfully.');
+  } else {
+    console.warn('⚠️ askPulseAIProxy module loaded but function not found');
+  }
+} catch (error) {
+  console.error('❌ Failed to load askPulseAIProxy module:', error.message);
+  // Don't throw - allow other functions to work
+}
