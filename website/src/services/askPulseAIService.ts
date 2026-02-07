@@ -1,11 +1,11 @@
 /**
  * Ask The Pulse AI Service
- * RAG-based chatbot using Google Gemini API v1 with Morning Pulse content retrieval
+ * RAG-based chatbot using backend proxy for secure Gemini API access
  * 
- * CRITICAL: Uses v1 API endpoint (not v1beta) for model compatibility
+ * CRITICAL: All API calls go through askPulseAIProxy Cloud Function
+ * API key is never exposed in frontend code
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NewsStory } from '../../types';
 
 // Editorial System Prompt (Non-negotiable)
@@ -136,22 +136,18 @@ Provide a helpful answer based solely on the articles above. If relevant, mentio
 };
 
 /**
- * Initialize Gemini client with v1 API endpoint
- * CRITICAL: Uses v1 API (not v1beta) for model compatibility
+ * Get the proxy URL from environment or use default
  */
-const getGeminiClient = (apiKey: string): GoogleGenerativeAI => {
-  // The @google/generative-ai package should use v1 by default for newer models
-  // But we can explicitly configure it if needed
-  const client = new GoogleGenerativeAI(apiKey);
-  
-  // Log API version being used (for debugging)
-  console.log('🔧 Using Google Generative AI SDK - API version handled automatically');
-  
-  return client;
+const getProxyUrl = (): string => {
+  return (
+    import.meta.env.VITE_ASK_PULSE_AI_PROXY_URL ||
+    'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/askPulseAIProxy'
+  );
 };
 
 /**
- * Generate AI response using Google Gemini with streaming support (v1 API)
+ * Generate AI response using backend proxy (secure - no API key in frontend)
+ * Streaming support via Server-Sent Events
  */
 export const generateAskPulseAIResponseStream = async function* (
   userQuestion: string,
@@ -159,74 +155,79 @@ export const generateAskPulseAIResponseStream = async function* (
   conversationHistory?: ChatMessage[]
 ): AsyncGenerator<StreamChunk, AskPulseAIResponse, unknown> {
   try {
-    // Get API key from multiple sources
-    const apiKey = 
-      import.meta.env.VITE_GEMINI_API_KEY || 
-      (typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY) ||
-      (typeof window !== 'undefined' && (window as any).__firebase_config?.geminiApiKey) ||
-      '';
-    
-    if (!apiKey) {
-      yield { text: "I'm having trouble connecting to the AI service. Please check the configuration. The API key is missing.", done: true };
-      return {
-        text: "I'm having trouble connecting to the AI service. Please check the configuration. The API key is missing.",
-        sources: []
-      };
-    }
+    const proxyUrl = getProxyUrl();
 
-    // Retrieve relevant articles
+    // Retrieve relevant articles (for sources)
     const relevantArticles = retrieveRelevantArticles(userQuestion, newsData, 5);
-    
-    // Initialize Gemini with v1 API
-    const genAI = getGeminiClient(apiKey);
-    
-    // Use gemini-2.5-flash which is available in v1beta API (FREE tier)
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024,
-      }
+
+    // Call backend proxy
+    const response = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        question: userQuestion,
+        newsData,
+        conversationHistory,
+        stream: true
+      })
     });
 
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Proxy error: ${response.status} ${response.statusText}`);
+    }
+
+    // Handle streaming response (Server-Sent Events)
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
     let fullText = '';
+    let finalResponse: AskPulseAIResponse | null = null;
 
-    // Construct prompt with articles
-    const constructedPrompt = constructPrompt(userQuestion, relevantArticles);
+    if (!reader) {
+      throw new Error('No response body');
+    }
 
-    // Use conversation history if available
-    if (conversationHistory && conversationHistory.length > 0) {
-      const chat = model.startChat({
-        history: conversationHistory,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.substring(6));
+            
+            if (data.done) {
+              finalResponse = {
+                text: data.fullText || fullText,
+                sources: data.sources || []
+              };
+            } else if (data.text) {
+              fullText += data.text;
+              yield { text: data.text, done: false };
+            } else if (data.error) {
+              throw new Error(data.error);
+            }
+          } catch (e) {
+            // Skip invalid JSON lines
+            if (e instanceof Error && e.message !== 'Unexpected end of JSON input') {
+              console.warn('Error parsing SSE data:', e);
+            }
+          }
         }
-      });
-      
-      const result = await chat.sendMessageStream(constructedPrompt);
-      
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        fullText += chunkText;
-        yield { text: chunkText, done: false };
-      }
-    } else {
-      // First message - use generateContentStream
-      const result = await model.generateContentStream(constructedPrompt);
-      
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        fullText += chunkText;
-        yield { text: chunkText, done: false };
       }
     }
 
-    // Extract sources with indices
+    // Return final response
+    if (finalResponse) {
+      return finalResponse;
+    }
+
+    // Extract sources if not provided
     const sources = relevantArticles
       .filter(article => article.headline && article.url)
       .map((article, idx) => ({
@@ -235,18 +236,12 @@ export const generateAskPulseAIResponseStream = async function* (
         index: idx + 1
       }));
 
-    // Return final response
     return {
       text: fullText,
       sources
     };
   } catch (error: any) {
     console.error('Streaming error:', error);
-    
-    // Check if it's an API version error
-    if (error.message?.includes('v1beta') || error.message?.includes('404')) {
-      console.error('❌ API version error detected. Model may not be available in current API version.');
-    }
     
     yield { text: "I encountered an error while processing your question. Please try again.", done: true };
     return {
@@ -257,8 +252,8 @@ export const generateAskPulseAIResponseStream = async function* (
 };
 
 /**
- * Generate AI response using Google Gemini (non-streaming, for backward compatibility)
- * Uses v1 API endpoint
+ * Generate AI response using backend proxy (non-streaming, for backward compatibility)
+ * Secure - no API key in frontend
  */
 export const generateAskPulseAIResponse = async (
   userQuestion: string,
@@ -266,190 +261,46 @@ export const generateAskPulseAIResponse = async (
   conversationHistory?: ChatMessage[]
 ): Promise<AskPulseAIResponse> => {
   try {
-    // Get API key from multiple sources
-    const apiKey = 
-      import.meta.env.VITE_GEMINI_API_KEY || 
-      (typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY) ||
-      (typeof window !== 'undefined' && (window as any).__firebase_config?.geminiApiKey) ||
-      '';
-    
-    if (!apiKey) {
-      console.error('Gemini API key not found. Checked:', {
-        env: !!import.meta.env.VITE_GEMINI_API_KEY,
-        window: !!(typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY),
-        firebaseConfig: !!(typeof window !== 'undefined' && (window as any).__firebase_config?.geminiApiKey)
-      });
-      return {
-        text: "I'm having trouble connecting to the AI service. Please check the configuration. The API key is missing.",
-        sources: []
-      };
-    }
+    const proxyUrl = getProxyUrl();
 
     // Log request details
     console.log('🔍 Ask Pulse AI Request:', {
       question: userQuestion,
-      articlesAvailable: Object.keys(newsData || {}).length,
-      apiKeyPresent: !!apiKey
+      articlesAvailable: Object.keys(newsData || {}).length
     });
 
-    // Retrieve relevant articles
-    const relevantArticles = retrieveRelevantArticles(userQuestion, newsData, 5);
-    
-    // Construct prompt
-    const constructedPrompt = constructPrompt(userQuestion, relevantArticles);
-    
-    // Log API key status (first 10 chars only for security)
-    console.log('🔑 Gemini API key found:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
-    
-    // Initialize Gemini with v1 API
-    const genAI = getGeminiClient(apiKey);
-    
-    // Generate response with current model (gemini-2.5-flash) - v1beta API
-    try {
-      console.log('🤖 Initializing Gemini model (v1beta API)...');
-      
-      let model;
-      let result;
-      let response;
-      let text: string;
+    // Call backend proxy
+    const response = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        question: userQuestion,
+        newsData,
+        conversationHistory,
+        stream: false
+      })
+    });
 
-      // Use conversation history if available
-      if (conversationHistory && conversationHistory.length > 0) {
-        model = genAI.getGenerativeModel({ 
-          model: 'gemini-2.5-flash',
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        });
-        
-        const chat = model.startChat({
-          history: conversationHistory,
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        });
-        
-        console.log('✅ Model initialized with conversation history, generating response...');
-        result = await chat.sendMessage(constructedPrompt);
-        response = await result.response;
-        text = response.text();
-      } else {
-        // First message - use generateContent
-        model = genAI.getGenerativeModel({ 
-          model: 'gemini-2.5-flash',
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        });
-
-        console.log('✅ Model initialized, generating response...');
-        result = await model.generateContent(constructedPrompt);
-        response = await result.response;
-        text = response.text();
-      }
-
-      console.log('✅ Response received from Gemini');
-
-      // Extract sources with indices for citation parsing
-      const sources = relevantArticles
-        .filter(article => article.headline && article.url)
-        .map((article, idx) => ({
-          title: article.headline!,
-          url: article.url,
-          index: idx + 1
-        }));
-
-      return {
-        text,
-        sources
-      };
-
-    } catch (error: any) {
-      console.error('❌ Gemini API error:', error);
-      
-      // Enhanced error logging for API version issues
-      if (error.message?.includes('v1beta') || error.message?.includes('404')) {
-        console.error('⚠️ API version/model compatibility issue detected');
-        console.error('Error details:', {
-          message: error.message,
-          status: error.status,
-          statusText: error.statusText
-        });
-      }
-      
-      // If gemini-2.5-flash fails, try alternative models available in v1beta
-      if (error.message?.includes('not found') || error.status === 404) {
-        console.log('⚠️ Trying alternative model: gemini-pro...');
-        
-        try {
-          const fallbackModel = genAI.getGenerativeModel({ 
-            model: 'gemini-pro',
-            generationConfig: {
-              temperature: 0.7,
-              topK: 40,
-              topP: 0.95,
-              maxOutputTokens: 1024,
-            }
-          });
-          
-          const result = await fallbackModel.generateContent(constructedPrompt);
-          const response = await result.response;
-          const text = response.text();
-          
-          console.log('✅ Fallback model response received');
-          
-          // Extract sources with indices for citation parsing
-          const sources = relevantArticles
-            .filter(article => article.headline && article.url)
-            .map((article, idx) => ({
-              title: article.headline!,
-              url: article.url,
-              index: idx + 1
-            }));
-
-          return {
-            text,
-            sources
-          };
-          
-        } catch (fallbackError: any) {
-          console.error('❌ Fallback model also failed:', fallbackError);
-          throw new Error('AI model unavailable: ' + fallbackError.message);
-        }
-      }
-      
-      throw new Error('AI model unavailable: ' + error.message);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Proxy error: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    return {
+      text: data.text || "I'm sorry, I couldn't generate a response.",
+      sources: data.sources || []
+    };
   } catch (error: any) {
     console.error('Ask Pulse AI Error:', error);
     
     // Provide helpful error messages
-    if (error.message?.includes('API_KEY')) {
-      return {
-        text: "I'm having trouble connecting to the AI service. Please check the API configuration.",
-        sources: []
-      };
-    }
-    
     if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
       return {
         text: "I'm currently experiencing high demand. Please try again in a moment.",
-        sources: []
-      };
-    }
-    
-    if (error.message?.includes('v1beta') || error.message?.includes('404')) {
-      return {
-        text: "I'm having trouble connecting to the AI service. The API version may be incompatible. Please check the configuration.",
         sources: []
       };
     }
@@ -504,32 +355,30 @@ export function formatResponseWithCitations(
 }
 
 /**
- * Test Gemini API connection and model availability
- * Useful for debugging API key and model access issues
+ * Test Gemini API connection via proxy
+ * Useful for debugging proxy and model access issues
  */
 export async function testGeminiConnection(): Promise<boolean> {
-  const apiKey = 
-    import.meta.env.VITE_GEMINI_API_KEY || 
-    (typeof window !== 'undefined' && (window as any).__GEMINI_API_KEY) ||
-    (typeof window !== 'undefined' && (window as any).__firebase_config?.geminiApiKey) ||
-    '';
-
-  if (!apiKey) {
-    console.error('❌ No Gemini API key found');
-    return false;
-  }
+  const proxyUrl = getProxyUrl();
 
   try {
-    const genAI = getGeminiClient(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    
-    // Simple test prompt
-    const result = await model.generateContent('Say "OK" if you can read this.');
-    const response = await result.response;
-    const text = response.text();
-    
-    console.log('✅ Gemini API test successful:', text);
-    return true;
+    const response = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: 'Say "OK" if you can read this.',
+        newsData: {},
+        stream: false
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Gemini API test successful:', data.text);
+      return true;
+    }
+    console.error('❌ Gemini API test failed:', response.status, response.statusText);
+    return false;
   } catch (error) {
     console.error('❌ Gemini API test failed:', error);
     return false;

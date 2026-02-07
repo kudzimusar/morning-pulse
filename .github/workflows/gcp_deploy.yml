@@ -241,6 +241,24 @@ jobs:
             FIREBASE_ADMIN_CONFIG=${{ secrets.GCP_SA_KEY }}
             APP_ID=morning-pulse-app
 
+      # Deploy Ask Pulse AI Proxy Function
+      - name: Deploy Ask Pulse AI Proxy Function
+        uses: google-github-actions/deploy-cloud-functions@v2
+        id: deploy-ask-pulse-ai
+        with:
+          name: askPulseAIProxy
+          runtime: nodejs20
+          entry_point: askPulseAIProxy
+          project_id: ${{ env.PROJECT_ID }}
+          region: ${{ env.REGION }}
+          source_dir: functions
+          memory_mb: 512
+          timeout: 540s
+          allow_unauthenticated: true
+          env_vars: |
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            APP_ID=morning-pulse-app
+
       # Explicitly set IAM policy for public access (backup for allow_unauthenticated)
       - name: Set Public Access for Newsletter Functions
         run: |
@@ -296,6 +314,17 @@ jobs:
             --role="roles/cloudfunctions.invoker" || true
           
           echo "✅ Public access configured for writer management functions"
+
+      # Set public access for Ask Pulse AI Proxy
+      - name: Set Public Access for Ask Pulse AI Proxy
+        run: |
+          echo "Setting public access for Ask Pulse AI Proxy..."
+          gcloud functions add-iam-policy-binding askPulseAIProxy \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --member="allUsers" \
+            --role="roles/cloudfunctions.invoker" || true
+          echo "✅ Public access configured for askPulseAIProxy"
 
       # Set up Cloud Scheduler for news aggregator
       - name: Setup Cloud Scheduler for News Aggregator
