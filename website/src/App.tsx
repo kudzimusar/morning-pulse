@@ -972,10 +972,13 @@ const App: React.FC = () => {
                 }}
                 activeTab={mobileActiveTab}
                 userRole={userRole}
-                isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
+                isAuthenticated={(userRole && Array.isArray(userRole) && userRole.length > 0) || isReaderAuthenticated}
                 notificationCount={0} // TODO: Implement notification count
                 topHeadlines={topHeadlines}
                 onSubscribeClick={handleSubscribeClick}
+                onSignOut={handleSignOut}
+                userName={readerInfo?.name || ''}
+                userEmail={readerInfo?.email || ''}
                 onTickerClick={(headline) => {
                   // Find article by headline and navigate to it
                   const allArticles: NewsStory[] = [];
@@ -1022,7 +1025,7 @@ const App: React.FC = () => {
                 isOpen={mobileNotificationsOpen}
                 onClose={() => setMobileNotificationsOpen(false)}
                 notificationCount={0} // TODO: Implement real notification count
-                isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
+                isAuthenticated={(userRole && Array.isArray(userRole) && userRole.length > 0) || isReaderAuthenticated}
                 userRole={userRole}
               />
             </>
@@ -1082,7 +1085,7 @@ const App: React.FC = () => {
           newsData={newsData}
           userCountry={currentCountry}
           userId={userRole && Array.isArray(userRole) && userRole.length > 0 ? 'authenticated' : null}
-          isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
+          isAuthenticated={(userRole && Array.isArray(userRole) && userRole.length > 0) || isReaderAuthenticated}
           userRole={userRole}
         />
       )}
