@@ -10,6 +10,8 @@ import MobileSearch from './components/MobileSearch';
 import MobileNotifications from './components/MobileNotifications';
 import ForYouFeed from './components/ForYouFeed';
 import AskPulseAI from './components/AskPulseAI';
+import BookmarksPage from './components/BookmarksPage';
+import TrendingSidebar from './components/AskPulseAI/TrendingSidebar';
 
 // ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
 const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {
@@ -410,6 +412,8 @@ const App: React.FC = () => {
         setCurrentPage('advertiser-login');
       } else if (path === 'advertiser/dashboard' || hash.startsWith('advertiser/dashboard')) {
         setCurrentPage('advertiser-dashboard');
+      } else if (path === 'bookmarks') {
+        setCurrentPage('bookmarks');
       } else if (path === 'advertiser/submit-ad' || hash.startsWith('advertiser/submit-ad')) {
         setCurrentPage('advertiser-submit-ad');
       } else if (path === 'admin') {
@@ -984,7 +988,46 @@ const App: React.FC = () => {
       )}
       
       {currentPage === 'askai' && view === 'public' && !requireEditor(userRole) && (
-        <AskPulseAI newsData={newsData} />
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 300px', 
+          gap: '2rem', 
+          maxWidth: '1400px', 
+          margin: '0 auto',
+          padding: '2rem',
+        }}>
+          <div>
+            <AskPulseAI newsData={newsData} />
+          </div>
+          <aside className="trending-sidebar-desktop">
+            {(() => {
+              const allArticles: NewsStory[] = [];
+              Object.values(newsData).forEach(categoryArticles => {
+                allArticles.push(...categoryArticles);
+              });
+              return <TrendingSidebar articles={allArticles} maxItems={10} />;
+            })()}
+          </aside>
+          <style>{`
+            @media (max-width: 1023px) {
+              .trending-sidebar-desktop {
+                display: none !important;
+              }
+            }
+            @media (min-width: 1024px) {
+              .trending-sidebar-desktop {
+                display: block;
+              }
+            }
+          `}</style>
+        </div>
+      )}
+      
+      {currentPage === 'bookmarks' && (
+        <BookmarksPage onBack={() => {
+          window.location.hash = 'news';
+          setCurrentPage('news');
+        }} />
       )}
       
       {currentPage === 'opinion' && (

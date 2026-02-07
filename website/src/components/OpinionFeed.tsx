@@ -5,6 +5,7 @@ import SEOHeader from './SEOHeader';
 import ArticleFooter from './ArticleFooter';
 import { trackArticleView, trackArticleEngagement } from '../services/analyticsService';
 import { X, PenTool, Share2, Check, Heart, Lightbulb, ThumbsDown, MessageCircle } from 'lucide-react';
+import { ShareButtons } from './AskPulseAI/ShareButtons';
 import { getImageByTopic } from '../utils/imageGenerator';
 import { 
   addReaction, 
@@ -32,7 +33,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null);
   const [slugOpinion, setSlugOpinion] = useState<Opinion | null>(null); // NEW: Opinion loaded by slug
   const [slugNotFound, setSlugNotFound] = useState(false); // NEW: Track if slug lookup failed
-  const [shareCopied, setShareCopied] = useState(false); // NEW: Track share link copy status
+  const [shareCopied, setShareCopied] = useState(false); // NEW: Track share link copy status (kept for compatibility)
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({ like: 0, love: 0, insightful: 0, disagree: 0, total: 0 });
   const [userReaction, setUserReaction] = useState<{ type: string } | null>(null);
   const [comments, setComments] = useState<PublicComment[]>([]);
@@ -694,28 +695,22 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
             >
               <X size={24} />
             </button>
-            <button 
-              onClick={() => handleShare(selectedOpinion)}
-              style={{ 
-                position: 'fixed', 
-                top: '20px', 
-                left: '20px', 
-                background: '#000', 
-                color: '#fff', 
-                border: 'none', 
-                padding: '10px 16px', 
-                borderRadius: '4px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                zIndex: 1001
-              }}
-            >
-              📤 Share
-            </button>
+            <div style={{ 
+              position: 'fixed', 
+              top: '20px', 
+              left: '20px',
+              zIndex: 1000,
+            }}>
+              <ShareButtons
+                article={{
+                  id: selectedOpinion.id,
+                  title: selectedOpinion.headline,
+                  url: selectedOpinion.slug ? `/opinion/${selectedOpinion.slug}` : `#opinion/${selectedOpinion.id}`,
+                  excerpt: selectedOpinion.subHeadline,
+                }}
+                compact
+              />
+            </div>
             <header style={{ textAlign: 'center', marginBottom: '40px' }}>
               <div style={{ color: '#991b1b', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', marginBottom: '20px' }}>{selectedOpinion.category}</div>
               <h1 style={{ fontSize: 'clamp(2.5rem, 7vw, 4rem)', fontWeight: '900', lineHeight: '0.95', marginBottom: '24px' }}>{selectedOpinion.headline}</h1>
@@ -1175,27 +1170,15 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
               <p style={{ fontSize: '14px', fontWeight: '700', color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Share this perspective
               </p>
-              <button
-                onClick={() => handleShare(selectedOpinion)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 24px',
-                  backgroundColor: shareCopied ? '#059669' : '#000',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '30px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              <ShareButtons
+                article={{
+                  id: selectedOpinion.id,
+                  title: selectedOpinion.headline,
+                  url: selectedOpinion.slug ? `/opinion/${selectedOpinion.slug}` : `#opinion/${selectedOpinion.id}`,
+                  excerpt: selectedOpinion.subHeadline,
                 }}
-              >
-                {shareCopied ? <Check size={20} /> : <Share2 size={20} />}
-                {shareCopied ? 'Link Copied!' : 'Share Story'}
-              </button>
+                compact={false}
+              />
             </div>
           </div>
         </div>
