@@ -884,9 +884,7 @@ const App: React.FC = () => {
                 isAuthenticated={userRole && Array.isArray(userRole) && userRole.length > 0}
                 notificationCount={0} // TODO: Implement notification count
                 topHeadlines={topHeadlines}
-                onSubscribeClick={() => {
-                  window.location.hash = 'join';
-                }}
+                onSubscribeClick={handleSubscribeClick}
                 onTickerClick={(headline) => {
                   // Find article by headline and navigate to it
                   const allArticles: NewsStory[] = [];
