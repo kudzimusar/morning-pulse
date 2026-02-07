@@ -204,8 +204,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: 'var(--font-body, system-ui, -apple-system, sans-serif)',
-      paddingBottom: '40px' // Ensure bottom content is not cut off
+      fontFamily: 'var(--font-body, system-ui, -apple-system, sans-serif)'
     }}>
       <div style={{
         width: '100%',
