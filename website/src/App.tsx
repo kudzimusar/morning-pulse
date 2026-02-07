@@ -175,6 +175,10 @@ const App: React.FC = () => {
   const [adminAuthLoading, setAdminAuthLoading] = useState(false);
   const [view, setView] = useState<'public' | 'admin'>('public');
   
+  // Reader authentication state
+  const [isReaderAuthenticated, setIsReaderAuthenticated] = useState(false);
+  const [readerInfo, setReaderInfo] = useState<{ name: string; email: string } | null>(null);
+  
   // ✅ FIX: Admin mode check - make it dynamic based on hash and view
   // This ensures isAdminMode reflects the current state, not just env var
   const isAdminMode = import.meta.env.VITE_ENABLE_ADMIN === 'true' || 
@@ -565,6 +569,65 @@ const App: React.FC = () => {
     };
   }, [isAdminMode]);
 
+  // ✅ NEW: Listen for reader authentication state changes
+  useEffect(() => {
+    const checkReaderAuth = async () => {
+      try {
+        const { getCurrentReader } = await import('./services/readerService');
+        const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+        
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (user && !user.isAnonymous) {
+            // Check if user is a reader
+            try {
+              const reader = await getCurrentReader();
+              if (reader) {
+                setIsReaderAuthenticated(true);
+                setReaderInfo({
+                  name: reader.name,
+                  email: reader.email
+                });
+                // If user doesn't have staff role, ensure they have reader role
+                if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
+                  setUserRole(['reader']);
+                }
+              } else {
+                // User is authenticated but not a reader - might be staff
+                // Don't clear state if they're staff
+                if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
+                  setIsReaderAuthenticated(false);
+                  setReaderInfo(null);
+                }
+              }
+            } catch (error) {
+              console.error('Error checking reader:', error);
+              // Don't clear state if user has staff role
+              if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
+                setIsReaderAuthenticated(false);
+                setReaderInfo(null);
+              }
+            }
+          } else {
+            // User is not authenticated or is anonymous
+            setIsReaderAuthenticated(false);
+            setReaderInfo(null);
+          }
+        });
+        
+        return unsubscribe;
+      } catch (error) {
+        console.error('Error setting up reader auth listener:', error);
+        return () => {};
+      }
+    };
+
+    const cleanupPromise = checkReaderAuth();
+    return () => {
+      cleanupPromise.then(unsub => unsub && unsub());
+    };
+  }, [userRole]);
+
   // Try to load static data first (Mode B), fallback to Firestore (Mode A)
   useEffect(() => {
     const loadStaticData = async () => {
@@ -643,7 +706,44 @@ const App: React.FC = () => {
   const handleSubscribeClick = () => {
     // Navigate to newsletter subscription page
     window.location.hash = 'subscribe';
-    window.location.hash = 'subscribe';
+  };
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    try {
+      const { signOutReader } = await import('./services/readerService');
+      const { logoutEditor } = require('./services/authService');
+      
+      if (userRole && Array.isArray(userRole) && userRole.length > 0) {
+        // Check if user is staff
+        if (userRole.includes('editor') || userRole.includes('admin') || userRole.includes('super_admin')) {
+          await logoutEditor();
+        } else {
+          // Regular reader
+          await signOutReader();
+        }
+      } else if (isReaderAuthenticated) {
+        // Reader authentication
+        await signOutReader();
+      }
+      
+      // Clear state
+      setIsReaderAuthenticated(false);
+      setReaderInfo(null);
+      setUserRole(null);
+      
+      // Redirect to news
+      window.location.hash = 'news';
+      window.location.reload();
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Still clear state and redirect even if sign out fails
+      setIsReaderAuthenticated(false);
+      setReaderInfo(null);
+      setUserRole(null);
+      window.location.hash = 'news';
+      window.location.reload();
+    }
   };
 
   // Handler to switch between public and admin views
