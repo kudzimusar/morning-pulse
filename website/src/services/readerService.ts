@@ -134,8 +134,13 @@ export const getReader = async (uid: string): Promise<Reader | null> => {
     }
     return null;
   } catch (error: any) {
+    // Handle permission errors gracefully
+    if (error.code === 'permission-denied' || error.message?.includes('permissions') || error.message?.includes('Missing or insufficient permissions')) {
+      console.warn('⚠️ Reader document access denied for uid:', uid);
+      return null;
+    }
     console.error('Error fetching reader:', error);
-    throw new Error(`Failed to fetch reader: ${error.message}`);
+    return null; // Return null instead of throwing
   }
 };
 
@@ -145,9 +150,28 @@ export const getReader = async (uid: string): Promise<Reader | null> => {
 export const getCurrentReader = async (): Promise<Reader | null> => {
   const auth = getAuth();
   const user = auth.currentUser;
-  if (!user) return null;
+  if (!user) {
+    console.log('ℹ️ No current user found');
+    return null;
+  }
   
-  return getReader(user.uid);
+  // Skip if user is anonymous
+  if (user.isAnonymous) {
+    console.log('ℹ️ User is anonymous, skipping reader check');
+    return null;
+  }
+  
+  try {
+    return await getReader(user.uid);
+  } catch (error: any) {
+    // Handle permission errors gracefully
+    if (error.code === 'permission-denied' || error.message?.includes('permissions') || error.message?.includes('Missing or insufficient permissions')) {
+      console.warn('⚠️ Reader document access denied - user may not have reader account yet');
+      return null;
+    }
+    console.error('Error fetching reader:', error);
+    return null; // Return null instead of throwing
+  }
 };
 
 /**

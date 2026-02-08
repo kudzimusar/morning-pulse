@@ -578,11 +578,19 @@ const App: React.FC = () => {
         
         const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          console.log('🔄 Auth state changed:', {
+            hasUser: !!user,
+            isAnonymous: user?.isAnonymous,
+            uid: user?.uid?.substring(0, 8) + '...'
+          });
+          
           if (user && !user.isAnonymous) {
             // Check if user is a reader
             try {
+              console.log('🔍 Checking if user is a reader...');
               const reader = await getCurrentReader();
               if (reader) {
+                console.log('✅ User is a reader:', reader.name, reader.email);
                 setIsReaderAuthenticated(true);
                 setReaderInfo({
                   name: reader.name,
@@ -593,6 +601,7 @@ const App: React.FC = () => {
                   setUserRole(['reader']);
                 }
               } else {
+                console.log('ℹ️ User is authenticated but not a reader (might be staff)');
                 // User is authenticated but not a reader - might be staff
                 // Don't clear state if they're staff
                 if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
@@ -601,7 +610,7 @@ const App: React.FC = () => {
                 }
               }
             } catch (error) {
-              console.error('Error checking reader:', error);
+              console.error('❌ Error checking reader:', error);
               // Don't clear state if user has staff role
               if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
                 setIsReaderAuthenticated(false);
@@ -610,6 +619,7 @@ const App: React.FC = () => {
             }
           } else {
             // User is not authenticated or is anonymous
+            console.log('ℹ️ User is not authenticated or is anonymous');
             setIsReaderAuthenticated(false);
             setReaderInfo(null);
           }
@@ -627,6 +637,16 @@ const App: React.FC = () => {
       cleanupPromise.then(unsub => unsub && unsub());
     };
   }, [userRole]);
+
+  // Debug: Log auth state changes
+  useEffect(() => {
+    console.log('📊 Auth State:', {
+      isReaderAuthenticated,
+      readerInfo: readerInfo ? { name: readerInfo.name, email: readerInfo.email } : null,
+      userRole,
+      isAuthenticated: (userRole && Array.isArray(userRole) && userRole.length > 0) || isReaderAuthenticated
+    });
+  }, [isReaderAuthenticated, readerInfo, userRole]);
 
   // Try to load static data first (Mode B), fallback to Firestore (Mode A)
   useEffect(() => {
