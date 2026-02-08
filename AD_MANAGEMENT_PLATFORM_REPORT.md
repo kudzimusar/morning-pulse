@@ -551,6 +551,7 @@ website/
 - [ ] Approve ad
 - [ ] Reject ad
 - [ ] Activate approved ad
+- [ ] Mark/Unmark ad as "House Ad" (Exempt from payment)
 - [ ] View active ads with metrics
 
 ### 13.3 Security
