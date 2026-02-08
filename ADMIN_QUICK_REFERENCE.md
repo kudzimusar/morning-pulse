@@ -81,7 +81,20 @@
 
 ---
 
+## 📢 Advertising (Ad Management)
+
+- **Manage Campaigns**: Admin Dashboard > Ad Management tab
+- **Fix "No Ads"**: Ensure ads are set to **'active'** and **'paid'**.
+  - See full guide: `AD_DEBUGGING_GUIDE.md`
+- **Ad Specs**:
+  - Header: 728x90 or 970x250
+  - Sidebar: 300x250 or 300x600
+  - Inline: 300x250
+
+---
+
 ## ⚡ Keyboard Shortcuts
+
 
 Coming soon...
 
