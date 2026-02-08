@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  getPendingAdvertisers, 
-  getApprovedAdvertisers, 
-  approveAdvertiser, 
+import {
+  getPendingAdvertisers,
+  getApprovedAdvertisers,
+  approveAdvertiser,
   rejectAdvertiser,
   getPendingAds,
   getActiveAds,
   approveAd,
   rejectAd,
   activateAd,
+  markAdAsHouseAd,
   subscribeToAds,
   Advertiser,
   Ad
@@ -41,7 +42,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
     if (!requireSuperAdmin(userRoles)) {
       return;
     }
-    
+
     if (activeTab === 'advertisers') {
       loadAdvertisers();
     } else if (activeTab === 'creatives') {
@@ -142,7 +143,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
 
     try {
       await approveAd(adId);
-      
+
       // Auto-generate invoice if enabled
       const generateInvoice = confirm('Generate invoice for this ad?');
       if (generateInvoice) {
@@ -165,7 +166,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
       } else {
         alert('Ad approved successfully!');
       }
-      
+
       await loadData();
     } catch (error: any) {
       alert(`Failed to approve ad: ${error.message}`);
@@ -210,6 +211,26 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
     }
   };
 
+  const handleToggleHouseAd = async (adId: string, currentStatus: boolean | undefined) => {
+    if (!requireSuperAdmin(userRoles)) {
+      alert('You do not have permission to modify house ads.');
+      return;
+    }
+
+    const action = currentStatus ? 'remove House Ad status from' : 'mark as House Ad';
+    if (!confirm(`Are you sure you want to ${action} this ad?`)) {
+      return;
+    }
+
+    try {
+      await markAdAsHouseAd(adId, !currentStatus);
+      alert(`Ad ${currentStatus ? 'removed from house ads' : 'marked as house ad'}.`);
+      await loadData();
+    } catch (error: any) {
+      alert(`Failed to update house ad status: ${error.message}`);
+    }
+  };
+
   if (!requireSuperAdmin(userRoles)) {
     return (
       <div style={{ padding: '32px', textAlign: 'center' }}>
@@ -231,7 +252,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem' }}>Ad Operations Console</h2>
-        
+
         {/* Main Tabs */}
         <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid #e5e7eb', marginBottom: '16px', flexWrap: 'wrap' }}>
           <button
@@ -409,7 +430,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                             Applied: {advertiser.createdAt?.toLocaleDateString()}
                           </div>
                         </div>
-                        
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '16px' }}>
                           <button
                             onClick={() => handleApproveAdvertiser(advertiser.uid)}
@@ -427,7 +448,7 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                           >
                             Approve
                           </button>
-                          
+
                           {!showRejectForm[advertiser.uid] ? (
                             <button
                               onClick={() => setShowRejectForm({ ...showRejectForm, [advertiser.uid]: true })}
@@ -595,8 +616,8 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                         {ad.creativeUrl && (
                           <div style={{ marginTop: '12px' }}>
                             <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>Creative Preview:</div>
-                            <img 
-                              src={ad.creativeUrl} 
+                            <img
+                              src={ad.creativeUrl}
                               alt={ad.title}
                               style={{
                                 maxWidth: '300px',
@@ -654,9 +675,9 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
             {(!activeAds || activeAds.length === 0) ? (
               <p style={{ color: '#6b7280', fontSize: '0.875rem', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>No active ads in inventory.</p>
             ) : (
-              <div style={{ 
-                backgroundColor: 'white', 
-                borderRadius: '8px', 
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
                 border: '1px solid #e5e7eb',
                 overflow: 'hidden',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -680,12 +701,12 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                       const ctr = ad.views > 0 ? (ad.clicks / ad.views) * 100 : 0;
                       const revenue = ad.clicks * 0.50; // Mock rate of $0.50 per click
                       const isPaid = ad.paymentStatus === 'paid' || ad.isHouseAd;
-                      
+
                       const now = new Date();
                       const endDate = ad.endDate?.toDate?.() || new Date(ad.endDate);
                       const isExpired = endDate < now;
                       const isExpiringSoon = !isExpired && (endDate.getTime() - now.getTime()) < (48 * 60 * 60 * 1000); // 48 hours
-                      
+
                       return (
                         <tr key={ad.id} style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: isExpired ? '#fff1f2' : 'transparent' }}>
                           <td style={{ padding: '12px 16px' }}>
@@ -718,17 +739,33 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                             </div>
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                            <span style={{ 
-                              padding: '4px 10px', 
-                              backgroundColor: isPaid ? '#d1fae5' : '#fee2e2', 
-                              color: isPaid ? '#065f46' : '#991b1b', 
-                              borderRadius: '12px', 
-                              fontSize: '0.7rem',
-                              fontWeight: '600',
-                              textTransform: 'uppercase'
-                            }}>
-                              {ad.isHouseAd ? 'EXEMPT' : ad.paymentStatus}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                              <span style={{
+                                padding: '4px 10px',
+                                backgroundColor: isPaid ? '#d1fae5' : '#fee2e2',
+                                color: isPaid ? '#065f46' : '#991b1b',
+                                borderRadius: '12px',
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                textTransform: 'uppercase'
+                              }}>
+                                {ad.isHouseAd ? 'EXEMPT' : ad.paymentStatus}
+                              </span>
+                              <button
+                                onClick={() => handleToggleHouseAd(ad.id, ad.isHouseAd)}
+                                style={{
+                                  padding: '2px 6px',
+                                  fontSize: '0.65rem',
+                                  backgroundColor: 'transparent',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  color: '#6b7280'
+                                }}
+                              >
+                                {ad.isHouseAd ? 'Unmark House' : 'Mark House'}
+                              </button>
+                            </div>
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                             {ad.status === 'approved' ? (
@@ -750,11 +787,11 @@ const AdManagementTab: React.FC<AdManagementTabProps> = ({ userRoles }) => {
                                 Activate
                               </button>
                             ) : (
-                              <span style={{ 
-                                padding: '4px 10px', 
-                                backgroundColor: ad.status === 'active' ? (isExpired ? '#fecaca' : '#dcfce7') : '#f3f4f6', 
-                                color: ad.status === 'active' ? (isExpired ? '#b91c1c' : '#166534') : '#374151', 
-                                borderRadius: '12px', 
+                              <span style={{
+                                padding: '4px 10px',
+                                backgroundColor: ad.status === 'active' ? (isExpired ? '#fecaca' : '#dcfce7') : '#f3f4f6',
+                                color: ad.status === 'active' ? (isExpired ? '#b91c1c' : '#166534') : '#374151',
+                                borderRadius: '12px',
                                 fontSize: '0.7rem',
                                 fontWeight: '600',
                                 textTransform: 'uppercase'

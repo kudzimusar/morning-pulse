@@ -5,10 +5,10 @@
  * Ads: artifacts/{appId}/public/data/ads/{adId}
  */
 
-import { 
-  getFirestore, 
-  collection, 
-  query, 
+import {
+  getFirestore,
+  collection,
+  query,
   where,
   getDocs,
   doc,
@@ -21,7 +21,7 @@ import {
   addDoc,
   onSnapshot
 } from 'firebase/firestore';
-import { 
+import {
   getAuth,
   createUserWithEmailAndPassword,
   User
@@ -88,12 +88,12 @@ export const registerAdvertiser = async (
 ): Promise<string> => {
   const auth = getAuth();
   const db = getDb();
-  
+
   try {
     // 1. Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
-    
+
     // 2. Create advertiser document
     const advertiserRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'advertisers', uid);
     await setDoc(advertiserRef, {
@@ -104,7 +104,7 @@ export const registerAdvertiser = async (
       status: 'pending_approval',
       createdAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Advertiser registered:', uid);
     return uid;
   } catch (error: any) {
@@ -119,7 +119,7 @@ export const registerAdvertiser = async (
 export const getAdvertiser = async (uid: string): Promise<Advertiser | null> => {
   const db = getDb();
   const advertiserRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'advertisers', uid);
-  
+
   try {
     const snap = await getDoc(advertiserRef);
     if (snap.exists()) {
@@ -161,11 +161,11 @@ export const getPendingAdvertisers = async (): Promise<Advertiser[]> => {
   const db = getDb();
   const advertisersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'advertisers');
   const q = query(advertisersRef, where('status', '==', 'pending_approval'));
-  
+
   try {
     const snapshot = await getDocs(q);
     const advertisers: Advertiser[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       advertisers.push({
@@ -181,7 +181,7 @@ export const getPendingAdvertisers = async (): Promise<Advertiser[]> => {
         updatedAt: data.updatedAt?.toDate?.() || undefined,
       });
     });
-    
+
     return advertisers.sort((a, b) => {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
@@ -198,11 +198,11 @@ export const getApprovedAdvertisers = async (): Promise<Advertiser[]> => {
   const db = getDb();
   const advertisersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'advertisers');
   const q = query(advertisersRef, where('status', '==', 'approved'));
-  
+
   try {
     const snapshot = await getDocs(q);
     const advertisers: Advertiser[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       advertisers.push({
@@ -218,7 +218,7 @@ export const getApprovedAdvertisers = async (): Promise<Advertiser[]> => {
         updatedAt: data.updatedAt?.toDate?.() || undefined,
       });
     });
-    
+
     return advertisers.sort((a, b) => {
       const nameA = a.companyName.toLowerCase();
       const nameB = b.companyName.toLowerCase();
@@ -236,14 +236,14 @@ export const getApprovedAdvertisers = async (): Promise<Advertiser[]> => {
 export const approveAdvertiser = async (uid: string): Promise<void> => {
   const db = getDb();
   const advertiserRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'advertisers', uid);
-  
+
   try {
     await updateDoc(advertiserRef, {
       status: 'approved',
       approvedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Advertiser approved:', uid);
   } catch (error: any) {
     console.error('❌ Error approving advertiser:', error);
@@ -257,14 +257,14 @@ export const approveAdvertiser = async (uid: string): Promise<void> => {
 export const rejectAdvertiser = async (uid: string, reason: string): Promise<void> => {
   const db = getDb();
   const advertiserRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'advertisers', uid);
-  
+
   try {
     await updateDoc(advertiserRef, {
       status: 'rejected',
       rejectedReason: reason,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Advertiser rejected:', uid);
   } catch (error: any) {
     console.error('❌ Error rejecting advertiser:', error);
@@ -289,7 +289,7 @@ export const submitAd = async (
 ): Promise<string> => {
   const db = getDb();
   const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
-  
+
   try {
     const docRef = await addDoc(adsRef, {
       advertiserId,
@@ -308,7 +308,7 @@ export const submitAd = async (
       paymentStatus: (adData as any).isHouseAd ? 'paid' : 'pending',
       createdAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Ad submitted:', docRef.id);
     return docRef.id;
   } catch (error: any) {
@@ -325,10 +325,10 @@ export const uploadAdCreative = async (file: File, advertiserId: string): Promis
     const storage = getStorage();
     const fileName = `ads/${advertiserId}/${Date.now()}_${file.name}`;
     const storageRef = ref(storage, fileName);
-    
+
     await uploadBytes(storageRef, file);
     const downloadURL = await getDownloadURL(storageRef);
-    
+
     console.log('✅ Ad creative uploaded:', downloadURL);
     return downloadURL;
   } catch (error: any) {
@@ -344,11 +344,11 @@ export const getAdsByAdvertiser = async (advertiserId: string): Promise<Ad[]> =>
   const db = getDb();
   const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
   const q = query(adsRef, where('advertiserId', '==', advertiserId));
-  
+
   try {
     const snapshot = await getDocs(q);
     const ads: Ad[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       ads.push({
@@ -370,7 +370,7 @@ export const getAdsByAdvertiser = async (advertiserId: string): Promise<Ad[]> =>
         updatedAt: data.updatedAt?.toDate?.() || undefined,
       });
     });
-    
+
     return ads.sort((a, b) => {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
@@ -387,11 +387,11 @@ export const getPendingAds = async (): Promise<Ad[]> => {
   const db = getDb();
   const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
   const q = query(adsRef, where('status', '==', 'pending'));
-  
+
   try {
     const snapshot = await getDocs(q);
     const ads: Ad[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       ads.push({
@@ -413,7 +413,7 @@ export const getPendingAds = async (): Promise<Ad[]> => {
         updatedAt: data.updatedAt?.toDate?.() || undefined,
       });
     });
-    
+
     return ads.sort((a, b) => {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
@@ -430,11 +430,11 @@ export const getActiveAds = async (): Promise<Ad[]> => {
   const db = getDb();
   const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
   const q = query(adsRef, where('status', '==', 'active'));
-  
+
   try {
     const snapshot = await getDocs(q);
     const ads: Ad[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       ads.push({
@@ -456,7 +456,7 @@ export const getActiveAds = async (): Promise<Ad[]> => {
         updatedAt: data.updatedAt?.toDate?.() || undefined,
       });
     });
-    
+
     return ads;
   } catch (error: any) {
     console.error('Error fetching active ads:', error);
@@ -473,7 +473,7 @@ export const subscribeToAds = (
 ): (() => void) => {
   const db = getDb();
   const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
-  
+
   const unsubscribe = onSnapshot(adsRef, (snapshot) => {
     const ads: Ad[] = [];
     snapshot.forEach((docSnap) => {
@@ -502,7 +502,7 @@ export const subscribeToAds = (
     console.error('❌ Firestore Permission Error (Ads):', error);
     if (onError) onError(error);
   });
-  
+
   return unsubscribe;
 };
 
@@ -512,21 +512,21 @@ export const subscribeToAds = (
 export const approveAd = async (adId: string, paymentId?: string): Promise<void> => {
   const db = getDb();
   const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
-  
+
   try {
     const adSnap = await getDoc(adRef);
     if (!adSnap.exists()) throw new Error('Ad not found');
     const adData = adSnap.data();
 
     const isPaid = paymentId || adData.isHouseAd;
-    
+
     await updateDoc(adRef, {
       status: 'approved',
       paymentStatus: isPaid ? 'paid' : 'pending',
       paymentId: paymentId || null,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Ad approved:', adId);
   } catch (error: any) {
     console.error('❌ Error approving ad:', error);
@@ -540,13 +540,13 @@ export const approveAd = async (adId: string, paymentId?: string): Promise<void>
 export const rejectAd = async (adId: string, reason?: string): Promise<void> => {
   const db = getDb();
   const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
-  
+
   try {
     await updateDoc(adRef, {
       status: 'rejected',
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Ad rejected:', adId);
   } catch (error: any) {
     console.error('❌ Error rejecting ad:', error);
@@ -560,15 +560,15 @@ export const rejectAd = async (adId: string, reason?: string): Promise<void> => 
 export const activateAd = async (adId: string): Promise<void> => {
   const db = getDb();
   const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
-  
+
   try {
     const adSnap = await getDoc(adRef);
     if (!adSnap.exists()) {
       throw new Error('Ad not found');
     }
-    
+
     const adData = adSnap.data();
-    
+
     // ✅ BUSINESS RULE: Only PAID ads can be activated (unless it's a House Ad)
     if (adData.paymentStatus !== 'paid' && !adData.isHouseAd) {
       throw new Error('Cannot activate ad: Payment status must be "paid".');
@@ -585,11 +585,38 @@ export const activateAd = async (adId: string): Promise<void> => {
       status: 'active',
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Ad activated:', adId);
   } catch (error: any) {
     console.error('❌ Error activating ad:', error);
     throw new Error(error.message || `Failed to activate ad`);
+  }
+};
+
+/**
+ * Mark ad as House Ad (admin only)
+ * House ads are free and internal.
+ */
+export const markAdAsHouseAd = async (adId: string, isHouseAd: boolean): Promise<void> => {
+  const db = getDb();
+  const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
+
+  try {
+    const updateData: any = {
+      isHouseAd: isHouseAd,
+      updatedAt: serverTimestamp(),
+    };
+
+    // If marking as house ad, also mark as paid
+    if (isHouseAd) {
+      updateData.paymentStatus = 'paid';
+    }
+
+    await updateDoc(adRef, updateData);
+    console.log(`✅ Ad ${adId} house status set to: ${isHouseAd}`);
+  } catch (error: any) {
+    console.error('❌ Error updating house ad status:', error);
+    throw new Error(`Failed to update house ad status: ${error.message}`);
   }
 };
 
@@ -599,7 +626,7 @@ export const activateAd = async (adId: string): Promise<void> => {
 export const trackAdView = async (adId: string): Promise<void> => {
   const db = getDb();
   const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
-  
+
   try {
     const adSnap = await getDoc(adRef);
     if (adSnap.exists()) {
@@ -619,7 +646,7 @@ export const trackAdView = async (adId: string): Promise<void> => {
 export const trackAdClick = async (adId: string): Promise<void> => {
   const db = getDb();
   const adRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'ads', adId);
-  
+
   try {
     const adSnap = await getDoc(adRef);
     if (adSnap.exists()) {
@@ -686,7 +713,7 @@ export const createCampaign = async (
   const db = getDb();
   const auth = getAuth();
   const campaignsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns');
-  
+
   try {
     const docRef = await addDoc(campaignsRef, {
       advertiserId,
@@ -703,7 +730,7 @@ export const createCampaign = async (
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser?.uid || advertiserId,
     });
-    
+
     console.log('✅ Campaign created:', docRef.id);
     return docRef.id;
   } catch (error: any) {
@@ -721,12 +748,12 @@ export const updateCampaign = async (
 ): Promise<void> => {
   const db = getDb();
   const campaignRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns', campaignId);
-  
+
   try {
     const updateData: any = {
       updatedAt: serverTimestamp(),
     };
-    
+
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.startDate !== undefined) updateData.startDate = serverTimestamp();
     if (updates.endDate !== undefined) updateData.endDate = serverTimestamp();
@@ -737,7 +764,7 @@ export const updateCampaign = async (
     if (updates.adIds !== undefined) updateData.adIds = updates.adIds;
     if (updates.slotIds !== undefined) updateData.slotIds = updates.slotIds;
     if (updates.status !== undefined) updateData.status = updates.status;
-    
+
     await updateDoc(campaignRef, updateData);
     console.log('✅ Campaign updated:', campaignId);
   } catch (error: any) {
@@ -752,13 +779,13 @@ export const updateCampaign = async (
 export const attachAdToCampaign = async (campaignId: string, adId: string): Promise<void> => {
   const db = getDb();
   const campaignRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns', campaignId);
-  
+
   try {
     const campaignSnap = await getDoc(campaignRef);
     if (!campaignSnap.exists()) {
       throw new Error('Campaign not found');
     }
-    
+
     const currentAdIds = campaignSnap.data().adIds || [];
     if (!currentAdIds.includes(adId)) {
       await updateDoc(campaignRef, {
@@ -780,11 +807,11 @@ export const getCampaignsByAdvertiser = async (advertiserId: string): Promise<Ca
   const db = getDb();
   const campaignsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns');
   const q = query(campaignsRef, where('advertiserId', '==', advertiserId));
-  
+
   try {
     const snapshot = await getDocs(q);
     const campaigns: Campaign[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       campaigns.push({
@@ -805,7 +832,7 @@ export const getCampaignsByAdvertiser = async (advertiserId: string): Promise<Ca
         updatedAt: data.updatedAt?.toDate?.() || undefined,
       });
     });
-    
+
     return campaigns.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error: any) {
     console.error('Error fetching campaigns:', error);
@@ -823,35 +850,35 @@ export const getCampaignAnalytics = async (campaignId: string): Promise<{
   spend: number;
 }> => {
   const db = getDb();
-  
+
   try {
     // Get campaign
     const campaignRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns', campaignId);
     const campaignSnap = await getDoc(campaignRef);
-    
+
     if (!campaignSnap.exists()) {
       throw new Error('Campaign not found');
     }
-    
+
     const adIds = campaignSnap.data().adIds || [];
-    
+
     // Get impressions for all ads in campaign
     const impressionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adImpressions');
     const impressionsQuery = query(impressionsRef, where('adId', 'in', adIds.length > 0 ? adIds : ['']));
     const impressionsSnap = await getDocs(impressionsQuery);
-    
+
     // Get clicks for all ads in campaign
     const clicksRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adClicks');
     const clicksQuery = query(clicksRef, where('adId', 'in', adIds.length > 0 ? adIds : ['']));
     const clicksSnap = await getDocs(clicksQuery);
-    
+
     const impressions = impressionsSnap.size;
     const clicks = clicksSnap.size;
     const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-    
+
     // Calculate spend (placeholder - would need actual pricing logic)
     const spend = 0; // TODO: Implement pricing calculation
-    
+
     return { impressions, clicks, ctr, spend };
   } catch (error: any) {
     console.error('Error fetching campaign analytics:', error);
@@ -878,7 +905,7 @@ export interface AdSlot {
 export const getAdSlot = async (slotId: string): Promise<AdSlot | null> => {
   const db = getDb();
   const slotRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'adSlots', slotId);
-  
+
   try {
     console.log(`🔍 [getAdSlot] Fetching slot: ${slotId} from path: artifacts/${APP_ID}/public/data/adSlots/${slotId}`);
     const snap = await getDoc(slotRef);
@@ -915,18 +942,18 @@ export const getAdsForSlot = async (
   }
 ): Promise<Ad[]> => {
   const db = getDb();
-  
+
   try {
     // Get slot configuration
     const slot = await getAdSlot(slotId);
     if (!slot) {
       return [];
     }
-    
+
     const limit = options?.limit || slot.maxAds || 1;
     const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
     const now = new Date();
-    
+
     /**
      * Helper to parse and filter ads from snapshot
      */
@@ -936,7 +963,7 @@ export const getAdsForSlot = async (
         const data = docSnap.data();
         let startDate: Date;
         let endDate: Date;
-        
+
         if (data.startDate && typeof data.startDate.toDate === 'function') {
           startDate = data.startDate.toDate();
         } else if (data.startDate && data.startDate.seconds) {
@@ -944,7 +971,7 @@ export const getAdsForSlot = async (
         } else {
           startDate = new Date(data.startDate || 0);
         }
-        
+
         if (data.endDate && typeof data.endDate.toDate === 'function') {
           endDate = data.endDate.toDate();
         } else if (data.endDate && data.endDate.seconds) {
@@ -952,9 +979,9 @@ export const getAdsForSlot = async (
         } else {
           endDate = new Date(data.endDate || Date.now() + 31536000000);
         }
-        
+
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
-        
+
         // ✅ PHASE 2: Strict Expiry Check
         if (startDate <= now && endDate >= now) {
           results.push({
@@ -992,10 +1019,10 @@ export const getAdsForSlot = async (
       where('paymentStatus', '==', 'paid'),
       where('isHouseAd', '==', false)
     );
-    
+
     let snapshot = await getDocs(clientAdsQuery);
     let ads = parseAndFilterAds(snapshot);
-    
+
     // 🌊 WATERFALL STEP 2: Fallback to General Placement Ads (Legacy Support)
     if (ads.length === 0) {
       const placementMap: Record<string, string> = {
@@ -1008,7 +1035,7 @@ export const getAdsForSlot = async (
         'footer_1': 'sidebar',
       };
       const placement = placementMap[slotId] || 'sidebar';
-      
+
       console.log(`🌊 [Waterfall] Step 2: Fallback to Placement [${placement}] for Slot [${slotId}]`);
       const placementAdsQuery = query(
         adsRef,
@@ -1033,20 +1060,20 @@ export const getAdsForSlot = async (
       snapshot = await getDocs(houseAdsQuery);
       ads = parseAndFilterAds(snapshot);
     }
-    
+
     if (ads.length === 0) {
       console.log(`❌ [getAdsForSlot] No ads found for Slot [${slotId}] after all waterfall steps.`);
     } else {
       console.log(`✅ [getAdsForSlot] Found ${ads.length} ads for Slot [${slotId}]`);
     }
-    
+
     // Sort by priority tier (premium first) and return limited results
     const priorityOrder = { premium: 0, standard: 1, house: 2 };
     ads.sort((a, b) => {
       // Simple rotation for now - can be enhanced with campaign priority
       return Math.random() - 0.5;
     });
-    
+
     return ads.slice(0, limit);
   } catch (error: any) {
     console.error('Error fetching ads for slot:', slotId, error);
@@ -1094,11 +1121,11 @@ export const trackAdImpression = async (
   const db = getDb();
   const impressionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adImpressions');
   const auth = getAuth();
-  
+
   try {
     // Also update the ad's view count (backward compatibility)
     await trackAdView(adId);
-    
+
     // Create impression record
     const docRef = await addDoc(impressionsRef, {
       adId,
@@ -1108,7 +1135,7 @@ export const trackAdImpression = async (
       userAgent: metadata?.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : null),
       referrer: metadata?.referrer || (typeof document !== 'undefined' ? document.referrer : null),
     });
-    
+
     console.log('✅ Impression tracked:', docRef.id);
     return docRef.id;
   } catch (error: any) {
@@ -1133,11 +1160,11 @@ export const trackAdClickDetailed = async (
   const db = getDb();
   const clicksRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adClicks');
   const auth = getAuth();
-  
+
   try {
     // Also update the ad's click count (backward compatibility)
     await trackAdClick(adId);
-    
+
     // Create click record
     const docRef = await addDoc(clicksRef, {
       adId,
@@ -1147,7 +1174,7 @@ export const trackAdClickDetailed = async (
       userAgent: metadata?.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : null),
       referrer: metadata?.referrer || (typeof document !== 'undefined' ? document.referrer : null),
     });
-    
+
     console.log('✅ Click tracked:', docRef.id);
     return docRef.id;
   } catch (error: any) {
@@ -1191,11 +1218,11 @@ export const getAdvertiserInvoices = async (advertiserId: string): Promise<Invoi
   const db = getDb();
   const invoicesRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'invoices');
   const q = query(invoicesRef, where('advertiserId', '==', advertiserId));
-  
+
   try {
     const snapshot = await getDocs(q);
     const invoices: Invoice[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       invoices.push({
@@ -1212,7 +1239,7 @@ export const getAdvertiserInvoices = async (advertiserId: string): Promise<Invoi
         invoiceNumber: data.invoiceNumber || '',
       });
     });
-    
+
     return invoices.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error: any) {
     console.error('Error fetching invoices:', error);
