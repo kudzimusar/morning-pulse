@@ -842,10 +842,25 @@ const App: React.FC = () => {
         const auth = getAuth(app);
         
         // ✅ FIX: Sign in anonymously on public routes (not just root)
-        if (!auth.currentUser && isPublicRoute && !isAdminRoute) {
+        // BUT: Only if user is not already authenticated with email/password
+        const currentUser = auth.currentUser;
+        const isAlreadyAuthenticated = currentUser && !currentUser.isAnonymous;
+        
+        if (!isAlreadyAuthenticated && isPublicRoute && !isAdminRoute) {
           console.log('🔐 App: Signing in anonymously for public access...');
-          await signInAnonymously(auth);
-          console.log('✅ App: Anonymous authentication successful');
+          try {
+            await signInAnonymously(auth);
+            console.log('✅ App: Anonymous authentication successful');
+          } catch (error: any) {
+            // If already signed in, that's fine
+            if (error.code === 'auth/operation-not-allowed') {
+              console.log('ℹ️ Anonymous auth not enabled, continuing...');
+            } else {
+              console.error('❌ App: Anonymous authentication failed:', error);
+            }
+          }
+        } else if (isAlreadyAuthenticated) {
+          console.log('ℹ️ User already authenticated, skipping anonymous sign-in');
         }
       } catch (error: any) {
         console.error('❌ App: Anonymous authentication failed:', error);
