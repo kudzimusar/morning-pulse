@@ -10,6 +10,10 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 const axios = require('axios');
+const cors = require('cors');
+
+// CORS Handler
+const corsHandler = cors({ origin: true });
 
 // --- CONFIGURATION ---
 
@@ -34,7 +38,7 @@ function setCorsHeaders(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Max-Age', '3600');
-  
+
   // Handle preflight
   if (req.method === 'OPTIONS') {
     res.status(204).end();
@@ -58,7 +62,7 @@ const getSystemPrompt = (country = 'Zimbabwe') => {
   const isZimbabwe = country === 'Zimbabwe' || country === 'ZW';
   const localCategory = isZimbabwe ? 'Local (Zim)' : `Local (${country})`;
   const businessCategory = isZimbabwe ? 'Business (Zim)' : 'Business';
-  
+
   return `You are "Morning Pulse", a global news aggregator with local focus. 
 Your output must mirror the professional "Kukurigo" style.
 
@@ -110,7 +114,7 @@ const NEWS_DATA = {
 let db;
 try {
   let serviceAccount = null;
-  
+
   // Try Base64 encoded config first
   if (process.env.FIREBASE_ADMIN_CONFIG_BASE64) {
     try {
@@ -121,16 +125,16 @@ try {
       console.error('❌ Failed to decode Base64 config:', error.message);
     }
   }
-  
+
   // Fallback to regular config - but check if it's Base64-encoded
   if (!serviceAccount && process.env.FIREBASE_ADMIN_CONFIG) {
     try {
       const configString = process.env.FIREBASE_ADMIN_CONFIG.trim();
-      
+
       // Detect if config is Base64-encoded (starts with base64-like pattern)
       // Base64 JSON typically starts with "ewog" (which is {" in base64)
       let parsedConfig = configString;
-      
+
       // Try to detect Base64: if it doesn't start with '{' and contains base64 chars, try decoding
       if (!configString.startsWith('{') && /^[A-Za-z0-9+/=]+$/.test(configString)) {
         try {
@@ -141,7 +145,7 @@ try {
           console.log('ℹ️ Tried Base64 decode, failed, attempting direct JSON parse');
         }
       }
-      
+
       serviceAccount = JSON.parse(parsedConfig);
       console.log('✅ Parsed Firebase config from FIREBASE_ADMIN_CONFIG');
     } catch (error) {
@@ -198,14 +202,14 @@ async function sendWhatsAppMessage(to, message) {
     console.error('❌ sendWhatsAppMessage: No recipient phone number provided');
     return null;
   }
-  
+
   if (!message || message.trim() === '') {
     console.error('❌ sendWhatsAppMessage: Empty message body');
     return null;
   }
-  
+
   const url = `https://graph.facebook.com/v18.0/${WHATSAPP_PHONE_ID}/messages`;
-  
+
   try {
     console.log(`📤 Sending WhatsApp message to ${to} (${message.length} chars)`);
     const response = await axios.post(url, {
@@ -241,26 +245,26 @@ async function getTodaysNews() {
       console.warn('⚠️ Firestore not initialized, will use search fallback');
       return null;
     }
-    
+
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const newsPath = `artifacts/${APP_ID}/public/data/news/${today}`;
-    
+
     const newsDoc = await db.doc(newsPath).get();
-    
+
     if (newsDoc.exists) {
       const data = newsDoc.data();
       const categories = data.categories || {};
-      
+
       // Verify we have data for at least some categories
       if (Object.keys(categories).length > 0) {
         console.log(`✅ Using fresh news from Firestore: ${today} (${Object.keys(categories).length} categories)`);
-        
+
         // Ensure all 7 categories are represented (even if empty)
         const structuredNews = {};
         NEWS_CATEGORIES.forEach(category => {
           structuredNews[category] = categories[category] || [];
         });
-        
+
         return structuredNews;
       } else {
         console.log('ℹ️ News document exists but empty, will use search fallback');
@@ -286,9 +290,9 @@ async function fetchNewsWithSearch(missingCategories = null) {
     // For fallback scenarios, only fetch 3 key categories to avoid timeouts
     const fallbackCategories = ['Local (Zim)', 'Business (Zim)', 'Global'];
     const categoriesToFetch = missingCategories || fallbackCategories;
-    
+
     console.log(`🔍 Fetching news via Google Search for ${categoriesToFetch.length} categories (fallback mode)`);
-    
+
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
       tools: [{ googleSearch: {} }],
@@ -313,7 +317,7 @@ async function fetchNewsWithSearch(missingCategories = null) {
       const today = new Date();
       const dateStr = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const optimizedQuery = `Latest news for ${category === 'Local (Zim)' ? 'Zimbabwe' : category === 'Business (Zim)' ? 'Zimbabwe Business' : category === 'African Focus' ? 'Africa' : category === 'Global' ? 'World' : category} for ${dateStr}. Provide detailed paragraphs and sources.`;
-      
+
       const prompt = `Find the top 3-5 most important and recent news stories for: ${category}.
 Search for: ${optimizedQuery}
 
@@ -337,24 +341,24 @@ Only return valid JSON, no additional text.`;
 
       try {
         // Add timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout after 15 seconds')), 15000)
         );
-        
+
         const generatePromise = model.generateContent(prompt);
         const result = await Promise.race([generatePromise, timeoutPromise]);
         const response = await result.response;
         let text = response.text().trim();
-        
+
         // Extract JSON from markdown code blocks if present
         if (text.startsWith('```json')) {
           text = text.replace(/^```json\n?/, '').replace(/\n?```$/, '');
         } else if (text.startsWith('```')) {
           text = text.replace(/^```\n?/, '').replace(/\n?```$/, '');
         }
-        
+
         const articles = JSON.parse(text);
-        
+
         // Add metadata
         return {
           category: category,
@@ -374,7 +378,7 @@ Only return valid JSON, no additional text.`;
     });
 
     const results = await Promise.all(searchPromises);
-    
+
     // Organize by category
     const newsByCategory = {};
     results.forEach(result => {
@@ -425,35 +429,35 @@ async function handleNewsQuery(userMessage, userId, country = 'Zimbabwe') {
     // Get current date for header
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    
+
     // Get system prompt based on country
     const systemPrompt = getSystemPrompt(country);
-    
+
     // Step 1: Try to get news from Firestore
     let newsData = await getTodaysNews();
-    
+
     // Step 2: If Firestore is empty or missing, use Google Search fallback
     if (!newsData || Object.keys(newsData).length === 0) {
       console.log('📡 Firestore news unavailable, using Google Search fallback');
       newsData = await fetchNewsWithSearch();
-      
+
       // If search also fails, use hardcoded fallback
       if (!newsData || Object.keys(newsData).length === 0) {
         console.log('⚠️ Search fallback failed, using hardcoded news');
         newsData = NEWS_DATA;
       }
     }
-    
+
     // Step 3: Format news for prompt
     const formattedNews = formatNewsForPrompt(newsData);
-    
+
     // Step 4: Use gemini-2.5-flash for response generation with extended timeout
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       // Critical fix for the 30s SDK timeout - extend to 240 seconds
       requestOptions: { timeout: 240000 }
     });
-    
+
     // Step 5: Build comprehensive prompt
     const prompt = `${systemPrompt}
 
@@ -477,10 +481,10 @@ CRITICAL: Generate a COMPLETE Morning Pulse news bulletin covering ALL 7 categor
 If the user asks a specific question, answer it using the news context provided. If they ask for "news" or "update", provide the full formatted bulletin with all 7 categories.`;
 
     // Generate content with timeout and token limits
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Request timeout after 25 seconds')), 25000)
     );
-    
+
     const generatePromise = model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
@@ -488,7 +492,7 @@ If the user asks a specific question, answer it using the news context provided.
         temperature: 0.7
       }
     });
-    
+
     const result = await Promise.race([generatePromise, timeoutPromise]);
     const response = result.response;
     let responseText = response.text();
@@ -509,7 +513,7 @@ If the user asks a specific question, answer it using the news context provided.
 
     console.log(`✅ Gemini AI response generated with Kukurigo formatting (${responseText.length} characters)`);
     return responseText;
-    
+
   } catch (error) {
     console.error("❌ Error in handleNewsQuery:", error.message);
     console.error("Error details:", {
@@ -526,7 +530,7 @@ If the user asks a specific question, answer it using the news context provided.
  * Responds immediately to Meta, then processes in background
  */
 exports.webhook = async (req, res) => {
-  
+
   // Handle GET request (webhook verification)
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
@@ -571,10 +575,10 @@ exports.webhook = async (req, res) => {
   // Handle POST request (incoming messages)
   if (req.method === 'POST') {
     const body = req.body;
-    
+
     // CRITICAL: Acknowledge Meta immediately to prevent timeout
     res.status(200).send('EVENT_RECEIVED');
-    
+
     // Process message in background (don't await - let it run asynchronously)
     // Store the promise to keep function alive
     const backgroundTask = (async () => {
@@ -583,33 +587,33 @@ exports.webhook = async (req, res) => {
           const entry = body.entry?.[0];
           const changes = entry?.changes?.[0];
           const value = changes?.value;
-          
+
           if (value?.messages) {
             const message = value.messages[0];
             const messageId = message.id;
-            
+
             // Skip if already processed (prevents duplicates from WhatsApp retries)
             if (processedMessages.has(messageId)) {
               console.log(`⏭️ Skipping duplicate message: ${messageId}`);
               return;
             }
-            
+
             // Add to processed set
             processedMessages.add(messageId);
-            
+
             // Clean up old messages after 10 minutes
             setTimeout(() => {
               processedMessages.delete(messageId);
             }, 600000);
-            
+
             const from = message.from;
             const messageText = message.text?.body || '';
-            
+
             if (!from) {
               console.error('❌ No sender phone number found');
               return;
             }
-            
+
             if (message.type !== 'text') {
               await sendWhatsAppMessage(from, "I currently only process text messages. Please type your query!");
               return;
@@ -629,13 +633,13 @@ exports.webhook = async (req, res) => {
                     .doc('data')
                     .collection('subscribers')
                     .doc(from);
-                  
+
                   await subRef.set({
                     phoneNumber: from,
                     status: 'active',
                     subscribedAt: admin.firestore.FieldValue.serverTimestamp()
                   }, { merge: true });
-                  
+
                   await sendWhatsAppMessage(from, "✅ *Morning Pulse: Subscribed!*\n\nYou'll receive updates every 5 hours.");
                   console.log(`✅ Subscribed user ${from} to Morning Pulse`);
                 } catch (err) {
@@ -647,31 +651,31 @@ exports.webhook = async (req, res) => {
               }
               return;
             }
-            
+
             // Handle news queries - this may take 20-30 seconds
             // Process in background and send response when ready
             console.log(`🔄 Starting news query processing for ${from}...`);
-            
+
             // Extract country from message if specified, otherwise default to Zimbabwe
             let country = 'Zimbabwe';
             const countryMatch = messageText.match(/(?:for|from)\s+([A-Za-z\s]+)/i);
             if (countryMatch) {
               country = countryMatch[1].trim();
             }
-            
+
             const aiResponse = await handleNewsQuery(messageText, from, country);
-            
+
             if (!aiResponse || aiResponse.trim() === '') {
               console.error('❌ Empty response from handleNewsQuery');
               await sendWhatsAppMessage(from, "⚠️ I couldn't generate a response. Please try again.");
               return;
             }
-            
+
             console.log(`✅ Generated response (${aiResponse.length} chars), sending to ${from}...`);
-            
+
             // Send response via WhatsApp
             const sendResult = await sendWhatsAppMessage(from, aiResponse);
-            
+
             if (sendResult) {
               console.log('✅ WhatsApp message sent successfully');
             } else {
@@ -693,13 +697,13 @@ exports.webhook = async (req, res) => {
         }
       }
     })(); // Immediately invoked async function - runs in background
-    
+
     // Keep the promise reference to prevent early termination
     // In Cloud Functions, the function will stay alive until the promise resolves
     backgroundTask.catch(err => {
       console.error('❌ Unhandled error in background task:', err);
     });
-    
+
     // Function returns immediately after starting background task
     return;
   }
@@ -741,14 +745,14 @@ exports.getOpinions = async (req, res) => {
 
     const status = req.query.status || 'all'; // 'pending', 'published', or 'all'
     const appId = APP_ID;
-    
+
     // Use admin SDK path structure: artifacts/{appId}/public/data/opinions
     const opinionsRef = db.collection('artifacts').doc(appId)
       .collection('public').doc('data')
       .collection('opinions');
 
     let query = opinionsRef;
-    
+
     // Apply status filter if specified
     if (status === 'pending') {
       query = query.where('status', '==', 'pending');
@@ -809,9 +813,9 @@ async function sendBrevoEmail({ toEmail, toName, subject, html }) {
   try {
     console.log(`📡 Attempting Brevo API call to: ${toEmail}`);
     const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
-      sender: { 
-        email: NEWSLETTER_FROM_EMAIL,  
-        name: NEWSLETTER_FROM_NAME 
+      sender: {
+        email: NEWSLETTER_FROM_EMAIL,
+        name: NEWSLETTER_FROM_NAME
       },
       to: [{ email: toEmail, name: toName || '' }],
       subject,
@@ -835,6 +839,7 @@ async function sendBrevoEmail({ toEmail, toName, subject, html }) {
     let errorDetail = error.message;
     if (error.response) {
       errorDetail = `Status ${error.response.status}: ${JSON.stringify(error.response.data)}`;
+      console.error(`❌ Brevo API Error Response for ${toEmail}:`, JSON.stringify(error.response.data, null, 2));
     }
     console.error(`❌ Brevo API Failure for ${toEmail}:`, errorDetail);
     return { success: false, error: errorDetail };
@@ -849,7 +854,7 @@ async function sendBrevoEmail({ toEmail, toName, subject, html }) {
 async function sendNewsletterEmail(newsletter, recipients) {
   const { subject, html } = newsletter;
   const results = [];
-  
+
   // Brevo free tier has daily limits, so we send one by one
   // In a high-volume scenario, we'd use their batch/template API
   for (const recipient of recipients) {
@@ -925,16 +930,14 @@ function segmentSubscribers(subscribers, interests = null) {
  * Trigger: HTTP POST with newsletter content
  */
 exports.sendNewsletter = async (req, res) => {
-  // Set CORS headers and handle preflight
-  if (setCorsHeaders(req, res)) return;
+  return corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+      return;
+    }
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-    return;
-  }
-
-  try {
-    const { newsletter, interests } = req.body;
+    try {
+      const { newsletter, interests } = req.body;
 
       if (!newsletter || !newsletter.subject || !newsletter.html) {
         res.status(400).json({ error: 'Missing required fields: newsletter.subject, newsletter.html' });
@@ -1015,13 +1018,14 @@ exports.sendNewsletter = async (req, res) => {
         }
       });
 
-  } catch (error) {
-    console.error('❌ Newsletter send error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    } catch (error) {
+      console.error('❌ Newsletter send error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
 };
 
 /**
@@ -1029,15 +1033,13 @@ exports.sendNewsletter = async (req, res) => {
  * Supports subscribe, unsubscribe, and update preferences
  */
 exports.manageSubscription = async (req, res) => {
-  // Set CORS headers and handle preflight
-  if (setCorsHeaders(req, res)) return;
+  return corsHandler(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+      return;
+    }
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
-    return;
-  }
-
-  try {
+    try {
       const { action, email, name, interests } = req.body;
 
       if (!email || !action) {
@@ -1098,13 +1100,14 @@ exports.manageSubscription = async (req, res) => {
         res.status(400).json({ error: 'Invalid action. Use: subscribe, unsubscribe, update' });
       }
 
-  } catch (error) {
-    console.error('❌ Subscription management error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    } catch (error) {
+      console.error('❌ Subscription management error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
 };
 
 /**
@@ -1112,7 +1115,7 @@ exports.manageSubscription = async (req, res) => {
  */
 function generateNewsletterHTML({ title, currentDate, articles, ads, type }) {
   const baseUrl = 'https://kudzimusar.github.io/morning-pulse/';
-  
+
   const articleHTML = articles.map((article, index) => {
     const url = `${baseUrl}#opinion/${article.slug || article.id}`;
     const pubDate = article.publishedAt.toLocaleDateString('en-US', {
@@ -1225,11 +1228,10 @@ function generateNewsletterHTML({ title, currentDate, articles, ads, type }) {
  * Automatically sends newsletters on schedule (can be triggered by Cloud Scheduler)
  */
 exports.sendScheduledNewsletter = async (req, res) => {
-  // Set CORS headers and handle preflight
-  if (setCorsHeaders(req, res)) return;
+  return corsHandler(req, res, async () => {
 
-  try {
-    const { newsletterType = 'weekly' } = req.body || {};
+    try {
+      const { newsletterType = 'weekly' } = req.body || {};
 
       // Get recent published opinions (last 7 days for weekly, 1 day for daily)
       const cutoffDate = new Date();
@@ -1292,7 +1294,7 @@ exports.sendScheduledNewsletter = async (req, res) => {
           .collection('public')
           .doc('data')
           .collection('ads');
-        
+
         const activeAdsSnapshot = await adsRef
           .where('status', '==', 'active')
           .where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
@@ -1354,7 +1356,7 @@ exports.sendScheduledNewsletter = async (req, res) => {
       try {
         const sendId = `${newsletterType}_${Date.now()}`;
         const sentAt = admin.firestore.FieldValue.serverTimestamp();
-        
+
         await db.collection('artifacts')
           .doc(APP_ID)
           .collection('analytics')
@@ -1412,13 +1414,14 @@ exports.sendScheduledNewsletter = async (req, res) => {
         }
       });
 
-  } catch (error) {
-    console.error('❌ Scheduled newsletter error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    } catch (error) {
+      console.error('❌ Scheduled newsletter error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
 };
 
 
@@ -1456,20 +1459,20 @@ exports.computeWriterMetrics = async (req, res) => {
       .collection('opinions');
 
     const opinionsSnap = await opinionsRef.get();
-    
+
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
+
     // Aggregate by writerId (authorId)
     const writerStats = {};
-    
+
     opinionsSnap.forEach(docSnap => {
       const data = docSnap.data();
       const writerId = data.authorId;
-      
+
       // Skip if no authorId (anonymous submissions)
       if (!writerId) return;
-      
+
       // Initialize writer stats if needed
       if (!writerStats[writerId]) {
         writerStats[writerId] = {
@@ -1494,22 +1497,22 @@ exports.computeWriterMetrics = async (req, res) => {
           categoryBreakdown: {}
         };
       }
-      
+
       const stats = writerStats[writerId];
       const submittedAt = data.submittedAt?.toDate?.() || new Date();
       const publishedAt = data.publishedAt?.toDate?.();
       const status = data.status;
       const category = data.category || 'general';
-      
+
       // Update writer name if newer
       if (data.authorName) stats.writerName = data.authorName;
-      
+
       // Lifetime stats
       stats.lifetime.totalSubmitted++;
-      
+
       if (status === 'published') {
         stats.lifetime.totalPublished++;
-        
+
         // Track first/last published dates
         if (publishedAt) {
           if (!stats.lifetime.firstPublishedAt || publishedAt < stats.lifetime.firstPublishedAt) {
@@ -1519,13 +1522,13 @@ exports.computeWriterMetrics = async (req, res) => {
             stats.lifetime.lastPublishedAt = publishedAt;
           }
         }
-        
+
         // Category breakdown
         if (!stats.categoryBreakdown[category]) {
           stats.categoryBreakdown[category] = { published: 0, views: 0 };
         }
         stats.categoryBreakdown[category].published++;
-        
+
         // Calculate review time
         if (publishedAt && submittedAt) {
           const reviewHours = (publishedAt.getTime() - submittedAt.getTime()) / (1000 * 60 * 60);
@@ -1535,7 +1538,7 @@ exports.computeWriterMetrics = async (req, res) => {
       } else if (status === 'rejected') {
         stats.lifetime.totalRejected++;
       }
-      
+
       // 30-day stats
       if (submittedAt >= thirtyDaysAgo) {
         stats.rolling30d.submitted++;
@@ -1543,33 +1546,33 @@ exports.computeWriterMetrics = async (req, res) => {
         if (status === 'rejected') stats.rolling30d.rejected++;
       }
     });
-    
+
     // Calculate derived metrics and save
     const metricsRef = db.collection('artifacts')
       .doc(APP_ID)
       .collection('public')
       .doc('data')
       .collection('writerMetrics');
-    
+
     const batch = db.batch();
     let processedCount = 0;
-    
+
     for (const writerId in writerStats) {
       const stats = writerStats[writerId];
-      
+
       // Calculate averages and rates
-      const avgReviewHours = stats.rolling30d.reviewedCount > 0 
-        ? stats.rolling30d.totalReviewHours / stats.rolling30d.reviewedCount 
+      const avgReviewHours = stats.rolling30d.reviewedCount > 0
+        ? stats.rolling30d.totalReviewHours / stats.rolling30d.reviewedCount
         : 0;
-      
-      const rejectionRate = stats.lifetime.totalSubmitted > 0 
-        ? (stats.lifetime.totalRejected / stats.lifetime.totalSubmitted) * 100 
+
+      const rejectionRate = stats.lifetime.totalSubmitted > 0
+        ? (stats.lifetime.totalRejected / stats.lifetime.totalSubmitted) * 100
         : 0;
-      
-      const avgViewsPerArticle = stats.lifetime.totalPublished > 0 
-        ? stats.lifetime.totalViews / stats.lifetime.totalPublished 
+
+      const avgViewsPerArticle = stats.lifetime.totalPublished > 0
+        ? stats.lifetime.totalViews / stats.lifetime.totalPublished
         : 0;
-      
+
       const metricsDoc = {
         writerId,
         writerName: stats.writerName,
@@ -1594,23 +1597,23 @@ exports.computeWriterMetrics = async (req, res) => {
         lastComputed: admin.firestore.FieldValue.serverTimestamp(),
         categoryBreakdown: stats.categoryBreakdown
       };
-      
+
       const writerMetricRef = metricsRef.doc(writerId);
       batch.set(writerMetricRef, metricsDoc, { merge: true });
       processedCount++;
     }
-    
+
     await batch.commit();
-    
+
     console.log(`✅ Writer metrics computed for ${processedCount} writers`);
-    
+
     res.status(200).json({
       success: true,
       message: `Computed metrics for ${processedCount} writers`,
       writersProcessed: processedCount,
       computedAt: new Date().toISOString()
     });
-    
+
   } catch (error) {
     console.error('❌ Error computing writer metrics:', error);
     res.status(500).json({
@@ -1718,42 +1721,42 @@ exports.generateWriterStatements = async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(204).send('');
   }
-  
+
   try {
     // Get period parameters
     const { periodStart, periodEnd, writerId } = req.query;
-    
+
     if (!periodStart || !periodEnd) {
       return res.status(400).json({
         success: false,
         error: 'periodStart and periodEnd query parameters are required'
       });
     }
-    
+
     const startDate = new Date(periodStart);
     const endDate = new Date(periodEnd);
-    
+
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return res.status(400).json({
         success: false,
         error: 'Invalid date format. Use ISO date strings.'
       });
     }
-    
+
     console.log(`📊 Generating statements for period: ${periodStart} to ${periodEnd}`);
-    
+
     // Build query for published opinions in the period
     let opinionsQuery = db.collection('opinions')
       .where('status', '==', 'published')
       .where('publishedAt', '>=', startDate)
       .where('publishedAt', '<=', endDate);
-    
+
     const opinionsSnapshot = await opinionsQuery.get();
-    
+
     if (opinionsSnapshot.empty) {
       console.log('⚠️ No published opinions found in the specified period');
       return res.status(200).json({
@@ -1762,19 +1765,19 @@ exports.generateWriterStatements = async (req, res) => {
         statementsGenerated: 0
       });
     }
-    
+
     // Group opinions by writer
     const writerArticles = {};
-    
+
     opinionsSnapshot.forEach((doc) => {
       const opinion = doc.data();
       const authorId = opinion.authorId;
-      
+
       // Skip if filtering by specific writer and this isn't them
       if (writerId && authorId !== writerId) {
         return;
       }
-      
+
       if (!writerArticles[authorId]) {
         writerArticles[authorId] = {
           writerId: authorId,
@@ -1782,10 +1785,10 @@ exports.generateWriterStatements = async (req, res) => {
           articles: []
         };
       }
-      
+
       // Calculate word count from body
       const wordCount = opinion.body ? opinion.body.split(/\s+/).filter(w => w.length > 0).length : 0;
-      
+
       writerArticles[authorId].articles.push({
         opinionId: doc.id,
         headline: opinion.headline || 'Untitled',
@@ -1793,14 +1796,14 @@ exports.generateWriterStatements = async (req, res) => {
         wordCount: wordCount
       });
     });
-    
+
     // Fetch writer payment profiles and generate statements
     const batch = db.batch();
     let statementsGenerated = 0;
-    
+
     for (const authorId of Object.keys(writerArticles)) {
       const writerData = writerArticles[authorId];
-      
+
       // Fetch writer's payment profile
       const writerDoc = await db.collection('writers').doc(authorId).get();
       let paymentProfile = {
@@ -1809,7 +1812,7 @@ exports.generateWriterStatements = async (req, res) => {
         currency: 'USD',
         payoutMethod: 'manual'
       };
-      
+
       if (writerDoc.exists) {
         const writerProfile = writerDoc.data();
         if (writerProfile.paymentProfile) {
@@ -1820,12 +1823,12 @@ exports.generateWriterStatements = async (req, res) => {
         }
         writerData.writerName = writerProfile.displayName || writerProfile.name || writerData.writerName;
       }
-      
+
       // Calculate total amounts based on payment model
       let totalAmountDue = 0;
       const totalWords = writerData.articles.reduce((sum, a) => sum + a.wordCount, 0);
       const articlesCount = writerData.articles.length;
-      
+
       switch (paymentProfile.model) {
         case 'per-article':
           totalAmountDue = articlesCount * (paymentProfile.rate || 0);
@@ -1840,22 +1843,22 @@ exports.generateWriterStatements = async (req, res) => {
         default:
           totalAmountDue = 0;
       }
-      
+
       // Calculate per-article amounts for statement details
       const articlesWithAmounts = writerData.articles.map(article => ({
         ...article,
-        amount: paymentProfile.model === 'per-article' 
+        amount: paymentProfile.model === 'per-article'
           ? (paymentProfile.rate || 0)
           : paymentProfile.model === 'per-word'
             ? article.wordCount * (paymentProfile.rate || 0)
             : totalAmountDue / articlesCount // Distribute salary evenly
       }));
-      
+
       // Create statement document
       const statementId = `${periodStart.substring(0, 7)}-${Date.now()}`;
       const statementRef = db.collection('writerPayments').doc(authorId)
         .collection('statements').doc(statementId);
-      
+
       const statement = {
         id: statementId,
         writerId: authorId,
@@ -1872,17 +1875,17 @@ exports.generateWriterStatements = async (req, res) => {
         generatedAt: admin.firestore.FieldValue.serverTimestamp(),
         articles: articlesWithAmounts
       };
-      
+
       batch.set(statementRef, statement);
       statementsGenerated++;
-      
+
       console.log(`📝 Generated statement for ${writerData.writerName}: ${articlesCount} articles, ${paymentProfile.currency} ${totalAmountDue.toFixed(2)}`);
     }
-    
+
     await batch.commit();
-    
+
     console.log(`✅ Generated ${statementsGenerated} payment statements`);
-    
+
     res.status(200).json({
       success: true,
       message: `Generated ${statementsGenerated} payment statements`,
@@ -1892,7 +1895,7 @@ exports.generateWriterStatements = async (req, res) => {
         end: periodEnd
       }
     });
-    
+
   } catch (error) {
     console.error('❌ Error generating writer statements:', error);
     res.status(500).json({
@@ -1923,28 +1926,28 @@ exports.autoPublishScheduledStories = async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(204).send('');
   }
-  
+
   try {
     console.log('🕐 Auto-publisher: Checking for scheduled stories...');
-    
+
     const now = new Date();
-    
+
     // Query for scheduled stories where scheduledFor has passed
     const opinionsRef = db.collection('artifacts')
       .doc('morning-pulse-app')
       .collection('public')
       .collection('data')
       .collection('opinions');
-    
+
     const scheduledQuery = opinionsRef
       .where('status', '==', 'scheduled');
-    
+
     const snapshot = await scheduledQuery.get();
-    
+
     if (snapshot.empty) {
       console.log('📭 No scheduled stories found');
       return res.status(200).json({
@@ -1954,29 +1957,29 @@ exports.autoPublishScheduledStories = async (req, res) => {
         checkedAt: now.toISOString()
       });
     }
-    
+
     console.log(`📋 Found ${snapshot.size} scheduled stories to check`);
-    
+
     const batch = db.batch();
     let publishedCount = 0;
     const publishedStories = [];
-    
+
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
-      const scheduledFor = data.scheduledFor?.toDate ? data.scheduledFor.toDate() : 
-                           data.scheduledFor ? new Date(data.scheduledFor) : null;
-      
+      const scheduledFor = data.scheduledFor?.toDate ? data.scheduledFor.toDate() :
+        data.scheduledFor ? new Date(data.scheduledFor) : null;
+
       if (!scheduledFor) {
         console.warn(`⚠️ Story ${docSnap.id} is scheduled but has no scheduledFor timestamp`);
         continue;
       }
-      
+
       // Check if scheduled time has passed
       if (scheduledFor <= now) {
         console.log(`📰 Auto-publishing: "${data.headline}" (scheduled for ${scheduledFor.toISOString()})`);
-        
+
         const docRef = opinionsRef.doc(docSnap.id);
-        
+
         batch.update(docRef, {
           status: 'published',
           publishedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1985,7 +1988,7 @@ exports.autoPublishScheduledStories = async (req, res) => {
           // Keep editorialMeta approval timestamp for SLA tracking
           'editorialMeta.approvalAt': admin.firestore.FieldValue.serverTimestamp()
         });
-        
+
         publishedCount++;
         publishedStories.push({
           id: docSnap.id,
@@ -1998,11 +2001,11 @@ exports.autoPublishScheduledStories = async (req, res) => {
         console.log(`⏰ Story "${data.headline}" scheduled for ${timeUntil} minutes from now`);
       }
     }
-    
+
     if (publishedCount > 0) {
       await batch.commit();
       console.log(`✅ Auto-published ${publishedCount} stories`);
-      
+
       // Log to auto-publish audit collection (optional)
       try {
         await db.collection('autoPublishLog').add({
@@ -2015,17 +2018,17 @@ exports.autoPublishScheduledStories = async (req, res) => {
         console.warn('Could not write to audit log:', logError.message);
       }
     }
-    
+
     res.status(200).json({
       success: true,
-      message: publishedCount > 0 
+      message: publishedCount > 0
         ? `Auto-published ${publishedCount} scheduled stories`
         : 'No stories were ready to publish',
       publishedCount,
       publishedStories,
       checkedAt: now.toISOString()
     });
-    
+
   } catch (error) {
     console.error('❌ Error in auto-publisher:', error);
     res.status(500).json({
