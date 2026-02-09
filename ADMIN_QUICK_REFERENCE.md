@@ -84,10 +84,11 @@
 ## 📢 Advertising (Ad Management)
 
 - **Manage Campaigns**: Admin Dashboard > Ad Management tab
+- **How to Add Paid Ads**: [Step-by-Step Guide](HOW_TO_ADD_PAID_ADS.md)
 - **Fix "No Ads"**: Ensure ads are set to **'active'** and **'paid'**.
-  - See full guide: `AD_DEBUGGING_GUIDE.md`
+  - See full debugging guide: `AD_DEBUGGING_GUIDE.md`
 - **Ad Specs**:
-  - Header: 728x90 or 970x250
+  - Header: 728x90 or 970x250 (Desktop), 300x50 or 320x100 (Mobile)
   - Sidebar: 300x250 or 300x600
   - Inline: 300x250
 
