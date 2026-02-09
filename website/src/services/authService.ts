@@ -293,15 +293,16 @@ export const getReaderRole = async (uid: string): Promise<string[] | null> => {
 };
 
 /**
- * Check if user has editor, admin, or super_admin role
+ * Check if user has editor, admin role.
+ * This is now stricter and will not return true for a super_admin.
  * Supports roles array (new format) with backward compatibility
  */
 export const requireEditor = (roles: StaffRole): boolean => {
   if (!roles || !Array.isArray(roles)) {
     return false;
   }
-  // ✅ Check if roles array includes any editor-level permission
-  return roles.includes('editor') || roles.includes('admin') || roles.includes('super_admin');
+  // ✅ FIX: Check for editor-level permission but EXCLUDE super_admin
+  return (roles.includes('editor') || roles.includes('admin')) && !roles.includes('super_admin');
 };
 
 /**
