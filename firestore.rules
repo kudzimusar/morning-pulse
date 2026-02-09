@@ -1,360 +1,168 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ===========================================
-    // HELPERS
-    // ===========================================
-    
-    function isAuthenticated() {
+    // --- Helper Functions ---
+    function isSignedIn() {
       return request.auth != null;
     }
-
-    function getStaffDoc() {
-      // Path must be absolute and point to the specific staff collection
-      return get(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/staff/$(request.auth.uid));
+    
+    function getRole() {
+      return request.auth.token.role;
     }
-
-    function hasRole(role) {
-      return isAuthenticated() && 
-             exists(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/staff/$(request.auth.uid)) &&
-             getStaffDoc().data.roles.hasAny([role]);
+    
+    function isSuperAdmin() {
+      return getRole() == 'super_admin';
     }
-
-    function isAdmin() {
-      return hasRole('admin') || hasRole('super_admin');
+    
+    function isBureauChief() {
+      return getRole() in ['bureau_chief', 'super_admin'];
     }
-
+    
     function isEditor() {
-      return hasRole('editor') || hasRole('admin') || hasRole('super_admin');
+      return getRole() in ['editor', 'bureau_chief', 'super_admin'];
+    }
+    
+    function isAdmin() {
+      return getRole() in ['admin', 'super_admin'];
+    }
+    
+    function isWriter() {
+      return getRole() == 'writer';
+    }
+    
+    function isOwner(resource) {
+      return request.auth.uid == resource.data.authorId || request.auth.uid == resource.data.uid;
+    }
+    
+    function getStaffData(uid) {
+      // This function retrieves the user's specific sub-type from the /staff collection.
+      return get(/databases/$(database)/documents/staff/$(uid)).data;
     }
 
-    function isAdOps() {
-      return hasRole('ad_manager') || hasRole('sales') || hasRole('admin') || hasRole('super_admin');
+    // --- Main Application Data ---
+    match /artifacts/morning-pulse-app/{document=**} {
+      
+      // --- Opinions & Articles ---
+      match /public/data/opinions/{opinionId} {
+        // READ: Anyone can read a published article.
+        allow read: if resource.data.status == 'published';
+        
+        // READ: Authors, editors, and above can read non-published articles.
+        allow read: if isSignedIn() && (isOwner(resource) || isEditor());
+
+        // CREATE: Rules for creating new articles.
+        allow create: if isSignedIn() && (
+          // Case 1: Journalist (Staff)
+          // Can create a draft directly.
+          (
+            isWriter() && getStaffData(request.auth.uid).writerType == 'journalist' &&
+            request.resource.data.authorId == request.auth.uid &&
+            request.resource.data.status == 'draft' 
+          ) ||
+          // Case 2: Pitch Writer (Freelance)
+          // Can create an article ONLY if it's linked to their own approved pitch.
+          (
+            isWriter() && getStaffData(request.auth.uid).writerType == 'pitch_writer' &&
+            request.resource.data.authorId == request.auth.uid &&
+            exists(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/pitches/$(request.resource.data.pitchId)) &&
+            get(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/pitches/$(request.resource.data.pitchId)).data.status == 'approved' &&
+            get(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/pitches/$(request.resource.data.pitchId)).data.authorId == request.auth.uid
+          ) ||
+          // Case 3: Guest Writer / Opinion Submission (Regular User)
+          // Can create a submission that is immediately marked as 'pending'.
+          (
+             getRole() == 'user' && 
+             request.resource.data.authorId == request.auth.uid &&
+             request.resource.data.status == 'pending' &&
+             !('writerType' in request.resource.data) // Cannot set a writer type.
+          )
+        );
+
+        // UPDATE: Rules for modifying existing articles.
+        allow update: if isSignedIn() && (
+          // An author can update their own article if it's a draft or requires changes.
+          // They cannot, however, change the status themselves.
+          (
+            isOwner(resource) &&
+            resource.data.status in ['draft', 'changes_requested'] &&
+            request.resource.data.status == resource.data.status &&
+            request.resource.data.authorId == request.auth.uid
+          ) ||
+          // Editors, Bureau Chiefs, and Super Admins can update any article at any time.
+          // This allows them to approve, publish, reject, or edit content.
+          isEditor()
+        );
+
+        // DELETE: Only the highest-level roles can delete content.
+        allow delete: if isSignedIn() && isBureauChief();
+      }
+
+      // --- Article Pitches (from Freelancers) ---
+      match /public/data/pitches/{pitchId} {
+        // CREATE: A pitch writer can create a pitch.
+        allow create: if isSignedIn() && isWriter() && getStaffData(request.auth.uid).writerType == 'pitch_writer' && request.resource.data.authorId == request.auth.uid;
+        
+        // READ: The author can read their own pitch. Editors can read any pitch.
+        allow read: if isSignedIn() && (isOwner(resource) || isEditor());
+        
+        // UPDATE: The author can edit a PENDING pitch. Editors can update any pitch (to approve/reject).
+        allow update: if isSignedIn() && (
+          (isOwner(resource) && resource.data.status == 'pending') || isEditor()
+        );
+        
+        // DELETE: The author can delete a PENDING pitch. Editors can delete any.
+        allow delete: if isSignedIn() && ((isOwner(resource) && resource.data.status == 'pending') || isEditor());
+      }
+      
+      // --- Advertisements ---
+      match /public/data/ads/{adId} {
+        allow read: if isSignedIn() && (isAdmin() || (getRole() == 'advertiser' && isOwner(resource)));
+        allow create: if isSignedIn() && getRole() == 'advertiser' && request.resource.data.advertiserId == request.auth.uid;
+        allow update: if isSignedIn() && ((getRole() == 'advertiser' && isOwner(resource) && resource.data.status == 'pending') || isAdmin());
+      }
+
+      // --- Generated Analytics & Metrics (Read-only for clients) ---
+      match /public/data/writerMetrics/{writerId} {
+        allow read: if isSignedIn() && (request.auth.uid == writerId || isEditor() || isAdmin());
+        allow write: if false; // Should only be written by a trusted backend process.
+      }
+      
+       match /public/data/subscribers/{subscriberId} {
+        allow read, write: if isSignedIn() && request.auth.uid == subscriberId;
+      }
+    }
+    
+    // --- Staff Collection (Private) ---
+    // This collection defines the roles and is highly sensitive.
+    match /staff/{staffId} {
+      // READ: Users can read their own staff profile. Bureau Chiefs can read all profiles.
+      allow read: if isSignedIn() && (request.auth.uid == staffId || isBureauChief());
+      
+      // WRITE: Only Bureau Chiefs and Super Admins can modify roles.
+      // This is the source of truth for the Custom Claims Cloud Function.
+      allow write: if isSignedIn() && isBureauChief();
+    }
+    
+    // --- Public User Profiles ---
+    match /users/{userId} {
+      // READ: Any signed-in user can read a public profile. Admins can also read.
+      allow read: if isSignedIn() || isAdmin();
+      // WRITE: Users can only write to their own profile.
+      allow write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Helper function: Check if user is approved advertiser (requires appId parameter)
-    function isApprovedAdvertiser(appId) {
-      return isAuthenticated() && 
-             exists(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/artifacts/$(appId)/public/data/advertisers/$(request.auth.uid)).data.status == 'approved';
-    }
-    
-    // ===========================================
-    // STAFF COLLECTION
-    // ===========================================
-    match /artifacts/{appId}/public/data/staff/{uid} {
-      // Anyone authenticated can read staff (for role checks, activity display)
-      allow read, list: if isAuthenticated();
-      
-      // Allow create if:
-      // 1. Admin is creating it, OR
-      // 2. User is creating their own during signup (from invitation)
-      allow create: if isAdmin() || 
-                      (request.auth.uid == uid && 
-                       request.resource.data.keys().hasAll(['uid', 'email', 'name', 'roles', 'isActive']) &&
-                       request.resource.data.uid == uid);
-      
-      // Only admins can update staff documents
-      // Exception: Users can update their own lastActive timestamp
-      allow update: if isAdmin() || 
-                      (request.auth.uid == uid && 
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActive', 'updatedAt']));
-      
-      // Only admins can delete staff
-      allow delete: if isAdmin();
-    }
-    
-    // ===========================================
-    // INVITATIONS COLLECTION
-    // ===========================================
-    match /artifacts/{appId}/public/data/invites/{token} {
-      // Anyone can read (needed to validate token on join page)
-      allow read, list: if true;
-      
-      // Only admins can create invitations
-      allow create: if isAdmin();
-      
-      // Only admins can update invitations (revoke, mark as used)
-      // Exception: System can mark invite as 'used' during signup
-      allow update: if isAdmin() || 
-                      (isAuthenticated() && 
-                       request.resource.data.status == 'used' &&
-                       resource.data.status == 'pending');
-      
-      // Only admins can delete invitations
-      allow delete: if isAdmin();
-    }
-    
-    // ===========================================
-    // CONTENT
-    // ===========================================
-    
-    // NEWS COLLECTION
-    match /artifacts/{appId}/public/data/news/{date} {
-      // Public can read and list news
-      allow read, list: if true;
-      allow write: if isEditor();
-    }
-
-    // OPINIONS COLLECTION (Editorial Content)
-    match /artifacts/{appId}/public/data/opinions/{opinionId} {
-      // Public can read and list published opinions; editors can see all
-      // FIX: Allow list for everyone, but filter results in query
-      allow read, list: if true;
-      
-      // ========================================
-      // Sprint 6: Content Validation Functions
-      // ========================================
-      
-      // Validate headline: must exist and be at least 5 characters
-      function hasValidHeadline(data) {
-        return data.keys().hasAny(['headline']) && 
-               data.headline is string && 
-               data.headline.size() >= 5;
-      }
-      
-      // Validate body: must exist and be at least 50 characters
-      function hasValidBody(data) {
-        return data.keys().hasAny(['body']) && 
-               data.body is string && 
-               data.body.size() >= 50;
-      }
-      
-      // Validate authorName: must exist and be at least 2 characters
-      function hasValidAuthorName(data) {
-        return data.keys().hasAny(['authorName']) && 
-               data.authorName is string && 
-               data.authorName.size() >= 2;
-      }
-      
-      // Combined content validation for submissions
-      function isValidOpinionContent(data) {
-        return hasValidHeadline(data) && 
-               hasValidBody(data) && 
-               hasValidAuthorName(data);
-      }
-      
-      // Writers can create opinions (submissions) with valid content
-      allow create: if isAuthenticated() && isValidOpinionContent(request.resource.data);
-      
-      // Editors can update any opinion; writers can update their own (with valid content)
-      allow update: if isEditor() || 
-                      (isAuthenticated() && 
-                       request.auth.uid == resource.data.authorId && 
-                       isValidOpinionContent(request.resource.data));
-      
-      // Only admins can delete opinions
-      allow delete: if isAdmin();
-    }
-    
-    // ===========================================
-    // SOCIAL
-    // ===========================================
-    
-    // PUBLIC REACTIONS COLLECTION
-    match /artifacts/{appId}/public/data/reactions/{reactionId} {
-      allow read, list: if true;
-      allow create: if isAuthenticated() &&
-                      request.resource.data.userId == request.auth.uid;
-      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isEditor();
-      allow update: if false;
-    }
-
-    // PUBLIC COMMENTS COLLECTION
-    match /artifacts/{appId}/public/data/publicComments/{commentId} {
-      allow read, list: if true;
-      allow create: if isAuthenticated() &&
-                      request.resource.data.userId == request.auth.uid &&
-                      request.resource.data.status == 'active';
-      allow update: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isEditor();
-      allow delete: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isEditor();
-    }
-    
-    // ===========================================
-    // ADVERTISING
-    // ===========================================
-    
-    // ADVERTISERS COLLECTION
-    match /artifacts/{appId}/public/data/advertisers/{uid} {
-      allow read, list: if request.auth.uid == uid || isAdmin() || isAdOps();
-      allow create: if request.auth.uid == uid && request.resource.data.status == 'pending_approval';
-      allow update: if isAdmin() || isAdOps();
-      allow delete: if isAdmin();
-    }
-    
-    // ADS COLLECTION
-    match /artifacts/{appId}/public/data/ads/{adId} {
-      // Public can read ads
-      allow read, list: if true;
-      allow create: if isApprovedAdvertiser(appId) && request.resource.data.advertiserId == request.auth.uid;
-      allow update: if isAdmin() || isAdOps();
-      allow delete: if isAdmin();
-    }
-    
-    // AD SLOTS COLLECTION
-    match /artifacts/{appId}/public/data/adSlots/{slotId} {
-      allow read, list: if true;
-      allow create, update: if isAdmin() || isAdOps();
-      allow delete: if isAdmin();
-    }
-    
-    // AD IMPRESSIONS & CLICKS
-    match /artifacts/{appId}/public/data/adImpressions/{impressionId} {
-      allow read, list: if isAdmin() || isAdOps();
-      allow create: if true;
-      allow update, delete: if false;
-    }
-    match /artifacts/{appId}/public/data/adClicks/{clickId} {
-      allow read, list: if isAdmin() || isAdOps();
-      allow create: if true;
-      allow update, delete: if false;
-    }
-    
-    // ===========================================
-    // OTHER COLLECTIONS
-    // ===========================================
-    
-    // WRITERS COLLECTION
-    match /artifacts/{appId}/public/data/writers/{uid} {
-      allow create: if true;
-      allow read, list: if request.auth.uid == uid || isAdmin();
-      allow update: if request.auth.uid == uid || isAdmin();
-      allow delete: if isAdmin();
-    }
-    
-    // ===========================================
-    // STORY PITCHES COLLECTION (Sprint 0)
-    // ===========================================
-    match /artifacts/{appId}/public/data/storyPitches/{pitchId} {
-      // Writers can read their own pitches; editors can read all
-      allow read: if isAuthenticated() && 
-                    (resource.data.writerId == request.auth.uid || isEditor());
-      
-      // Editors can list all pitches; writers see filtered by client
-      allow list: if isAuthenticated();
-      
-      // Writers can create pitches
-      allow create: if isAuthenticated() && 
-                      request.resource.data.writerId == request.auth.uid;
-      
-      // Writers can update their own drafts; editors can update any pitch
-      allow update: if isAuthenticated() && 
-                      ((resource.data.writerId == request.auth.uid && 
-                        resource.data.status in ['draft', 'submitted', 'rejected']) || 
-                       isEditor());
-      
-      // Writers can delete their own drafts; admins can delete any
-      allow delete: if isAuthenticated() && 
-                      ((resource.data.writerId == request.auth.uid && 
-                        resource.data.status == 'draft') || 
-                       isAdmin());
-    }
-    
-    // SHORT LINKS COLLECTION
-    match /short_links/{shortId} {
-      allow read, list: if true;
-      allow create, update: if isEditor();
-      allow delete: if isAdmin();
-    }
-    
-    // ===========================================
-    // NEWSLETTER SUBSCRIBERS
-    // ===========================================
-    match /artifacts/{appId}/public/data/subscribers/{subscriberId} {
-      // Public can read (needed for unsubscribe pages)
-      // Anyone can create (subscribe)
-      // Anyone can update (unsubscribe, update preferences)
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if isAdmin();
-    }
-    
-    // ===========================================
-    // WRITER METRICS COLLECTION (Sprint 3)
-    // ===========================================
-    // Metrics are computed by Cloud Functions
-    // Writers can read their own metrics, admins can read all
-    match /artifacts/{appId}/public/data/writerMetrics/{writerId} {
-      // Writers can read their own metrics
-      allow read: if isAuthenticated() && request.auth.uid == writerId;
-      // Editors and admins can read all metrics
-      allow read: if isEditor();
-      // Cloud Functions use admin SDK for writes
-      allow write: if false;
-    }
-    
-    // Allow listing all metrics for editors/admins (leaderboard)
-    match /artifacts/{appId}/public/data/writerMetrics/{document=**} {
-      allow list: if isEditor();
-    }
-    
-    // ===========================================
-    // WRITER PAYMENTS COLLECTION (Sprint 4)
-    // ===========================================
-    // Payment statements are generated by Cloud Functions
-    // Writers can read their own statements, admins can read/manage all
-    
-    // Allow admins to list all writer payment documents
-    match /writerPayments/{writerId} {
-      // Writers can read their own payment root document
-      allow read: if isAuthenticated() && request.auth.uid == writerId;
-      // Admins can read all payment documents
-      allow read, list: if isAdmin();
-      // Cloud Functions use admin SDK for writes
-      allow write: if false;
-    }
-    
-    // Allow admins to list the root writerPayments collection
-    match /writerPayments/{document=**} {
-      allow list: if isAdmin();
-    }
-    
-    // Payment statements subcollection
-    match /writerPayments/{writerId}/statements/{statementId} {
-      // Writers can read their own statements
-      allow read: if isAuthenticated() && request.auth.uid == writerId;
-      // Admins can read all statements
-      allow read, list: if isAdmin();
-      // Only admins can update statement status (mark as paid, approved)
-      allow update: if isAdmin();
-      // Cloud Functions handle creation (admin SDK)
-      allow create, delete: if false;
-    }
-    
-    // Allow listing all payment statements for admins or the writer
-    match /writerPayments/{writerId}/statements/{document=**} {
-      allow list: if isAdmin() || (isAuthenticated() && request.auth.uid == writerId);
-    }
-    
-    // ===========================================
-    // ANALYTICS COLLECTION
-    // ===========================================
-    // Analytics are written by Cloud Functions (admin SDK)
-    // Only admins can read analytics
-    match /artifacts/{appId}/analytics/{document=**} {
-      allow read: if isAdmin();
-      // Cloud Functions use admin SDK, so client writes are blocked
-      allow write: if false;
-    }
-    
-    // ===========================================
-    // AUTO-PUBLISH AUDIT LOG (Sprint 5)
-    // ===========================================
-    // Audit log for server-side auto-publisher
-    // Written by Cloud Functions, readable by admins
-    match /autoPublishLog/{logId} {
-      allow read: if isAdmin();
-      // Cloud Functions use admin SDK for writes
-      allow write: if false;
-    }
-    
-    // ===========================================
-    // DEFAULT DENY
-    // ===========================================
-    match /{document=**} {
+    // --- Staff Invitations (Private & Backend-Managed) ---
+    match /invites/{inviteId} {
+      // No client-side access. All invite logic is handled by Cloud Functions.
       allow read, write: if false;
+    }
+    
+    // --- Audit Logs (Admin-readable) ---
+    match /auditLog/{logId} {
+      allow read: if isSignedIn() && isBureauChief();
+      allow write: if false; // Only backend processes can write logs.
     }
   }
 }

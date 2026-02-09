@@ -1,22 +1,21 @@
 /**
  * Staff Management Service
- * Handles CRUD operations for staff members
+ * Handles CRUD operations for staff members based on a single-role security model.
  */
 
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  getDocs,
+import {
+  getFirestore,
+  collection,
   doc,
+  getDocs,
   getDoc,
-  setDoc,
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  Firestore
+  Firestore,
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
+import { WriterType } from '../types'; // Import the WriterType definition
 
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
@@ -35,7 +34,8 @@ export interface StaffMember {
   uid: string;
   email: string;
   name: string;
-  roles: string[];
+  role: string; // A single, primary role
+  writerType?: WriterType; // e.g., 'journalist' or 'pitch_writer'
   createdAt?: Date;
   lastActive?: Date;
   updatedAt?: Date;
@@ -48,11 +48,11 @@ export interface StaffMember {
 }
 
 /**
- * Get all staff members
+ * Get all staff members from the /staff collection.
  */
 export const getAllStaff = async (): Promise<StaffMember[]> => {
   const db = getDb();
-  const staffRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'staff');
+  const staffRef = collection(db, 'staff');
   
   const snapshot = await getDocs(staffRef);
   const staff: StaffMember[] = [];
@@ -63,7 +63,8 @@ export const getAllStaff = async (): Promise<StaffMember[]> => {
       uid: docSnap.id,
       email: data.email || '',
       name: data.name || '',
-      roles: data.roles || [],
+      role: data.role || 'writer', // Default to 'writer' for legacy data
+      writerType: data.writerType,
       isActive: data.isActive !== undefined ? data.isActive : true,
       createdAt: data.createdAt?.toDate?.() || undefined,
       lastActive: data.lastActive?.toDate?.() || undefined,
@@ -76,19 +77,15 @@ export const getAllStaff = async (): Promise<StaffMember[]> => {
     });
   });
   
-  return staff.sort((a, b) => {
-    const nameA = a.name.toLowerCase();
-    const nameB = b.name.toLowerCase();
-    return nameA.localeCompare(nameB);
-  });
+  return staff.sort((a, b) => a.name.localeCompare(b.name));
 };
 
 /**
- * Get staff member by UID
+ * Get a single staff member by their UID.
  */
 export const getStaffMember = async (uid: string): Promise<StaffMember | null> => {
   const db = getDb();
-  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
+  const staffRef = doc(db, 'staff', uid);
   
   try {
     const snap = await getDoc(staffRef);
@@ -98,7 +95,8 @@ export const getStaffMember = async (uid: string): Promise<StaffMember | null> =
         uid: snap.id,
         email: data.email || '',
         name: data.name || '',
-        roles: data.roles || [],
+        role: data.role || 'writer',
+        writerType: data.writerType,
         isActive: data.isActive !== undefined ? data.isActive : true,
         createdAt: data.createdAt?.toDate?.() || undefined,
         lastActive: data.lastActive?.toDate?.() || undefined,
@@ -118,68 +116,47 @@ export const getStaffMember = async (uid: string): Promise<StaffMember | null> =
 };
 
 /**
- * Create or update staff member
- * Note: This requires admin role - should be checked in component
+ * Update a staff member's role and, if applicable, their writer type.
+ * This is the primary function for changing a user's permissions.
  */
-export const upsertStaffMember = async (
+export const updateStaffRole = async (
   uid: string,
-  email: string,
-  name: string,
-  roles: string[]
+  role: string,
+  writerType?: WriterType
 ): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
+  const staffRef = doc(db, 'staff', uid);
   
-  const snap = await getDoc(staffRef);
-  const existingData = snap.exists() ? snap.data() : null;
-  
-  await setDoc(staffRef, {
-    email,
-    name,
-    roles,
-    createdAt: existingData?.createdAt || serverTimestamp(),
+  const payload: { [key: string]: any } = {
+    role,
     updatedAt: serverTimestamp(),
-  }, { merge: true });
+  };
+
+  // Only set writerType if the role is 'writer'. Otherwise, clear it.
+  if (role === 'writer') {
+    payload.writerType = writerType || 'journalist'; // Default to journalist
+  } else {
+    payload.writerType = null; // Clear the writerType for non-writer roles
+  }
+  
+  await updateDoc(staffRef, payload);
 };
 
 /**
- * Update staff member roles
- */
-export const updateStaffRoles = async (
-  uid: string,
-  roles: string[]
-): Promise<void> => {
-  const db = getDb();
-  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
-  
-  await updateDoc(staffRef, {
-    roles,
-    updatedAt: serverTimestamp(),
-  });
-};
-
-/**
- * Update staff member last active timestamp
+ * Update staff member last active timestamp.
  */
 export const updateLastActive = async (uid: string): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
-  
+  const staffRef = doc(db, 'staff', uid);
   try {
-    await updateDoc(staffRef, {
-      lastActive: serverTimestamp(),
-    });
+    await updateDoc(staffRef, { lastActive: serverTimestamp() });
   } catch (error) {
-    // Fail silently - last active is not critical
     console.warn('Could not update last active:', error);
   }
 };
 
 /**
- * Suspend a staff member
- * @param uid - Staff member UID
- * @param suspendedBy - Admin UID performing suspension
- * @param suspendedByName - Admin name performing suspension
+ * Suspend a staff member, preventing them from logging in.
  */
 export const suspendStaffMember = async (
   uid: string,
@@ -187,7 +164,7 @@ export const suspendStaffMember = async (
   suspendedByName: string
 ): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
+  const staffRef = doc(db, 'staff', uid);
   
   await updateDoc(staffRef, {
     isActive: false,
@@ -196,17 +173,14 @@ export const suspendStaffMember = async (
     suspendedByName,
     updatedAt: serverTimestamp(),
   });
-  
-  console.log(`🚫 [STAFF] ${suspendedByName} suspended staff member: ${uid}`);
 };
 
 /**
- * Activate (unsuspend) a staff member
- * @param uid - Staff member UID
+ * Reactivate a suspended staff member.
  */
 export const activateStaffMember = async (uid: string): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
+  const staffRef = doc(db, 'staff', uid);
   
   await updateDoc(staffRef, {
     isActive: true,
@@ -215,16 +189,13 @@ export const activateStaffMember = async (uid: string): Promise<void> => {
     suspendedByName: null,
     updatedAt: serverTimestamp(),
   });
-  
-  console.log(`✅ [STAFF] Staff member reactivated: ${uid}`);
 };
 
 /**
- * Delete staff member
+ * Delete a staff member from the system.
  */
 export const deleteStaffMember = async (uid: string): Promise<void> => {
   const db = getDb();
-  const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
-  
+  const staffRef = doc(db, 'staff', uid);
   await deleteDoc(staffRef);
 };
