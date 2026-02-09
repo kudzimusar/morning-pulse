@@ -18,6 +18,9 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
   // State for editorials
   const [editorials, setEditorials] = useState<Opinion[]>([]);
 
+  // State for visible articles count (mobile)
+  const [visibleCount, setVisibleCount] = useState<number>(10);
+
   // Subscribe to published editorials
   useEffect(() => {
     const unsubscribe = subscribeToPublishedOpinions(
@@ -53,13 +56,13 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
     'Tech',
     'General News'
   ];
-  
+
   // Get the actual Local category name from newsData
-  const localCategoryKey = Object.keys(newsData).find(key => 
+  const localCategoryKey = Object.keys(newsData).find(key =>
     key.startsWith('Local')
   ) || 'Local (Zim)';
-  
-  const categoryOrder = baseCategoryOrder.map(cat => 
+
+  const categoryOrder = baseCategoryOrder.map(cat =>
     cat === 'Local' ? localCategoryKey : cat
   );
 
@@ -85,7 +88,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
       return categoryArticles.length > 0 ? categoryArticles[0] : null;
     }
     // Otherwise, use top story from Local category (dynamic)
-    const localCategoryKey = Object.keys(newsData).find(key => 
+    const localCategoryKey = Object.keys(newsData).find(key =>
       key.startsWith('Local')
     ) || 'Local (Zim)';
     const localArticles = newsData[localCategoryKey] || [];
@@ -99,7 +102,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
   // Get grid articles (excluding hero article)
   const gridArticles = useMemo(() => {
     let articles: NewsStory[] = [];
-    
+
     if (selectedCategory) {
       // Filter by selected category, exclude hero
       const categoryArticles = newsData[selectedCategory] || [];
@@ -126,6 +129,11 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
     });
   }, [newsData, selectedCategory, heroArticle, categoryOrder]);
 
+  // Reset visible count when category changes
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [selectedCategory, userCountry]);
+
   // Get top headlines for ticker
   const topHeadlines = useMemo(() => {
     return allArticles.slice(0, 5).map(article => article.headline);
@@ -143,15 +151,15 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
           <HeroCard article={heroArticle} userCountry={userCountry} />
         </section>
       )}
-      
+
       {/* Editorial Section Separator - After Hero */}
       {heroArticle && (
         <div className="mobile-section-separator mobile-only" />
       )}
 
       {/* Advertising Slot - Homepage Sidebar */}
-      <AdSlot 
-        slotId="homepage_sidebar_1" 
+      <AdSlot
+        slotId="homepage_sidebar_1"
         userCountry={userCountry}
         style={{ marginBottom: '32px' }}
       />
@@ -161,11 +169,11 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
         <section className="editorials-section" style={{ marginTop: '32px', marginBottom: '32px' }}>
           <div className="section-header">
             <h2 className="section-title">Featured Editorials</h2>
-            <a 
-              href="#opinion" 
-              style={{ 
-                fontSize: '14px', 
-                color: '#666', 
+            <a
+              href="#opinion"
+              style={{
+                fontSize: '14px',
+                color: '#666',
                 textDecoration: 'none',
                 fontWeight: '500'
               }}
@@ -185,14 +193,14 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
                 timestamp: editorial.publishedAt?.getTime() || editorial.submittedAt.getTime() || Date.now(),
                 imageUrl: editorial.finalImageUrl || editorial.suggestedImageUrl || editorial.imageUrl
               };
-              
+
               // Generate slug if not present (for older editorials)
-              const slug = editorial.slug || (editorial.headline ? 
-                editorial.headline.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100) 
+              const slug = editorial.slug || (editorial.headline ?
+                editorial.headline.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100)
                 : editorial.id);
-              
+
               return (
-                <ArticleCard 
+                <ArticleCard
                   key={editorial.id}
                   article={editorialArticle}
                   variant="grid"
@@ -210,7 +218,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
       <section className="news-grid-section mobile-category-section">
         {selectedCategory && (
           <div className="section-header">
-            <h2 
+            <h2
               className="section-title mobile-section-label desktop-only"
               data-category={selectedCategory}
             >
@@ -224,35 +232,32 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
         )}
         <div className="news-grid-container desktop-only">
           {gridArticles.map((article, index) => (
-            <ArticleCard 
+            <ArticleCard
               key={`${userCountry || 'default'}-${article.id}-${index}`}
-              article={article} 
+              article={article}
               variant="grid"
               userCountry={userCountry}
             />
           ))}
         </div>
-        {/* Mobile Card Stack - Limited to 10 articles initially */}
+        {/* Mobile Card Stack - Limited to visibleCount articles initially */}
         <div className="mobile-card-stack mobile-only">
-          {gridArticles.slice(0, 10).map((article, index) => (
-            <ArticleCard 
+          {gridArticles.slice(0, visibleCount).map((article, index) => (
+            <ArticleCard
               key={`${userCountry || 'default'}-${article.id}-${index}`}
-              article={article} 
+              article={article}
               variant="compact"
               userCountry={userCountry}
             />
           ))}
           {/* Editorial Separator after 6 stories */}
-          {gridArticles.length > 6 && (
+          {gridArticles.length > 6 && visibleCount > 6 && (
             <div className="mobile-section-separator" />
           )}
           {/* Load More Button */}
-          {gridArticles.length > 6 && (
+          {visibleCount < gridArticles.length && (
             <button
-              onClick={() => {
-                // TODO: Implement load more / infinite scroll
-                console.log('Load more articles');
-              }}
+              onClick={() => setVisibleCount(prev => prev + 6)}
               className="mobile-load-more-button"
               style={{
                 width: '100%',
@@ -267,7 +272,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
                 cursor: 'pointer',
               }}
             >
-              View More Stories ({gridArticles.length - 6} remaining) →
+              View More Stories ({gridArticles.length - visibleCount} remaining) →
             </button>
           )}
         </div>
