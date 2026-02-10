@@ -89,6 +89,7 @@ import {
   getCurrentEditor,
   onEditorAuthStateChanged,
   getStaffRole,
+  getUserRoles,
   StaffRole,
   requireEditor,
   logoutEditor
