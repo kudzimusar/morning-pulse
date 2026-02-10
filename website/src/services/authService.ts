@@ -116,7 +116,12 @@ export const signInEditor = async (email: string, password: string): Promise<Use
     // Check for ANY staff role via claims
     const hasStaffRole = claims.super_admin || claims.bureau_chief || claims.admin || claims.editor || claims.writer;
 
-    if (!hasStaffRole) {
+    // ✅ FIX: Allow bootstrap UIDs to bypass initial claims check to enable bootstrapping
+    const BOOTSTRAP_UID = '2jnMK761RcMvag3Agj5Wx3HjwpJ2';
+    const VAGWARISA_UID = 'VaGwarisa';
+    const isBootstrapUser = user.uid === BOOTSTRAP_UID || user.uid === VAGWARISA_UID;
+
+    if (!hasStaffRole && !isBootstrapUser) {
       console.error("Access Denied: This account does not have staff privileges.");
       await signOut(auth);
       throw new Error("Access Denied: Your account does not have required staff permissions.");
@@ -155,8 +160,9 @@ export const signInEditor = async (email: string, password: string): Promise<Use
 
 /**
  * Get staff roles from Firestore (Legacy/Secondary check)
+ * Returns string[] to support multi-role RBAC
  */
-export const getStaffRole = async (uid: string): Promise<StaffRole> => {
+export const getStaffRole = async (uid: string): Promise<string[]> => {
   try {
     const db = getDbInstance();
     const auth = getAuthInstance();
@@ -166,11 +172,19 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
       console.log(`🔍 [AUTH] Checking staff role for UID: ${uid}`);
     }
 
+    const BOOTSTRAP_UID = '2jnMK761RcMvag3Agj5Wx3HjwpJ2';
+    const VAGWARISA_UID = 'VaGwarisa';
+
     const staffRef = doc(db, 'staff', uid);
     const snap = await getDoc(staffRef);
 
     if (!snap.exists()) {
-      return null;
+      // ✅ FIX: Special case for bootstrap UIDs if doc doesn't exist yet
+      if (uid === BOOTSTRAP_UID || uid === VAGWARISA_UID) {
+        console.log('🚀 [AUTH] Providing bootstrap roles for missing staff doc');
+        return ['super_admin', 'admin', 'editor'];
+      }
+      return [];
     }
 
     const data = snap.data();
@@ -181,17 +195,17 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
       return [data.role];
     }
 
-    return null;
+    return [];
   } catch (error) {
     console.error('❌ Error fetching staff role:', error);
-    return null;
+    return [];
   }
 };
 
 /**
  * Synchronous role check for UI rendering (legacy use in App.tsx)
  */
-export const requireEditor = (roles: StaffRole): boolean => {
+export const requireEditor = (roles: string[]): boolean => {
   if (!roles || !Array.isArray(roles)) {
     return false;
   }
@@ -202,7 +216,7 @@ export const requireEditor = (roles: StaffRole): boolean => {
 /**
  * Synchronous super admin check
  */
-export const requireSuperAdmin = (roles: StaffRole): boolean => {
+export const requireSuperAdmin = (roles: string[]): boolean => {
   if (!roles || !Array.isArray(roles)) {
     return false;
   }
@@ -245,6 +259,9 @@ export const getUserRoles = async (): Promise<string[]> => {
   if (!currentUser) return [];
 
   try {
+    const BOOTSTRAP_UID = '2jnMK761RcMvag3Agj5Wx3HjwpJ2';
+    const VAGWARISA_UID = 'VaGwarisa';
+
     const tokenResult = await currentUser.getIdTokenResult(true);
     const claims = tokenResult.claims;
 
@@ -254,6 +271,12 @@ export const getUserRoles = async (): Promise<string[]> => {
     if (claims.admin) roles.push('admin');
     if (claims.editor) roles.push('editor');
     if (claims.writer) roles.push('writer');
+
+    // ✅ FIX: Inject roles for bootstrap users if claims are missing
+    if (roles.length === 0 && (currentUser.uid === BOOTSTRAP_UID || currentUser.uid === VAGWARISA_UID)) {
+      console.log('🚀 [AUTH] Injecting bootstrap roles for admin UID');
+      return ['super_admin', 'admin', 'editor'];
+    }
 
     return roles;
   } catch (error) {

@@ -180,6 +180,11 @@ const AdminDashboard: React.FC = () => {
         const VAGWARISA_UID = 'VaGwarisa'; // Business partner UID
 
         if (currentUser.uid === BOOTSTRAP_UID || currentUser.uid === VAGWARISA_UID) {
+          // Immediately authorize bootstrap UIDs
+          setIsAuthorized(true);
+          setIsAdmin(true);
+          setIsSuperAdmin(true);
+
           try {
             const { db } = firebaseInstances;
             const staffRef = doc(db, 'staff', currentUser.uid);
@@ -203,7 +208,7 @@ const AdminDashboard: React.FC = () => {
 
         try {
           const { db } = firebaseInstances;
-          const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', currentUser.uid);
+          const staffRef = doc(db, 'staff', currentUser.uid);
           const staffSnap = await getDoc(staffRef);
 
           if (staffSnap.exists()) {
@@ -214,6 +219,13 @@ const AdminDashboard: React.FC = () => {
             setIsAdmin(roles.includes('admin') || roles.includes('super_admin'));
             setIsSuperAdmin(roles.includes('super_admin'));
             console.log('✅ Initialization: User roles verified');
+          } else if (currentUser.uid === BOOTSTRAP_UID || currentUser.uid === VAGWARISA_UID) {
+            // ✅ FIX: Don't unauthorized bootstrap users even if doc doesn't exist yet
+            console.log('🚀 [AUTH] Keeping bootstrap user authorized');
+            setUserRoles(['super_admin', 'admin', 'editor']);
+            setIsAuthorized(true);
+            setIsAdmin(true);
+            setIsSuperAdmin(true);
           } else {
             setUserRoles([]);
             setIsAuthorized(false);
