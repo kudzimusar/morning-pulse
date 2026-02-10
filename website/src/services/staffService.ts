@@ -46,7 +46,8 @@ export const updateStaffRole = async (uid: string, roles: string[], writerType?:
   const staffRef = doc(db, 'staff', uid);
 
   const payload: any = {
-    roles,
+    role: roles[0] as StaffRole, // Legacy property
+    roles: roles as StaffRole[],
     updatedAt: serverTimestamp(),
   };
 
@@ -75,7 +76,8 @@ export const createStaffInvite = async (email: string, name: string, roles: stri
     id: inviteRef.id,
     email: email.toLowerCase().trim(),
     name,
-    roles,
+    role: roles[0] as StaffRole, // Legacy property
+    roles: roles as StaffRole[],
     status: 'pending',
     createdAt: serverTimestamp(),
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
