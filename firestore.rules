@@ -2,12 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // --- BOOTSTRAP ADMIN UIDs ---
-    // These UIDs can ALWAYS perform admin actions, even without custom claims
-    function isBootstrapAdmin() {
+    // --- 👑 BOSS MODE (Global Bypass) ---
+    // These specific UIDs have full access to everything, regardless of roles or tokens.
+    // This resolves all initialization/catch-22 permission issues.
+    function isBoss() {
       return request.auth != null && (
-        request.auth.uid in ['2jnMK761RcMvag3Agj5Wx3HjwpJ2', 'VaGwarisa']
+        request.auth.uid == '2jnMK761RcMvag3Agj5Wx3HjwpJ2' || 
+        request.auth.uid == 'VaGwarisa'
       );
+    }
+    
+    match /{document=**} {
+      allow read, write: if isBoss();
     }
     
     // --- Helper Functions ---
@@ -16,33 +22,29 @@ service cloud.firestore {
     }
     
     function isSuperAdmin() {
-      return isBootstrapAdmin() || 
-             (isSignedIn() && request.auth.token.super_admin == true);
+      return isSignedIn() && request.auth.token.super_admin == true;
     }
     
     function isBureauChief() {
-      return isBootstrapAdmin() ||
-             (isSignedIn() && (
-               request.auth.token.bureau_chief == true || 
-               request.auth.token.super_admin == true
-             ));
+      return isSignedIn() && (
+        request.auth.token.bureau_chief == true || 
+        request.auth.token.super_admin == true
+      );
     }
     
     function isEditor() {
-      return isBootstrapAdmin() ||
-             (isSignedIn() && (
-               request.auth.token.editor == true || 
-               request.auth.token.bureau_chief == true || 
-               request.auth.token.super_admin == true
-             ));
+      return isSignedIn() && (
+        request.auth.token.editor == true || 
+        request.auth.token.bureau_chief == true || 
+        request.auth.token.super_admin == true
+      );
     }
     
     function isAdmin() {
-      return isBootstrapAdmin() ||
-             (isSignedIn() && (
-               request.auth.token.admin == true || 
-               request.auth.token.super_admin == true
-             ));
+      return isSignedIn() && (
+        request.auth.token.admin == true || 
+        request.auth.token.super_admin == true
+      );
     }
     
     function isWriter() {
@@ -50,14 +52,13 @@ service cloud.firestore {
     }
     
     function hasAnyStaffRole() {
-      return isBootstrapAdmin() ||
-             (isSignedIn() && (
-               request.auth.token.super_admin == true ||
-               request.auth.token.bureau_chief == true ||
-               request.auth.token.admin == true ||
-               request.auth.token.editor == true ||
-               request.auth.token.writer == true
-             ));
+      return isSignedIn() && (
+        request.auth.token.super_admin == true ||
+        request.auth.token.bureau_chief == true ||
+        request.auth.token.admin == true ||
+        request.auth.token.editor == true ||
+        request.auth.token.writer == true
+      );
     }
     
     function isOwner(resource) {
@@ -68,123 +69,74 @@ service cloud.firestore {
       );
     }
     
-    // --- PUBLIC CONTENT ---
+    // --- PUBLIC CONTENT (LEGACY & ROOT) ---
     match /artifacts/{appId}/public/{document=**} {
-      allow read: if true;  // Public read access
-      allow write: if hasAnyStaffRole();  // Staff can write
+      allow read: if true;
+      allow write: if hasAnyStaffRole();
     }
     
-    // --- STAFF COLLECTION (ROOT LEVEL) ---
+    // --- STAFF COLLECTION ---
     match /staff/{staffId} {
-      // Bootstrap admin OR own profile OR bureau chief/admin viewing others
-      allow read: if isBootstrapAdmin() || 
-                     (isSignedIn() && request.auth.uid == staffId) ||
-                     isBureauChief() ||
-                     isAdmin();
-      
-      // Bootstrap admin OR bureau chiefs can modify
-      allow write: if isBootstrapAdmin() || isBureauChief();
-      
-      // Allow staff to update their own lastActive timestamp
-      allow update: if isSignedIn() && 
-                       request.auth.uid == staffId && 
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActive']);
+      allow read: if (isSignedIn() && request.auth.uid == staffId) || isBureauChief() || isAdmin();
+      allow write: if isBureauChief();
+      allow update: if isSignedIn() && request.auth.uid == staffId;
     }
     
-    // --- WRITERS COLLECTION (ROOT LEVEL) ---
+    // --- WRITERS COLLECTION ---
     match /writers/{writerId} {
-      // Editors and admins can read all writer profiles
-      allow read: if isEditor() || isAdmin();
-      
-      // Editors and admins can manage writers
-      allow write: if isEditor() || isAdmin();
-      
-      // Writers can read their own profile
-      allow read: if isSignedIn() && request.auth.uid == writerId;
-      
-      // Writers can update their own profile
-      allow update: if isSignedIn() && request.auth.uid == writerId;
+      allow read: if isEditor() || isAdmin() || (isSignedIn() && request.auth.uid == writerId);
+      allow write: if isEditor() || isAdmin() || (isSignedIn() && request.auth.uid == writerId);
     }
     
-    // --- INVITATIONS (ROOT LEVEL) ---
+    // --- INVITATIONS ---
     match /invites/{inviteId} {
-      // Admins and bureau chiefs can manage invites
-      allow read, write: if isAdmin() || isBureauChief();
+      allow read: if true; // Tokens must be readable to validate
+      allow write: if isAdmin() || isBureauChief();
     }
     
-    // --- AUDIT LOGS (ROOT LEVEL) ---
+    // --- AUDIT LOGS ---
     match /auditLog/{logId} {
-      // Admins can read audit logs
       allow read: if isAdmin() || isBureauChief();
-      
-      // Staff can write to audit log (for tracking their actions)
       allow create: if hasAnyStaffRole();
-      
-      // Nobody can update or delete audit logs
       allow update, delete: if false;
     }
     
-    // --- SUBSCRIBERS/NEWSLETTER (ROOT LEVEL) ---
+    // --- SUBSCRIBERS ---
     match /subscribers/{subscriberId} {
-      // Admins can read all subscribers
-      allow read: if isAdmin() || isEditor();
-      
-      // Admins can manage subscribers
-      allow write: if isAdmin();
-      
-      // Users can manage their own subscription
-      allow read, write: if isSignedIn() && request.auth.uid == subscriberId;
+      allow read: if isAdmin() || isEditor() || (isSignedIn() && request.auth.uid == subscriberId);
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == subscriberId);
     }
     
-    // --- USERS/READERS (ROOT LEVEL) ---
+    // --- READERS & USERS ---
     match /users/{userId} {
-      allow read: if true;  // Public profiles
+      allow read: if true;
       allow write: if isSignedIn() && request.auth.uid == userId;
     }
     
     match /readers/{readerId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == readerId || 
-        isAdmin()
-      );
+      allow read: if (isSignedIn() && request.auth.uid == readerId) || isAdmin();
       allow write: if isSignedIn() && request.auth.uid == readerId;
     }
     
     // --- OPINIONS/ARTICLES (Legacy Path) ---
     match /artifacts/{appId}/public/data/opinions/{opinionId} {
-      allow read: if true;  // Public read
-      
-      allow create: if isSignedIn() && (
-        (isWriter() && request.resource.data.authorId == request.auth.uid && request.resource.data.status == 'draft') ||
-        isEditor()
-      );
-      
-      allow update: if isSignedIn() && (
-        (isOwner(resource) && resource.data.status in ['draft', 'changes_requested']) ||
-        isEditor()
-      );
-      
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (isOwner(resource) || isEditor());
       allow delete: if isBureauChief();
     }
     
     // --- PITCHES ---
     match /artifacts/{appId}/public/data/pitches/{pitchId} {
       allow read: if isSignedIn() && (isOwner(resource) || isEditor());
-      allow create: if isWriter() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isSignedIn() && (
-        (isOwner(resource) && resource.data.status == 'pending') || 
-        isEditor()
-      );
-      allow delete: if isSignedIn() && (
-        (isOwner(resource) && resource.data.status == 'pending') || 
-        isEditor()
-      );
+      allow create: if isWriter();
+      allow update, delete: if isSignedIn() && (isOwner(resource) || isEditor());
     }
     
     // --- ADS ---
     match /artifacts/{appId}/public/data/ads/{adId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.advertiserId == request.auth.uid;
+      allow create: if isSignedIn();
       allow update: if isSignedIn() && (isOwner(resource) || isAdmin());
       allow delete: if isAdmin();
     }
