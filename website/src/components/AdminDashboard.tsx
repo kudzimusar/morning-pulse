@@ -447,7 +447,7 @@ const AdminDashboard: React.FC = () => {
           )}
 
           {activeTab === 'staff-management' && isAdmin && (
-            <StaffManagementTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+            <StaffManagementTab />
           )}
 
           {activeTab === 'writer-hub' && isAdmin && (
