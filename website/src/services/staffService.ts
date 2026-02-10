@@ -1,14 +1,14 @@
 
-import { 
-  getFirestore, 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  updateDoc, 
-  deleteDoc, 
-  serverTimestamp, 
-  setDoc
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  setDoc,
 } from 'firebase/firestore';
 import { StaffMember, StaffRole, WriterType, StaffInvite } from '../types';
 import { getCurrentEditor } from './authService';
@@ -67,7 +67,7 @@ export const createStaffInvite = async (email: string, name: string, role: Staff
 
   const inviteRef = doc(invitesCollection); // Auto-generate ID
 
-  const newInvite: StaffInvite = {
+  const newInvite: any = {
     id: inviteRef.id,
     email,
     name,
@@ -83,6 +83,58 @@ export const createStaffInvite = async (email: string, name: string, role: Staff
   }
 
   await setDoc(inviteRef, newInvite);
+};
+
+/**
+ * Update staff member last active timestamp.
+ */
+export const updateLastActive = async (uid: string): Promise<void> => {
+  const db = getFirestore();
+  const staffRef = doc(db, 'staff', uid);
+  
+  try {
+    await updateDoc(staffRef, { 
+      lastActive: serverTimestamp() 
+    });
+  } catch (error) {
+    console.warn('Could not update last active:', error);
+  }
+};
+
+/**
+ * Suspend a staff member
+ */
+export const suspendStaffMember = async (
+  uid: string,
+  suspendedBy: string,
+  suspendedByName: string
+): Promise<void> => {
+  const db = getFirestore();
+  const staffRef = doc(db, 'staff', uid);
+  
+  await updateDoc(staffRef, {
+    isActive: false,
+    suspendedBy,
+    suspendedByName,
+    suspendedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+};
+
+/**
+ * Reactivate a suspended staff member
+ */
+export const activateStaffMember = async (uid: string): Promise<void> => {
+  const db = getFirestore();
+  const staffRef = doc(db, 'staff', uid);
+  
+  await updateDoc(staffRef, {
+    isActive: true,
+    suspendedBy: null,
+    suspendedByName: null,
+    suspendedAt: null,
+    updatedAt: serverTimestamp(),
+  });
 };
 
 /**
