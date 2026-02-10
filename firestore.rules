@@ -2,167 +2,73 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // --- Helper Functions ---
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    function getRole() {
-      return request.auth.token.role;
-    }
-    
+
+    // --- Role Hierarchy Helper Functions ---
+    // These functions create a permission hierarchy:
+    // super_admin -> bureau_chief -> admin / editor -> writer
+
     function isSuperAdmin() {
-      return getRole() == 'super_admin';
+      return request.auth.token.super_admin == true;
     }
-    
+
     function isBureauChief() {
-      return getRole() in ['bureau_chief', 'super_admin'];
+      // Bureau chiefs inherit super_admin privileges.
+      return request.auth.token.bureau_chief == true || isSuperAdmin();
     }
-    
-    function isEditor() {
-      return getRole() in ['editor', 'bureau_chief', 'super_admin'];
-    }
-    
+
     function isAdmin() {
-      return getRole() in ['admin', 'super_admin'];
+      // Admins inherit bureau_chief privileges.
+      return request.auth.token.admin == true || isBureauChief();
     }
-    
+
+    function isEditor() {
+      // Editors inherit bureau_chief privileges.
+      return request.auth.token.editor == true || isBureauChief();
+    }
+
     function isWriter() {
-      return getRole() == 'writer';
-    }
-    
-    function isOwner(resource) {
-      return request.auth.uid == resource.data.authorId || request.auth.uid == resource.data.uid;
-    }
-    
-    function getStaffData(uid) {
-      // This function retrieves the user's specific sub-type from the /staff collection.
-      return get(/databases/$(database)/documents/staff/$(uid)).data;
+      return request.auth.token.writer == true;
     }
 
-    // --- Main Application Data ---
-    match /artifacts/morning-pulse-app/{document=**} {
-      
-      // --- Opinions & Articles ---
-      match /public/data/opinions/{opinionId} {
-        // READ: Anyone can read a published article.
-        allow read: if resource.data.status == 'published';
-        
-        // READ: Authors, editors, and above can read non-published articles.
-        allow read: if isSignedIn() && (isOwner(resource) || isEditor());
+    // --- Collection-Specific Rules ---
 
-        // CREATE: Rules for creating new articles.
-        allow create: if isSignedIn() && (
-          // Case 1: Journalist (Staff)
-          // Can create a draft directly.
-          (
-            isWriter() && getStaffData(request.auth.uid).writerType == 'journalist' &&
-            request.resource.data.authorId == request.auth.uid &&
-            request.resource.data.status == 'draft' 
-          ) ||
-          // Case 2: Pitch Writer (Freelance)
-          // Can create an article ONLY if it's linked to their own approved pitch.
-          (
-            isWriter() && getStaffData(request.auth.uid).writerType == 'pitch_writer' &&
-            request.resource.data.authorId == request.auth.uid &&
-            exists(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/pitches/$(request.resource.data.pitchId)) &&
-            get(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/pitches/$(request.resource.data.pitchId)).data.status == 'approved' &&
-            get(/databases/$(database)/documents/artifacts/morning-pulse-app/public/data/pitches/$(request.resource.data.pitchId)).data.authorId == request.auth.uid
-          ) ||
-          // Case 3: Guest Writer / Opinion Submission (Regular User)
-          // Can create a submission that is immediately marked as 'pending'.
-          (
-             getRole() == 'user' && 
-             request.resource.data.authorId == request.auth.uid &&
-             request.resource.data.status == 'pending' &&
-             !('writerType' in request.resource.data) // Cannot set a writer type.
-          )
-        );
-
-        // UPDATE: Rules for modifying existing articles.
-        allow update: if isSignedIn() && (
-          // An author can update their own article if it's a draft or requires changes.
-          // They cannot, however, change the status themselves.
-          (
-            isOwner(resource) &&
-            resource.data.status in ['draft', 'changes_requested'] &&
-            request.resource.data.status == resource.data.status &&
-            request.resource.data.authorId == request.auth.uid
-          ) ||
-          // Editors, Bureau Chiefs, and Super Admins can update any article at any time.
-          // This allows them to approve, publish, reject, or edit content.
-          isEditor()
-        );
-
-        // DELETE: Only the highest-level roles can delete content.
-        allow delete: if isSignedIn() && isBureauChief();
-      }
-
-      // --- Article Pitches (from Freelancers) ---
-      match /public/data/pitches/{pitchId} {
-        // CREATE: A pitch writer can create a pitch.
-        allow create: if isSignedIn() && isWriter() && getStaffData(request.auth.uid).writerType == 'pitch_writer' && request.resource.data.authorId == request.auth.uid;
-        
-        // READ: The author can read their own pitch. Editors can read any pitch.
-        allow read: if isSignedIn() && (isOwner(resource) || isEditor());
-        
-        // UPDATE: The author can edit a PENDING pitch. Editors can update any pitch (to approve/reject).
-        allow update: if isSignedIn() && (
-          (isOwner(resource) && resource.data.status == 'pending') || isEditor()
-        );
-        
-        // DELETE: The author can delete a PENDING pitch. Editors can delete any.
-        allow delete: if isSignedIn() && ((isOwner(resource) && resource.data.status == 'pending') || isEditor());
-      }
-      
-      // --- Advertisements ---
-      match /public/data/ads/{adId} {
-        allow read: if isSignedIn() && (isAdmin() || (getRole() == 'advertiser' && isOwner(resource)));
-        allow create: if isSignedIn() && getRole() == 'advertiser' && request.resource.data.advertiserId == request.auth.uid;
-        allow update: if isSignedIn() && ((getRole() == 'advertiser' && isOwner(resource) && resource.data.status == 'pending') || isAdmin());
-      }
-
-      // --- Generated Analytics & Metrics (Read-only for clients) ---
-      match /public/data/writerMetrics/{writerId} {
-        allow read: if isSignedIn() && (request.auth.uid == writerId || isEditor() || isAdmin());
-        allow write: if false; // Should only be written by a trusted backend process.
-      }
-      
-       match /public/data/subscribers/{subscriberId} {
-        allow read, write: if isSignedIn() && request.auth.uid == subscriberId;
-      }
-    }
-    
-    // --- Staff Collection (Private) ---
-    // This collection defines the roles and is highly sensitive.
+    // Staff Collection
     match /staff/{staffId} {
-      // READ: Users can read their own staff profile. Bureau Chiefs can read all profiles.
-      allow read: if isSignedIn() && (request.auth.uid == staffId || isBureauChief());
+      // Staff can read their own profile. Bureau chiefs and above can read any profile.
+      allow read: if request.auth.uid == staffId || isBureauChief();
       
-      // WRITE: Only Bureau Chiefs and Super Admins can modify roles.
-      // This is the source of truth for the Custom Claims Cloud Function.
-      allow write: if isSignedIn() && isBureauChief();
-    }
-    
-    // --- Public User Profiles ---
-    match /users/{userId} {
-      // READ: Any signed-in user can read a public profile. Admins can also read.
-      allow read: if isSignedIn() || isAdmin();
-      // WRITE: Users can only write to their own profile.
-      allow write: if isSignedIn() && request.auth.uid == userId;
+      // Only bureau chiefs and above can modify staff roles.
+      allow write: if isBureauChief();
     }
 
-    // --- Staff Invitations (Private & Backend-Managed) ---
-    match /invites/{inviteId} {
-      // No client-side access. All invite logic is handled by Cloud Functions.
-      allow read, write: if false;
+    // Articles/Opinions Collection
+    match /artifacts/morning-pulse-app/public/data/opinions/{opinionId} {
+      // Anyone can read published content.
+      allow read: if resource.data.status == 'published';
+      
+      // Authors can read their own work, and editors (and above) can read any work.
+      allow read: if request.auth.uid == resource.data.authorId || isEditor();
+      
+      // Authenticated writers can create new drafts.
+      allow create: if isWriter() &&
+                   request.resource.data.authorId == request.auth.uid &&
+                   request.resource.data.status == 'draft';
+      
+      // Authors can update their own drafts. Editors (and above) can update any document.
+      allow update: if isEditor() ||
+                   (request.auth.uid == resource.data.authorId && resource.data.status == 'draft');
     }
-    
-    // --- Audit Logs (Admin-readable) ---
-    match /auditLog/{logId} {
-      allow read: if isSignedIn() && isBureauChief();
-      allow write: if false; // Only backend processes can write logs.
+
+    // News Collection (Generic)
+    match /news/{storyId} {
+      // Publicly readable
+      allow read: if true;
+      // Writers can create
+      allow create: if isWriter();
+      // Editors and above can update
+      allow update: if isEditor();
+      // Admins and above can delete
+      allow delete: if isAdmin();
     }
   }
 }

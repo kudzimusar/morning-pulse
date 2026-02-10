@@ -1,201 +1,94 @@
-/**
- * Staff Management Service
- * Handles CRUD operations for staff members based on a single-role security model.
- */
 
-import {
-  getFirestore,
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-  Firestore,
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  deleteDoc, 
+  serverTimestamp, 
+  setDoc
 } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
-import { WriterType } from '../types'; // Import the WriterType definition
+import { StaffMember, StaffRole, WriterType, StaffInvite } from '../types';
+import { getCurrentEditor } from './authService';
 
-const APP_ID = (window as any).__app_id || 'morning-pulse-app';
-
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
-
-export interface StaffMember {
-  uid: string;
-  email: string;
-  name: string;
-  role: string; // A single, primary role
-  writerType?: WriterType; // e.g., 'journalist' or 'pitch_writer'
-  createdAt?: Date;
-  lastActive?: Date;
-  updatedAt?: Date;
-  isActive: boolean;
-  suspendedAt?: Date | null;
-  suspendedBy?: string | null;
-  suspendedByName?: string | null;
-  invitedBy?: string;
-  invitedByName?: string;
-}
+const db = getFirestore();
+const staffCollection = collection(db, 'staff');
+const invitesCollection = collection(db, 'staff_invites');
 
 /**
- * Get all staff members from the /staff collection.
+ * Fetches all staff members from the 'staff' collection.
  */
-export const getAllStaff = async (): Promise<StaffMember[]> => {
-  const db = getDb();
-  const staffRef = collection(db, 'staff');
-  
-  const snapshot = await getDocs(staffRef);
-  const staff: StaffMember[] = [];
-  
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    staff.push({
-      uid: docSnap.id,
-      email: data.email || '',
-      name: data.name || '',
-      role: data.role || 'writer', // Default to 'writer' for legacy data
-      writerType: data.writerType,
-      isActive: data.isActive !== undefined ? data.isActive : true,
-      createdAt: data.createdAt?.toDate?.() || undefined,
-      lastActive: data.lastActive?.toDate?.() || undefined,
-      updatedAt: data.updatedAt?.toDate?.() || undefined,
-      suspendedAt: data.suspendedAt?.toDate?.() || null,
-      suspendedBy: data.suspendedBy || null,
-      suspendedByName: data.suspendedByName || null,
-      invitedBy: data.invitedBy,
-      invitedByName: data.invitedByName,
-    });
-  });
-  
-  return staff.sort((a, b) => a.name.localeCompare(b.name));
+export const getStaff = async (): Promise<StaffMember[]> => {
+  const snapshot = await getDocs(staffCollection);
+  return snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as StaffMember));
 };
 
 /**
- * Get a single staff member by their UID.
+ * Fetches a single staff member by their UID.
  */
 export const getStaffMember = async (uid: string): Promise<StaffMember | null> => {
-  const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
-  
-  try {
-    const snap = await getDoc(staffRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      return {
-        uid: snap.id,
-        email: data.email || '',
-        name: data.name || '',
-        role: data.role || 'writer',
-        writerType: data.writerType,
-        isActive: data.isActive !== undefined ? data.isActive : true,
-        createdAt: data.createdAt?.toDate?.() || undefined,
-        lastActive: data.lastActive?.toDate?.() || undefined,
-        updatedAt: data.updatedAt?.toDate?.() || undefined,
-        suspendedAt: data.suspendedAt?.toDate?.() || null,
-        suspendedBy: data.suspendedBy || null,
-        suspendedByName: data.suspendedByName || null,
-        invitedBy: data.invitedBy,
-        invitedByName: data.invitedByName,
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting staff member:', error);
-    return null;
-  }
+  const docRef = doc(db, 'staff', uid);
+  const docSnap = await getDoc(docRef);
+  return docSnap.exists() ? { ...docSnap.data(), uid: docSnap.id } as StaffMember : null;
 };
 
 /**
- * Update a staff member's role and, if applicable, their writer type.
- * This is the primary function for changing a user's permissions.
+ * Updates the role and, if applicable, the writer type for a staff member.
+ * This triggers the `setRoleOnStaffChange` Cloud Function.
  */
-export const updateStaffRole = async (
-  uid: string,
-  role: string,
-  writerType?: WriterType
-): Promise<void> => {
-  const db = getDb();
+export const updateStaffRole = async (uid: string, role: StaffRole, writerType?: WriterType): Promise<void> => {
   const staffRef = doc(db, 'staff', uid);
   
-  const payload: { [key: string]: any } = {
+  const payload: any = {
     role,
     updatedAt: serverTimestamp(),
   };
 
-  // Only set writerType if the role is 'writer'. Otherwise, clear it.
-  if (role === 'writer') {
-    payload.writerType = writerType || 'journalist'; // Default to journalist
+  // Only set writerType if the role is 'writer'. Otherwise, remove it.
+  if (role === 'writer' && writerType) {
+    payload.writerType = writerType;
   } else {
-    payload.writerType = null; // Clear the writerType for non-writer roles
+    payload.writerType = null; // Use null to explicitly remove the field
   }
-  
+
   await updateDoc(staffRef, payload);
 };
 
 /**
- * Update staff member last active timestamp.
+ * Creates an invitation for a new staff member.
  */
-export const updateLastActive = async (uid: string): Promise<void> => {
-  const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
-  try {
-    await updateDoc(staffRef, { lastActive: serverTimestamp() });
-  } catch (error) {
-    console.warn('Could not update last active:', error);
+export const createStaffInvite = async (email: string, name: string, role: StaffRole, writerType?: WriterType): Promise<void> => {
+  const currentUser = getCurrentEditor();
+  if (!currentUser) {
+    throw new Error("You must be logged in to create an invite.");
   }
+
+  const inviteRef = doc(invitesCollection); // Auto-generate ID
+
+  const newInvite: StaffInvite = {
+    id: inviteRef.id,
+    email,
+    name,
+    role,
+    createdAt: serverTimestamp(),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+    invitedBy: currentUser.uid,
+    invitedByName: currentUser.displayName || 'Admin',
+  };
+
+  if (role === 'writer' && writerType) {
+    newInvite.writerType = writerType;
+  }
+
+  await setDoc(inviteRef, newInvite);
 };
 
 /**
- * Suspend a staff member, preventing them from logging in.
+ * Removes a staff member from the 'staff' collection.
  */
-export const suspendStaffMember = async (
-  uid: string,
-  suspendedBy: string,
-  suspendedByName: string
-): Promise<void> => {
-  const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
-  
-  await updateDoc(staffRef, {
-    isActive: false,
-    suspendedAt: serverTimestamp(),
-    suspendedBy,
-    suspendedByName,
-    updatedAt: serverTimestamp(),
-  });
-};
-
-/**
- * Reactivate a suspended staff member.
- */
-export const activateStaffMember = async (uid: string): Promise<void> => {
-  const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
-  
-  await updateDoc(staffRef, {
-    isActive: true,
-    suspendedAt: null,
-    suspendedBy: null,
-    suspendedByName: null,
-    updatedAt: serverTimestamp(),
-  });
-};
-
-/**
- * Delete a staff member from the system.
- */
-export const deleteStaffMember = async (uid: string): Promise<void> => {
-  const db = getDb();
-  const staffRef = doc(db, 'staff', uid);
-  await deleteDoc(staffRef);
+export const removeStaffMember = async (uid: string): Promise<void> => {
+  const docRef = doc(db, 'staff', uid);
+  await deleteDoc(docRef);
 };
