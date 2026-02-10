@@ -3,9 +3,9 @@
  * Handles secure invitation token generation, validation, and staff onboarding
  */
 
-import { 
-  getFirestore, 
-  collection, 
+import {
+  getFirestore,
+  collection,
   doc,
   getDoc,
   setDoc,
@@ -18,13 +18,13 @@ import {
   Firestore,
   Timestamp
 } from 'firebase/firestore';
-import { 
+import {
   getAuth,
   createUserWithEmailAndPassword,
   User
 } from 'firebase/auth';
 import { getApp } from 'firebase/app';
-import { StaffInvite, StaffMember } from '../../types';
+import { StaffInvite, StaffMember } from '../types';
 import { logStaffAction, AuditActions } from './auditService';
 
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
@@ -72,7 +72,7 @@ const generateInviteToken = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  
+
   // Fallback for older browsers (less secure but functional)
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
@@ -99,11 +99,11 @@ export const createStaffInvite = async (
 ): Promise<StaffInvite> => {
   const db = getDb();
   const token = generateInviteToken();
-  
+
   // Set expiry to 7 days from now
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  
+
   const invite: StaffInvite = {
     id: token,
     email: email.toLowerCase().trim(),
@@ -115,18 +115,18 @@ export const createStaffInvite = async (
     expiresAt,
     status: 'pending'
   };
-  
+
   // Save to Firestore: /artifacts/{appId}/public/data/invites/{token}
-  const inviteRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', token);
-  
+  const inviteRef = doc(db, 'invites', token);
+
   await setDoc(inviteRef, {
     ...invite,
     createdAt: serverTimestamp(),
     expiresAt: Timestamp.fromDate(expiresAt)
   });
-  
+
   console.log(`✅ [INVITE] Created invite for ${email} with token: ${token}`);
-  
+
   return invite;
 };
 
@@ -137,18 +137,18 @@ export const createStaffInvite = async (
  */
 export const validateInviteToken = async (token: string): Promise<StaffInvite | null> => {
   const db = getDb();
-  
+
   try {
-    const inviteRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', token);
+    const inviteRef = doc(db, 'invites', token);
     const inviteSnap = await getDoc(inviteRef);
-    
+
     if (!inviteSnap.exists()) {
       console.warn(`⚠️ [INVITE] Token not found: ${token}`);
       return null;
     }
-    
+
     const data = inviteSnap.data();
-    
+
     // Convert Firestore timestamps to Date objects
     const invite: StaffInvite = {
       id: inviteSnap.id,
@@ -165,13 +165,13 @@ export const validateInviteToken = async (token: string): Promise<StaffInvite | 
       revokedBy: data.revokedBy,
       revokedAt: data.revokedAt?.toDate()
     };
-    
+
     // Check if invite is still valid
     if (invite.status !== 'pending') {
       console.warn(`⚠️ [INVITE] Token status is ${invite.status}: ${token}`);
       return null;
     }
-    
+
     // Check if expired
     if (invite.expiresAt < new Date()) {
       console.warn(`⚠️ [INVITE] Token expired: ${token}`);
@@ -179,10 +179,10 @@ export const validateInviteToken = async (token: string): Promise<StaffInvite | 
       await updateDoc(inviteRef, { status: 'expired' });
       return null;
     }
-    
+
     console.log(`✅ [INVITE] Valid token for ${invite.email}`);
     return invite;
-    
+
   } catch (error) {
     console.error('Error validating invite token:', error);
     return null;
@@ -201,13 +201,13 @@ export const createStaffFromInvite = async (
 ): Promise<User> => {
   const db = getDb();
   const auth = getAuthInstance();
-  
+
   // 1. Validate the invite
   const invite = await validateInviteToken(token);
   if (!invite) {
     throw new Error('Invalid or expired invitation token');
   }
-  
+
   try {
     // 2. Create Firebase Auth user with email/password
     console.log(`📧 [INVITE] Creating auth user for ${invite.email}...`);
@@ -217,12 +217,12 @@ export const createStaffFromInvite = async (
       password
     );
     const user = userCredential.user;
-    
+
     console.log(`✅ [INVITE] Auth user created with UID: ${user.uid}`);
-    
+
     // 3. Create staff document at /staff/{uid}
-    const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', user.uid);
-    
+    const staffRef = doc(db, 'staff', user.uid);
+
     const staffMember: Partial<StaffMember> = {
       uid: user.uid,
       email: invite.email,
@@ -234,27 +234,27 @@ export const createStaffFromInvite = async (
       createdAt: new Date(),
       lastActive: new Date()
     };
-    
+
     await setDoc(staffRef, {
       ...staffMember,
       createdAt: serverTimestamp(),
       lastActive: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-    
+
     console.log(`✅ [INVITE] Staff document created at artifacts/${APP_ID}/public/data/staff/${user.uid}`);
-    
+
     // 4. Mark invite as used
-    const inviteRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', token);
+    const inviteRef = doc(db, 'invites', token);
     await updateDoc(inviteRef, {
       status: 'used',
       usedBy: user.uid,
       usedAt: serverTimestamp()
     });
-    
+
     console.log(`✅ [INVITE] Invite marked as used: ${token}`);
     console.log(`🎉 [INVITE] ${invite.name} successfully joined as ${invite.roles.join(', ')}`);
-    
+
     // 5. Log the action (new staff created from invite)
     try {
       await logStaffAction(
@@ -265,7 +265,7 @@ export const createStaffFromInvite = async (
         invite.name,
         undefined,
         invite.roles,
-        { 
+        {
           email: invite.email,
           source: 'invitation',
           inviteToken: token
@@ -275,25 +275,25 @@ export const createStaffFromInvite = async (
       // Don't fail the signup if audit logging fails
       console.warn('Could not log staff creation:', error);
     }
-    
+
     return user;
-    
+
   } catch (error: any) {
     console.error('❌ [INVITE] Error creating staff from invite:', error);
-    
+
     // Provide user-friendly error messages
     if (error.code === 'auth/email-already-in-use') {
       throw new Error('An account with this email already exists. Please contact an administrator.');
     }
-    
+
     if (error.code === 'auth/weak-password') {
       throw new Error('Password is too weak. Please use at least 6 characters.');
     }
-    
+
     if (error.code === 'auth/invalid-email') {
       throw new Error('Invalid email address format.');
     }
-    
+
     throw new Error(error.message || 'Failed to create account. Please try again.');
   }
 };
@@ -305,19 +305,19 @@ export const createStaffFromInvite = async (
  */
 export const revokeInvite = async (token: string, revokedBy: string): Promise<void> => {
   const db = getDb();
-  const inviteRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', token);
-  
+  const inviteRef = doc(db, 'invites', token);
+
   const inviteSnap = await getDoc(inviteRef);
   if (!inviteSnap.exists()) {
     throw new Error('Invite not found');
   }
-  
+
   await updateDoc(inviteRef, {
     status: 'revoked',
     revokedBy,
     revokedAt: serverTimestamp()
   });
-  
+
   console.log(`🚫 [INVITE] Invite revoked by ${revokedBy}: ${token}`);
 };
 
@@ -327,12 +327,12 @@ export const revokeInvite = async (token: string, revokedBy: string): Promise<vo
  */
 export const getPendingInvites = async (): Promise<StaffInvite[]> => {
   const db = getDb();
-  const invitesRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'invites');
+  const invitesRef = collection(db, 'invites');
   const q = query(invitesRef, where('status', '==', 'pending'));
-  
+
   const snapshot = await getDocs(q);
   const invites: StaffInvite[] = [];
-  
+
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
     invites.push({
@@ -347,7 +347,7 @@ export const getPendingInvites = async (): Promise<StaffInvite[]> => {
       status: data.status || 'pending'
     });
   });
-  
+
   // Sort by creation date (newest first)
   return invites.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 };
@@ -358,7 +358,7 @@ export const getPendingInvites = async (): Promise<StaffInvite[]> => {
  */
 export const deleteInvite = async (token: string): Promise<void> => {
   const db = getDb();
-  const inviteRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', token);
+  const inviteRef = doc(db, 'invites', token);
   await deleteDoc(inviteRef);
   console.log(`🗑️ [INVITE] Deleted invite: ${token}`);
 };
@@ -370,13 +370,13 @@ export const deleteInvite = async (token: string): Promise<void> => {
  */
 export const hasPendingInvite = async (email: string): Promise<boolean> => {
   const db = getDb();
-  const invitesRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'invites');
+  const invitesRef = collection(db, 'invites');
   const q = query(
-    invitesRef, 
+    invitesRef,
     where('email', '==', email.toLowerCase().trim()),
     where('status', '==', 'pending')
   );
-  
+
   const snapshot = await getDocs(q);
   return !snapshot.empty;
 };

@@ -19,14 +19,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     try {
       // Sign in with email/password
       const user = await signInEditor(email, password);
+
+      if (!user) {
+        throw new Error('Could not retrieve user information after sign in.');
+      }
+
       console.log('✅ Email/password login successful, user:', user.uid);
 
       // ✅ FIX: Immediately verify role from staff collection
       const { getStaffRole, requireEditor } = await import('../services/authService');
       const role = await getStaffRole(user.uid);
-      
+
       console.log('🔍 Role check result:', role);
-      
+
       if (!requireEditor(role)) {
         // ✅ FIX: Sign out if role check fails
         console.error('❌ User does not have editor role, signing out...');
@@ -38,7 +43,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       }
 
       console.log('✅ Role verified as editor, redirecting to dashboard...');
-      
+
       if (onLoginSuccess) {
         onLoginSuccess();
       }

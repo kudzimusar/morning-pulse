@@ -119,12 +119,12 @@ export const signInEditor = async (email: string, password: string): Promise<Use
     if (!hasStaffRole) {
       console.error("Access Denied: This account does not have staff privileges.");
       await signOut(auth);
-      return null;
+      throw new Error("Access Denied: Your account does not have required staff permissions.");
     }
 
     // Check if account is active in Firestore (safety check)
     try {
-      const staffRef = doc(db, 'artifacts', appId, 'public', 'data', 'staff', user.uid);
+      const staffRef = doc(db, 'staff', user.uid);
       const staffSnap = await getDoc(staffRef);
       if (staffSnap.exists()) {
         const staffData = staffSnap.data();
@@ -166,7 +166,7 @@ export const getStaffRole = async (uid: string): Promise<StaffRole> => {
       console.log(`🔍 [AUTH] Checking staff role for UID: ${uid}`);
     }
 
-    const staffRef = doc(db, 'artifacts', appId, 'public', 'data', 'staff', uid);
+    const staffRef = doc(db, 'staff', uid);
     const snap = await getDoc(staffRef);
 
     if (!snap.exists()) {

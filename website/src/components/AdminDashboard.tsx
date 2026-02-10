@@ -4,25 +4,25 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { 
-  getAuth, 
-  signOut, 
+import {
+  getAuth,
+  signOut,
   onAuthStateChanged,
   User
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  onSnapshot, 
-  doc, 
+import {
+  getFirestore,
+  collection,
+  query,
+  onSnapshot,
+  doc,
   getDoc,
   setDoc,
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
-import { Opinion } from '../../types';
+import { Opinion } from '../types';
 import PrioritySummary from './admin/PrioritySummary';
 import EditorialQueueTab from './admin/EditorialQueueTab';
 import PublishedContentTab from './admin/PublishedContentTab';
@@ -93,21 +93,21 @@ const AdminDashboard: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+
   // Login form
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
-  
+
   // Dashboard state
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [pendingOpinions, setPendingOpinions] = useState<Opinion[]>([]);
   const [publishedOpinions, setPublishedOpinions] = useState<Opinion[]>([]);
-  
+
   // UI state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  
+
   // Firebase instances
   const [firebaseInstances, setFirebaseInstances] = useState<{
     auth: any;
@@ -129,7 +129,7 @@ const AdminDashboard: React.FC = () => {
   // Handle URL params
   useEffect(() => {
     if (!firebaseInstances) return;
-    
+
     const parseHashParams = () => {
       try {
         const hash = window.location.hash;
@@ -137,16 +137,16 @@ const AdminDashboard: React.FC = () => {
         if (hashMatch) {
           const path = hashMatch[1];
           const queryString = hashMatch[2] || '';
-          
+
           if (queryString) {
             const params = new URLSearchParams(queryString.substring(1));
             const tabParam = params.get('tab') as TabId;
             const articleParam = params.get('article');
-            
+
             if (tabParam && ['editorial-queue', 'published-content'].includes(tabParam)) {
               setActiveTab(tabParam);
             }
-            
+
             if (articleParam && tabParam === 'editorial-queue') {
               if (!hash.includes(`article=${articleParam}`)) {
                 const newHash = `#dashboard?tab=editorial-queue&article=${articleParam}`;
@@ -159,7 +159,7 @@ const AdminDashboard: React.FC = () => {
         // console.error('Error parsing hash params:', error);
       }
     };
-    
+
     parseHashParams();
     window.addEventListener('hashchange', parseHashParams);
     return () => window.removeEventListener('hashchange', parseHashParams);
@@ -170,21 +170,21 @@ const AdminDashboard: React.FC = () => {
     if (!firebaseInstances) return;
 
     const { auth } = firebaseInstances;
-    
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      
+
       if (currentUser) {
         // 🚀 EMERGENCY BOOTSTRAP: Restore admin access for specific UID
         const BOOTSTRAP_UID = '2jnMK761RcMvag3Agj5Wx3HjwpJ2';
         const VAGWARISA_UID = 'VaGwarisa'; // Business partner UID
-        
+
         if (currentUser.uid === BOOTSTRAP_UID || currentUser.uid === VAGWARISA_UID) {
           try {
             const { db } = firebaseInstances;
-            const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', currentUser.uid);
+            const staffRef = doc(db, 'staff', currentUser.uid);
             const staffSnap = await getDoc(staffRef);
-            
+
             if (!staffSnap.exists()) {
               await setDoc(staffRef, {
                 email: currentUser.email,
@@ -205,7 +205,7 @@ const AdminDashboard: React.FC = () => {
           const { db } = firebaseInstances;
           const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', currentUser.uid);
           const staffSnap = await getDoc(staffRef);
-          
+
           if (staffSnap.exists()) {
             const staffData = staffSnap.data() as StaffDocument;
             const roles = staffData.roles || [];
@@ -233,7 +233,7 @@ const AdminDashboard: React.FC = () => {
         setIsAdmin(false);
         setIsSuperAdmin(false);
       }
-      
+
       setLoading(false);
     });
 
@@ -243,9 +243,9 @@ const AdminDashboard: React.FC = () => {
   // Activity heartbeat
   useEffect(() => {
     if (!user || !isAuthorized) return;
-    updateLastActive(user.uid).catch(() => {});
+    updateLastActive(user.uid).catch(() => { });
     const intervalId = setInterval(() => {
-      updateLastActive(user.uid).catch(() => {});
+      updateLastActive(user.uid).catch(() => { });
     }, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, [user, isAuthorized]);
@@ -257,7 +257,7 @@ const AdminDashboard: React.FC = () => {
     const { db } = firebaseInstances;
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
-    
+
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -265,7 +265,7 @@ const AdminDashboard: React.FC = () => {
         snapshot.forEach((docSnap) => {
           opinions.push({ id: docSnap.id, ...docSnap.data() } as Opinion);
         });
-        
+
         setPendingOpinions(opinions.filter(o => o.status === 'pending'));
         setPublishedOpinions(opinions.filter(o => o.status === 'published' || o.isPublished));
       },
@@ -280,10 +280,10 @@ const AdminDashboard: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firebaseInstances) return;
-    
+
     setLoginLoading(true);
     setLoginError('');
-    
+
     try {
       const { auth } = firebaseInstances;
       const { signInWithEmailAndPassword } = await import('firebase/auth');

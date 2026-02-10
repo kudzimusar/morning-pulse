@@ -4,8 +4,8 @@
  * Readers are stored at: artifacts/{appId}/public/data/readers/{uid}
  */
 
-import { 
-  getFirestore, 
+import {
+  getFirestore,
   doc,
   getDoc,
   setDoc,
@@ -13,7 +13,7 @@ import {
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
-import { 
+import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -61,15 +61,15 @@ export const registerReader = async (
 ): Promise<string> => {
   const auth = getAuth();
   const db = getDb();
-  
+
   try {
     // 1. Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
-    
+
     // 2. Create reader document
-    const readerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid);
-    
+    const readerRef = doc(db, 'readers', uid);
+
     await setDoc(readerRef, {
       email,
       name: name.trim(),
@@ -81,7 +81,7 @@ export const registerReader = async (
       },
       createdAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Reader registered:', uid);
     return uid;
   } catch (error: any) {
@@ -95,7 +95,7 @@ export const registerReader = async (
  */
 export const signInReader = async (email: string, password: string): Promise<User> => {
   const auth = getAuth();
-  
+
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     console.log('✅ Reader sign-in successful');
@@ -111,8 +111,8 @@ export const signInReader = async (email: string, password: string): Promise<Use
  */
 export const getReader = async (uid: string): Promise<Reader | null> => {
   const db = getDb();
-  const readerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid);
-  
+  const readerRef = doc(db, 'readers', uid);
+
   try {
     const snap = await getDoc(readerRef);
     if (snap.exists()) {
@@ -154,13 +154,13 @@ export const getCurrentReader = async (): Promise<Reader | null> => {
     console.log('ℹ️ No current user found');
     return null;
   }
-  
+
   // Skip if user is anonymous
   if (user.isAnonymous) {
     console.log('ℹ️ User is anonymous, skipping reader check');
     return null;
   }
-  
+
   try {
     return await getReader(user.uid);
   } catch (error: any) {
@@ -182,8 +182,8 @@ export const updateReaderPreferences = async (
   preferences: { categories: string[] }
 ): Promise<void> => {
   const db = getDb();
-  const readerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid);
-  
+  const readerRef = doc(db, 'readers', uid);
+
   try {
     await updateDoc(readerRef, {
       'preferences.categories': preferences.categories,
@@ -203,8 +203,8 @@ export const loadReaderPreferences = async (
   uid: string
 ): Promise<{ categories: string[] } | null> => {
   const db = getDb();
-  const readerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid);
-  
+  const readerRef = doc(db, 'readers', uid);
+
   try {
     const snap = await getDoc(readerRef);
     if (snap.exists()) {
@@ -227,19 +227,19 @@ export const activateNewsletterTrial = async (
   email: string
 ): Promise<void> => {
   const db = getDb();
-  const readerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid);
-  
+  const readerRef = doc(db, 'readers', uid);
+
   try {
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 days from now
-    
+
     await updateDoc(readerRef, {
       'preferences.newsletterSubscribed': true,
       'preferences.newsletterTrialUsed': true,
       'preferences.newsletterTrialEndDate': trialEndDate,
       updatedAt: serverTimestamp()
     });
-    
+
     console.log('✅ Newsletter trial activated for reader:', uid);
   } catch (error: any) {
     console.error('❌ Failed to activate newsletter trial:', error);
@@ -252,14 +252,14 @@ export const activateNewsletterTrial = async (
  */
 export const checkReaderExists = async (email: string): Promise<boolean> => {
   const db = getDb();
-  
+
   try {
     // Query readers collection for matching email
     const { collection, query, where, getDocs } = await import('firebase/firestore');
-    const readersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'readers');
+    const readersRef = collection(db, 'readers');
     const q = query(readersRef, where('email', '==', email.toLowerCase().trim()));
     const querySnapshot = await getDocs(q);
-    
+
     return !querySnapshot.empty;
   } catch (error: any) {
     console.error('Error checking reader existence:', error);

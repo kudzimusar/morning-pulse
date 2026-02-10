@@ -5,10 +5,10 @@
  * Approved writers are also added to /staff/{uid} with roles: ['writer']
  */
 
-import { 
-  getFirestore, 
-  collection, 
-  query, 
+import {
+  getFirestore,
+  collection,
+  query,
   where,
   getDocs,
   doc,
@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
-import { 
+import {
   getAuth,
   createUserWithEmailAndPassword,
   User
@@ -50,21 +50,21 @@ export interface Writer {
   rejectedReason?: string;
   createdAt: Date;
   updatedAt?: Date;
-  
+
   // ============================================
   // WRITER GOVERNANCE FIELDS (Sprint 1)
   // ============================================
-  
+
   // Writer tier classification
   tier?: 'staff' | 'freelance' | 'contributor' | 'guest';
-  
+
   // Topic areas/beats the writer covers
   beats?: string[];
-  
+
   // Assigned editor oversight
   editorId?: string;
   editorName?: string;
-  
+
   // Contract information
   contract?: {
     exclusive?: boolean;
@@ -72,7 +72,7 @@ export interface Writer {
     endDate?: Date;
     contractType?: 'exclusive' | 'non-exclusive' | 'guest';
   };
-  
+
   // Suspension status (enterprise governance)
   suspension?: {
     isSuspended: boolean;
@@ -82,7 +82,7 @@ export interface Writer {
     suspendedBy?: string;
     suspendedByName?: string;
   };
-  
+
   // Compliance tracking
   compliance?: {
     ndaAccepted?: boolean;
@@ -91,7 +91,7 @@ export interface Writer {
     termsAccepted?: boolean;
     termsAcceptedAt?: Date;
   };
-  
+
   // ============================================
   // PAYMENT PROFILE (Sprint 4)
   // ============================================
@@ -118,14 +118,14 @@ export const registerWriter = async (
 ): Promise<string> => {
   const auth = getAuth();
   const db = getDb();
-  
+
   try {
     // 1. Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
-    
+
     // 2. Create writer document at root level: /writers/{uid}
-    const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
+    const writerRef = doc(db, 'writers', uid);
     await setDoc(writerRef, {
       email,
       name,
@@ -134,7 +134,7 @@ export const registerWriter = async (
       status: 'pending_approval',
       createdAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Writer registered:', uid);
     return uid;
   } catch (error: any) {
@@ -203,8 +203,8 @@ const docToWriter = (snap: any): Writer => {
  */
 export const getWriter = async (uid: string): Promise<Writer | null> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
-  
+  const writerRef = doc(db, 'writers', uid);
+
   try {
     const snap = await getDoc(writerRef);
     if (snap.exists()) {
@@ -232,17 +232,17 @@ export const getCurrentWriter = async (): Promise<Writer | null> => {
  */
 export const getPendingWriters = async (): Promise<Writer[]> => {
   const db = getDb();
-  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
+  const writersRef = collection(db, 'writers');
   const q = query(writersRef, where('status', '==', 'pending_approval'));
-  
+
   try {
     const snapshot = await getDocs(q);
     const writers: Writer[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       writers.push(docToWriter(docSnap));
     });
-    
+
     return writers.sort((a, b) => {
       // Sort by creation date (newest first)
       return b.createdAt.getTime() - a.createdAt.getTime();
@@ -258,17 +258,17 @@ export const getPendingWriters = async (): Promise<Writer[]> => {
  */
 export const getApprovedWriters = async (): Promise<Writer[]> => {
   const db = getDb();
-  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
+  const writersRef = collection(db, 'writers');
   const q = query(writersRef, where('status', '==', 'approved'));
-  
+
   try {
     const snapshot = await getDocs(q);
     const writers: Writer[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       writers.push(docToWriter(docSnap));
     });
-    
+
     return writers.sort((a, b) => {
       const nameA = a.name.toLowerCase();
       const nameB = b.name.toLowerCase();
@@ -286,27 +286,27 @@ export const getApprovedWriters = async (): Promise<Writer[]> => {
  */
 export const approveWriter = async (uid: string): Promise<void> => {
   const db = getDb();
-  
+
   try {
     // 1. Get writer data
-    const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
+    const writerRef = doc(db, 'writers', uid);
     const writerSnap = await getDoc(writerRef);
-    
+
     if (!writerSnap.exists()) {
       throw new Error('Writer not found');
     }
-    
+
     const writerData = writerSnap.data();
-    
+
     // 2. Update writer status
     await updateDoc(writerRef, {
       status: 'approved',
       approvedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    
+
     // 3. Add to staff collection with writer role
-    const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
+    const staffRef = doc(db, 'staff', uid);
     await setDoc(staffRef, {
       email: writerData.email,
       name: writerData.name,
@@ -314,9 +314,9 @@ export const approveWriter = async (uid: string): Promise<void> => {
       createdAt: serverTimestamp(),
       lastActive: serverTimestamp(),
     }, { merge: true });
-    
+
     console.log('✅ Writer approved:', uid);
-    
+
     // TODO: Send approval email notification
   } catch (error: any) {
     console.error('❌ Error approving writer:', error);
@@ -329,17 +329,17 @@ export const approveWriter = async (uid: string): Promise<void> => {
  */
 export const rejectWriter = async (uid: string, reason: string): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
-  
+  const writerRef = doc(db, 'writers', uid);
+
   try {
     await updateDoc(writerRef, {
       status: 'rejected',
       rejectedReason: reason,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Writer rejected:', uid);
-    
+
     // TODO: Send rejection email notification
   } catch (error: any) {
     console.error('❌ Error rejecting writer:', error);
@@ -359,16 +359,16 @@ export const updateWriterProfile = async (
   }
 ): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', uid);
-  
+  const writerRef = doc(db, 'writers', uid);
+
   try {
     await updateDoc(writerRef, {
       ...updates,
       updatedAt: serverTimestamp(),
     });
-    
+
     // Also update staff collection if writer is approved
-    const staffRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'staff', uid);
+    const staffRef = doc(db, 'staff', uid);
     const staffSnap = await getDoc(staffRef);
     if (staffSnap.exists()) {
       const updateData: any = {};
@@ -380,7 +380,7 @@ export const updateWriterProfile = async (
         });
       }
     }
-    
+
     console.log('✅ Writer profile updated:', uid);
   } catch (error: any) {
     console.error('❌ Error updating writer profile:', error);
@@ -404,20 +404,20 @@ export const isApprovedWriter = async (): Promise<boolean> => {
  * Assign an editor to oversee a writer
  */
 export const assignEditorToWriter = async (
-  writerUid: string, 
+  writerUid: string,
   editorUid: string,
   editorName: string
 ): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+  const writerRef = doc(db, 'writers', writerUid);
+
   try {
     await updateDoc(writerRef, {
       editorId: editorUid,
       editorName: editorName,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Editor assigned to writer:', writerUid);
   } catch (error: any) {
     console.error('❌ Error assigning editor:', error);
@@ -430,15 +430,15 @@ export const assignEditorToWriter = async (
  */
 export const removeEditorFromWriter = async (writerUid: string): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+  const writerRef = doc(db, 'writers', writerUid);
+
   try {
     await updateDoc(writerRef, {
       editorId: null,
       editorName: null,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Editor removed from writer:', writerUid);
   } catch (error: any) {
     console.error('❌ Error removing editor:', error);
@@ -450,18 +450,18 @@ export const removeEditorFromWriter = async (writerUid: string): Promise<void> =
  * Set writer tier (staff, freelance, contributor, guest)
  */
 export const setWriterTier = async (
-  writerUid: string, 
+  writerUid: string,
   tier: 'staff' | 'freelance' | 'contributor' | 'guest'
 ): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+  const writerRef = doc(db, 'writers', writerUid);
+
   try {
     await updateDoc(writerRef, {
       tier: tier,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Writer tier set:', writerUid, tier);
   } catch (error: any) {
     console.error('❌ Error setting writer tier:', error);
@@ -473,18 +473,18 @@ export const setWriterTier = async (
  * Update writer beats (topic areas)
  */
 export const setWriterBeats = async (
-  writerUid: string, 
+  writerUid: string,
   beats: string[]
 ): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+  const writerRef = doc(db, 'writers', writerUid);
+
   try {
     await updateDoc(writerRef, {
       beats: beats,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Writer beats updated:', writerUid, beats);
   } catch (error: any) {
     console.error('❌ Error updating writer beats:', error);
@@ -503,8 +503,8 @@ export const suspendWriter = async (
   until?: Date
 ): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+  const writerRef = doc(db, 'writers', writerUid);
+
   try {
     await updateDoc(writerRef, {
       suspension: {
@@ -517,7 +517,7 @@ export const suspendWriter = async (
       },
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Writer suspended:', writerUid);
   } catch (error: any) {
     console.error('❌ Error suspending writer:', error);
@@ -530,14 +530,14 @@ export const suspendWriter = async (
  */
 export const unsuspendWriter = async (writerUid: string): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+  const writerRef = doc(db, 'writers', writerUid);
+
   try {
     await updateDoc(writerRef, {
       'suspension.isSuspended': false,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Writer unsuspended:', writerUid);
   } catch (error: any) {
     console.error('❌ Error unsuspending writer:', error);
@@ -551,9 +551,9 @@ export const unsuspendWriter = async (writerUid: string): Promise<void> => {
 export const isWriterSuspended = async (writerUid: string): Promise<boolean> => {
   const writer = await getWriter(writerUid);
   if (!writer) return false;
-  
+
   if (!writer.suspension?.isSuspended) return false;
-  
+
   // Check if suspension has expired
   if (writer.suspension.suspendedUntil) {
     const now = new Date();
@@ -563,7 +563,7 @@ export const isWriterSuspended = async (writerUid: string): Promise<boolean> => 
       return false;
     }
   }
-  
+
   return true;
 };
 
@@ -573,13 +573,13 @@ export const isWriterSuspended = async (writerUid: string): Promise<boolean> => 
 export const acknowledgeStyleGuide = async (writerUid: string): Promise<void> => {
   const db = getDb();
   const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+
   try {
     await updateDoc(writerRef, {
       'compliance.lastStyleGuideAck': serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Style guide acknowledged:', writerUid);
   } catch (error: any) {
     console.error('❌ Error acknowledging style guide:', error);
@@ -593,14 +593,14 @@ export const acknowledgeStyleGuide = async (writerUid: string): Promise<void> =>
 export const acceptTerms = async (writerUid: string): Promise<void> => {
   const db = getDb();
   const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+
   try {
     await updateDoc(writerRef, {
       'compliance.termsAccepted': true,
       'compliance.termsAcceptedAt': serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Terms accepted:', writerUid);
   } catch (error: any) {
     console.error('❌ Error accepting terms:', error);
@@ -613,21 +613,21 @@ export const acceptTerms = async (writerUid: string): Promise<void> => {
  */
 export const getWritersByTier = async (tier: Writer['tier']): Promise<Writer[]> => {
   const db = getDb();
-  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
+  const writersRef = collection(db, 'writers');
   const q = query(
-    writersRef, 
+    writersRef,
     where('status', '==', 'approved'),
     where('tier', '==', tier)
   );
-  
+
   try {
     const snapshot = await getDocs(q);
     const writers: Writer[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       writers.push(docToWriter(docSnap));
     });
-    
+
     return writers;
   } catch (error: any) {
     console.error('Error fetching writers by tier:', error);
@@ -642,19 +642,19 @@ export const getWritersByEditor = async (editorUid: string): Promise<Writer[]> =
   const db = getDb();
   const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
   const q = query(
-    writersRef, 
+    writersRef,
     where('status', '==', 'approved'),
     where('editorId', '==', editorUid)
   );
-  
+
   try {
     const snapshot = await getDocs(q);
     const writers: Writer[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       writers.push(docToWriter(docSnap));
     });
-    
+
     return writers;
   } catch (error: any) {
     console.error('Error fetching writers by editor:', error);
@@ -675,13 +675,13 @@ export const updateWriterPaymentProfile = async (
 ): Promise<void> => {
   const db = getDb();
   const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
-  
+
   try {
     await updateDoc(writerRef, {
       paymentProfile: paymentProfile,
       updatedAt: serverTimestamp(),
     });
-    
+
     console.log('✅ Writer payment profile updated:', writerUid);
   } catch (error: any) {
     console.error('❌ Error updating payment profile:', error);
@@ -696,11 +696,11 @@ export const getWritersWithPaymentProfiles = async (): Promise<Writer[]> => {
   const db = getDb();
   const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
   const q = query(writersRef, where('status', '==', 'approved'));
-  
+
   try {
     const snapshot = await getDocs(q);
     const writers: Writer[] = [];
-    
+
     snapshot.forEach((docSnap) => {
       const writer = docToWriter(docSnap);
       // Only include writers who have a payment profile set up
@@ -708,7 +708,7 @@ export const getWritersWithPaymentProfiles = async (): Promise<Writer[]> => {
         writers.push(writer);
       }
     });
-    
+
     return writers.sort((a, b) => a.name.localeCompare(b.name));
   } catch (error: any) {
     console.error('Error fetching writers with payment profiles:', error);
