@@ -14,7 +14,8 @@ export interface StaffMember {
   uid: string;
   email: string;
   name: string;
-  role: StaffRole;
+  role: StaffRole;        // Primary role (legacy)
+  roles: StaffRole[];    // Multi-role support
   writerType?: WriterType;
   isActive: boolean;
   createdAt?: Date;
@@ -32,12 +33,35 @@ export interface StaffInvite {
   id: string;
   email: string;
   name: string;
-  role: StaffRole;
+  role: StaffRole;        // Primary role (legacy)
+  roles: StaffRole[];    // Multi-role support
   writerType?: WriterType;
+  status: 'pending' | 'used' | 'revoked' | 'expired';
   createdAt: Date;
   expiresAt: Date;
   invitedBy: string;
   invitedByName: string;
+  usedBy?: string;
+  usedAt?: Date;
+  revokedBy?: string;
+  revokedAt?: Date;
+}
+
+// Represents an Opinion/Article piece
+export interface Opinion {
+  id: string;
+  title: string;
+  author: string;
+  authorUid: string;
+  content: string;
+  category: string;
+  status: 'pending' | 'published' | 'rejected' | 'scheduled';
+  createdAt: any;
+  updatedAt?: any;
+  publishedAt?: any;
+  image?: string;
+  summary?: string;
+  slug?: string;
 }
 
 // Represents a log entry in the /auditLog collection
