@@ -16,6 +16,7 @@ import {
   onSnapshot,
   doc,
   getDoc,
+  setDoc,
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
@@ -96,6 +97,26 @@ const AdminDashboard: React.FC = () => {
 
   // UI state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Keyboard shortcuts for tab navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only trigger if no input is focused
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')) return;
+
+      const key = e.key;
+      if (key >= '1' && key <= '9') {
+        const index = parseInt(key) - 1;
+        if (ALL_TABS[index]) {
+          setActiveTab(ALL_TABS[index].id);
+          showToast(`Switched to ${ALL_TABS[index].label}`, 'success');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Firebase instances
   const [firebaseInstances, setFirebaseInstances] = useState<{

@@ -1,119 +1,130 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    Cell
+} from 'recharts';
 import MetricCard from './widgets/MetricCard';
-import PerformanceChart from './widgets/PerformanceChart';
 import './AdminDashboard.css';
 
 const RevenueTab: React.FC = () => {
     const [loading, setLoading] = useState(true);
-    const [revenueData, setRevenueData] = useState<any[]>([]);
+    const [revenueTrend, setRevenueTrend] = useState<any[]>([]);
+    const [subscriptionMix, setSubscriptionMix] = useState<any[]>([]);
 
     useEffect(() => {
-        // Mock data simulation
+        // Simulating monetization data fetch
         setTimeout(() => {
-            setRevenueData([
-                { name: 'Jan', revenue: 12000, subs: 8000, ads: 4000 },
-                { name: 'Feb', revenue: 15400, subs: 10000, ads: 5400 },
-                { name: 'Mar', revenue: 18900, subs: 12500, ads: 6400 },
-                { name: 'Apr', revenue: 22100, subs: 15000, ads: 7100 },
-                { name: 'May', revenue: 28400, subs: 19000, ads: 9400 },
-                { name: 'Jun', revenue: 35200, subs: 24000, ads: 11200 },
-                { name: 'Jul', revenue: 45230, subs: 30000, ads: 15230 },
+            setRevenueTrend([
+                { month: 'Jan', revenue: 32000, churn: 120 },
+                { month: 'Feb', revenue: 35000, churn: 140 },
+                { month: 'Mar', revenue: 38000, churn: 130 },
+                { month: 'Apr', revenue: 42000, churn: 110 },
+                { month: 'May', revenue: 45000, churn: 95 },
+                { month: 'Jun', revenue: 52000, churn: 80 },
             ]);
+
+            setSubscriptionMix([
+                { name: 'Free', count: 12500, color: '#9ca3af' },
+                { name: 'Pro', count: 4800, color: '#3b82f6' },
+                { name: 'Premium', count: 1200, color: '#f59e0b' },
+                { name: 'Corporate', count: 150, color: '#8b5cf6' },
+            ]);
+
             setLoading(false);
-        }, 800);
+        }, 1200);
     }, []);
 
-    if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Analyzing financial records...</div>;
+    if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading financial oversight engine...</div>;
 
     return (
         <div className="fade-in">
             <header style={{ marginBottom: '24px' }}>
-                <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>Revenue & Monetization</h2>
+                <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>Revenue Control</h2>
                 <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
-                    Track subscription growth, ad performance, and overall platform ROI.
+                    Monetization performance, subscription health, and fiscal projections.
                 </p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-                <MetricCard
-                    title="Total Revenue"
-                    value="$45,230.50"
-                    change={18}
-                    trend="up"
-                    icon="💰"
-                    color="#10b981"
-                    description="Gross income this month"
-                />
-                <MetricCard
-                    title="Subscriptions"
-                    value="$30,000.00"
-                    change={22}
-                    trend="up"
-                    icon="💎"
-                    color="#3b82f6"
-                    description="MRR from active plans"
-                />
-                <MetricCard
-                    title="Ad Revenue"
-                    value="$15,230.50"
-                    change={9}
-                    trend="up"
-                    icon="📢"
-                    color="#f59e0b"
-                    description="Programmatic & Direct ads"
-                />
-                <MetricCard
-                    title="Churn Rate"
-                    value="2.3%"
-                    change={0.5}
-                    trend="down"
-                    icon="📉"
-                    color="#ef4444"
-                    description="Subscriber retention"
-                />
+            {/* KPI Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
+                <MetricCard title="MTD Revenue" value="$52,430" trend="up" change={15} icon="💰" color="#10b981" />
+                <MetricCard title="Avg MRR" value="$45,200" trend="up" change={12} icon="🔄" color="#3b82f6" />
+                <MetricCard title="Active Subs" value="6,150" trend="up" change={5} icon="👥" color="#f59e0b" />
+                <MetricCard title="Churn Rate" value="1.8%" trend="down" change={0.5} icon="📉" color="#ef4444" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                {/* Revenue Growth Chart */}
                 <div className="admin-card" style={{ padding: '24px' }}>
-                    <PerformanceChart
-                        title="Revenue Trend (Subscriptions vs Ads)"
-                        data={revenueData}
-                        xKey="name"
-                        yKey="revenue"
-                        color="#4f46e5"
-                    />
+                    <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>Monthly Revenue Growth (MRR)</h3>
+                    <div style={{ height: '300px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={revenueTrend}>
+                                <defs>
+                                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRev)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
+                {/* Subscription Mix */}
                 <div className="admin-card" style={{ padding: '24px' }}>
-                    <h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600' }}>Subscription Tiers</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}>
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
-                                <span>Free Tier</span>
-                                <span style={{ fontWeight: '600' }}>12,847 users</span>
-                            </div>
-                            <div style={{ height: '8px', backgroundColor: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{ width: '100%', height: '100%', backgroundColor: '#9ca3af' }}></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
-                                <span>Monthly Pro</span>
-                                <span style={{ fontWeight: '600' }}>1,234 subs</span>
-                            </div>
-                            <div style={{ height: '8px', backgroundColor: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{ width: '65%', height: '100%', backgroundColor: '#3b82f6' }}></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
-                                <span>Annual Premium</span>
-                                <span style={{ fontWeight: '600' }}>845 subs</span>
-                            </div>
-                            <div style={{ height: '8px', backgroundColor: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{ width: '45%', height: '100%', backgroundColor: '#10b981' }}></div>
-                            </div>
-                        </div>
+                    <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>Subscription Tier Mix</h3>
+                    <div style={{ height: '300px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={subscriptionMix} layout="vertical">
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#4b5563' }} />
+                                <Tooltip />
+                                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={30}>
+                                    {subscriptionMix.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            {/* Ad Inventory Performance placeholder */}
+            <div className="admin-card" style={{ padding: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0, fontSize: '16px' }}>📢 Advertising Hub Performance</h3>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <span style={{ fontSize: '12px', padding: '4px 8px', backgroundColor: '#ecfdf5', color: '#047857', borderRadius: '12px', fontWeight: '500' }}>Inventory: 94% full</span>
+                    </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+                    <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
+                        <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>Total Impressions</p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>1.2M</p>
+                    </div>
+                    <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
+                        <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>Avg eCPM</p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>$12.40</p>
+                    </div>
+                    <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
+                        <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>Ad Fill Rate</p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>98.2%</p>
                     </div>
                 </div>
             </div>

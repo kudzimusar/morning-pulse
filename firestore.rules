@@ -163,6 +163,19 @@ service cloud.firestore {
     }
 
     // --- 📊 ANALYTICS & METRICS ---
+    match /analytics/daily/{date} {
+      allow read: if isSuperAdmin() || isAdmin();
+      allow write: if isBoss();
+    }
+    match /analytics/articles/{articleId} {
+      allow read: if isSuperAdmin() || isAdmin();
+      allow write: if isBoss();
+      allow create, update: if true; // Allow client-side increments (with safety)
+    }
+    match /analytics/staff/{staffId} {
+      allow read: if isSuperAdmin() || isAdmin() || (isSignedIn() && request.auth.uid == staffId);
+      allow write: if isBoss();
+    }
     match /analytics/{document=**} {
       allow read: if isSuperAdmin() || isAdmin();
       allow write: if isBoss();

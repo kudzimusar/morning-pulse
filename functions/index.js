@@ -2,7 +2,14 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
-admin.initializeApp();
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+}
+
+const { aggregateDailyStats, onArticlePublished } = require("./analyticsAggregator");
+
+exports.aggregateDailyStats = aggregateDailyStats;
+exports.onArticlePublished = onArticlePublished;
 
 exports.setRoleOnStaffChange = functions.firestore
   .document('staff/{staffId}')
@@ -13,8 +20,8 @@ exports.setRoleOnStaffChange = functions.firestore
 
     // If data is the same, do nothing to prevent infinite loops.
     if (JSON.stringify(newData) === JSON.stringify(oldData)) {
-        console.log(`No change detected for staff ${staffId}. Exiting function.`);
-        return;
+      console.log(`No change detected for staff ${staffId}. Exiting function.`);
+      return;
     }
 
     // If the document is deleted or the user has no role, remove all custom claims.
@@ -27,7 +34,7 @@ exports.setRoleOnStaffChange = functions.firestore
       }
       return;
     }
-    
+
     // Set the new role as a custom claim.
     const role = newData.role;
     const claims = { [role]: true };

@@ -3,6 +3,20 @@
  * Advanced analytics tracking for user engagement and business metrics
  */
 
+import {
+  doc,
+  updateDoc,
+  increment,
+  setDoc,
+  serverTimestamp,
+  collection,
+  query,
+  limit,
+  getDocs,
+  getDoc
+} from 'firebase/firestore';
+import { db } from './firebase';
+
 // Google Analytics Measurement ID (replace with your actual GA4 ID)
 const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // TODO: Replace with actual GA4 ID
 
@@ -53,13 +67,53 @@ export const trackEvent = (
   }
 };
 
+/**
+ * Increment article view count in Firestore
+ */
+export const incrementArticleViewsFirestore = async (articleId: string, authorUid?: string) => {
+  if (!db) return;
+
+  try {
+    const articleRef = doc(db, 'analytics', 'articles', 'data', articleId);
+
+    // Use setDoc with merge for views to ensure document exists
+    await setDoc(articleRef, {
+      views: increment(1),
+      lastViewedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    // If authorUid is provided, also increment staff views
+    if (authorUid) {
+      const staffRef = doc(db, 'analytics', 'staff', 'data', authorUid);
+      await setDoc(staffRef, {
+        totalViews: increment(1),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+
+    // Increment daily global views
+    const today = new Date().toISOString().split('T')[0];
+    const dailyRef = doc(db, 'analytics', 'daily', 'stats', today);
+    await setDoc(dailyRef, {
+      totalViews: increment(1),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+  } catch (error) {
+    console.warn("Silent analytics failure:", error);
+  }
+};
+
 // Track article views
 export const trackArticleView = (
   articleId: string,
   articleTitle: string,
   authorName?: string,
-  category?: string
+  category?: string,
+  authorUid?: string
 ): void => {
+  // 1. Trace in GA4 (Standard)
   trackEvent('article_view', {
     article_id: articleId,
     article_title: articleTitle,
@@ -67,6 +121,9 @@ export const trackArticleView = (
     category: category || 'Uncategorized',
     content_type: 'opinion',
   });
+
+  // 2. Increment in Firestore (Command Center Data)
+  incrementArticleViewsFirestore(articleId, authorUid);
 };
 
 // Alias for trackArticleView to maintain compatibility
@@ -330,19 +387,19 @@ const CTR_STORAGE_PREFIX = 'morning-pulse-ctr-';
 // Get or create session ID
 export const getOrCreateSessionId = (): string => {
   let sessionId = sessionStorage.getItem(SESSION_KEY);
-  
+
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     sessionStorage.setItem(SESSION_KEY, sessionId);
   }
-  
+
   return sessionId;
 };
 
 // Track article click with CTR calculation
 export const trackArticleClick = (event: ArticleClickEvent): void => {
   const sessionId = event.sessionId || getOrCreateSessionId();
-  
+
   // Track in GA4
   trackEvent('article_click', {
     article_id: event.articleId,
@@ -352,10 +409,10 @@ export const trackArticleClick = (event: ArticleClickEvent): void => {
     source: event.source,
     session_id: sessionId,
   });
-  
+
   // Update CTR
   updateCTR(event.source);
-  
+
   // Store in local analytics
   storeLocalEvent('article_click', {
     ...event,
@@ -367,20 +424,20 @@ export const trackArticleClick = (event: ArticleClickEvent): void => {
 // Track share event
 export const trackShare = (event: ShareEvent): void => {
   const sessionId = event.sessionId || getOrCreateSessionId();
-  
+
   // Track in GA4
   trackEvent('share', {
     article_id: event.articleId,
     platform: event.platform,
     session_id: sessionId,
   });
-  
+
   // Also track as engagement
   trackArticleEngagement(event.articleId, 'share', {
     platform: event.platform,
     session_id: sessionId,
   });
-  
+
   // Store in local analytics
   storeLocalEvent('share', {
     ...event,
@@ -392,20 +449,20 @@ export const trackShare = (event: ShareEvent): void => {
 // Track bookmark event
 export const trackBookmark = (event: BookmarkEvent): void => {
   const sessionId = event.sessionId || getOrCreateSessionId();
-  
+
   // Track in GA4
   trackEvent('bookmark', {
     article_id: event.articleId,
     action: event.action,
     session_id: sessionId,
   });
-  
+
   // Also track as engagement
   trackArticleEngagement(event.articleId, 'bookmark', {
     action: event.action,
     session_id: sessionId,
   });
-  
+
   // Store in local analytics
   storeLocalEvent('bookmark', {
     ...event,
@@ -417,7 +474,7 @@ export const trackBookmark = (event: BookmarkEvent): void => {
 // Track AI query
 export const trackAIQuery = (event: AIQueryEvent): void => {
   const sessionId = event.sessionId || getOrCreateSessionId();
-  
+
   // Track in GA4
   trackEvent('ai_query', {
     query: event.query,
@@ -425,7 +482,7 @@ export const trackAIQuery = (event: AIQueryEvent): void => {
     articles_returned: event.articlesReturned,
     session_id: sessionId,
   });
-  
+
   // Store in local analytics
   storeLocalEvent('ai_query', {
     ...event,
@@ -440,7 +497,7 @@ export const trackImpression = (source: string): void => {
     const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
     const stored = localStorage.getItem(ctrKey);
     const ctrData: CTRData = stored ? JSON.parse(stored) : { impressions: 0, clicks: 0 };
-    
+
     ctrData.impressions += 1;
     localStorage.setItem(ctrKey, JSON.stringify(ctrData));
   } catch (error) {
@@ -454,7 +511,7 @@ const updateCTR = (source: string): void => {
     const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
     const stored = localStorage.getItem(ctrKey);
     const ctrData: CTRData = stored ? JSON.parse(stored) : { impressions: 0, clicks: 0 };
-    
+
     ctrData.clicks += 1;
     localStorage.setItem(ctrKey, JSON.stringify(ctrData));
   } catch (error) {
@@ -467,13 +524,13 @@ export const getCTR = (source: string): number => {
   try {
     const ctrKey = `${CTR_STORAGE_PREFIX}${source}`;
     const stored = localStorage.getItem(ctrKey);
-    
+
     if (!stored) return 0;
-    
+
     const ctrData: CTRData = JSON.parse(stored);
-    
+
     if (ctrData.impressions === 0) return 0;
-    
+
     return (ctrData.clicks / ctrData.impressions) * 100;
   } catch (error) {
     return 0;
@@ -495,7 +552,7 @@ const storeLocalEvent = (eventType: string, data: Record<string, any>): void => 
       timestamp: Date.now(),
       data,
     });
-    
+
     // Keep only last 1000 events
     const recentEvents = events.slice(-1000);
     localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(recentEvents));
@@ -518,13 +575,13 @@ export const getSessionData = (): SessionData => {
   const sessionId = getOrCreateSessionId();
   const sessionStart = sessionStorage.getItem(`${SESSION_KEY}-start`);
   const startTime = sessionStart ? parseInt(sessionStart, 10) : Date.now();
-  
+
   // Load events from local storage
   const events = loadLocalEvents();
   const articleClicks = events.filter(e => e.eventType === 'article_click').length;
   const pageViews = events.filter(e => e.eventType === 'page_view').length;
   const queries = events.filter(e => e.eventType === 'ai_query').length;
-  
+
   return {
     sessionId,
     startTime,
@@ -542,12 +599,12 @@ export const getTopArticles = (limit: number = 10): Array<{ articleId: string; c
     .filter(e => e.eventType === 'article_click')
     .map(e => e.data.articleId)
     .filter(Boolean);
-  
+
   const counts = clicks.reduce((acc, id) => {
     acc[id] = (acc[id] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   return Object.entries(counts)
     .map(([articleId, clicks]) => ({ articleId, clicks }))
     .sort((a, b) => b.clicks - a.clicks)
@@ -561,12 +618,12 @@ export const getPopularCategories = (): Array<{ category: string; views: number 
     .filter(e => e.eventType === 'article_click')
     .map(e => e.data.category)
     .filter(Boolean);
-  
+
   const counts = categories.reduce((acc, cat) => {
     acc[cat] = (acc[cat] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  
+
   return Object.entries(counts)
     .map(([category, views]) => ({ category, views }))
     .sort((a, b) => b.views - a.views);
@@ -585,9 +642,9 @@ export const getEngagementMetrics = (): {
     acc[source] = getCTR(source);
     return acc;
   }, {} as Record<string, number>);
-  
+
   const sessionData = getSessionData();
-  
+
   return {
     totalSessions: 1, // Current session
     avgSessionDuration: sessionData.timeOnSite,
@@ -607,7 +664,7 @@ export const exportAnalyticsData = (): string => {
     categories: getPopularCategories(),
     ctrBySource: getEngagementMetrics().ctrBySource,
   };
-  
+
   return JSON.stringify(data, null, 2);
 };
 
@@ -628,23 +685,23 @@ export const useAnalytics = () => {
   const trackClick = (event: ArticleClickEvent) => {
     trackArticleClick(event);
   };
-  
+
   const trackShareEvent = (event: ShareEvent) => {
     trackShare(event);
   };
-  
+
   const trackBookmarkEvent = (event: BookmarkEvent) => {
     trackBookmark(event);
   };
-  
+
   const trackQuery = (event: AIQueryEvent) => {
     trackAIQuery(event);
   };
-  
+
   const getMetrics = () => {
     return getEngagementMetrics();
   };
-  
+
   return {
     trackClick,
     trackShare: trackShareEvent,
@@ -663,7 +720,7 @@ if (typeof window !== 'undefined') {
   if (!sessionStorage.getItem(`${SESSION_KEY}-start`)) {
     sessionStorage.setItem(`${SESSION_KEY}-start`, Date.now().toString());
   }
-  
+
   // Track page view
   storeLocalEvent('page_view', {
     sessionId,
@@ -755,31 +812,31 @@ const APP_ID = (window as any).__app_id || 'morning-pulse-app';
  */
 export const getAnalyticsSummary = async (db: any, period: 'day' | 'week' | 'month' = 'week'): Promise<AnalyticsSummary> => {
   // console.log(`Fetching analytics summary for ${period}...`);
-  
+
   // ✅ FIX: Validate db instance before use
   if (!db) {
     console.error('❌ Analytics: Firestore database instance is undefined');
     return getMockAnalytics();
   }
-  
+
   // ✅ FIX: Check if db is a valid Firestore instance
   if (typeof db !== 'object' || (!db.type && typeof db.collection !== 'function')) {
     console.error('❌ Analytics: Invalid Firestore database instance');
     return getMockAnalytics();
   }
-  
+
   // ✅ FIX: Validate APP_ID before using
   if (!APP_ID || APP_ID === 'undefined' || APP_ID === 'null') {
     console.error('❌ Analytics: APP_ID is undefined or invalid');
     return getMockAnalytics();
   }
-  
+
   try {
     const { collection, query, limit, getDocs } = await import('firebase/firestore');
     const analyticsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'analytics');
     const q = query(analyticsRef, limit(1));
     const snapshot = await getDocs(q);
-    
+
     if (!snapshot.empty) {
       return snapshot.docs[0].data() as AnalyticsSummary;
     }
@@ -849,17 +906,17 @@ export interface AIQueryEvent {
 const getMockAnalytics = (): AnalyticsSummary => {
   const now = new Date();
   const dailyTraffic = [];
-  
+
   // Generate 7 days of trend data
   for (let i = 6; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(now.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
-    
+
     // Create an upward trend
     const baseViews = 150 + (6 - i) * 25;
     const randomVariation = Math.floor(Math.random() * 40);
-    
+
     dailyTraffic.push({
       date: dateStr,
       views: baseViews + randomVariation,

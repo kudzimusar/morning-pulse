@@ -63,14 +63,50 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <header>
-                <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#111827' }}>
-                    Morning Pulse Command Center
-                </h2>
-                <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
-                    Real-time overview of your enterprise newsroom operations.
-                </p>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+                        Morning Pulse Command Center
+                    </h2>
+                    <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
+                        Real-time overview of your enterprise newsroom operations.
+                    </p>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                        onClick={() => onNavigate('editorial-queue')}
+                        className="admin-button admin-button-primary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px' }}
+                    >
+                        <span>📝</span> Create Article
+                    </button>
+                    <button
+                        onClick={() => onNavigate('staff-management')}
+                        className="admin-button admin-button-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px' }}
+                    >
+                        <span>👥</span> Invite Staff
+                    </button>
+                </div>
             </header>
+
+            {/* Quick Stats Bar */}
+            <div style={{
+                backgroundColor: '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                padding: '12px 20px',
+                display: 'flex',
+                gap: '24px',
+                alignItems: 'center'
+            }}>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Quick Actions:</span>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                    <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('ad-management'); }} style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>📢 Manage Ads</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('newsletter-hub'); }} style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>📧 Send Newsletter</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('analytics'); }} style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>📈 View Report</a>
+                </div>
+            </div>
 
             {/* KPI Section */}
             <div style={{
