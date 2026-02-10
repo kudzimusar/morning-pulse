@@ -3,16 +3,21 @@
  * Provides email/password authentication and role-based access control using Firebase Custom Claims.
  */
 
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  signOut, 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   User,
   Auth
 } from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  Firestore
+} from 'firebase/firestore';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore'; // Keep for other services if needed
 
 // --- Firebase Initialization (Singleton Pattern) ---
 
@@ -21,12 +26,40 @@ let authInstance: Auth | null = null;
 let dbInstance: Firestore | null = null;
 
 const getFirebaseConfig = (): any => {
-    const configElement = document.getElementById('firebase-config');
-    if (!configElement || !configElement.textContent) {
-        console.error('Critical: Firebase config not found in the DOM.');
-        return {}; // Return empty config to avoid crash, though app will fail
-    }
+  // Priority 1: Try to get from window (injected at runtime via firebase-config.js or meta tag)
+  if (typeof window !== 'undefined' && (window as any).__firebase_config) {
+    return (window as any).__firebase_config;
+  }
+
+  const configElement = document.getElementById('firebase-config');
+  if (configElement && configElement.textContent) {
     return JSON.parse(configElement.textContent);
+  }
+
+  // Priority 2: Try to get from environment variable (build time)
+  const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
+  if (configStr && typeof configStr === 'string' && configStr.trim() && configStr !== 'null') {
+    try {
+      let parsed = JSON.parse(configStr);
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+      }
+      return parsed;
+    } catch (e) {
+      console.error('Failed to parse VITE_FIREBASE_CONFIG:', e);
+    }
+  }
+
+  // Fallback: Hardcoded for local development
+  return {
+    apiKey: "AIzaSyCAh6j7mhTtiQGN5855Tt-hCRVrNXbNxYE",
+    authDomain: "gen-lang-client-0999441419.firebaseapp.com",
+    projectId: "gen-lang-client-0999441419",
+    storageBucket: "gen-lang-client-0999441419.firebasestorage.app",
+    messagingSenderId: "328455476104",
+    appId: "1:328455476104:web:396deccbc5613e353f603d",
+    measurementId: "G-60S2YK429K"
+  };
 };
 
 const getAppInstance = (): FirebaseApp => {
@@ -47,10 +80,15 @@ const getAuthInstance = (): Auth => {
 };
 
 const getDbInstance = (): Firestore => {
-    if (dbInstance) return dbInstance;
-    dbInstance = getFirestore(getAppInstance());
-    return dbInstance;
+  if (dbInstance) return dbInstance;
+  dbInstance = getFirestore(getAppInstance());
+  return dbInstance;
 };
+
+// --- Staff Role Types ---
+export type StaffRole = string[] | null;
+
+const appId = (window as any).__app_id || 'morning-pulse-app';
 
 // --- Core Authentication Functions ---
 
@@ -59,7 +97,10 @@ const getDbInstance = (): Firestore => {
  */
 export const signInEditor = async (email: string, password: string): Promise<User | null> => {
   const auth = getAuthInstance();
+  const db = getDbInstance();
+
   try {
+    // 🔐 Sign out anonymous user if present before email/password login
     if (auth.currentUser && auth.currentUser.isAnonymous) {
       await signOut(auth);
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -67,21 +108,40 @@ export const signInEditor = async (email: string, password: string): Promise<Use
 
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
+
     console.log("✅ Claims-based auth check running...");
     const tokenResult = await user.getIdTokenResult(true);
     const claims = tokenResult.claims;
 
+    // Check for ANY staff role via claims
     const hasStaffRole = claims.super_admin || claims.bureau_chief || claims.admin || claims.editor || claims.writer;
 
     if (!hasStaffRole) {
-        console.error("Access Denied: This account does not have staff privileges.");
-        await signOut(auth);
-        return null;
+      console.error("Access Denied: This account does not have staff privileges.");
+      await signOut(auth);
+      return null;
     }
-    
-    const role = Object.keys(claims).find(r =>['super_admin', 'bureau_chief', 'admin', 'editor', 'writer'].includes(r));
+
+    // Check if account is active in Firestore (safety check)
+    try {
+      const staffRef = doc(db, 'artifacts', appId, 'public', 'data', 'staff', user.uid);
+      const staffSnap = await getDoc(staffRef);
+      if (staffSnap.exists()) {
+        const staffData = staffSnap.data();
+        const isActive = staffData.isActive !== undefined ? staffData.isActive : true;
+        if (!isActive) {
+          console.warn(`🚫 [AUTH] Suspended account: ${user.uid}`);
+          await signOut(auth);
+          throw new Error('Your account has been suspended.');
+        }
+      }
+    } catch (dbError) {
+      console.warn('Account status check skipped:', dbError);
+    }
+
+    const role = Object.keys(claims).find(r => ['super_admin', 'bureau_chief', 'admin', 'editor', 'writer'].includes(r));
     console.log(`Login successful. Role: ${role || 'user'}`);
+
     return user;
 
   } catch (error: any) {
@@ -89,20 +149,68 @@ export const signInEditor = async (email: string, password: string): Promise<Use
     if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
       throw new Error('Invalid email or password.');
     }
-    throw new Error('An unexpected error occurred during sign-in.');
+    throw error;
   }
 };
 
 /**
- * Get current authenticated user
+ * Get staff roles from Firestore (Legacy/Secondary check)
  */
-export const getCurrentEditor = (): User | null => {
-  const authInstance = getAuthInstance();
-  return authInstance.currentUser;
+export const getStaffRole = async (uid: string): Promise<StaffRole> => {
+  try {
+    const db = getDbInstance();
+    const auth = getAuthInstance();
+    const isAnonymous = auth.currentUser?.isAnonymous || false;
+
+    if (!isAnonymous) {
+      console.log(`🔍 [AUTH] Checking staff role for UID: ${uid}`);
+    }
+
+    const staffRef = doc(db, 'artifacts', appId, 'public', 'data', 'staff', uid);
+    const snap = await getDoc(staffRef);
+
+    if (!snap.exists()) {
+      return null;
+    }
+
+    const data = snap.data();
+    if (data?.roles) {
+      return Array.isArray(data.roles) ? data.roles : [data.roles];
+    }
+    if (data?.role && typeof data.role === 'string') {
+      return [data.role];
+    }
+
+    return null;
+  } catch (error) {
+    console.error('❌ Error fetching staff role:', error);
+    return null;
+  }
 };
 
 /**
- * Logs out the current user.
+ * Synchronous role check for UI rendering (legacy use in App.tsx)
+ */
+export const requireEditor = (roles: StaffRole): boolean => {
+  if (!roles || !Array.isArray(roles)) {
+    return false;
+  }
+  // ✅ FIX: Include all editor-level roles
+  return roles.includes('editor') || roles.includes('admin') || roles.includes('bureau_chief') || roles.includes('super_admin');
+};
+
+/**
+ * Synchronous super admin check
+ */
+export const requireSuperAdmin = (roles: StaffRole): boolean => {
+  if (!roles || !Array.isArray(roles)) {
+    return false;
+  }
+  return roles.includes('super_admin');
+};
+
+/**
+ * Logs out the current editor.
  */
 export const logoutEditor = async (): Promise<void> => {
   const auth = getAuthInstance();
@@ -117,30 +225,36 @@ export const onEditorAuthStateChanged = (callback: (user: User | null) => void):
   return onAuthStateChanged(auth, callback);
 };
 
-// --- Role and Permission Checks (using Custom Claims) ---
+/**
+ * Get current authenticated user
+ */
+export const getCurrentEditor = (): User | null => {
+  const auth = getAuthInstance();
+  return auth.currentUser;
+};
+
+// --- Claims-based Role Logic ---
 
 /**
  * Gets the roles of the current user from their ID token claims.
  */
 export const getUserRoles = async (): Promise<string[]> => {
-  const auth = getAuth();
+  const auth = getAuthInstance();
   const currentUser = auth.currentUser;
-  
-  if (!currentUser) {
-    return [];
-  }
+
+  if (!currentUser) return [];
 
   try {
     const tokenResult = await currentUser.getIdTokenResult(true);
     const claims = tokenResult.claims;
-    
+
     const roles: string[] = [];
     if (claims.super_admin) roles.push('super_admin');
     if (claims.bureau_chief) roles.push('bureau_chief');
     if (claims.admin) roles.push('admin');
     if (claims.editor) roles.push('editor');
     if (claims.writer) roles.push('writer');
-    
+
     return roles;
   } catch (error) {
     console.error("❌ Error getting user roles from token:", error);
@@ -149,25 +263,17 @@ export const getUserRoles = async (): Promise<string[]> => {
 };
 
 /**
- * Checks if the user has a role that grants editor privileges.
+ * Asynchronous check if the user has editor privileges (claims-based).
  */
-export const requireEditor = async (): Promise<boolean> => {
+export const requireEditorAsync = async (): Promise<boolean> => {
   const roles = await getUserRoles();
   return roles.some(role => ['editor', 'admin', 'bureau_chief', 'super_admin'].includes(role));
 };
 
 /**
- * Checks if the user has super_admin privileges.
+ * Asynchronous check if the user has super_admin privileges (claims-based).
  */
-export const requireSuperAdmin = async (): Promise<boolean> => {
+export const requireSuperAdminAsync = async (): Promise<boolean> => {
   const roles = await getUserRoles();
   return roles.includes('super_admin');
-};
-
-/**
- * Checks if the user has at least bureau_chief privileges.
- */
-export const requireBureauChief = async (): Promise<boolean> => {
-  const roles = await getUserRoles();
-  return roles.some(role => ['bureau_chief', 'super_admin'].includes(role));
 };
