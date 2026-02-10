@@ -519,8 +519,8 @@ const App: React.FC = () => {
         }
 
         try {
-          const role = await getStaffRole(user.uid);
-          setUserRole(role);
+          const roles = await getUserRoles();
+          setUserRole(roles);
 
           // ✅ FIX: Switch to admin view when editor logs in
           if (requireEditor(role)) {
