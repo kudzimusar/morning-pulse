@@ -59,6 +59,20 @@ const SystemTab: React.FC = () => {
                 />
             </div>
 
+            <div style={{ padding: '20px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ fontSize: '24px' }}>⚡</div>
+                <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e40af' }}>Infrastructure Pulse: Low Latency Mode</div>
+                    <div style={{ fontSize: '12px', color: '#3b82f6' }}>All systems are nominal. Global CDN propagation at 100%.</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="status-badge active" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fff' }}></span>
+                        Live
+                    </div>
+                </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                 <div className="admin-card" style={{ padding: '24px' }}>
                     <h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600', marginBottom: '20px' }}>System Infrastructure Status</h3>

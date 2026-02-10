@@ -22,22 +22,24 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { Opinion } from '../types';
-import PrioritySummary from './admin/PrioritySummary';
-import EditorialQueueTab from './admin/EditorialQueueTab';
-import PublishedContentTab from './admin/PublishedContentTab';
-import StaffManagementTab from './admin/StaffManagementTab';
-import AnalyticsTab from './admin/AnalyticsTab';
-import NewsletterHub from './admin/NewsletterHub';
-import ImageComplianceTab from './admin/ImageComplianceTab';
-import SettingsTab from './admin/SettingsTab';
-import SubscriberManagementTab from './admin/SubscriberManagementTab';
-import AdManagementTab from './admin/AdManagementTab';
-import IntegrationSettings from './admin/IntegrationSettings';
-import WriterHub from './admin/WriterHub';
+// Lazy load tab components
+const PrioritySummary = React.lazy(() => import('./admin/PrioritySummary'));
+const EditorialQueueTab = React.lazy(() => import('./admin/EditorialQueueTab'));
+const PublishedContentTab = React.lazy(() => import('./admin/PublishedContentTab'));
+const StaffManagementTab = React.lazy(() => import('./admin/StaffManagementTab'));
+const AnalyticsTab = React.lazy(() => import('./admin/AnalyticsTab'));
+const NewsletterHub = React.lazy(() => import('./admin/NewsletterHub'));
+const ImageComplianceTab = React.lazy(() => import('./admin/ImageComplianceTab'));
+const SettingsTab = React.lazy(() => import('./admin/SettingsTab'));
+const SubscriberManagementTab = React.lazy(() => import('./admin/SubscriberManagementTab'));
+const AdManagementTab = React.lazy(() => import('./admin/AdManagementTab'));
+const IntegrationSettings = React.lazy(() => import('./admin/IntegrationSettings'));
+const WriterHub = React.lazy(() => import('./admin/WriterHub'));
+const DashboardOverviewTab = React.lazy(() => import('./admin/DashboardOverviewTab'));
+const RevenueTab = React.lazy(() => import('./admin/RevenueTab'));
+const SystemTab = React.lazy(() => import('./admin/SystemTab'));
 import { updateLastActive } from '../services/staffService';
-import DashboardOverviewTab from './admin/DashboardOverviewTab';
-import RevenueTab from './admin/RevenueTab';
-import SystemTab from './admin/SystemTab';
+import { Suspense } from 'react';
 // Constants
 const APP_ID = "morning-pulse-app";
 
@@ -443,65 +445,67 @@ const AdminDashboard: React.FC = () => {
 
         {/* Content Area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#fff' }}>
-          {activeTab === 'dashboard' && (
-            <DashboardOverviewTab
-              onNavigate={(tab) => setActiveTab(tab as any)}
-              pendingCount={pendingOpinions.length}
-              publishedCount={publishedOpinions.length}
-            />
-          )}
+          <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Processing...</div>}>
+            {activeTab === 'dashboard' && (
+              <DashboardOverviewTab
+                onNavigate={(tab) => setActiveTab(tab as any)}
+                pendingCount={pendingOpinions.length}
+                publishedCount={publishedOpinions.length}
+              />
+            )}
 
-          {activeTab === 'editorial-queue' && (
-            <EditorialQueueTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-          )}
+            {activeTab === 'editorial-queue' && (
+              <EditorialQueueTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+            )}
 
-          {activeTab === 'published-content' && (
-            <PublishedContentTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-          )}
+            {activeTab === 'published-content' && (
+              <PublishedContentTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+            )}
 
-          {activeTab === 'staff-management' && isAdmin && (
-            <StaffManagementTab />
-          )}
+            {activeTab === 'staff-management' && isAdmin && (
+              <StaffManagementTab />
+            )}
 
-          {activeTab === 'writer-hub' && isAdmin && (
-            <WriterHub userRoles={userRoles} />
-          )}
+            {activeTab === 'writer-hub' && isAdmin && (
+              <WriterHub userRoles={userRoles} />
+            )}
 
-          {activeTab === 'subscriber-management' && isAdmin && (
-            <SubscriberManagementTab userRoles={userRoles} />
-          )}
+            {activeTab === 'subscriber-management' && isAdmin && (
+              <SubscriberManagementTab userRoles={userRoles} />
+            )}
 
-          {activeTab === 'ad-management' && isAdmin && (
-            <AdManagementTab userRoles={userRoles} />
-          )}
+            {activeTab === 'ad-management' && isAdmin && (
+              <AdManagementTab userRoles={userRoles} />
+            )}
 
-          {activeTab === 'analytics' && isAuthorized && (
-            <AnalyticsTab firebaseInstances={firebaseInstances} isAuthorized={isAuthorized} userRoles={userRoles} />
-          )}
+            {activeTab === 'analytics' && isAuthorized && (
+              <AnalyticsTab firebaseInstances={firebaseInstances} isAuthorized={isAuthorized} userRoles={userRoles} />
+            )}
 
-          {activeTab === 'revenue' && isSuperAdmin && (
-            <RevenueTab />
-          )}
+            {activeTab === 'revenue' && isSuperAdmin && (
+              <RevenueTab />
+            )}
 
-          {activeTab === 'system-health' && isSuperAdmin && (
-            <SystemTab />
-          )}
+            {activeTab === 'system-health' && isSuperAdmin && (
+              <SystemTab />
+            )}
 
-          {activeTab === 'newsletter-hub' && isSuperAdmin && (
-            <NewsletterHub />
-          )}
+            {activeTab === 'newsletter-hub' && isSuperAdmin && (
+              <NewsletterHub />
+            )}
 
-          {activeTab === 'image-compliance' && (
-            <ImageComplianceTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-          )}
+            {activeTab === 'image-compliance' && (
+              <ImageComplianceTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+            )}
 
-          {activeTab === 'integrations' && isAdmin && (
-            <IntegrationSettings userRoles={userRoles} showToast={showToast} />
-          )}
+            {activeTab === 'integrations' && isAdmin && (
+              <IntegrationSettings userRoles={userRoles} showToast={showToast} />
+            )}
 
-          {activeTab === 'settings' && (
-            <SettingsTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-          )}
+            {activeTab === 'settings' && (
+              <SettingsTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+            )}
+          </Suspense>
         </div>
       </div>
     </div>

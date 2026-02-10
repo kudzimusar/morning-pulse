@@ -9,6 +9,8 @@ import {
 } from '../../services/staffService';
 import { getUserRoles } from '../../services/authService';
 import type { StaffMember, StaffRole, WriterType } from '../../types.ts';
+import StaffProfileModal from './widgets/StaffProfileModal';
+import { exportToCSV } from '../../services/csvExportService';
 import './AdminDashboard.css';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -19,6 +21,7 @@ const StaffManagementTab: React.FC = () => {
   const [currentUserRoles, setCurrentUserRoles] = useState<StaffRole[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
 
   // State for the new staff invite form
   const [newStaffEmail, setNewStaffEmail] = useState('');
@@ -59,9 +62,13 @@ const StaffManagementTab: React.FC = () => {
 
   const filteredStaff = useMemo(() => {
     return staff.filter(member => {
+      // Safety guards for missing name/email
+      const name = member.name || '';
+      const email = member.email || '';
+
       const matchesSearch =
-        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase());
+        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesRole = roleFilter === 'all' || member.roles?.includes(roleFilter as StaffRole) || member.role === roleFilter;
 
@@ -195,6 +202,12 @@ const StaffManagementTab: React.FC = () => {
           <option value="editor">Editors</option>
           <option value="writer">Writers</option>
         </select>
+        <button
+          className="admin-button admin-button-secondary"
+          onClick={() => exportToCSV(filteredStaff, 'Staff_List')}
+        >
+          Export CSV
+        </button>
       </div>
 
       {/* Staff Table */}
@@ -211,15 +224,19 @@ const StaffManagementTab: React.FC = () => {
           </thead>
           <tbody>
             {filteredStaff.map((member) => (
-              <tr key={member.uid}>
+              <tr
+                key={member.uid}
+                onClick={() => setSelectedStaff(member)}
+                style={{ cursor: 'pointer' }}
+              >
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontWeight: 'bold', color: '#4f46e5' }}>
-                      {member.name.charAt(0)}
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#4f46e5' }}>
+                      {(member.name || '?').charAt(0)}
                     </div>
                     <div>
-                      <div style={{ fontWeight: '600' }}>{member.name}</div>
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>{member.email}</div>
+                      <div style={{ fontWeight: '600' }}>{member.name || 'Unknown Staff'}</div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>{member.email || 'No Email'}</div>
                     </div>
                   </div>
                 </td>
@@ -239,11 +256,11 @@ const StaffManagementTab: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span className={isOnline(member.lastActive) ? 'online-dot' : 'offline-dot'}></span>
                     <span style={{ fontSize: '13px', color: '#6b7280' }}>
-                      {isOnline(member.lastActive) ? 'OnlineNow' : 'Away'}
+                      {isOnline(member.lastActive) ? 'Online' : 'Away'}
                     </span>
                   </div>
                 </td>
-                <td style={{ textAlign: 'right' }}>
+                <td style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                     <button
                       className="admin-button admin-button-secondary"
@@ -271,6 +288,13 @@ const StaffManagementTab: React.FC = () => {
           </div>
         )}
       </div>
+
+      {selectedStaff && (
+        <StaffProfileModal
+          member={selectedStaff}
+          onClose={() => setSelectedStaff(null)}
+        />
+      )}
     </div>
   );
 };

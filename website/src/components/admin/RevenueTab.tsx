@@ -11,7 +11,7 @@ import {
     Bar,
     Cell
 } from 'recharts';
-import MetricCard from './widgets/MetricCard';
+import { exportToCSV } from '../../services/csvExportService';
 import './AdminDashboard.css';
 
 const RevenueTab: React.FC = () => {
@@ -46,11 +46,19 @@ const RevenueTab: React.FC = () => {
 
     return (
         <div className="fade-in">
-            <header style={{ marginBottom: '24px' }}>
-                <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>Revenue Control</h2>
-                <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
-                    Monetization performance, subscription health, and fiscal projections.
-                </p>
+            <header style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>Revenue Control</h2>
+                    <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
+                        Monetization performance, subscription health, and fiscal projections.
+                    </p>
+                </div>
+                <button
+                    className="admin-button admin-button-secondary"
+                    onClick={() => exportToCSV(revenueTrend, 'Revenue_Report')}
+                >
+                    Export Report
+                </button>
             </header>
 
             {/* KPI Row */}

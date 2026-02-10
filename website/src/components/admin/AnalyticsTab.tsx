@@ -12,8 +12,7 @@ import {
   Cell,
   Legend
 } from 'recharts';
-import PerformanceChart from './widgets/PerformanceChart';
-import MetricCard from './widgets/MetricCard';
+import { exportToCSV } from '../../services/csvExportService';
 import './AdminDashboard.css';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -66,6 +65,10 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       setLoading(false);
     }, 1000);
   }, []);
+
+  const handleExport = () => {
+    exportToCSV(topArticles, 'Top_Articles');
+  };
 
   if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Synchronizing analytics engine...</div>;
 
@@ -134,36 +137,57 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       </div>
 
       {/* Tables Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <div className="admin-card">
           <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '16px' }}>🏆 Top Performing Articles (This Month)</h3>
-            <button className="admin-button admin-button-secondary" style={{ fontSize: '12px' }}>Export CSV</button>
+            <h3 style={{ margin: 0, fontSize: '16px' }}>🏆 Top Articles</h3>
+            <button className="admin-button admin-button-secondary" style={{ fontSize: '12px' }} onClick={handleExport}>Export</button>
           </div>
           <table className="admin-table">
             <thead>
               <tr>
                 <th>Headline</th>
-                <th>Total Views</th>
-                <th>Avg Engagement</th>
+                <th>Views</th>
                 <th>CTR</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {topArticles.map(article => (
                 <tr key={article.id}>
-                  <td style={{ fontWeight: '500' }}>{article.title}</td>
-                  <td>{article.views.toLocaleString()}</td>
-                  <td>
-                    <div style={{ height: '6px', width: '100px', backgroundColor: '#f3f4f6', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${Math.random() * 60 + 40}%`, backgroundColor: '#10b981' }}></div>
-                    </div>
-                  </td>
-                  <td>{article.ctr}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button className="admin-button admin-button-secondary" style={{ padding: '4px 8px', fontSize: '11px' }}>View Report</button>
-                  </td>
+                  <td style={{ fontWeight: '500', fontSize: '13px' }}>{article.title}</td>
+                  <td style={{ fontSize: '13px' }}>{article.views.toLocaleString()}</td>
+                  <td style={{ fontSize: '13px' }}>{article.ctr}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="admin-card">
+          <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '16px' }}>✍️ Writer Efficiency (ROI)</h3>
+            <button className="admin-button admin-button-secondary" style={{ fontSize: '12px' }}>Details</button>
+          </div>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Writer</th>
+                <th>Avg Views/Art</th>
+                <th>Rank</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { name: 'John Doe', avg: 12450, rank: '🥇' },
+                { name: 'Sarah Chen', avg: 9800, rank: '🥈' },
+                { name: 'Mike Brown', avg: 8200, rank: '🥉' },
+                { name: 'Emily White', avg: 7600, rank: '4th' },
+                { name: 'David Black', avg: 6400, rank: '5th' },
+              ].map((writer, i) => (
+                <tr key={i}>
+                  <td style={{ fontWeight: '500', fontSize: '13px' }}>{writer.name}</td>
+                  <td style={{ fontSize: '13px' }}>{writer.avg.toLocaleString()}</td>
+                  <td style={{ fontSize: '13px' }}>{writer.rank}</td>
                 </tr>
               ))}
             </tbody>

@@ -16,7 +16,7 @@
   background: white;
   border: 1px solid var(--admin-border);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -57,9 +57,20 @@
   font-weight: 600;
 }
 
-.status-badge.active { background: #ecfdf5; color: #065f46; }
-.status-badge.pending { background: #fff7ed; color: #9a3412; }
-.status-badge.inactive { background: #fef2f2; color: #991b1b; }
+.status-badge.active {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.status-badge.pending {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.status-badge.inactive {
+  background: #fef2f2;
+  color: #991b1b;
+}
 
 .role-badge {
   background: #f3f4f6;
@@ -72,9 +83,20 @@
   margin-right: 4px;
 }
 
-.role-badge.super_admin { background: #fee2e2; color: #991b1b; }
-.role-badge.admin { background: #e0e7ff; color: #3730a3; }
-.role-badge.editor { background: #fef3c7; color: #92400e; }
+.role-badge.super_admin {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.role-badge.admin {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.role-badge.editor {
+  background: #fef3c7;
+  color: #92400e;
+}
 
 .admin-input {
   width: 100%;
@@ -143,10 +165,86 @@
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: 固定;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--admin-border);
+  display: flex;
+  background: var(--admin-bg);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
