@@ -523,11 +523,11 @@ const App: React.FC = () => {
           setUserRole(roles);
 
           // ✅ FIX: Switch to admin view when editor logs in
-          if (requireEditor(role)) {
+          if (requireEditor(roles)) {
             setView('admin');
             window.location.hash = 'dashboard';
-            console.log('✅ Editor authenticated, switching to admin dashboard');
-            console.log('✅ Roles:', role);
+            console.log('✅ [AUTH] Editor authenticated via claims, switching to dashboard');
+            console.log('✅ [AUTH] Roles:', roles);
           } else {
             setView('public');
           }
