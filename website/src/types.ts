@@ -6,16 +6,16 @@
 // Defines all possible staff roles
 export type StaffRole = 'super_admin' | 'bureau_chief' | 'admin' | 'editor' | 'writer';
 
-// Defines the specific sub-types a staff member with the 'writer' role can have.
+// Defines the specific sub-types a staff member with the 'writer' role can have
 export type WriterType = 'journalist' | 'pitch_writer';
 
-// Represents a staff member in the Firestore /staff collection.
+// Represents a staff member in the Firestore /staff collection
 export interface StaffMember {
   uid: string;
   email: string;
   name: string;
-  role: StaffRole;           // ✅ Changed from string to StaffRole
-  writerType?: WriterType;  
+  role: StaffRole;
+  writerType?: WriterType;
   isActive: boolean;
   createdAt?: Date;
   lastActive?: Date;
@@ -27,12 +27,12 @@ export interface StaffMember {
   invitedByName?: string;
 }
 
-// Represents a pending invitation for a new staff member.
+// Represents a pending invitation for a new staff member
 export interface StaffInvite {
   id: string;
   email: string;
   name: string;
-  role: StaffRole;          // ✅ Changed from string to StaffRole
+  role: StaffRole;
   writerType?: WriterType;
   createdAt: Date;
   expiresAt: Date;
@@ -40,10 +40,10 @@ export interface StaffInvite {
   invitedByName: string;
 }
 
-// Represents a log entry in the /auditLog collection.
+// Represents a log entry in the /auditLog collection
 export interface AuditLog {
   id: string;
-  action: string; 
+  action: string;
   timestamp: Date;
   performedByUid: string;
   performedByName: string;
