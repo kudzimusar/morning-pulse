@@ -1,7 +1,7 @@
 /**
  * Authentication Service for Editorial Staff
- * Provides email/password authentication and role-based access control.
- * Uses Firebase custom claims as the single source of truth for roles.
+ * Provides email/password authentication for editors and super admins
+ * Does NOT interfere with anonymous authentication used for public submissions
  */
 
 import { 
@@ -20,27 +20,31 @@ import {
 } from 'firebase/firestore';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 
-// --- Firebase Initialization (Singleton Pattern) ---
-
-let app: FirebaseApp | null = null;
-let authInstance: Auth | null = null;
-let dbInstance: Firestore | null = null;
-
+// Reuse Firebase config pattern from opinionsService
 const getFirebaseConfig = (): any => {
+  // Priority 1: Try to get from window (injected at runtime via firebase-config.js)
   if (typeof window !== 'undefined' && (window as any).__firebase_config) {
     const config = (window as any).__firebase_config;
-    if (config && config.apiKey && config.apiKey !== 'YOUR_API_KEY') {
+    if (typeof config === 'object' && config !== null && config.apiKey && config.apiKey !== 'YOUR_API_KEY') {
       return config;
     }
   }
+  
+  // Priority 2: Try to get from environment variable (build time)
   const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
-  if (configStr) {
+  if (configStr && typeof configStr === 'string' && configStr.trim() && configStr !== 'null') {
     try {
-      return JSON.parse(JSON.parse(configStr));
+      let parsed = JSON.parse(configStr);
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+      }
+      return parsed;
     } catch (e) {
       console.error('Failed to parse VITE_FIREBASE_CONFIG:', e);
     }
   }
+  
+  // Priority 3: Hardcoded fallback for local development
   return {
     apiKey: "AIzaSyCAh6j7mhTtiQGN5855Tt-hCRVrNXbNxYE",
     authDomain: "gen-lang-client-0999441419.firebaseapp.com",
@@ -52,185 +56,297 @@ const getFirebaseConfig = (): any => {
   };
 };
 
+// Get Firebase app instance (reuse if exists, create if not)
+// Use a named app to avoid conflicts with other Firebase initializations
+let app: FirebaseApp | null = null;
+let authInstance: Auth | null = null;
+let dbInstance: Firestore | null = null;
+
 const getAppInstance = (): FirebaseApp => {
   if (app) return app;
+  
   const config = getFirebaseConfig();
   try {
+    // Try to get default app first (might be initialized by opinionsService)
     app = getApp();
   } catch (e) {
-    app = initializeApp(config);
+    // Default app doesn't exist, create it
+    try {
+      app = initializeApp(config);
+    } catch (initError: any) {
+      // App might already exist with a different name, try to get it again
+      if (initError.code === 'app/duplicate-app') {
+        app = getApp();
+      } else {
+        throw initError;
+      }
+    }
   }
   return app;
 };
 
 const getAuthInstance = (): Auth => {
-  if (!authInstance) {
-    authInstance = getAuth(getAppInstance());
-  }
+  if (authInstance) return authInstance;
+  
+  // Lazy initialization - only when needed
+  const appInstance = getAppInstance();
+  authInstance = getAuth(appInstance);
   return authInstance;
 };
 
 const getDbInstance = (): Firestore => {
-  if (!dbInstance) {
-    dbInstance = getFirestore(getAppInstance());
-  }
+  if (dbInstance) return dbInstance;
+  
+  // Lazy initialization - only when needed
+  const appInstance = getAppInstance();
+  dbInstance = getFirestore(appInstance);
   return dbInstance;
 };
 
+// Staff role types - now supports multiple roles per user
+// Backward compatible: can be array of roles or single role string
+export type StaffRole = string[] | null;
+
 const appId = (window as any).__app_id || 'morning-pulse-app';
 
-// --- Role Management (Based on Custom Claims) ---
-
-export type StaffRole = 'super_admin' | 'admin' | 'editor';
-let userRolesCache: StaffRole[] | null = null;
-
 /**
- * [NEW] Gets user roles from the Firebase ID token's custom claims.
- * This is the SINGLE SOURCE OF TRUTH for user permissions.
- * Caches roles to avoid re-parsing the token on every check.
- */
-export const getUserRoles = async (forceRefresh: boolean = false): Promise<StaffRole[] | null> => {
-  const user = getCurrentEditor();
-  if (!user) {
-    userRolesCache = null;
-    return null;
-  }
-
-  if (userRolesCache && !forceRefresh) {
-    return userRolesCache;
-  }
-
-  try {
-    console.log('🔍 [AUTH] Getting ID token result for roles...');
-    const idTokenResult = await user.getIdTokenResult(forceRefresh);
-    const claims = idTokenResult.claims;
-    
-    const roles: StaffRole[] = [];
-    if (claims.super_admin) roles.push('super_admin');
-    if (claims.admin) roles.push('admin');
-    if (claims.editor) roles.push('editor');
-
-    console.log(`✅ [AUTH] Roles from token: ${roles.join(', ') || 'none'}`);
-    userRolesCache = roles;
-    return userRolesCache;
-  } catch (error) {
-    console.error('❌ [AUTH] Error getting user roles from token:', error);
-    userRolesCache = null;
-    return null;
-  }
-};
-
-// Clear role cache on auth state change
-onEditorAuthStateChanged(user => {
-  if (!user) {
-    userRolesCache = null;
-  }
-});
-
-
-/**
- * [SIMPLIFIED] Signs in a user and verifies their account is active.
- * Role checking is now handled by the router guard using custom claims.
+ * Sign in editor with email and password
+ * This is separate from anonymous authentication used for public submissions
+ * Checks if account is active before allowing login
  */
 export const signInEditor = async (email: string, password: string): Promise<User> => {
-  const auth = getAuthInstance();
-  
-  if (auth.currentUser?.isAnonymous) {
-    console.log('🔐 Signing out anonymous user before editor login...');
-    await signOut(auth);
-  }
-  
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    console.log(`✅ [AUTH] Login successful for ${user.email}`);
-
-    // Verify the account is not suspended. This is the only check needed here.
-    const staffDoc = await getDoc(doc(getDbInstance(), 'artifacts', appId, 'public', 'data', 'staff', user.uid));
-    if (staffDoc.exists() && staffDoc.data().isActive === false) {
-      await signOut(auth);
-      throw new Error('Your account has been suspended. Please contact the administrator.');
+    const authInstance = getAuthInstance();
+    const dbInstance = getDbInstance();
+    
+    // ✅ FIX: Sign out anonymous user if present before email/password login
+    if (authInstance.currentUser && authInstance.currentUser.isAnonymous) {
+      console.log('🔐 Signing out anonymous user before editor login...');
+      await signOut(authInstance);
+      // Wait a moment for sign out to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
     
-    // Force refresh the token to get the latest custom claims after login.
-    await getUserRoles(true); 
-
+    const userCredential = await signInWithEmailAndPassword(authInstance, email, password);
+    const user = userCredential.user;
+    console.log('✅ Editor email/password login successful');
+    
+    // ✅ NEW: Check if account is active
+    try {
+      const staffRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'staff', user.uid);
+      const staffSnap = await getDoc(staffRef);
+      
+      if (staffSnap.exists()) {
+        const staffData = staffSnap.data();
+        const isActive = staffData.isActive !== undefined ? staffData.isActive : true;
+        
+        if (!isActive) {
+          // Account is suspended - sign them out immediately
+          console.warn(`🚫 [AUTH] Suspended account attempted login: ${user.uid}`);
+          await signOut(authInstance);
+          
+          throw new Error(
+            'Your account has been suspended. Please contact the administrator for assistance.'
+          );
+        }
+        
+        console.log(`✅ [AUTH] Active account verified: ${user.uid}`);
+      }
+    } catch (error: any) {
+      // If it's our suspension error, re-throw it
+      if (error.message && error.message.includes('suspended')) {
+        throw error;
+      }
+      // Otherwise, log but allow login (staff doc might not exist yet)
+      console.warn('Could not verify account status:', error);
+    }
+    
     return user;
   } catch (error: any) {
-    console.error('❌ [AUTH] Sign in failed:', error.message);
-    // Re-throw specific, user-friendly errors
+    console.error('❌ Editor sign in failed:', error);
+    
+    // Check if it's our custom suspension error
+    if (error.message && error.message.includes('suspended')) {
+      throw error;
+    }
+    
+    // Provide user-friendly error messages
+    if (error.code === 'auth/operation-not-allowed') {
+      throw new Error(
+        'Email/Password authentication is not enabled. ' +
+        'Please enable it in Firebase Console > Authentication > Sign-in method > Email/Password. ' +
+        'Visit: https://console.firebase.google.com/project/gen-lang-client-0999441419/authentication/providers'
+      );
+    }
+    
     if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-      throw new Error('Invalid email or password.');
+      throw new Error('Invalid email or password. Please check your credentials.');
     }
-    if (error.message.includes('suspended')) {
-      throw new Error(error.message);
+    
+    if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email address format.');
     }
-    throw new Error('An unexpected error occurred during sign-in.');
+    
+    if (error.code === 'auth/too-many-requests') {
+      throw new Error('Too many failed login attempts. Please try again later.');
+    }
+    
+    // Generic error
+    throw new Error(error.message || 'Failed to sign in. Please try again.');
   }
 };
 
 /**
- * [REFACTORED] Checks if the user has at least 'editor' level privileges.
- * Now uses the reliable custom claims cache.
+ * Get staff roles for a user UID
+ * Checks Firestore: staff/{uid} (top-level collection)
+ * Returns array of roles, with backward compatibility for single role string
  */
-export const requireEditor = async (): Promise<boolean> => {
-  const roles = await getUserRoles();
-  if (!roles) return false;
-  return roles.includes('editor') || roles.includes('admin') || roles.includes('super_admin');
+export const getStaffRole = async (uid: string): Promise<StaffRole> => {
+  try {
+    const dbInstance = getDbInstance();
+    const appId = (window as any).__app_id || 'morning-pulse-app';
+    
+    // ✅ FIX: Silence staff warning for anonymous users
+    // Check if this is an anonymous user (anonymous UIDs are typically long random strings)
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    const isAnonymous = currentUser?.isAnonymous || false;
+    
+    // Only log for authenticated (non-anonymous) users
+    if (!isAnonymous) {
+      console.log(`🔍 [AUTH] Checking staff role for UID: ${uid}, AppID: ${appId}`);
+    }
+    
+    // ✅ FIX: Use mandatory path structure with logged appId
+    const staffRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'staff', uid);
+    const snap = await getDoc(staffRef);
+    
+    if (!snap.exists()) {
+      // ✅ FIX: Only warn for authenticated users, not anonymous
+      if (!isAnonymous) {
+        console.warn(`⚠️ Staff record is missing in path: artifacts/${appId}/public/data/staff/${uid}`);
+      }
+      return null;
+    }
+    
+    const data = snap.data();
+    console.log('📋 Staff document data:', data);
+    
+    // ✅ FIX: Check for roles array first (new format)
+    // Firestore arrays are already arrays, no conversion needed
+    if (data?.roles) {
+      // Handle both array and single value (Firestore might store as array even if single)
+      const rolesArray = Array.isArray(data.roles) ? data.roles : [data.roles];
+      
+      // Filter to only valid roles
+      const validRoles = rolesArray.filter((r: any) => 
+        typeof r === 'string' && ['editor', 'super_admin', 'admin'].includes(r)
+      );
+      
+      if (validRoles.length > 0) {
+        console.log('✅ Found valid roles array:', validRoles);
+        return validRoles;
+      }
+    }
+    
+    // ✅ BACKWARD COMPATIBILITY: Check for single role string (old format)
+    if (data?.role && typeof data.role === 'string') {
+      const role = data.role;
+      if (role === 'super_admin' || role === 'editor' || role === 'admin') {
+        console.log('✅ Found single role (backward compat):', role);
+        // Convert single role to array for consistency
+        return [role];
+      }
+    }
+    
+    console.log('⚠️ No valid roles found in staff document');
+    return null;
+  } catch (error) {
+    console.error('❌ Error fetching staff role:', error);
+    return null;
+  }
 };
 
 /**
- * [REFACTORED] Checks if the user has 'admin' or 'super_admin' privileges.
- * Now uses the reliable custom claims cache.
+ * Get reader role for a user UID
+ * Checks Firestore: artifacts/{appId}/public/data/readers/{uid}
  */
-export const requireSuperAdmin = async (): Promise<boolean> => {
-  const roles = await getUserRoles();
-  if (!roles) return false;
-  return roles.includes('admin') || roles.includes('super_admin');
+export const getReaderRole = async (uid: string): Promise<string[] | null> => {
+  try {
+    const dbInstance = getDbInstance();
+    const appId = (window as any).__app_id || 'morning-pulse-app';
+    
+    const readerRef = doc(dbInstance, 'artifacts', appId, 'public', 'data', 'readers', uid);
+    const snap = await getDoc(readerRef);
+    
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data?.role === 'reader') {
+        return ['reader'];
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Error fetching reader role:', error);
+    return null;
+  }
 };
 
 /**
- * Logs out the current user.
+ * Check if user has editor, admin role.
+ * This is now stricter and will not return true for a super_admin.
+ * Supports roles array (new format) with backward compatibility
+ */
+export const requireEditor = (roles: StaffRole): boolean => {
+  if (!roles || !Array.isArray(roles)) {
+    return false;
+  }
+  // ✅ FIX: Check for editor-level permission but EXCLUDE super_admin
+  return (roles.includes('editor') || roles.includes('admin')) && !roles.includes('super_admin');
+};
+
+/**
+ * Check if user has super_admin or admin role
+ * Supports roles array (new format) with backward compatibility
+ */
+export const requireSuperAdmin = (roles: StaffRole): boolean => {
+  if (!roles || !Array.isArray(roles)) {
+    return false;
+  }
+  // ✅ Check if roles array includes admin or super_admin
+  return roles.includes('super_admin') || roles.includes('admin');
+};
+
+/**
+ * Logout editor (signs out from email/password auth)
+ * Does NOT affect anonymous authentication
  */
 export const logoutEditor = async (): Promise<void> => {
-  const auth = getAuthInstance();
-  await signOut(auth);
-  userRolesCache = null; // Clear cache on logout
-  console.log('✅ [AUTH] User signed out.');
+  const authInstance = getAuthInstance();
+  await signOut(authInstance);
 };
 
 /**
- * Gets the current authenticated user object.
+ * Get current authenticated user (for editors)
  */
 export const getCurrentEditor = (): User | null => {
-  return getAuthInstance().currentUser;
+  const authInstance = getAuthInstance();
+  return authInstance.currentUser;
 };
 
 /**
- * Subscribes to authentication state changes.
+ * Subscribe to auth state changes
+ * Useful for tracking editor login/logout
  */
 export const onEditorAuthStateChanged = (
   callback: (user: User | null) => void
 ): (() => void) => {
-  return onAuthStateChanged(getAuthInstance(), (user) => {
-    if (!user) {
-      userRolesCache = null; // Ensure cache is cleared on logout
-    }
-    callback(user);
-  });
+  try {
+    const authInstance = getAuthInstance();
+    return onAuthStateChanged(authInstance, callback);
+  } catch (error) {
+    console.error('Error setting up auth state listener:', error);
+    // Return a no-op unsubscribe function
+    return () => {};
+  }
 };
-
-// The getStaffRole and getReaderRole functions are no longer needed for client-side authorization
-// and can be deprecated or removed if no other part of the app uses them for display purposes.
-// For now, they will be left for potential other uses but are not part of the auth flow.
-
-export const getStaffRole = async (uid: string): Promise<string[] | null> => {
-    // This function is no longer authoritative for role checking.
-    // It can be used for displaying role info if needed.
-    return [];
-}
-
-export const getReaderRole = async (uid: string): Promise<string[] | null> => {
-    return [];
-}
-
