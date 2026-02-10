@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Loader2, ArrowUp, ExternalLink, Clock, BookOpen } from 'lucide-react';
-import { generateAskPulseAIResponseStream, convertToChatHistory, formatResponseWithCitations } from '../services/askPulseAIService';
+import { generateAskPulseAIResponseStream, convertToChatHistory, formatResponseWithCitations, resetConversation } from '../services/askPulseAIService';
 import { subscribeToPublishedOpinions } from '../services/opinionsService';
 import { NewsStory, Opinion } from '../../types';
 import { BookmarkButton } from './AskPulseAI/BookmarkButton';
@@ -35,6 +35,9 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
 
   // Subscribe to opinions
   useEffect(() => {
+    // Reset conversation context on mount for a fresh start
+    resetConversation();
+
     const unsubscribe = subscribeToPublishedOpinions(
       (fetched) => {
         setOpinions(fetched);
@@ -68,7 +71,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   // Helper: Get article from sources
   const getArticleFromSource = (source: { title: string; url?: string; index?: number }): NewsStory | null => {
     if (!newsData) return null;
-    
+
     // Search through all categories
     for (const category of Object.keys(newsData)) {
       const article = newsData[category].find(
@@ -82,19 +85,19 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   // Helper: Get related opinions based on category/keywords
   const getRelatedOpinions = (sources: Array<{ title: string; url?: string }>, limit: number = 2): Opinion[] => {
     if (opinions.length === 0) return [];
-    
+
     // Extract keywords from source titles
-    const keywords = sources.flatMap(s => 
+    const keywords = sources.flatMap(s =>
       s.title.toLowerCase().split(/\s+/).filter(w => w.length > 3)
     );
-    
+
     // Find opinions matching keywords or categories
     const related = opinions
       .filter(op => op.isPublished && op.publishedAt)
       .filter(op => {
         const headlineLower = (op.headline || '').toLowerCase();
         const categoryLower = (op.category || '').toLowerCase();
-        return keywords.some(kw => 
+        return keywords.some(kw =>
           headlineLower.includes(kw) || categoryLower.includes(kw)
         );
       })
@@ -105,7 +108,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         return dateB - dateA;
       })
       .slice(0, limit);
-    
+
     return related;
   };
 
@@ -146,7 +149,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
       // Convert previous messages to chat history (excluding current user message)
       const previousMessages = messages.filter(m => m.role === 'ai' || (m.role === 'user' && m.content !== queryText));
       const chatHistory = convertToChatHistory(previousMessages);
-      
+
       // Create streaming generator with opinions support
       const streamGenerator = generateAskPulseAIResponseStream(
         queryText,
@@ -154,15 +157,15 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         chatHistory.length > 0 ? chatHistory : undefined,
         opinions // Pass opinions to service
       );
-      
+
       let accumulatedText = '';
       let finalResponse: { text: string; sources?: Array<{ title: string; url?: string; index?: number }> } | null = null;
-      
+
       // Stream the response
       // The generator yields chunks and returns the final response when done
       let generator = streamGenerator;
       let result = await generator.next();
-      
+
       while (!result.done) {
         if (result.value && result.value.text) {
           accumulatedText += result.value.text;
@@ -170,16 +173,16 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         }
         result = await generator.next();
       }
-      
+
       // Get final response from generator return value
       if (result.done && result.value) {
         finalResponse = result.value;
       }
-      
+
       // Format response with citations
       const responseText = finalResponse?.text || accumulatedText;
       const responseSources = finalResponse?.sources || [];
-      
+
       const { formattedText, citations } = formatResponseWithCitations(
         responseText,
         responseSources
@@ -189,45 +192,45 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
       const citedArticles = responseSources
         .map(source => getArticleFromSource(source))
         .filter((article): article is NewsStory => article !== null);
-      
+
       // Get additional related articles (NOT already cited) for more content variety
       const citedArticleIds = new Set(citedArticles.map(a => a.id));
       const allArticles: NewsStory[] = [];
       Object.values(newsData || {}).forEach(categoryArticles => {
         allArticles.push(...categoryArticles);
       });
-      
+
       // Find related articles that are NOT already cited (to avoid duplicates)
       const additionalArticles = allArticles
         .filter(article => {
           // Exclude already cited articles (CRITICAL: no duplicates)
           if (citedArticleIds.has(article.id)) return false;
-          
+
           // Also exclude articles with same headline (might be duplicates)
           const citedHeadlines = new Set(citedArticles.map(a => a.headline?.toLowerCase()));
           if (article.headline && citedHeadlines.has(article.headline.toLowerCase())) {
             return false;
           }
-          
+
           // Find articles related to the query topic
           const queryLower = queryText.toLowerCase();
           const headlineLower = (article.headline || '').toLowerCase();
           const detailLower = (article.detail || '').toLowerCase();
-          
+
           // Check if article relates to query keywords
           const queryWords = queryLower.split(/\s+/).filter(w => w.length > 3);
-          const hasMatch = queryWords.some(word => 
+          const hasMatch = queryWords.some(word =>
             headlineLower.includes(word) || detailLower.includes(word)
           );
-          
+
           return hasMatch;
         })
         .slice(0, 5); // Get up to 5 additional articles for more content variety
-      
+
       // Only show additional articles (NOT cited ones) to avoid duplicates
       // If no additional articles found, show empty list rather than duplicates
       const articleData = additionalArticles;
-      
+
       const relatedOpinions = getRelatedOpinions(responseSources, 2);
 
       // Track AI query analytics
@@ -245,20 +248,20 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         articles: articleData,
         opinions: relatedOpinions
       };
-      
+
       setMessages(prev => [...prev, aiMessage]);
       setStreamingText('');
-      
+
       setQuery(''); // Clear input after sending
     } catch (err: any) {
       const errorMessage = err?.message || 'Sorry, I encountered an error. Please try again.';
       setError(errorMessage);
       console.error('AI query error:', err);
-      
+
       // Add error message to chat for user visibility
-      setMessages(prev => [...prev, { 
-        role: 'ai', 
-        content: `I'm sorry, I encountered an error: ${errorMessage}. Please try again.` 
+      setMessages(prev => [...prev, {
+        role: 'ai',
+        content: `I'm sorry, I encountered an error: ${errorMessage}. Please try again.`
       }]);
       setStreamingText('');
     } finally {
@@ -281,14 +284,14 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
       .replace(/\*\*\*/g, '')
       .replace(/---+/g, '')
       .replace(/___+/g, '');
-    
+
     // Remove excessive line breaks (more than 2 consecutive)
     formatted = formatted.replace(/\n{3,}/g, '\n\n');
-    
+
     // Clean up spacing around citations
     formatted = formatted.replace(/\s+\[(\d+)\]/g, ' [$1]');
     formatted = formatted.replace(/\[(\d+)\]\s+/g, '[$1] ');
-    
+
     return formatted.trim();
   };
 
@@ -297,10 +300,10 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
     const formatted = formatAIResponse(text);
     const lines = formatted.split('\n');
     const elements: React.ReactNode[] = [];
-    
+
     lines.forEach((line, idx) => {
       const trimmed = line.trim();
-      
+
       // Skip empty lines (but keep spacing)
       if (!trimmed) {
         if (idx > 0 && idx < lines.length - 1 && lines[idx - 1]?.trim()) {
@@ -308,7 +311,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         }
         return;
       }
-      
+
       // Format numbered sections with bold headers (1. **Header**:)
       const numberedBoldMatch = trimmed.match(/^(\d+)\.\s+\*\*(.+?)\*\*:\s*(.+)$/);
       if (numberedBoldMatch) {
@@ -364,12 +367,12 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         );
         return;
       }
-      
+
       // Format bold headers (text with ** around it ending with :)
       if (/^\*\*/.test(trimmed) && trimmed.endsWith('**:')) {
         const boldText = trimmed.replace(/\*\*/g, '').replace(':', '');
         elements.push(
-          <div key={idx} style={{ 
+          <div key={idx} style={{
             marginTop: idx > 0 ? '16px' : '0',
             marginBottom: '8px',
             fontWeight: 700,
@@ -381,7 +384,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         );
         return;
       }
-      
+
       // Regular paragraph - process citations and remove any remaining markdown
       const cleanLine = trimmed.replace(/\*\*\*/g, '').replace(/---+/g, '').replace(/___+/g, '');
       const parts = cleanLine.split(/(\[CITATION:\d+\]|\[\d+\])/);
@@ -426,7 +429,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
         </div>
       );
     });
-    
+
     return <div>{elements}</div>;
   };
 
@@ -548,7 +551,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
             <BookOpen size={12} />
             {estimateReadTime(article.detail)} min read
           </span>
-          
+
           <div style={{
             display: 'flex',
             gap: '6px',
@@ -643,7 +646,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
             />
           </div>
         )}
-        
+
         <div style={{ padding: '16px' }}>
           <div style={{
             display: 'flex',
@@ -675,7 +678,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
               </span>
             )}
           </div>
-          
+
           <h3 style={{
             margin: '0 0 8px 0',
             fontSize: '1.1rem',
@@ -685,7 +688,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
           }}>
             {article.headline}
           </h3>
-          
+
           <p style={{
             margin: '0 0 12px 0',
             fontSize: '0.875rem',
@@ -698,7 +701,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
           }}>
             {article.detail}
           </p>
-          
+
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -729,7 +732,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
               </span>
             )}
           </div>
-          
+
           {/* Action Buttons: Bookmark and Share */}
           <div style={{
             display: 'flex',
@@ -852,7 +855,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
   };
 
   return (
-    <div className="mobile-content-with-nav" style={{ 
+    <div className="mobile-content-with-nav" style={{
       minHeight: 'calc(100vh - 200px)',
       padding: '0',
       maxWidth: '100%',
@@ -940,9 +943,9 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
 
       {/* Conversation View */}
       {hasInteracted && (
-        <div style={{ 
-          flex: 1, 
-          display: 'flex', 
+        <div style={{
+          flex: 1,
+          display: 'flex',
           flexDirection: 'column',
           padding: '16px',
           overflowY: 'auto'
@@ -962,12 +965,12 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                 <div style={{
                   maxWidth: '85%',
                   padding: '12px 16px',
-                  background: message.role === 'user' 
-                    ? 'var(--primary-color)' 
+                  background: message.role === 'user'
+                    ? 'var(--primary-color)'
                     : '#f3f4f6',
                   color: message.role === 'user' ? 'white' : 'var(--text-color)',
-                  borderRadius: message.role === 'user' 
-                    ? '16px 16px 4px 16px' 
+                  borderRadius: message.role === 'user'
+                    ? '16px 16px 4px 16px'
                     : '16px 16px 16px 4px',
                   fontSize: '0.9375rem',
                   lineHeight: 1.6,
@@ -979,10 +982,10 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                     <div>
                       {/* Format and render AI response text with proper formatting */}
                       {renderFormattedResponse(message.content, message.citations)}
-                      
+
                       {/* Compact Article List (replaces large card boxes) */}
                       {message.articles && message.articles.length > 0 && (
-                        <div style={{ 
+                        <div style={{
                           marginTop: '20px',
                           paddingTop: '16px',
                           borderTop: '1px solid #e5e7eb'
@@ -1003,10 +1006,10 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                             gap: '0'
                           }}>
                             {message.articles.map((article, idx) => (
-                              <ArticleListItem 
-                                key={idx} 
-                                article={article} 
-                                index={idx} 
+                              <ArticleListItem
+                                key={idx}
+                                article={article}
+                                index={idx}
                                 isLast={idx === message.articles.length - 1}
                               />
                             ))}
@@ -1077,7 +1080,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                 </div>
               </div>
             ))}
-            
+
             {/* Streaming text display */}
             {loading && streamingText && (
               <div
@@ -1108,7 +1111,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                     // Remove markdown separators from streaming text
                     return <span key={idx}>{part.replace(/\*\*\*/g, '').replace(/---+/g, '')}</span>;
                   })}
-                  <span style={{ 
+                  <span style={{
                     display: 'inline-block',
                     width: '8px',
                     height: '16px',
@@ -1119,7 +1122,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                 </div>
               </div>
             )}
-            
+
             {loading && !streamingText && (
               <div style={{
                 display: 'flex',
@@ -1133,7 +1136,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                 <span>Thinking...</span>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -1193,8 +1196,8 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
               style={{
                 width: '44px',
                 height: '44px',
-                background: loading || !query.trim() 
-                  ? 'var(--border-color)' 
+                background: loading || !query.trim()
+                  ? 'var(--border-color)'
                   : 'var(--primary-color)',
                 color: 'white',
                 border: 'none',

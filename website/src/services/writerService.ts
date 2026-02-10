@@ -572,7 +572,7 @@ export const isWriterSuspended = async (writerUid: string): Promise<boolean> => 
  */
 export const acknowledgeStyleGuide = async (writerUid: string): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
+  const writerRef = doc(db, 'writers', writerUid);
 
   try {
     await updateDoc(writerRef, {
@@ -592,7 +592,7 @@ export const acknowledgeStyleGuide = async (writerUid: string): Promise<void> =>
  */
 export const acceptTerms = async (writerUid: string): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
+  const writerRef = doc(db, 'writers', writerUid);
 
   try {
     await updateDoc(writerRef, {
@@ -640,7 +640,7 @@ export const getWritersByTier = async (tier: Writer['tier']): Promise<Writer[]> 
  */
 export const getWritersByEditor = async (editorUid: string): Promise<Writer[]> => {
   const db = getDb();
-  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
+  const writersRef = collection(db, 'writers');
   const q = query(
     writersRef,
     where('status', '==', 'approved'),
@@ -674,7 +674,7 @@ export const updateWriterPaymentProfile = async (
   paymentProfile: Writer['paymentProfile']
 ): Promise<void> => {
   const db = getDb();
-  const writerRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writers', writerUid);
+  const writerRef = doc(db, 'writers', writerUid);
 
   try {
     await updateDoc(writerRef, {
@@ -694,7 +694,7 @@ export const updateWriterPaymentProfile = async (
  */
 export const getWritersWithPaymentProfiles = async (): Promise<Writer[]> => {
   const db = getDb();
-  const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
+  const writersRef = collection(db, 'writers');
   const q = query(writersRef, where('status', '==', 'approved'));
 
   try {

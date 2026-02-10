@@ -636,7 +636,10 @@ export const trackAdView = async (adId: string): Promise<void> => {
       });
     }
   } catch (error: any) {
-    console.error('Error tracking ad view:', error);
+    // Suppress permission errors for anonymous users (expected behavior)
+    if (error?.code !== 'permission-denied') {
+      console.error('Error tracking ad view:', error);
+    }
   }
 };
 
@@ -656,7 +659,10 @@ export const trackAdClick = async (adId: string): Promise<void> => {
       });
     }
   } catch (error: any) {
-    console.error('Error tracking ad click:', error);
+    // Suppress permission errors for anonymous users (expected behavior)
+    if (error?.code !== 'permission-denied') {
+      console.error('Error tracking ad click:', error);
+    }
   }
 };
 

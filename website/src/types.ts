@@ -69,11 +69,11 @@ export interface AuditLog {
   id: string;
   action: string;
   timestamp: Date;
-  performedByUid: string;
+  performedBy: string;      // UID of performer
   performedByName: string;
-  targetUid?: string;
+  targetUid?: string;       // UID of affected member
   targetName?: string;
-  oldState?: any;
-  newState?: any;
-  details?: { [key: string]: any };
+  oldValue?: any;
+  newValue?: any;
+  metadata?: { [key: string]: any };
 }

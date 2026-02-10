@@ -31,7 +31,7 @@ export const subscribeToNewsletter = async (
   try {
     const url = 'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/manageSubscription';
     console.log(`🔗 POST to ${url}`);
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -61,16 +61,17 @@ export const subscribeToNewsletter = async (
  */
 export const getActiveSubscribers = async (): Promise<any[]> => {
   const db = getDb();
-  const subscribersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'subscribers');
-  const q = query(subscribersRef, where('status', '==', 'active'), where('emailNewsletter', '==', true));
-  
+  // Standardized to root collection: subscribers
+  const subscribersRef = collection(db, 'subscribers');
+  const q = query(subscribersRef, where('status', '==', 'active'));
+
   const snapshot = await getDocs(q);
   const subscribers: any[] = [];
-  
+
   snapshot.forEach((doc) => {
     subscribers.push({ id: doc.id, ...doc.data() });
   });
-  
+
   return subscribers;
 };
 
@@ -90,8 +91,7 @@ export function downloadNewsletter(html: string, filename = 'newsletter.html') {
 }
 
 /**
- * ✅ NEW: Preview newsletter in new browser tab (for Admin UI)
- * This is what your UI expects and what Rollup is failing on.
+ * Preview newsletter in new browser tab
  */
 export function previewNewsletter(html: string) {
   const previewWindow = window.open('', '_blank');
@@ -125,15 +125,15 @@ export const generateNewsletter = async (
   try {
     const adsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'ads');
     const q = query(
-      adsRef, 
+      adsRef,
       where('status', '==', 'active'),
-      where('paymentStatus', '==', 'paid'), // ✅ PHASE 4: Enforce paid status for newsletter ads
+      where('paymentStatus', '==', 'paid'),
       where('placement', 'in', ['newsletter_top', 'newsletter_inline', 'newsletter_footer'])
     );
-    
+
     const snapshot = await getDocs(q);
     const activeAds: any[] = [];
-    
+
     snapshot.forEach((doc) => {
       const data = doc.data();
       activeAds.push({
@@ -162,8 +162,8 @@ export const generateNewsletter = async (
     subHeadline: article.subHeadline,
     authorName: article.authorName,
     slug: article.slug,
-    publishedAt: article.publishedAt instanceof Date 
-      ? article.publishedAt 
+    publishedAt: article.publishedAt instanceof Date
+      ? article.publishedAt
       : (article.publishedAt?.toDate?.() || new Date()),
     imageUrl: article.finalImageUrl || article.imageUrl
   }));
@@ -186,13 +186,13 @@ export const sendNewsletter = async (params: {
   interests?: string[];
 }): Promise<{ success: boolean; message: string; stats?: any }> => {
   const { subject, html, interests } = params;
-  
+
   try {
     const url = 'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/sendNewsletter';
     console.log(`📧 Sending newsletter via ${url}`);
     console.log(`📧 Subject: ${subject?.substring(0, 50)}...`);
     console.log(`📧 HTML length: ${html?.length || 0} chars`);
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

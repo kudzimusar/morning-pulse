@@ -10,19 +10,24 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { StaffMember, StaffRole, WriterType, StaffInvite } from '../types';
+import { StaffMember, StaffRole, WriterType } from '../types';
 import { getCurrentEditor } from './authService';
 
 const db = getFirestore();
 const staffCollection = collection(db, 'staff');
-const invitesCollection = collection(db, 'staff_invites');
+const invitesCollection = collection(db, 'invites');
 
 /**
  * Fetches all staff members from the 'staff' collection.
  */
 export const getStaff = async (): Promise<StaffMember[]> => {
-  const snapshot = await getDocs(staffCollection);
-  return snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as StaffMember));
+  try {
+    const snapshot = await getDocs(staffCollection);
+    return snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as StaffMember));
+  } catch (error) {
+    console.error("Error fetching staff:", error);
+    throw error;
+  }
 };
 
 /**
@@ -35,22 +40,20 @@ export const getStaffMember = async (uid: string): Promise<StaffMember | null> =
 };
 
 /**
- * Updates the role and, if applicable, the writer type for a staff member.
- * This triggers the `setRoleOnStaffChange` Cloud Function.
+ * Updates the roles and, if applicable, the writer type for a staff member.
  */
-export const updateStaffRole = async (uid: string, role: StaffRole, writerType?: WriterType): Promise<void> => {
+export const updateStaffRole = async (uid: string, roles: string[], writerType?: WriterType): Promise<void> => {
   const staffRef = doc(db, 'staff', uid);
-  
+
   const payload: any = {
-    role,
+    roles,
     updatedAt: serverTimestamp(),
   };
 
-  // Only set writerType if the role is 'writer'. Otherwise, remove it.
-  if (role === 'writer' && writerType) {
+  if (roles.includes('writer') && writerType) {
     payload.writerType = writerType;
   } else {
-    payload.writerType = null; // Use null to explicitly remove the field
+    payload.writerType = null;
   }
 
   await updateDoc(staffRef, payload);
@@ -59,26 +62,28 @@ export const updateStaffRole = async (uid: string, role: StaffRole, writerType?:
 /**
  * Creates an invitation for a new staff member.
  */
-export const createStaffInvite = async (email: string, name: string, role: StaffRole, writerType?: WriterType): Promise<void> => {
+export const createStaffInvite = async (email: string, name: string, roles: string[], writerType?: WriterType): Promise<void> => {
   const currentUser = getCurrentEditor();
   if (!currentUser) {
     throw new Error("You must be logged in to create an invite.");
   }
 
+  // Use the invites collection (standardized)
   const inviteRef = doc(invitesCollection); // Auto-generate ID
 
   const newInvite: any = {
     id: inviteRef.id,
-    email,
+    email: email.toLowerCase().trim(),
     name,
-    role,
+    roles,
+    status: 'pending',
     createdAt: serverTimestamp(),
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
     invitedBy: currentUser.uid,
     invitedByName: currentUser.displayName || 'Admin',
   };
 
-  if (role === 'writer' && writerType) {
+  if (roles.includes('writer') && writerType) {
     newInvite.writerType = writerType;
   }
 
@@ -89,12 +94,11 @@ export const createStaffInvite = async (email: string, name: string, role: Staff
  * Update staff member last active timestamp.
  */
 export const updateLastActive = async (uid: string): Promise<void> => {
-  const db = getFirestore();
   const staffRef = doc(db, 'staff', uid);
-  
+
   try {
-    await updateDoc(staffRef, { 
-      lastActive: serverTimestamp() 
+    await updateDoc(staffRef, {
+      lastActive: serverTimestamp()
     });
   } catch (error) {
     console.warn('Could not update last active:', error);
@@ -109,9 +113,8 @@ export const suspendStaffMember = async (
   suspendedBy: string,
   suspendedByName: string
 ): Promise<void> => {
-  const db = getFirestore();
   const staffRef = doc(db, 'staff', uid);
-  
+
   await updateDoc(staffRef, {
     isActive: false,
     suspendedBy,
@@ -125,9 +128,8 @@ export const suspendStaffMember = async (
  * Reactivate a suspended staff member
  */
 export const activateStaffMember = async (uid: string): Promise<void> => {
-  const db = getFirestore();
   const staffRef = doc(db, 'staff', uid);
-  
+
   await updateDoc(staffRef, {
     isActive: true,
     suspendedBy: null,
