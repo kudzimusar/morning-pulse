@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getStaff, updateStaffRole, removeStaffMember, createStaffInvite } from '../../services/staffService';
 import { getUserRoles } from '../../services/authService';
-import { StaffMember, StaffRole, WriterType } from '../../types';
+import type { StaffMember, StaffRole, WriterType } from '../../types.ts';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
