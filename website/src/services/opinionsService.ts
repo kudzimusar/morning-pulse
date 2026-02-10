@@ -1,12 +1,12 @@
-import { 
+import {
   getFirestore,
   initializeFirestore,
   persistentLocalCache,
-  collection, 
-  addDoc, 
-  query, 
-  getDocs, 
-  doc, 
+  collection,
+  addDoc,
+  query,
+  getDocs,
+  doc,
   setDoc,
   getDoc,
   updateDoc,
@@ -16,17 +16,19 @@ import {
   where,
   Firestore
 } from 'firebase/firestore';
-import { 
-  getAuth, 
+import {
+  getAuth,
   signInAnonymously,
   Auth
 } from 'firebase/auth';
 import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
-import { Opinion, OpinionSubmissionData, OpinionVersion } from '../../types';
+import { Opinion, OpinionSubmissionData, OpinionVersion } from '../../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
 import { generateSlug } from '../utils/slugUtils';
 import EnhancedFirestore from './enhancedFirestore';
+
+import { auth, db, app } from './firebase';
 
 // Get Firebase config (same pattern as FirebaseConnector)
 const getFirebaseConfig = (): any => {
@@ -37,7 +39,7 @@ const getFirebaseConfig = (): any => {
       return config;
     }
   }
-  
+
   // Priority 2: Try to get from environment variable (build time)
   const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
   if (configStr && typeof configStr === 'string' && configStr.trim() && configStr !== 'null') {
@@ -51,7 +53,7 @@ const getFirebaseConfig = (): any => {
       console.error('Failed to parse VITE_FIREBASE_CONFIG:', e);
     }
   }
-  
+
   // Priority 3: Hardcoded fallback for local development
   return {
     apiKey: "AIzaSyCAh6j7mhTtiQGN5855Tt-hCRVrNXbNxYE",
@@ -65,56 +67,16 @@ const getFirebaseConfig = (): any => {
 };
 
 // Get Firestore instance
-let app: FirebaseApp | null = null;
-let db: Firestore | null = null;
-let auth: Auth | null = null;
 let storage: FirebaseStorage | null = null;
 
-const getDb = (): Firestore | null => {
-  if (db && auth) return db;
-  
-  try {
-    const config = getFirebaseConfig();
-    if (!config || Object.keys(config).length === 0) {
-      console.warn('Firebase config not available');
-      return null;
-    }
-    
-    try {
-      app = getApp();
-    } catch (e) {
-      app = initializeApp(config);
-    }
-    
-    // Use modern persistence with localCache (replaces deprecated enableIndexedDbPersistence)
-    try {
-      db = initializeFirestore(app, {
-        localCache: persistentLocalCache()
-      });
-    } catch (e: any) {
-      // If already initialized, get the existing instance
-      if (e.code === 'failed-precondition') {
-        db = getFirestore(app);
-      } else {
-        // Fallback to regular getFirestore
-        db = getFirestore(app);
-      }
-    }
-    // CRITICAL: Initialize auth from the same app instance
-    if (!auth) {
-      auth = getAuth(app);
-    }
-    return db;
-  } catch (e) {
-    console.error('Firebase initialization error:', e);
-    return null;
-  }
-};
+const getDb = () => db;
+const getAuthInstance = () => auth;
+const getAppInstance = () => app;
 
 const getStorageInstance = (): FirebaseStorage | null => {
   if (storage && app) return storage;
-  const _db = getDb();
-  if (!_db || !app) return null;
+  const _db = getDb(); // This line is now redundant as db is imported directly
+  if (!db || !app) return null; // Use imported db directly
   storage = getStorage(app);
   return storage;
 };
@@ -157,24 +119,24 @@ export const ensureAuthenticated = async (): Promise<void> => {
       throw new Error('Firebase not initialized');
     }
   }
-  
+
   if (auth) {
     const currentUser = auth.currentUser;
     if (!currentUser) {
       console.log('🔐 No user authenticated, signing in anonymously...');
-      
 
-      
+
+
       try {
         const userCredential = await signInAnonymously(auth);
         console.log('✅ Anonymous authentication successful');
-        
+
 
       } catch (error: any) {
         console.error('❌ Anonymous authentication failed:', error);
-        
 
-        
+
+
         if (error.code === 'auth/configuration-not-found') {
           const message = 'CRITICAL: Enable Anonymous Auth in Firebase Console > Authentication > Sign-in Method.';
           console.error(message);
@@ -211,12 +173,12 @@ export const submitOpinion = async (opinionData: OpinionSubmissionData): Promise
   try {
     // CRITICAL: Ensure anonymous authentication before writing to Firestore
     await ensureAuthenticated();
-    
+
     console.log('📝 Attempting to submit opinion to path: artifacts/${APP_ID}/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
-    
+
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-    
+
     // PRIMARY: Generate imageUrl on submit so admins see an image during review
     const suggestedImageUrl = opinionData.suggestedImageUrl;
     const imageUrl = suggestedImageUrl || (opinionData as any).imageUrl || getImageByTopic(opinionData.headline || '');
@@ -281,13 +243,13 @@ export const createEditorialArticle = async (
 
   try {
     await ensureAuthenticated();
-    
+
     console.log('📝 Creating editorial article directly...');
-    
+
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-    
+
     const imageUrl = articleData.finalImageUrl || getImageByTopic(articleData.headline || '');
-    
+
     const docData = {
       writerType: 'Editorial',
       authorName: articleData.authorName,
@@ -352,20 +314,20 @@ export const replaceArticleImage = async (
         console.warn('Could not delete old image:', error);
       }
     }
-    
+
     // Upload new image to final.jpg (overwrites)
     const newImageRef = storageRef(s, `published_images/${articleId}/final.jpg`);
     await uploadBytes(newImageRef, file, {
       contentType: file.type || 'image/jpeg',
     });
-    
+
     const downloadURL = await getDownloadURL(newImageRef);
     console.log('✅ Image replaced successfully:', downloadURL);
-    
+
     // ✅ NEW: Update Firestore document with new image URL
     try {
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', articleId);
-      
+
       // Check if document exists before updating
       const opinionSnap = await getDoc(opinionRef);
       if (opinionSnap.exists()) {
@@ -383,7 +345,7 @@ export const replaceArticleImage = async (
       // Don't throw - image upload succeeded, just Firestore update failed
       // The caller can handle this gracefully
     }
-    
+
     return downloadURL;
   } catch (error: any) {
     console.error('❌ Error replacing image:', error);
@@ -408,21 +370,21 @@ export const superAdminMediaOverride = async (
 
   try {
     await ensureAuthenticated();
-    
+
     // Get current article data to capture previous image URL
     const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', articleId);
     const snap = await getDoc(docRef);
-    
+
     if (!snap.exists()) {
       throw new Error('Article not found');
     }
-    
+
     const existing = snap.data() as any;
     const previousImageUrl = existing.finalImageUrl || existing.suggestedImageUrl || existing.imageUrl || null;
-    
+
     // Upload new image
     const newImageUrl = await replaceArticleImage(file, articleId);
-    
+
     // Update document with new image and audit trail
     await updateDoc(docRef, {
       finalImageUrl: newImageUrl,
@@ -436,7 +398,7 @@ export const superAdminMediaOverride = async (
       },
       updatedAt: serverTimestamp()
     });
-    
+
     console.log('✅ Super admin media override completed:', {
       articleId,
       previousImageUrl,
@@ -462,12 +424,12 @@ export const getPublishedOpinions = async (): Promise<Opinion[]> => {
   try {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
-    
+
     console.log('📝 Attempting to fetch published opinions from path: artifacts/${APP_ID}/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
-    
+
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-    
+
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
     const allOpinions: Opinion[] = [];
@@ -511,17 +473,17 @@ export const subscribeToPublishedOpinions = (
   if (!db) {
     console.warn('Firebase not initialized, returning empty unsubscribe');
     if (onError) onError('Firebase not initialized');
-    return () => {};
+    return () => { };
   }
 
   try {
     console.log('📰 Subscribing to published opinions in Firestore...');
-    
+
     const enhancedFirestore = EnhancedFirestore.getInstance(db);
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
 
-    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
+    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string;[key: string]: any }>>(
       q,
       (data) => {
         // Filter and sort in JavaScript memory
@@ -531,7 +493,7 @@ export const subscribeToPublishedOpinions = (
           submittedAt: doc.submittedAt?.toDate?.() || new Date(),
           publishedAt: doc.publishedAt?.toDate?.() || null,
         })) as Opinion[];
-        
+
         // Filter for published status and sort by publishedAt descending
         const publishedOpinions = allData
           .filter(item => item.status === 'published')
@@ -540,7 +502,7 @@ export const subscribeToPublishedOpinions = (
             const timeB = b.publishedAt?.getTime() || 0;
             return timeB - timeA; // Newest first
           });
-        
+
         console.log(`✅ Found ${allData.length} total opinions, ${publishedOpinions.length} published`);
         callback(publishedOpinions);
       },
@@ -564,7 +526,7 @@ export const subscribeToPublishedOpinions = (
     if (onError) {
       onError(`Setup error: ${error.message}`);
     }
-    return () => {};
+    return () => { };
   }
 };
 
@@ -581,12 +543,12 @@ export const getPendingOpinions = async (): Promise<Opinion[]> => {
   try {
     // CRITICAL: Ensure authentication before fetching
     await ensureAuthenticated();
-    
+
     console.log('📝 Attempting to fetch pending opinions from path: artifacts/${APP_ID}/public/data/opinions');
     console.log('👤 Current Auth Status:', auth?.currentUser ? 'Authenticated' : 'Anonymous/Guest');
-    
+
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-    
+
     // FIX: Fetch entire collection without where/orderBy to avoid permission errors
     const snapshot = await getDocs(opinionsRef);
     const allOpinions: Opinion[] = [];
@@ -630,17 +592,17 @@ export const subscribeToPendingOpinions = (
   if (!db) {
     console.warn('Firebase not initialized, returning empty unsubscribe');
     if (onError) onError('Firebase not initialized');
-    return () => {};
+    return () => { };
   }
 
   try {
     console.log('📝 Subscribing to pending opinions in Firestore...');
-    
+
     const enhancedFirestore = EnhancedFirestore.getInstance(db);
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
 
-    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
+    const unsubscribe = enhancedFirestore.subscribeWithRetry<Array<{ id: string;[key: string]: any }>>(
       q,
       (data) => {
         // Filter and sort in JavaScript memory
@@ -650,7 +612,7 @@ export const subscribeToPendingOpinions = (
           submittedAt: doc.submittedAt?.toDate?.() || new Date(),
           publishedAt: doc.publishedAt?.toDate?.() || null,
         })) as Opinion[];
-        
+
         // Filter for pending status and sort by submittedAt descending
         const pendingOpinions = allData
           .filter(item => item.status === 'pending')
@@ -659,7 +621,7 @@ export const subscribeToPendingOpinions = (
             const timeB = b.submittedAt?.getTime() || 0;
             return timeB - timeA; // Newest first
           });
-        
+
         console.log(`✅ Found ${allData.length} total opinions, ${pendingOpinions.length} pending`);
         callback(pendingOpinions);
       },
@@ -683,7 +645,7 @@ export const subscribeToPendingOpinions = (
     if (onError) {
       onError(`Setup error: ${error.message}`);
     }
-    return () => {};
+    return () => { };
   }
 };
 
@@ -705,7 +667,7 @@ export const approveOpinion = async (
     // CRITICAL: Ensure authentication before write operation
     await ensureAuthenticated();
     console.log('✅ Authentication verified for approval');
-    
+
     // Use exact mandatory path structure
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
 
@@ -739,10 +701,10 @@ export const approveOpinion = async (
     };
     if (!hasValidUrl) patch.imageGeneratedAt = new Date().toISOString();
     if (editorNotes) patch.editorNotes = editorNotes;
-    
+
     // Direct Firestore update with merge
     await setDoc(docRef, patch, { merge: true });
-    
+
     console.log('✅ Opinion approved:', opinionId, '(SLA approvalAt tracked)');
   } catch (error: any) {
     console.error('❌ Error approving opinion:', error);
@@ -763,16 +725,16 @@ export const rejectOpinion = async (opinionId: string, reviewedBy?: string): Pro
     // CRITICAL: Ensure authentication before write operation
     await ensureAuthenticated();
     console.log('✅ Authentication verified for rejection');
-    
+
     // Use exact mandatory path structure
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
-    
+
     // Direct Firestore update with merge
     await setDoc(docRef, {
       status: 'rejected',
       updatedAt: Date.now(),
     }, { merge: true });
-    
+
     console.log('✅ Opinion rejected:', opinionId);
   } catch (error: any) {
     console.error('❌ Error rejecting opinion:', error);
@@ -798,22 +760,22 @@ export const claimStory = async (
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     // Get current story to save original body
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       throw new Error('Story not found');
     }
-    
+
     const currentData = snap.data();
-    
+
     // Check if already claimed by someone else
     if (currentData.claimedBy && currentData.claimedBy !== editorId) {
       throw new Error(`Story is already claimed by ${currentData.claimedByName || 'another editor'}`);
     }
-    
+
     // Claim the story with SLA tracking (Sprint 2)
     const updateData: any = {
       status: 'in-review',
@@ -826,14 +788,14 @@ export const claimStory = async (
       'editorialMeta.assignedEditorId': editorId,
       'editorialMeta.assignedEditorName': editorName,
     };
-    
+
     // Only set firstResponseAt if not already set (first editor to claim)
     if (!currentData.editorialMeta?.firstResponseAt) {
       updateData['editorialMeta.firstResponseAt'] = Timestamp.now();
     }
-    
+
     await setDoc(docRef, updateData, { merge: true });
-    
+
     console.log('✅ Story claimed by editor:', editorName, '(SLA tracking enabled)');
   } catch (error: any) {
     console.error('❌ Error claiming story:', error);
@@ -853,20 +815,20 @@ export const releaseStory = async (storyId: string, editorId: string): Promise<v
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     // Verify the editor is the one who claimed it
     const snap = await getDoc(docRef);
     if (!snap.exists()) {
       throw new Error('Story not found');
     }
-    
+
     const currentData = snap.data();
     if (currentData.claimedBy !== editorId) {
       throw new Error('You can only release stories you have claimed');
     }
-    
+
     // Release the story
     await setDoc(docRef, {
       status: 'pending',
@@ -875,7 +837,7 @@ export const releaseStory = async (storyId: string, editorId: string): Promise<v
       claimedAt: null,
       updatedAt: Timestamp.now(),
     }, { merge: true });
-    
+
     console.log('✅ Story released back to pending queue');
   } catch (error: any) {
     console.error('❌ Error releasing story:', error);
@@ -900,14 +862,14 @@ export const returnToWriter = async (
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     // Get current data to increment return count
     const snap = await getDoc(docRef);
     const currentData = snap.exists() ? snap.data() : {};
     const currentReturnCount = currentData.editorialMeta?.returnCount || 0;
-    
+
     await setDoc(docRef, {
       status: 'pending',
       editorNotes: editorNotes,
@@ -921,7 +883,7 @@ export const returnToWriter = async (
       'editorialMeta.lastReturnedAt': Timestamp.now(),
       'editorialMeta.lastReturnReason': editorNotes,
     }, { merge: true });
-    
+
     console.log('✅ Story returned to writer with feedback (return #', currentReturnCount + 1, ')');
   } catch (error: any) {
     console.error('❌ Error returning story to writer:', error);
@@ -944,14 +906,14 @@ export const setStoryPriority = async (
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     await setDoc(docRef, {
       'editorialMeta.priority': priority,
       updatedAt: Timestamp.now(),
     }, { merge: true });
-    
+
     console.log('✅ Story priority set to:', priority);
   } catch (error: any) {
     console.error('❌ Error setting story priority:', error);
@@ -974,14 +936,14 @@ export const setStorySLA = async (
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     await setDoc(docRef, {
       'editorialMeta.slaHours': slaHours,
       updatedAt: Timestamp.now(),
     }, { merge: true });
-    
+
     console.log('✅ Story SLA set to:', slaHours, 'hours');
   } catch (error: any) {
     console.error('❌ Error setting story SLA:', error);
@@ -1001,15 +963,15 @@ export const submitForReview = async (storyId: string): Promise<void> => {
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     await setDoc(docRef, {
       status: 'pending',
       submittedAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     }, { merge: true });
-    
+
     console.log('✅ Draft submitted for review');
   } catch (error: any) {
     console.error('❌ Error submitting for review:', error);
@@ -1032,15 +994,15 @@ export const schedulePublication = async (
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     await setDoc(docRef, {
       status: 'scheduled',
       scheduledFor: Timestamp.fromDate(scheduledFor),
       updatedAt: Timestamp.now(),
     }, { merge: true });
-    
+
     console.log('✅ Publication scheduled for:', scheduledFor);
   } catch (error: any) {
     console.error('❌ Error scheduling publication:', error);
@@ -1060,15 +1022,15 @@ export const archiveStory = async (storyId: string): Promise<void> => {
 
   try {
     await ensureAuthenticated();
-    
+
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', storyId);
-    
+
     await setDoc(docRef, {
       status: 'archived',
       archivedAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     }, { merge: true });
-    
+
     console.log('✅ Story archived');
   } catch (error: any) {
     console.error('❌ Error archiving story:', error);
@@ -1089,27 +1051,27 @@ export const checkAndPublishScheduledStories = async (): Promise<number> => {
 
   try {
     await ensureAuthenticated();
-    
+
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef, where('status', '==', 'scheduled'));
     const snapshot = await getDocs(q);
-    
+
     const now = new Date();
     let publishedCount = 0;
-    
+
     const publishPromises = snapshot.docs.map(async (docSnap) => {
       const data = docSnap.data();
       const scheduledFor = data.scheduledFor?.toDate();
-      
+
       if (!scheduledFor) {
         console.warn(`Story ${docSnap.id} is scheduled but has no scheduledFor timestamp`);
         return;
       }
-      
+
       // Check if scheduled time has passed
       if (scheduledFor <= now) {
         console.log(`📰 Auto-publishing story: ${data.headline} (scheduled for ${scheduledFor})`);
-        
+
         const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', docSnap.id);
         await setDoc(docRef, {
           status: 'published',
@@ -1117,17 +1079,17 @@ export const checkAndPublishScheduledStories = async (): Promise<number> => {
           publishedAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         }, { merge: true });
-        
+
         publishedCount++;
       }
     });
-    
+
     await Promise.all(publishPromises);
-    
+
     if (publishedCount > 0) {
       console.log(`✅ Auto-published ${publishedCount} scheduled stor${publishedCount === 1 ? 'y' : 'ies'}`);
     }
-    
+
     return publishedCount;
   } catch (error: any) {
     console.error('❌ Error in auto-publisher:', error);
@@ -1147,13 +1109,13 @@ export const getOpinionBySlug = async (slugOrId: string): Promise<Opinion | null
 
   try {
     await ensureAuthenticated();
-    
+
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-    
+
     // Try to find by slug first
     const slugQuery = query(opinionsRef, where('slug', '==', slugOrId), where('status', '==', 'published'));
     const slugSnapshot = await getDocs(slugQuery);
-    
+
     if (!slugSnapshot.empty) {
       const docSnap = slugSnapshot.docs[0];
       const data = docSnap.data();
@@ -1164,11 +1126,11 @@ export const getOpinionBySlug = async (slugOrId: string): Promise<Opinion | null
         publishedAt: data.publishedAt?.toDate?.() || null,
       } as Opinion;
     }
-    
+
     // Fallback: Try as document ID
     const docRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', slugOrId);
     const docSnap = await getDoc(docRef);
-    
+
     if (docSnap.exists()) {
       const data = docSnap.data();
       // Only return if published
@@ -1181,7 +1143,7 @@ export const getOpinionBySlug = async (slugOrId: string): Promise<Opinion | null
         } as Opinion;
       }
     }
-    
+
     console.log(`❌ Opinion not found for slug/ID: ${slugOrId}`);
     return null;
   } catch (error: any) {
@@ -1210,12 +1172,12 @@ export const createVersionSnapshot = async (
 
   try {
     await ensureAuthenticated();
-    
+
     // Get current version count
     const versionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId, 'versions');
     const versionsSnapshot = await getDocs(versionsRef);
     const versionNumber = versionsSnapshot.size + 1;
-    
+
     const versionData = {
       opinionId,
       headline,
@@ -1226,7 +1188,7 @@ export const createVersionSnapshot = async (
       savedAt: Timestamp.now(),
       versionNumber,
     };
-    
+
     const versionDocRef = await addDoc(versionsRef, versionData);
     console.log(`✅ Version snapshot created: v${versionNumber} for opinion ${opinionId}`);
     return versionDocRef.id;
@@ -1249,10 +1211,10 @@ export const getVersionHistory = async (opinionId: string): Promise<OpinionVersi
 
   try {
     await ensureAuthenticated();
-    
+
     const versionsRef = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId, 'versions');
     const versionsSnapshot = await getDocs(versionsRef);
-    
+
     const versions: OpinionVersion[] = [];
     versionsSnapshot.forEach((docSnap) => {
       const data = docSnap.data();
@@ -1268,10 +1230,10 @@ export const getVersionHistory = async (opinionId: string): Promise<OpinionVersi
         versionNumber: data.versionNumber || 0,
       });
     });
-    
+
     // Sort by version number descending (newest first)
     versions.sort((a, b) => b.versionNumber - a.versionNumber);
-    
+
     console.log(`✅ Loaded ${versions.length} versions for opinion ${opinionId}`);
     return versions;
   } catch (error: any) {
@@ -1297,9 +1259,9 @@ export const restoreVersion = async (
 
   try {
     await ensureAuthenticated();
-    
+
     const opinionRef = doc(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions', opinionId);
-    
+
     // Create a snapshot of current state before restoring (for rollback safety)
     const currentSnap = await getDoc(opinionRef);
     if (currentSnap.exists()) {
@@ -1313,7 +1275,7 @@ export const restoreVersion = async (
         `${restoredByName} (before restore)`
       );
     }
-    
+
     // Restore the version data
     await setDoc(opinionRef, {
       headline: version.headline,
@@ -1324,7 +1286,7 @@ export const restoreVersion = async (
       restoredBy,
       updatedAt: Timestamp.now(),
     }, { merge: true });
-    
+
     console.log(`✅ Restored opinion ${opinionId} to version ${version.versionNumber}`);
   } catch (error: any) {
     console.error('❌ Error restoring version:', error);

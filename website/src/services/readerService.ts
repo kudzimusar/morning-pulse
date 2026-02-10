@@ -5,34 +5,22 @@
  */
 
 import {
-  getFirestore,
   doc,
   getDoc,
   setDoc,
   updateDoc,
-  serverTimestamp,
-  Firestore
+  serverTimestamp
 } from 'firebase/firestore';
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   User
 } from 'firebase/auth';
-import { getApp } from 'firebase/app';
+import { auth, db } from './firebase';
 
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
-
+const getDb = () => db;
+const getAuthInstance = () => auth;
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 export interface Reader {
@@ -59,7 +47,7 @@ export const registerReader = async (
   password: string,
   name: string
 ): Promise<string> => {
-  const auth = getAuth();
+  const auth = getAuthInstance();
   const db = getDb();
 
   try {
@@ -94,7 +82,7 @@ export const registerReader = async (
  * Sign in reader with email and password
  */
 export const signInReader = async (email: string, password: string): Promise<User> => {
-  const auth = getAuth();
+  const auth = getAuthInstance();
 
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -148,7 +136,7 @@ export const getReader = async (uid: string): Promise<Reader | null> => {
  * Get current reader data
  */
 export const getCurrentReader = async (): Promise<Reader | null> => {
-  const auth = getAuth();
+  const auth = getAuthInstance();
   const user = auth.currentUser;
   if (!user) {
     console.log('ℹ️ No current user found');

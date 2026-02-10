@@ -4,86 +4,17 @@
  */
 
 import {
-  getAuth,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  User,
-  Auth
+  User
 } from 'firebase/auth';
 import {
-  getFirestore,
   doc,
-  getDoc,
-  Firestore
+  getDoc
 } from 'firebase/firestore';
-import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
+import { auth, db } from './firebase';
 
-// --- Firebase Initialization (Singleton Pattern) ---
-
-let app: FirebaseApp | null = null;
-let authInstance: Auth | null = null;
-let dbInstance: Firestore | null = null;
-
-const getFirebaseConfig = (): any => {
-  // Priority 1: Try to get from window (injected at runtime via firebase-config.js or meta tag)
-  if (typeof window !== 'undefined' && (window as any).__firebase_config) {
-    return (window as any).__firebase_config;
-  }
-
-  const configElement = document.getElementById('firebase-config');
-  if (configElement && configElement.textContent) {
-    return JSON.parse(configElement.textContent);
-  }
-
-  // Priority 2: Try to get from environment variable (build time)
-  const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
-  if (configStr && typeof configStr === 'string' && configStr.trim() && configStr !== 'null') {
-    try {
-      let parsed = JSON.parse(configStr);
-      if (typeof parsed === 'string') {
-        parsed = JSON.parse(parsed);
-      }
-      return parsed;
-    } catch (e) {
-      console.error('Failed to parse VITE_FIREBASE_CONFIG:', e);
-    }
-  }
-
-  // Fallback: Hardcoded for local development
-  return {
-    apiKey: "AIzaSyCAh6j7mhTtiQGN5855Tt-hCRVrNXbNxYE",
-    authDomain: "gen-lang-client-0999441419.firebaseapp.com",
-    projectId: "gen-lang-client-0999441419",
-    storageBucket: "gen-lang-client-0999441419.firebasestorage.app",
-    messagingSenderId: "328455476104",
-    appId: "1:328455476104:web:396deccbc5613e353f603d",
-    measurementId: "G-60S2YK429K"
-  };
-};
-
-const getAppInstance = (): FirebaseApp => {
-  if (app) return app;
-  const config = getFirebaseConfig();
-  try {
-    app = getApp();
-  } catch (e) {
-    app = initializeApp(config);
-  }
-  return app;
-};
-
-const getAuthInstance = (): Auth => {
-  if (authInstance) return authInstance;
-  authInstance = getAuth(getAppInstance());
-  return authInstance;
-};
-
-const getDbInstance = (): Firestore => {
-  if (dbInstance) return dbInstance;
-  dbInstance = getFirestore(getAppInstance());
-  return dbInstance;
-};
 
 // --- Staff Role Types ---
 export type StaffRole = string[] | null;
@@ -96,9 +27,6 @@ const appId = (window as any).__app_id || 'morning-pulse-app';
  * Signs in a user and verifies they have a staff role via Custom Claims.
  */
 export const signInEditor = async (email: string, password: string): Promise<User | null> => {
-  const auth = getAuthInstance();
-  const db = getDbInstance();
-
   try {
     // 🔐 Sign out anonymous user if present before email/password login
     if (auth.currentUser && auth.currentUser.isAnonymous) {
@@ -164,8 +92,6 @@ export const signInEditor = async (email: string, password: string): Promise<Use
  */
 export const getStaffRole = async (uid: string): Promise<string[]> => {
   try {
-    const db = getDbInstance();
-    const auth = getAuthInstance();
     const isAnonymous = auth.currentUser?.isAnonymous || false;
 
     if (!isAnonymous) {
@@ -227,7 +153,6 @@ export const requireSuperAdmin = (roles: string[]): boolean => {
  * Logs out the current editor.
  */
 export const logoutEditor = async (): Promise<void> => {
-  const auth = getAuthInstance();
   await signOut(auth);
 };
 
@@ -235,7 +160,6 @@ export const logoutEditor = async (): Promise<void> => {
  * Subscribes to authentication state changes.
  */
 export const onEditorAuthStateChanged = (callback: (user: User | null) => void): (() => void) => {
-  const auth = getAuthInstance();
   return onAuthStateChanged(auth, callback);
 };
 
@@ -243,7 +167,6 @@ export const onEditorAuthStateChanged = (callback: (user: User | null) => void):
  * Get current authenticated user
  */
 export const getCurrentEditor = (): User | null => {
-  const auth = getAuthInstance();
   return auth.currentUser;
 };
 
@@ -253,7 +176,6 @@ export const getCurrentEditor = (): User | null => {
  * Gets the roles of the current user from their ID token claims.
  */
 export const getUserRoles = async (): Promise<string[]> => {
-  const auth = getAuthInstance();
   const currentUser = auth.currentUser;
 
   if (!currentUser) return [];

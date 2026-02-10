@@ -1,24 +1,9 @@
-/**
- * Newsletter Service
- * Handles subscriber management and newsletter generation
- */
-
-import { getFirestore, collection, addDoc, query, getDocs, where, Timestamp, Firestore } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
+import { collection, addDoc, query, getDocs, where, Timestamp } from 'firebase/firestore';
 import { generateNewsletterHTML as sharedGenerateNewsletterHTML, NewsletterArticle, NewsletterAd } from '../../../shared/newsletterTemplates';
+import { db } from './firebase';
 
+const getDb = () => db;
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
-
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
 
 /**
  * Subscribe a new user to the newsletter

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../services/firebase';
 import { getCurrentSubscriber } from '../services/subscriptionService';
 
 interface SubscriberLoginProps {
@@ -25,12 +26,11 @@ const SubscriberLogin: React.FC<SubscriberLoginProps> = ({ onSuccess, onBack }) 
     setIsSubmitting(true);
 
     try {
-      const auth = getAuth();
       await signInWithEmailAndPassword(auth, email.trim(), password);
 
       // Check if user is a subscriber
       const subscriber = await getCurrentSubscriber();
-      
+
       if (!subscriber) {
         setError('Subscriber account not found. Please register first.');
         await auth.signOut();
@@ -86,8 +86,8 @@ const SubscriberLogin: React.FC<SubscriberLoginProps> = ({ onSuccess, onBack }) 
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
       }}>
         {onBack && (
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             style={{
               background: 'none',
               border: 'none',
@@ -221,8 +221,8 @@ const SubscriberLogin: React.FC<SubscriberLoginProps> = ({ onSuccess, onBack }) 
             textAlign: 'center'
           }}>
             Don't have an account?{' '}
-            <a 
-              href="#subscriber/register" 
+            <a
+              href="#subscriber/register"
               style={{ color: '#000', textDecoration: 'underline' }}
             >
               Subscribe now

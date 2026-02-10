@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../services/firebase';
 import { getCurrentAdvertiser } from '../services/advertiserService';
 
 interface AdvertiserLoginProps {
@@ -25,12 +26,11 @@ const AdvertiserLogin: React.FC<AdvertiserLoginProps> = ({ onSuccess, onBack }) 
     setIsSubmitting(true);
 
     try {
-      const auth = getAuth();
       await signInWithEmailAndPassword(auth, email.trim(), password);
 
       // Check if user is an approved advertiser
       const advertiser = await getCurrentAdvertiser();
-      
+
       if (!advertiser) {
         setError('Advertiser account not found. Please register first.');
         await auth.signOut();
@@ -45,8 +45,8 @@ const AdvertiserLogin: React.FC<AdvertiserLoginProps> = ({ onSuccess, onBack }) 
 
       if (advertiser.status === 'rejected') {
         setError(
-          advertiser.rejectedReason 
-            ? `Your account was rejected: ${advertiser.rejectedReason}` 
+          advertiser.rejectedReason
+            ? `Your account was rejected: ${advertiser.rejectedReason}`
             : 'Your account has been rejected. Please contact support.'
         );
         await auth.signOut();
@@ -90,8 +90,8 @@ const AdvertiserLogin: React.FC<AdvertiserLoginProps> = ({ onSuccess, onBack }) 
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
       }}>
         {onBack && (
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             style={{
               background: 'none',
               border: 'none',
@@ -225,8 +225,8 @@ const AdvertiserLogin: React.FC<AdvertiserLoginProps> = ({ onSuccess, onBack }) 
             textAlign: 'center'
           }}>
             Don't have an account?{' '}
-            <a 
-              href="#advertiser/register" 
+            <a
+              href="#advertiser/register"
               style={{ color: '#000', textDecoration: 'underline' }}
             >
               Register as advertiser

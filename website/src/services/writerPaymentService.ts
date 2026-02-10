@@ -3,10 +3,10 @@
  * Manages payment statements and contributor payment operations
  */
 
-import { 
+import {
   getFirestore,
-  collection, 
-  doc, 
+  collection,
+  doc,
   getDoc,
   getDocs,
   setDoc,
@@ -19,26 +19,11 @@ import {
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
-import { WriterPaymentStatement, WriterPaymentSummary, PaymentStatementStatus } from '../../types';
+import { db } from './firebase';
+import { WriterPaymentStatement, WriterPaymentSummary, PaymentStatementStatus, StoryPitch, PitchStatus } from '../../../types';
 
+const getDb = () => db;
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
-
-// Get Firestore instance
-let db: Firestore | null = null;
-
-const getDb = (): Firestore | null => {
-  if (db) return db;
-  
-  try {
-    const app = getApp();
-    db = getFirestore(app);
-    return db;
-  } catch (e) {
-    console.error('Firebase initialization error in writerPaymentService:', e);
-    return null;
-  }
-};
 
 /**
  * Helper to convert Firestore doc to WriterPaymentStatement
@@ -95,12 +80,12 @@ export const getWriterStatements = async (writerId: string): Promise<WriterPayme
   try {
     const statementsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerId, 'statements');
     const snapshot = await getDocs(statementsRef);
-    
+
     const statements: WriterPaymentStatement[] = [];
     snapshot.forEach((docSnap) => {
       statements.push(docToStatement(docSnap));
     });
-    
+
     // Sort by period start (newest first)
     return statements.sort((a, b) => b.periodStart.getTime() - a.periodStart.getTime());
   } catch (error: any) {
@@ -119,7 +104,7 @@ export const getStatement = async (writerId: string, statementId: string): Promi
   try {
     const statementRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerId, 'statements', statementId);
     const snap = await getDoc(statementRef);
-    
+
     if (!snap.exists()) return null;
     return docToStatement(snap);
   } catch (error: any) {
@@ -139,20 +124,20 @@ export const getPendingStatements = async (): Promise<WriterPaymentStatement[]> 
     // Get all writers' payment docs
     const paymentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments');
     const writersSnap = await getDocs(paymentsRef);
-    
+
     const allStatements: WriterPaymentStatement[] = [];
-    
+
     // For each writer, get pending statements
     for (const writerDoc of writersSnap.docs) {
       const statementsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerDoc.id, 'statements');
       const q = query(statementsRef, where('status', '==', 'pending'));
       const statementsSnap = await getDocs(q);
-      
+
       statementsSnap.forEach((docSnap) => {
         allStatements.push(docToStatement(docSnap));
       });
     }
-    
+
     // Sort by created date (oldest first for processing)
     return allStatements.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   } catch (error: any) {
@@ -171,19 +156,19 @@ export const getStatementsByStatus = async (status: PaymentStatementStatus): Pro
   try {
     const paymentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments');
     const writersSnap = await getDocs(paymentsRef);
-    
+
     const allStatements: WriterPaymentStatement[] = [];
-    
+
     for (const writerDoc of writersSnap.docs) {
       const statementsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerDoc.id, 'statements');
       const q = query(statementsRef, where('status', '==', status));
       const statementsSnap = await getDocs(q);
-      
+
       statementsSnap.forEach((docSnap) => {
         allStatements.push(docToStatement(docSnap));
       });
     }
-    
+
     return allStatements.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error: any) {
     console.error('Error fetching statements by status:', error);
@@ -202,7 +187,7 @@ export const createStatement = async (
 
   try {
     const statementsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', statement.writerId, 'statements');
-    
+
     const docData = {
       ...statement,
       periodStart: Timestamp.fromDate(statement.periodStart),
@@ -214,7 +199,7 @@ export const createStatement = async (
       status: 'pending' as PaymentStatementStatus,
       createdAt: serverTimestamp(),
     };
-    
+
     const docRef = await addDoc(statementsRef, docData);
     console.log('✅ Payment statement created:', docRef.id);
     return docRef.id;
@@ -239,7 +224,7 @@ export const approveStatement = async (
 
   try {
     const statementRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerId, 'statements', statementId);
-    
+
     await updateDoc(statementRef, {
       status: 'approved',
       approvedAt: serverTimestamp(),
@@ -247,7 +232,7 @@ export const approveStatement = async (
       approvedByName,
       ...(adminNotes && { adminNotes }),
     });
-    
+
     console.log('✅ Statement approved:', statementId);
   } catch (error: any) {
     console.error('Error approving statement:', error);
@@ -271,7 +256,7 @@ export const markStatementPaid = async (
 
   try {
     const statementRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerId, 'statements', statementId);
-    
+
     await updateDoc(statementRef, {
       status: 'paid',
       paidAt: serverTimestamp(),
@@ -280,7 +265,7 @@ export const markStatementPaid = async (
       ...(paymentReference && { paymentReference }),
       ...(paymentMethod && { paymentMethod }),
     });
-    
+
     console.log('✅ Statement marked as paid:', statementId);
   } catch (error: any) {
     console.error('Error marking statement paid:', error);
@@ -302,19 +287,19 @@ export const disputeStatement = async (
 
   try {
     const statementRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerId, 'statements', statementId);
-    
+
     const updateData: any = {
       status: 'disputed',
     };
-    
+
     if (isWriter) {
       updateData.writerNotes = notes;
     } else {
       updateData.adminNotes = notes;
     }
-    
+
     await updateDoc(statementRef, updateData);
-    
+
     console.log('✅ Statement disputed:', statementId);
   } catch (error: any) {
     console.error('Error disputing statement:', error);
@@ -335,12 +320,12 @@ export const cancelStatement = async (
 
   try {
     const statementRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerId, 'statements', statementId);
-    
+
     await updateDoc(statementRef, {
       status: 'cancelled',
       adminNotes: reason,
     });
-    
+
     console.log('✅ Statement cancelled:', statementId);
   } catch (error: any) {
     console.error('Error cancelling statement:', error);
@@ -360,21 +345,21 @@ export const getPaymentSummaries = async (): Promise<WriterPaymentSummary[]> => 
     const writersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writers');
     const q = query(writersRef, where('status', '==', 'approved'));
     const writersSnap = await getDocs(q);
-    
+
     const summaries: WriterPaymentSummary[] = [];
-    
+
     for (const writerDoc of writersSnap.docs) {
       const writerData = writerDoc.data();
-      
+
       // Get writer's statements
       const statementsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'writerPayments', writerDoc.id, 'statements');
       const statementsSnap = await getDocs(statementsRef);
-      
+
       let pendingStatements = 0;
       let pendingAmount = 0;
       let totalPaid = 0;
       let lastPaymentDate: Date | undefined;
-      
+
       statementsSnap.forEach((stmtDoc) => {
         const stmt = stmtDoc.data();
         if (stmt.status === 'pending' || stmt.status === 'approved') {
@@ -389,7 +374,7 @@ export const getPaymentSummaries = async (): Promise<WriterPaymentSummary[]> => 
           }
         }
       });
-      
+
       summaries.push({
         writerId: writerDoc.id,
         writerName: writerData.name || 'Unknown',
@@ -406,7 +391,7 @@ export const getPaymentSummaries = async (): Promise<WriterPaymentSummary[]> => 
         lastPaymentDate,
       });
     }
-    
+
     // Sort by pending amount (highest first)
     return summaries.sort((a, b) => b.pendingAmount - a.pendingAmount);
   } catch (error: any) {
@@ -433,7 +418,7 @@ export const exportStatementsToCSV = (statements: WriterPaymentStatement[]): str
     'Paid Date',
     'Payment Reference'
   ].join(',');
-  
+
   const rows = statements.map(s => [
     s.id,
     `"${s.writerName}"`,
@@ -448,7 +433,7 @@ export const exportStatementsToCSV = (statements: WriterPaymentStatement[]): str
     s.paidAt?.toLocaleDateString() || '',
     s.paymentReference || ''
   ].join(','));
-  
+
   return [headers, ...rows].join('\n');
 };
 
@@ -472,14 +457,14 @@ export const getAllPaymentStatements = async (): Promise<WriterPaymentStatement[
     // Get all writers' payment root docs
     const paymentsRef = collection(db, 'writerPayments');
     const writersSnap = await getDocs(paymentsRef);
-    
+
     const allStatements: WriterPaymentStatement[] = [];
-    
+
     // For each writer, get all statements
     for (const writerDoc of writersSnap.docs) {
       const statementsRef = collection(db, 'writerPayments', writerDoc.id, 'statements');
       const statementsSnap = await getDocs(statementsRef);
-      
+
       statementsSnap.forEach((docSnap) => {
         const data = docSnap.data();
         allStatements.push({
@@ -524,7 +509,7 @@ export const getAllPaymentStatements = async (): Promise<WriterPaymentStatement[
         });
       });
     }
-    
+
     // Sort by period start (newest first)
     return allStatements.sort((a, b) => b.periodStart.getTime() - a.periodStart.getTime());
   } catch (error: any) {
@@ -547,11 +532,11 @@ export const updatePaymentStatementStatus = async (
 
   try {
     const statementRef = doc(db, 'writerPayments', writerId, 'statements', statementId);
-    
+
     const updateData: any = {
       status: newStatus,
     };
-    
+
     if (additionalData?.paidAt) {
       updateData.paidAt = Timestamp.fromDate(additionalData.paidAt);
     }
@@ -559,7 +544,7 @@ export const updatePaymentStatementStatus = async (
       updateData.transactionId = additionalData.transactionId;
       updateData.paymentReference = additionalData.transactionId;
     }
-    
+
     await updateDoc(statementRef, updateData);
     console.log(`✅ Statement ${statementId} status updated to ${newStatus}`);
   } catch (error: any) {
@@ -578,13 +563,13 @@ export const triggerStatementGeneration = async (
 ): Promise<{ statementsGenerated: number }> => {
   // Build the Cloud Function URL
   const functionUrl = process.env.REACT_APP_FUNCTIONS_URL || 'https://us-central1-your-project.cloudfunctions.net';
-  
+
   const params = new URLSearchParams({
     periodStart,
     periodEnd,
     ...(writerId && { writerId })
   });
-  
+
   try {
     const response = await fetch(`${functionUrl}/generateWriterStatements?${params.toString()}`, {
       method: 'POST',
@@ -592,12 +577,12 @@ export const triggerStatementGeneration = async (
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `HTTP ${response.status}`);
     }
-    
+
     const data = await response.json();
     return {
       statementsGenerated: data.statementsGenerated || 0

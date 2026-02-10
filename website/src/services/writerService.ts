@@ -20,24 +20,14 @@ import {
   Firestore
 } from 'firebase/firestore';
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   User
 } from 'firebase/auth';
-import { getApp } from 'firebase/app';
+import { auth as firebaseAuth, db as firebaseDb } from './firebase';
 
+const getAuth = () => firebaseAuth;
+const getDb = () => firebaseDb;
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
-
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
 
 export interface Writer {
   uid: string;

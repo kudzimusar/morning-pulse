@@ -4,31 +4,19 @@
  */
 
 import {
-  getFirestore,
   collection,
   addDoc,
   query,
   orderBy,
   limit,
   getDocs,
-  serverTimestamp,
-  Firestore
+  serverTimestamp
 } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
+import { db } from './firebase';
 import { AuditLog } from '../types';
 
-const APP_ID = 'morning-pulse-app';
-
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
+const getDb = () => db;
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 /**
  * Log a staff management action

@@ -22,24 +22,14 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   User
 } from 'firebase/auth';
-import { getApp } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db } from './firebase';
 
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
-
+const getDb = () => db;
+const getAuthInstance = () => auth;
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 export interface Advertiser {
@@ -86,7 +76,7 @@ export const registerAdvertiser = async (
   contactPhone: string,
   website?: string
 ): Promise<string> => {
-  const auth = getAuth();
+  const auth = getAuthInstance();
   const db = getDb();
 
   try {
@@ -148,7 +138,7 @@ export const getAdvertiser = async (uid: string): Promise<Advertiser | null> => 
  * Get advertiser by current auth user
  */
 export const getCurrentAdvertiser = async (): Promise<Advertiser | null> => {
-  const auth = getAuth();
+  const auth = getAuthInstance();
   const user = auth.currentUser;
   if (!user) return null;
   return getAdvertiser(user.uid);
@@ -717,7 +707,7 @@ export const createCampaign = async (
   }
 ): Promise<string> => {
   const db = getDb();
-  const auth = getAuth();
+  const auth = getAuthInstance();
   const campaignsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'campaigns');
 
   try {
@@ -1126,7 +1116,7 @@ export const trackAdImpression = async (
 ): Promise<string> => {
   const db = getDb();
   const impressionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adImpressions');
-  const auth = getAuth();
+  const auth = getAuthInstance();
 
   try {
     // Also update the ad's view count (backward compatibility)
@@ -1165,7 +1155,7 @@ export const trackAdClickDetailed = async (
 ): Promise<string> => {
   const db = getDb();
   const clicksRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'adClicks');
-  const auth = getAuth();
+  const auth = getAuthInstance();
 
   try {
     // Also update the ad's click count (backward compatibility)

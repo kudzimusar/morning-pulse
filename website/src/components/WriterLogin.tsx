@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../services/firebase';
 import { getCurrentWriter } from '../services/writerService';
 
 interface WriterLoginProps {
@@ -25,12 +26,11 @@ const WriterLogin: React.FC<WriterLoginProps> = ({ onSuccess, onBack }) => {
     setIsSubmitting(true);
 
     try {
-      const auth = getAuth();
       await signInWithEmailAndPassword(auth, email.trim(), password);
 
       // Check if user is an approved writer
       const writer = await getCurrentWriter();
-      
+
       if (!writer) {
         setError('Writer account not found. Please register first.');
         await auth.signOut();
@@ -45,8 +45,8 @@ const WriterLogin: React.FC<WriterLoginProps> = ({ onSuccess, onBack }) => {
 
       if (writer.status === 'rejected') {
         setError(
-          writer.rejectedReason 
-            ? `Your account was rejected: ${writer.rejectedReason}` 
+          writer.rejectedReason
+            ? `Your account was rejected: ${writer.rejectedReason}`
             : 'Your account has been rejected. Please contact support.'
         );
         await auth.signOut();
@@ -116,8 +116,8 @@ const WriterLogin: React.FC<WriterLoginProps> = ({ onSuccess, onBack }) => {
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
       }}>
         {onBack && (
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             style={{
               background: 'none',
               border: 'none',
@@ -251,8 +251,8 @@ const WriterLogin: React.FC<WriterLoginProps> = ({ onSuccess, onBack }) => {
             textAlign: 'center'
           }}>
             Don't have an account?{' '}
-            <a 
-              href="#writer/register" 
+            <a
+              href="#writer/register"
               style={{ color: '#000', textDecoration: 'underline' }}
             >
               Register as a writer

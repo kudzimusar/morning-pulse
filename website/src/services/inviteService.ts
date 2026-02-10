@@ -1,10 +1,4 @@
-/**
- * Staff Invitation Service
- * Handles secure invitation token generation, validation, and staff onboarding
- */
-
 import {
-  getFirestore,
   collection,
   doc,
   getDoc,
@@ -15,16 +9,14 @@ import {
   where,
   getDocs,
   serverTimestamp,
-  Firestore,
   Timestamp
 } from 'firebase/firestore';
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   User
 } from 'firebase/auth';
-import { getApp } from 'firebase/app';
-import { StaffInvite, StaffMember } from '../types';
+import { auth, db } from './firebase';
+import { StaffInvite, StaffMember, StaffRole } from '../types';
 import { logStaffAction, AuditActions } from './auditService';
 
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
@@ -43,26 +35,7 @@ export const getBaseUrl = (): string => {
 };
 
 // Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
-
-// Get Auth instance
-const getAuthInstance = () => {
-  try {
-    const app = getApp();
-    return getAuth(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
+const getDb = () => db;
 
 /**
  * Generate a unique invite token using crypto.randomUUID()
@@ -202,7 +175,7 @@ export const createStaffFromInvite = async (
   password: string
 ): Promise<User> => {
   const db = getDb();
-  const auth = getAuthInstance();
+  // const auth = getAuthInstance(); // Removed as per instruction
 
   // 1. Validate the invite
   const invite = await validateInviteToken(token);
@@ -212,12 +185,8 @@ export const createStaffFromInvite = async (
 
   try {
     // 2. Create Firebase Auth user with email/password
-    console.log(`📧 [INVITE] Creating auth user for ${invite.email}...`);
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      invite.email,
-      password
-    );
+    console.log(`📧 [INVITE] Creating auth user for ${invite.email}...`); // use auth from firebase.ts
+    const userCredential = await createUserWithEmailAndPassword(auth, invite.email, password);
     const user = userCredential.user;
 
     console.log(`✅ [INVITE] Auth user created with UID: ${user.uid}`);

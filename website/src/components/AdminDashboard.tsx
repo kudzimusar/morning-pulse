@@ -5,23 +5,21 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  getAuth,
   signOut,
-  onAuthStateChanged,
-  User
+  User,
+  signInWithEmailAndPassword,
+  onAuthStateChanged
 } from 'firebase/auth';
 import {
-  getFirestore,
   collection,
   query,
   onSnapshot,
   doc,
   getDoc,
-  setDoc,
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
+import { auth, db } from '../services/firebase';
 import { Opinion } from '../types';
 import PrioritySummary from './admin/PrioritySummary';
 import EditorialQueueTab from './admin/EditorialQueueTab';
@@ -41,17 +39,7 @@ import { updateLastActive } from '../services/staffService';
 const APP_ID = "morning-pulse-app";
 
 // Get Firebase instances (reuse existing app)
-const getFirebaseInstances = () => {
-  try {
-    const app = getApp();
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    return { auth, db };
-  } catch (error) {
-    // console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
+const getFirebaseInstances = () => ({ auth, db });
 
 interface StaffDocument {
   email: string;

@@ -1,7 +1,7 @@
 // Deployment fix attempt 2
 import React, { useState, useEffect } from 'react';
-import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, Auth, onAuthStateChanged } from 'firebase/auth';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { auth, app } from './services/firebase';
 import Header from './components/Header';
 import MobileHeader from './components/MobileHeader';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
@@ -837,15 +837,6 @@ const App: React.FC = () => {
       }
 
       try {
-        const config = getFirebaseConfig();
-        let app: FirebaseApp;
-        try {
-          app = getApp();
-        } catch (e) {
-          app = initializeApp(config);
-        }
-        const auth = getAuth(app);
-
         // ✅ FIX: Sign in anonymously on public routes (not just root)
         // BUT: Only if user is not already authenticated with email/password
         const currentUser = auth.currentUser;

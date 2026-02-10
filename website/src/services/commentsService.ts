@@ -18,9 +18,7 @@ import {
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
-import { initializeApp, getApp, FirebaseApp } from 'firebase/app';
-
-const APP_ID = (window as any).__app_id || 'morning-pulse-app';
+import { auth, db } from './firebase';
 
 export interface Comment {
   id: string;
@@ -52,73 +50,9 @@ export interface CommentThread {
   totalCount: number;
 }
 
-// Get Firebase config (same pattern as opinionsService)
-const getFirebaseConfig = (): any => {
-  // Priority 1: Try to get from window (injected at runtime via firebase-config.js)
-  if (typeof window !== 'undefined' && (window as any).__firebase_config) {
-    return (window as any).__firebase_config;
-  }
-
-  // Priority 2: Try from environment variables (for SSR/server-side)
-  if (typeof process !== 'undefined' && process.env) {
-    const config = {
-      apiKey: process.env.REACT_APP_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
-      authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
-      storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.REACT_APP_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
-    };
-
-    // Only return config if all required fields are present
-    if (config.apiKey && config.authDomain && config.projectId) {
-      return config;
-    }
-  }
-
-  // Fallback: Try to get existing app
-  try {
-    const app = getApp();
-    return app.options;
-  } catch (error) {
-    console.warn('Firebase config not found. Make sure firebase-config.js is loaded or environment variables are set.');
-    return null;
-  }
-};
-
-// Initialize Firebase if needed
-const initializeFirebaseIfNeeded = (): FirebaseApp | null => {
-  try {
-    // Try to get existing app first
-    return getApp();
-  } catch (error) {
-    // App doesn't exist, try to initialize
-    const config = getFirebaseConfig();
-    if (config) {
-      try {
-        return initializeApp(config, 'morning-pulse-app');
-      } catch (initError) {
-        console.error('Failed to initialize Firebase:', initError);
-        return null;
-      }
-    }
-    return null;
-  }
-};
-
-// Get Firestore instance with proper initialization
-const getDb = (): Firestore | null => {
-  try {
-    const app = initializeFirebaseIfNeeded();
-    if (app) {
-      return getFirestore(app);
-    }
-    return null;
-  } catch (error) {
-    console.error('Failed to get Firestore instance:', error);
-    return null;
-  }
-};
+const getDb = () => db;
+const getAuthInstance = () => auth;
+const APP_ID = (window as any).__app_id || 'morning-pulse-app';
 
 /**
  * Add a new inline comment
@@ -279,7 +213,7 @@ export const subscribeToArticleComments = (
   const db = getDb();
   if (!db) {
     console.warn('Firebase not initialized, returning no-op unsubscribe');
-    return () => {};
+    return () => { };
   }
 
   const q = query(

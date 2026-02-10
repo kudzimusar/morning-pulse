@@ -12,6 +12,7 @@ service cloud.firestore {
       );
     }
     
+    // Global bypass for Bosses
     match /{document=**} {
       allow read, write: if isBoss();
     }
@@ -21,51 +22,46 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    // Helper to check for a claim (handles potential absence of token/claims)
+    function hasClaim(claim) {
+      return isSignedIn() && request.auth.token.get(claim, false) == true;
+    }
+    
     function isSuperAdmin() {
-      return isSignedIn() && request.auth.token.super_admin == true;
+      return isBoss() || hasClaim('super_admin');
     }
     
     function isBureauChief() {
-      return isSignedIn() && (
-        request.auth.token.bureau_chief == true || 
-        request.auth.token.super_admin == true
-      );
+      return isBoss() || hasClaim('bureau_chief') || hasClaim('super_admin');
     }
     
     function isEditor() {
-      return isSignedIn() && (
-        request.auth.token.editor == true || 
-        request.auth.token.bureau_chief == true || 
-        request.auth.token.super_admin == true
-      );
+      return isBoss() || hasClaim('editor') || isBureauChief();
     }
     
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.admin == true || 
-        request.auth.token.super_admin == true
-      );
+      return isBoss() || hasClaim('admin') || isSuperAdmin();
     }
     
     function isWriter() {
-      return isSignedIn() && request.auth.token.writer == true;
+      return isBoss() || hasClaim('writer');
     }
     
     function hasAnyStaffRole() {
-      return isSignedIn() && (
-        request.auth.token.super_admin == true ||
-        request.auth.token.bureau_chief == true ||
-        request.auth.token.admin == true ||
-        request.auth.token.editor == true ||
-        request.auth.token.writer == true
-      );
+      return isBoss() || 
+             hasClaim('super_admin') || 
+             hasClaim('bureau_chief') || 
+             hasClaim('admin') || 
+             hasClaim('editor') || 
+             hasClaim('writer');
     }
     
     function isOwner(resource) {
       return isSignedIn() && (
         request.auth.uid == resource.data.authorId || 
         request.auth.uid == resource.data.uid ||
-        request.auth.uid == resource.data.authorUid
+        request.auth.uid == resource.data.authorUid ||
+        request.auth.uid == resource.data.writerId
       );
     }
     
@@ -77,68 +73,93 @@ service cloud.firestore {
     
     // --- STAFF COLLECTION ---
     match /staff/{staffId} {
-      allow read: if (isSignedIn() && request.auth.uid == staffId) || isBureauChief() || isAdmin();
-      allow write: if isBureauChief();
-      allow update: if isSignedIn() && request.auth.uid == staffId;
+      allow read: if isBoss() || (isSignedIn() && request.auth.uid == staffId) || isBureauChief() || isAdmin();
+      allow write: if isBoss() || isBureauChief() || isAdmin();
+      allow update: if isBoss() || (isSignedIn() && request.auth.uid == staffId);
     }
     
     // --- WRITERS COLLECTION ---
     match /writers/{writerId} {
-      allow read: if isEditor() || isAdmin() || (isSignedIn() && request.auth.uid == writerId);
-      allow write: if isEditor() || isAdmin() || (isSignedIn() && request.auth.uid == writerId);
+      allow read: if isBoss() || isEditor() || isAdmin() || (isSignedIn() && request.auth.uid == writerId);
+      allow write: if isBoss() || isEditor() || isAdmin() || (isSignedIn() && request.auth.uid == writerId);
     }
     
     // --- INVITATIONS ---
     match /invites/{inviteId} {
-      allow read: if true; // Tokens must be readable to validate
-      allow write: if isAdmin() || isBureauChief();
+      allow read: if true;
+      allow write: if isBoss() || isAdmin() || isBureauChief();
     }
     
     // --- AUDIT LOGS ---
     match /auditLog/{logId} {
-      allow read: if isAdmin() || isBureauChief();
-      allow create: if hasAnyStaffRole();
-      allow update, delete: if false;
+      allow read: if isBoss() || isAdmin() || isBureauChief();
+      allow create: if isBoss() || hasAnyStaffRole();
+      allow update, delete: if isBoss();
     }
     
     // --- SUBSCRIBERS ---
     match /subscribers/{subscriberId} {
-      allow read: if isAdmin() || isEditor() || (isSignedIn() && request.auth.uid == subscriberId);
-      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == subscriberId);
+      allow read: if isBoss() || isAdmin() || isEditor() || (isSignedIn() && request.auth.uid == subscriberId);
+      allow write: if isBoss() || isAdmin() || (isSignedIn() && request.auth.uid == subscriberId);
     }
     
     // --- READERS & USERS ---
     match /users/{userId} {
       allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isBoss() || (isSignedIn() && request.auth.uid == userId);
     }
     
     match /readers/{readerId} {
-      allow read: if (isSignedIn() && request.auth.uid == readerId) || isAdmin();
-      allow write: if isSignedIn() && request.auth.uid == readerId;
+      allow read: if isBoss() || (isSignedIn() && request.auth.uid == readerId) || isAdmin();
+      allow write: if isBoss() || (isSignedIn() && request.auth.uid == readerId);
     }
     
     // --- OPINIONS/ARTICLES (Legacy Path) ---
     match /artifacts/{appId}/public/data/opinions/{opinionId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && (isOwner(resource) || isEditor());
-      allow delete: if isBureauChief();
+      allow create: if isBoss() || isSignedIn();
+      allow update: if isBoss() || (isSignedIn() && (isOwner(resource) || isEditor()));
+      allow delete: if isBoss() || isBureauChief();
     }
     
     // --- PITCHES ---
     match /artifacts/{appId}/public/data/pitches/{pitchId} {
-      allow read: if isSignedIn() && (isOwner(resource) || isEditor());
-      allow create: if isWriter();
-      allow update, delete: if isSignedIn() && (isOwner(resource) || isEditor());
+      allow read: if isBoss() || (isSignedIn() && (isOwner(resource) || isEditor()));
+      allow create: if isBoss() || isWriter() || hasAnyStaffRole();
+      allow update, delete: if isBoss() || (isSignedIn() && (isOwner(resource) || isEditor()));
     }
     
     // --- ADS ---
     match /artifacts/{appId}/public/data/ads/{adId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && (isOwner(resource) || isAdmin());
-      allow delete: if isAdmin();
+      allow create: if isBoss() || isSignedIn();
+      allow update: if isBoss() || (isSignedIn() && (isOwner(resource) || isAdmin()));
+      allow delete: if isBoss() || isAdmin();
+    }
+    
+    // --- AD IMPRESSIONS & ANALYTICS ---
+    match /artifacts/{appId}/public/data/adImpressions/{impressionId} {
+      allow read: if isBoss() || isAdmin();
+      allow create: if true; // Allow anonymous users to track impressions
+    }
+    
+    match /artifacts/{appId}/public/data/adClicks/{clickId} {
+      allow read: if isBoss() || isAdmin();
+      allow create: if true; // Allow anonymous users to track clicks
+    }
+    
+    // --- ADVERTISERS ---
+    match /artifacts/{appId}/public/data/advertisers/{advertiserId} {
+      allow read: if isBoss() || isAdmin() || (isSignedIn() && request.auth.uid == advertiserId);
+      allow create: if isBoss() || isSignedIn(); // Allow self-registration
+      allow update: if isBoss() || isAdmin() || (isSignedIn() && request.auth.uid == advertiserId);
+      allow delete: if isBoss() || isAdmin();
+    }
+
+    // --- PAYMENTS & REVENUE ---
+    match /paymentStatements/{statementId} {
+      allow read: if isBoss() || isAdmin() || isBureauChief() || (isSignedIn() && request.auth.uid == resource.data.writerId);
+      allow write: if isBoss() || isAdmin() || isBureauChief();
     }
   }
 }

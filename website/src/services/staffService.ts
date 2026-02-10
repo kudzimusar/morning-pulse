@@ -1,6 +1,5 @@
 
 import {
-  getFirestore,
   collection,
   doc,
   getDocs,
@@ -10,10 +9,10 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
+import { db } from './firebase';
 import { StaffMember, StaffRole, WriterType } from '../types';
 import { getCurrentEditor } from './authService';
 
-const db = getFirestore();
 const staffCollection = collection(db, 'staff');
 const invitesCollection = collection(db, 'invites');
 

@@ -4,10 +4,10 @@
  * Pitches are stored at: /artifacts/{appId}/public/data/storyPitches/{pitchId}
  */
 
-import { 
-  getFirestore, 
-  collection, 
-  query, 
+import {
+  getFirestore,
+  collection,
+  query,
   where,
   orderBy,
   getDocs,
@@ -20,22 +20,12 @@ import {
   Timestamp,
   Firestore
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { getApp } from 'firebase/app';
-import { StoryPitch, PitchStatus } from '../../types';
+import { auth, db } from './firebase';
+import { StoryPitch, PitchStatus } from '../../../types';
 
+const getDb = () => db;
+const getAuthInstance = () => auth;
 const APP_ID = (window as any).__app_id || 'morning-pulse-app';
-
-// Get Firestore instance
-const getDb = (): Firestore => {
-  try {
-    const app = getApp();
-    return getFirestore(app);
-  } catch (error) {
-    console.error('Firebase initialization error:', error);
-    throw new Error('Firebase not initialized');
-  }
-};
 
 // Helper to get collection reference
 const getPitchesCollection = () => {
@@ -92,9 +82,9 @@ export const createPitch = async (
   },
   submitImmediately: boolean = false
 ): Promise<string> => {
-  const auth = getAuth();
+  const auth = getAuthInstance();
   const user = auth.currentUser;
-  
+
   if (!user) {
     throw new Error('User must be authenticated to create a pitch');
   }
@@ -102,7 +92,7 @@ export const createPitch = async (
   const db = getDb();
   const pitchesRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches');
   const newPitchRef = doc(pitchesRef);
-  
+
   const pitch: Partial<StoryPitch> = {
     writerId: user.uid,
     writerName: user.displayName || 'Unknown Writer',
@@ -126,7 +116,7 @@ export const createPitch = async (
 
   await setDoc(newPitchRef, pitch);
   console.log('✅ Pitch created:', newPitchRef.id);
-  
+
   return newPitchRef.id;
 };
 
@@ -135,19 +125,19 @@ export const createPitch = async (
  */
 export const updatePitch = async (
   pitchId: string,
-  updates: Partial<Pick<StoryPitch, 
-    'title' | 'summary' | 'angle' | 'proposedCategory' | 
+  updates: Partial<Pick<StoryPitch,
+    'title' | 'summary' | 'angle' | 'proposedCategory' |
     'estimatedWordCount' | 'proposedDeadline' | 'sources' | 'relevance'
   >>
 ): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await updateDoc(pitchRef, {
     ...updates,
     updatedAt: serverTimestamp(),
   });
-  
+
   console.log('✅ Pitch updated:', pitchId);
 };
 
@@ -157,13 +147,13 @@ export const updatePitch = async (
 export const submitPitch = async (pitchId: string): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await updateDoc(pitchRef, {
     status: 'submitted',
     submittedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  
+
   console.log('✅ Pitch submitted for review:', pitchId);
 };
 
@@ -179,7 +169,7 @@ export const approvePitch = async (
 ): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await updateDoc(pitchRef, {
     status: 'approved',
     reviewedBy: editorId,
@@ -189,7 +179,7 @@ export const approvePitch = async (
     priority: priority || 'normal',
     updatedAt: serverTimestamp(),
   });
-  
+
   console.log('✅ Pitch approved:', pitchId);
 };
 
@@ -204,7 +194,7 @@ export const rejectPitch = async (
 ): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await updateDoc(pitchRef, {
     status: 'rejected',
     reviewedBy: editorId,
@@ -213,7 +203,7 @@ export const rejectPitch = async (
     rejectionReason: reason,
     updatedAt: serverTimestamp(),
   });
-  
+
   console.log('✅ Pitch rejected:', pitchId);
 };
 
@@ -226,14 +216,14 @@ export const markPitchConverted = async (
 ): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await updateDoc(pitchRef, {
     status: 'converted',
     convertedToOpinionId: opinionId,
     convertedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  
+
   console.log('✅ Pitch marked as converted:', pitchId, '→', opinionId);
 };
 
@@ -243,7 +233,7 @@ export const markPitchConverted = async (
 export const getPitch = async (pitchId: string): Promise<StoryPitch | null> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   const snap = await getDoc(pitchRef);
   if (snap.exists()) {
     return docToPitch(snap);
@@ -257,18 +247,18 @@ export const getPitch = async (pitchId: string): Promise<StoryPitch | null> => {
 export const getWriterPitches = async (writerId: string): Promise<StoryPitch[]> => {
   const pitchesRef = getPitchesCollection();
   const q = query(
-    pitchesRef, 
+    pitchesRef,
     where('writerId', '==', writerId),
     orderBy('createdAt', 'desc')
   );
-  
+
   const snapshot = await getDocs(q);
   const pitches: StoryPitch[] = [];
-  
+
   snapshot.forEach((docSnap) => {
     pitches.push(docToPitch(docSnap));
   });
-  
+
   return pitches;
 };
 
@@ -278,18 +268,18 @@ export const getWriterPitches = async (writerId: string): Promise<StoryPitch[]> 
 export const getSubmittedPitches = async (): Promise<StoryPitch[]> => {
   const pitchesRef = getPitchesCollection();
   const q = query(
-    pitchesRef, 
+    pitchesRef,
     where('status', '==', 'submitted'),
     orderBy('submittedAt', 'desc')
   );
-  
+
   const snapshot = await getDocs(q);
   const pitches: StoryPitch[] = [];
-  
+
   snapshot.forEach((docSnap) => {
     pitches.push(docToPitch(docSnap));
   });
-  
+
   return pitches;
 };
 
@@ -299,18 +289,18 @@ export const getSubmittedPitches = async (): Promise<StoryPitch[]> => {
 export const getApprovedPitches = async (): Promise<StoryPitch[]> => {
   const pitchesRef = getPitchesCollection();
   const q = query(
-    pitchesRef, 
+    pitchesRef,
     where('status', '==', 'approved'),
     orderBy('reviewedAt', 'desc')
   );
-  
+
   const snapshot = await getDocs(q);
   const pitches: StoryPitch[] = [];
-  
+
   snapshot.forEach((docSnap) => {
     pitches.push(docToPitch(docSnap));
   });
-  
+
   return pitches;
 };
 
@@ -320,18 +310,18 @@ export const getApprovedPitches = async (): Promise<StoryPitch[]> => {
 export const getPitchesByStatus = async (status: PitchStatus): Promise<StoryPitch[]> => {
   const pitchesRef = getPitchesCollection();
   const q = query(
-    pitchesRef, 
+    pitchesRef,
     where('status', '==', status),
     orderBy('createdAt', 'desc')
   );
-  
+
   const snapshot = await getDocs(q);
   const pitches: StoryPitch[] = [];
-  
+
   snapshot.forEach((docSnap) => {
     pitches.push(docToPitch(docSnap));
   });
-  
+
   return pitches;
 };
 
@@ -341,7 +331,7 @@ export const getPitchesByStatus = async (status: PitchStatus): Promise<StoryPitc
 export const deletePitch = async (pitchId: string): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await deleteDoc(pitchRef);
   console.log('✅ Pitch deleted:', pitchId);
 };
@@ -356,13 +346,13 @@ export const assignEditorToPitch = async (
 ): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await updateDoc(pitchRef, {
     assignedEditorId: editorId,
     assignedEditorName: editorName,
     updatedAt: serverTimestamp(),
   });
-  
+
   console.log('✅ Editor assigned to pitch:', pitchId);
 };
 
@@ -375,11 +365,11 @@ export const setPitchPriority = async (
 ): Promise<void> => {
   const db = getDb();
   const pitchRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'storyPitches', pitchId);
-  
+
   await updateDoc(pitchRef, {
     priority,
     updatedAt: serverTimestamp(),
   });
-  
+
   console.log('✅ Pitch priority set:', pitchId, priority);
 };
