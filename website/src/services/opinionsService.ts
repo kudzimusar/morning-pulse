@@ -27,6 +27,7 @@ import { Opinion, OpinionSubmissionData, OpinionVersion } from '../../../types';
 import { getImageByTopic } from '../utils/imageGenerator';
 import { generateSlug } from '../utils/slugUtils';
 import EnhancedFirestore from './enhancedFirestore';
+import { logStaffAction } from './auditService';
 
 import { auth, db, app } from './firebase';
 
@@ -272,6 +273,19 @@ export const createEditorialArticle = async (
     };
 
     const docRef = await addDoc(opinionsRef, docData);
+
+    // --- 📊 LOG ACTION TO AUDIT LOG ---
+    await logStaffAction(
+      'ARTICLE_PUBLISHED',
+      articleData.authorName || 'unknown',
+      articleData.authorName || 'Editorial Team',
+      docRef.id,
+      articleData.headline,
+      'none',
+      'published',
+      { type: 'direct_editorial' }
+    );
+
     console.log('✅ Editorial article created with ID:', docRef.id);
     return docRef.id;
   } catch (error: any) {
@@ -704,6 +718,18 @@ export const approveOpinion = async (
 
     // Direct Firestore update with merge
     await setDoc(docRef, patch, { merge: true });
+
+    // --- 📊 LOG ACTION TO AUDIT LOG ---
+    await logStaffAction(
+      'OPINION_APPROVED',
+      reviewedBy || 'unknown',
+      reviewedBy || 'Editor', // In a real app we'd fetch the name
+      opinionId,
+      existing?.headline || 'Untitled Article',
+      'pending',
+      'published',
+      { headline: existing?.headline }
+    );
 
     console.log('✅ Opinion approved:', opinionId, '(SLA approvalAt tracked)');
   } catch (error: any) {

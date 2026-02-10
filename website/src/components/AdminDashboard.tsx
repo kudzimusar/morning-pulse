@@ -34,7 +34,9 @@ import AdManagementTab from './admin/AdManagementTab';
 import IntegrationSettings from './admin/IntegrationSettings';
 import WriterHub from './admin/WriterHub';
 import { updateLastActive } from '../services/staffService';
-
+import DashboardOverviewTab from './admin/DashboardOverviewTab';
+import RevenueTab from './admin/RevenueTab';
+import SystemTab from './admin/SystemTab';
 // Constants
 const APP_ID = "morning-pulse-app";
 
@@ -53,21 +55,20 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'subscriber-management' | 'ad-management' | 'analytics' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'subscriber-management' | 'ad-management' | 'analytics' | 'revenue' | 'system-health' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
 
-// ✅ FIX: Move tabs array to top level to prevent initialization errors
-// 📧 Newsletter Hub consolidates: Newsletter Generator, Subscribers, Newsletter History, Settings
-// ✍️ Writer Hub consolidates: Writer Management, Story Pitches, Payments
 const ALL_TABS = [
-  { id: 'dashboard' as TabId, label: 'Dashboard Overview', icon: '📊' },
+  { id: 'dashboard' as TabId, label: 'Command Center', icon: '🏰' },
   { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: '📝' },
   { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
   { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
   { id: 'writer-hub' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
   { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
   { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
-  { id: 'analytics' as TabId, label: 'Analytics', icon: '📈', superAdminOnly: true },
-  { id: 'newsletter-hub' as TabId, label: 'Newsletter', icon: '📧', superAdminOnly: true },
+  { id: 'revenue' as TabId, label: 'Revenue Dashboard', icon: '💰', superAdminOnly: true },
+  { id: 'analytics' as TabId, label: 'Analytics Hub', icon: '📈', superAdminOnly: true },
+  { id: 'system-health' as TabId, label: 'System Health', icon: '⚡', superAdminOnly: true },
+  { id: 'newsletter-hub' as TabId, label: 'Newsletter Hub', icon: '📧', superAdminOnly: true },
   { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️', superAdminOnly: true },
   { id: 'integrations' as TabId, label: 'Integrations', icon: '🔌', adminOnly: true },
   { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
@@ -422,20 +423,11 @@ const AdminDashboard: React.FC = () => {
         {/* Content Area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#fff' }}>
           {activeTab === 'dashboard' && (
-            <div>
-              <h2 style={{ marginTop: 0, marginBottom: '24px', fontSize: '24px', fontWeight: '600' }}>Dashboard Overview</h2>
-              <PrioritySummary
-                pendingCount={pendingOpinions.length}
-                imageIssuesCount={0}
-                scheduledCount={0}
-                recentlyPublishedCount={publishedOpinions.length}
-                onNavigate={(tab) => setActiveTab(tab as TabId)}
-              />
-              <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '24px', marginTop: '24px' }}>
-                <h3 style={{ marginTop: 0, fontSize: '18px', fontWeight: '600' }}>Today's Activity</h3>
-                <p style={{ color: '#6b7280', margin: 0 }}>Recent editorial actions and system updates will appear here.</p>
-              </div>
-            </div>
+            <DashboardOverviewTab
+              onNavigate={(tab) => setActiveTab(tab as any)}
+              pendingCount={pendingOpinions.length}
+              publishedCount={publishedOpinions.length}
+            />
           )}
 
           {activeTab === 'editorial-queue' && (
@@ -464,6 +456,14 @@ const AdminDashboard: React.FC = () => {
 
           {activeTab === 'analytics' && isAuthorized && (
             <AnalyticsTab firebaseInstances={firebaseInstances} isAuthorized={isAuthorized} userRoles={userRoles} />
+          )}
+
+          {activeTab === 'revenue' && isSuperAdmin && (
+            <RevenueTab />
+          )}
+
+          {activeTab === 'system-health' && isSuperAdmin && (
+            <SystemTab />
           )}
 
           {activeTab === 'newsletter-hub' && isSuperAdmin && (

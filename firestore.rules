@@ -161,5 +161,24 @@ service cloud.firestore {
       allow read: if isBoss() || isAdmin() || isBureauChief() || (isSignedIn() && request.auth.uid == resource.data.writerId);
       allow write: if isBoss() || isAdmin() || isBureauChief();
     }
+
+    // --- 📊 ANALYTICS & METRICS ---
+    match /analytics/{document=**} {
+      allow read: if isSuperAdmin() || isAdmin();
+      allow write: if isBoss();
+    }
+
+    // --- 🔴 LIVE ACTIVITY LOG ---
+    match /activityLog/{logId} {
+      allow read: if isSuperAdmin() || isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isBoss();
+    }
+
+    // --- ⚡ SYSTEM HEALTH & STATUS ---
+    match /systemHealth/{metricId} {
+      allow read: if isSuperAdmin() || isAdmin();
+      allow write: if isBoss();
+    }
   }
 }
