@@ -242,7 +242,7 @@ export const createStaffFromInvite = async (
       updatedAt: serverTimestamp()
     });
 
-    console.log(`✅ [INVITE] Staff document created at artifacts/${APP_ID}/public/data/staff/${user.uid}`);
+    console.log(`✅ [INVITE] Staff document created at /staff/${user.uid}`);
 
     // 4. Mark invite as used
     const inviteRef = doc(db, 'invites', token);
