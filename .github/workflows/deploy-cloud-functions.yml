@@ -1,0 +1,26 @@
+name: Deploy Cloud Functions
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+      - '.github/workflows/deploy-cloud-functions.yml'
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          action: deploy
+          only: functions
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
