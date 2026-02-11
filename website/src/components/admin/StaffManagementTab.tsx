@@ -11,6 +11,13 @@ import { getUserRoles } from '../../services/authService';
 import type { StaffMember, StaffRole, WriterType } from '../../types.ts';
 import StaffProfileModal from './widgets/StaffProfileModal';
 import { exportToCSV } from '../../services/csvExportService';
+import {
+  PERMISSION_KEYS,
+  PERMISSION_LABELS,
+  getRolesOrder,
+  roleHasPermission,
+  type PermissionKey
+} from '../../constants/permissionMatrix';
 import './AdminDashboard.css';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -287,6 +294,44 @@ const StaffManagementTab: React.FC = () => {
             No staff members match your current filters.
           </div>
         )}
+      </div>
+
+      {/* Permission Matrix */}
+      <div className="admin-card" style={{ padding: '24px', marginTop: '24px' }}>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: 'var(--admin-text-main)' }}>Permission Matrix</h3>
+        <p style={{ margin: 0, fontSize: '14px', color: 'var(--admin-text-muted)', marginBottom: '20px' }}>
+          What each role can do. Permissions are derived from roles; change a staff member&apos;s role above to update their access.
+        </p>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="admin-table permission-matrix">
+            <thead>
+              <tr>
+                <th style={{ minWidth: '160px' }}>Permission</th>
+                {getRolesOrder().map(role => (
+                  <th key={role} style={{ textAlign: 'center', minWidth: '100px' }}>
+                    <span className={`role-badge ${role}`}>{capitalize(role)}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {PERMISSION_KEYS.map(perm => (
+                <tr key={perm}>
+                  <td style={{ fontWeight: '500' }}>{PERMISSION_LABELS[perm as PermissionKey]}</td>
+                  {getRolesOrder().map(role => (
+                    <td key={role} style={{ textAlign: 'center' }}>
+                      {roleHasPermission(role, perm as PermissionKey) ? (
+                        <span style={{ color: 'var(--admin-success)', fontSize: '18px' }} title="Has permission">✓</span>
+                      ) : (
+                        <span style={{ color: 'var(--admin-border)', fontSize: '18px' }} title="No access">—</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {selectedStaff && (

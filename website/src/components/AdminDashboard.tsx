@@ -487,7 +487,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'system-health' && isSuperAdmin && (
-              <SystemTab />
+              <SystemTab firebaseInstances={firebaseInstances} />
             )}
 
             {activeTab === 'newsletter-hub' && isSuperAdmin && (

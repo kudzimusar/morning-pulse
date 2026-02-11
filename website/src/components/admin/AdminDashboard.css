@@ -48,6 +48,11 @@
   background-color: #f9fafb;
 }
 
+.permission-matrix th,
+.permission-matrix td {
+  vertical-align: middle;
+}
+
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -86,6 +91,11 @@
 .role-badge.super_admin {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.role-badge.bureau_chief {
+  background: #e9d5ff;
+  color: #6b21a8;
 }
 
 .role-badge.admin {
