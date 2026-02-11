@@ -124,3 +124,8 @@ This document describes the Phase 5 scope for the Super Admin Dashboard: Permiss
 - Phase 0–3 (Quick Wins, Foundation, Core Features, Polish) remain as in the main plan.
 - **Phase 5 (current)** is this document: Permission Matrix, System Health alerting, Content Audit.
 - When Phase 5 success criteria are complete, the dashboard delivers enterprise-grade permission visibility, real-time health awareness, and SEO content auditing.
+
+## Gap implementation and testing
+
+- For remaining strategic plan items (Staff Overview cards, Articles column, ⋮ menu, Permissions in profile, System Configuration block, charts, FAB, shortcuts, notifications), see **`SUPER_ADMIN_DASHBOARD_GAP_IMPLEMENTATION_PLAN.md`**.
+- That document defines stages, commit scope, and **how to test after every push/commit**.
