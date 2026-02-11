@@ -19,9 +19,19 @@ const STATIC_EVENTS: SystemEvent[] = [
 
 interface SystemTabProps {
   firebaseInstances?: { auth: any; db: Firestore } | null;
+  onNavigateToTab?: (tab: string) => void;
 }
 
-const SystemTab: React.FC<SystemTabProps> = ({ firebaseInstances }) => {
+const CONFIG_ROWS: { label: string; tabId: string }[] = [
+  { label: 'Security settings', tabId: 'settings' },
+  { label: 'Email templates', tabId: 'settings' },
+  { label: 'Site appearance', tabId: 'settings' },
+  { label: 'Integrations', tabId: 'integrations' },
+  { label: 'Analytics tracking', tabId: 'analytics' },
+  { label: 'Advanced settings', tabId: 'settings' },
+];
+
+const SystemTab: React.FC<SystemTabProps> = ({ firebaseInstances, onNavigateToTab }) => {
   const [health, setHealth] = useState<HealthState>({ latencyMs: null, status: 'unknown', lastChecked: null, error: null });
   const [events, setEvents] = useState<SystemEvent[]>([]);
 
@@ -209,6 +219,40 @@ const SystemTab: React.FC<SystemTabProps> = ({ firebaseInstances }) => {
               ))
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Configuration & Settings block */}
+      <div className="admin-card" style={{ padding: '24px', marginTop: '24px' }}>
+        <h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: '600', marginBottom: '20px' }}>Configuration & Settings</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {CONFIG_ROWS.map((row) => (
+            <div
+              key={row.tabId + row.label}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px',
+                background: '#f9fafb',
+                borderRadius: '8px',
+              }}
+            >
+              <span style={{ fontWeight: '500' }}>{row.label}</span>
+              {onNavigateToTab ? (
+                <button
+                  type="button"
+                  className="admin-button admin-button-secondary"
+                  style={{ padding: '6px 12px', fontSize: '13px' }}
+                  onClick={() => onNavigateToTab(row.tabId)}
+                >
+                  Configure
+                </button>
+              ) : (
+                <span style={{ fontSize: '13px', color: 'var(--admin-text-muted)' }}>—</span>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

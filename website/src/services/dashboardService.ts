@@ -1,13 +1,12 @@
 import {
     collection,
-    getDocs,
     query,
     where,
-    limit,
-    orderBy,
     getCountFromServer
 } from 'firebase/firestore';
 import { db } from './firebase';
+
+const APP_ID = (typeof window !== 'undefined' && (window as any).__app_id) ? (window as any).__app_id : 'morning-pulse-app';
 
 export interface DashboardStats {
     totalUsers: number;
@@ -90,5 +89,49 @@ export const fetchTrendData = async (metric: string) => {
         ];
     }
 
+    if (metric === 'subscribers') {
+        return [
+            { name: 'Jan', value: 1200 },
+            { name: 'Feb', value: 1450 },
+            { name: 'Mar', value: 1680 },
+            { name: 'Apr', value: 1920 },
+            { name: 'May', value: 2100 },
+            { name: 'Jun', value: 2350 },
+            { name: 'Jul', value: 2580 },
+        ];
+    }
+
     return [];
+};
+
+/** Content pipeline counts by status from artifacts/{APP_ID}/public/data/opinions */
+export interface ContentPipelineCount {
+    name: string;
+    count: number;
+}
+
+const CONTENT_STATUSES: { key: string; label: string }[] = [
+    { key: 'draft', label: 'Draft' },
+    { key: 'pending', label: 'Pending' },
+    { key: 'in-review', label: 'In Review' },
+    { key: 'scheduled', label: 'Scheduled' },
+    { key: 'published', label: 'Published' },
+    { key: 'rejected', label: 'Rejected' },
+];
+
+export const fetchContentPipelineCounts = async (): Promise<ContentPipelineCount[]> => {
+    try {
+        const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
+        const counts = await Promise.all(
+            CONTENT_STATUSES.map(async ({ key, label }) => {
+                const q = query(opinionsRef, where('status', '==', key));
+                const snap = await getCountFromServer(q);
+                return { name: label, count: snap.data().count };
+            })
+        );
+        return counts;
+    } catch (error) {
+        console.error('Error fetching content pipeline counts:', error);
+        return CONTENT_STATUSES.map(({ label }) => ({ name: label, count: 0 }));
+    }
 };

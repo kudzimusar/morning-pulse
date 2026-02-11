@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import MetricCard from './widgets/MetricCard';
 import ActivityFeed from './widgets/ActivityFeed';
 import StaffOnlineList from './widgets/StaffOnlineList';
 import PerformanceChart from './widgets/PerformanceChart';
 import PrioritySummary from './PrioritySummary';
-import { fetchDashboardStats, fetchTrendData, DashboardStats } from '../../services/dashboardService';
+import { fetchDashboardStats, fetchTrendData, fetchContentPipelineCounts, DashboardStats, ContentPipelineCount } from '../../services/dashboardService';
 
 interface DashboardOverviewTabProps {
     onNavigate: (tab: string) => void;
@@ -20,21 +21,27 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [revenueData, setRevenueData] = useState<any[]>([]);
     const [userData, setUserData] = useState<any[]>([]);
+    const [contentPipelineData, setContentPipelineData] = useState<ContentPipelineCount[]>([]);
+    const [subscriberData, setSubscriberData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [dashboardStats, revenueStats, userStats] = await Promise.all([
+                const [dashboardStats, revenueStats, userStats, pipelineCounts, subscriberTrend] = await Promise.all([
                     fetchDashboardStats(),
                     fetchTrendData('revenue'),
-                    fetchTrendData('users')
+                    fetchTrendData('users'),
+                    fetchContentPipelineCounts(),
+                    fetchTrendData('subscribers')
                 ]);
 
                 setStats(dashboardStats);
                 setRevenueData(revenueStats);
                 setUserData(userStats);
+                setContentPipelineData(pipelineCounts);
+                setSubscriberData(subscriberTrend);
             } catch (error) {
                 console.error("Error loading dashboard data:", error);
             } finally {
@@ -167,6 +174,32 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                         color="#10b981"
                     />
 
+                    {/* Content Status (This Week) / Pipeline */}
+                    <div style={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '12px',
+                        padding: '20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%'
+                    }}>
+                        <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600', color: '#111827' }}>
+                            Content Status (This Week)
+                        </h3>
+                        <div style={{ flex: 1, minHeight: 260, width: '100%' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={contentPipelineData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                                    <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
                     <PrioritySummary
                         pendingCount={initialPending}
                         imageIssuesCount={0}
@@ -195,6 +228,14 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     xKey="name"
                     yKey="value"
                     color="#3b82f6"
+                    height={200}
+                />
+                <PerformanceChart
+                    title="Subscriber Growth (6 Months)"
+                    data={subscriberData}
+                    xKey="name"
+                    yKey="value"
+                    color="#10b981"
                     height={200}
                 />
                 <div style={{

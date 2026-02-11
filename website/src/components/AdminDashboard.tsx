@@ -487,7 +487,7 @@ const AdminDashboard: React.FC = () => {
             )}
 
             {activeTab === 'system-health' && isSuperAdmin && (
-              <SystemTab firebaseInstances={firebaseInstances} />
+              <SystemTab firebaseInstances={firebaseInstances} onNavigateToTab={(tab) => setActiveTab(tab as TabId)} />
             )}
 
             {activeTab === 'newsletter-hub' && isSuperAdmin && (
