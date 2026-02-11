@@ -1,0 +1,14 @@
+---
+description: Always commit and push to GitHub after making file changes
+alwaysApply: true
+---
+
+# Commit and push after every change
+
+When you create, edit, or delete files in this project:
+
+1. **Stage** all relevant changes: `git add` the files you changed (or `git add .` for the whole change set).
+2. **Commit** with a clear message: e.g. `fix(scope): description` or `feat(scope): description`. Reference PLAN.md or a ticket if relevant.
+3. **Push** to the current branch: `git push origin main` (or the active branch).
+
+Do this in the same turn as your edits. Do not leave uncommitted changes unless the user explicitly asks you not to commit.
