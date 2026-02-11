@@ -39,6 +39,9 @@ const StaffManagementTab: React.FC = () => {
   const [newStaffRole, setNewStaffRole] = useState<StaffRole>('writer');
   const [newStaffWriterType, setNewStaffWriterType] = useState<WriterType>('journalist');
   const [showInviteForm, setShowInviteForm] = useState(false);
+  const [openMenuUid, setOpenMenuUid] = useState<string | null>(null);
+  const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
+  const [articleCountByUid, setArticleCountByUid] = useState<Record<string, number>>({});
 
   const fetchStaffAndRoles = async () => {
     try {
