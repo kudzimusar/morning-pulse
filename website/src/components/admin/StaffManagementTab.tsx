@@ -89,6 +89,13 @@ const StaffManagementTab: React.FC = () => {
     });
   }, [staff, searchTerm, roleFilter]);
 
+  const isOnline = (lastActive: any) => {
+    if (!lastActive) return false;
+    const date = new Date(lastActive.seconds ? lastActive.seconds * 1000 : lastActive);
+    const diff = (Date.now() - date.getTime()) / 1000 / 60;
+    return diff < 10;
+  };
+
   // A1: Staff overview counts (from full staff list)
   const staffOverview = useMemo(() => {
     const countByRole: Record<string, number> = { super_admin: 0, bureau_chief: 0, admin: 0, editor: 0, writer: 0 };
@@ -162,13 +169,6 @@ const StaffManagementTab: React.FC = () => {
     } catch (error) {
       console.error("Failed to send invite:", error);
     }
-  };
-
-  const isOnline = (lastActive: any) => {
-    if (!lastActive) return false;
-    const date = new Date(lastActive.seconds ? lastActive.seconds * 1000 : lastActive);
-    const diff = (Date.now() - date.getTime()) / 1000 / 60;
-    return diff < 10;
   };
 
   if (loading) return (
