@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { StaffMember } from '../../../types';
+import type { StaffRole } from '../../../types';
 import { getStaffMetrics, StaffMetrics } from '../../../services/staffMetricsService';
 import { getStaffAuditLogs } from '../../../services/auditService';
+import { PERMISSION_KEYS, PERMISSION_LABELS, roleHasPermission } from '../../../constants/permissionMatrix';
+import type { PermissionKey } from '../../../constants/permissionMatrix';
 import MetricCard from './MetricCard';
 import PerformanceChart from './PerformanceChart';
 import '../AdminDashboard.css';
@@ -41,6 +44,9 @@ const StaffProfileModal: React.FC<StaffProfileModalProps> = ({ member, onClose }
         { title: 'Avg Views', value: metrics?.avgViewsPerArticle || 0, icon: '📈', color: '#f59e0b' },
         { title: 'Engagement', value: `${metrics?.totalEngagement || 0}%`, icon: '🔥', color: '#8b5cf6' },
     ];
+
+    const roles = member.roles?.length ? member.roles : [member.role].filter(Boolean);
+    const hasPermission = (perm: PermissionKey) => roles.some((r: string) => roleHasPermission(r as StaffRole, perm));
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -107,7 +113,7 @@ const StaffProfileModal: React.FC<StaffProfileModalProps> = ({ member, onClose }
                                         {logs.length > 0 ? logs.map((log, i) => (
                                             <div key={i} style={{ padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
                                                 <div style={{ fontSize: '13px', fontWeight: '500' }}>{log.action}</div>
-                                                <div style={{ fontSize: '11px', color: '#9ca3af' }}>{new Date(log.timestamp?.seconds * 1000).toLocaleString()}</div>
+                                                <div style={{ fontSize: '11px', color: '#9ca3af' }}>{log.timestamp instanceof Date ? log.timestamp.toLocaleString() : (log.timestamp?.seconds ? new Date(log.timestamp.seconds * 1000).toLocaleString() : '—')}</div>
                                             </div>
                                         )) : (
                                             <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af', fontSize: '13px' }}>No recent activity recorded.</div>
@@ -115,13 +121,28 @@ const StaffProfileModal: React.FC<StaffProfileModalProps> = ({ member, onClose }
                                     </div>
                                 </div>
                             </div>
+
+                            {/* A3: Permissions & Access */}
+                            <div className="admin-card" style={{ padding: '20px', marginTop: '24px' }}>
+                                <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Permissions & Access</h3>
+                                <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--admin-text-muted)' }}>Effective permissions from role(s).</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px 24px' }}>
+                                    {PERMISSION_KEYS.map(perm => (
+                                        <div key={perm} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                                            <span style={{ color: hasPermission(perm as PermissionKey) ? 'var(--admin-success)' : 'var(--admin-border)', fontWeight: 'bold' }}>{hasPermission(perm as PermissionKey) ? '✓' : '—'}</span>
+                                            <span>{PERMISSION_LABELS[perm as PermissionKey]}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button type="button" className="admin-button admin-button-secondary" style={{ marginTop: '16px', padding: '6px 12px', fontSize: '13px' }} onClick={() => alert('Customize permissions: coming soon. Change role above to update access.')}>Customize permissions</button>
+                            </div>
                         </>
                     )}
                 </div>
 
                 <footer className="modal-footer" style={{ justifyContent: 'flex-end', gap: '12px' }}>
                     <button className="admin-button admin-button-secondary" onClick={onClose}>Close Profile</button>
-                    <button className="admin-button admin-button-primary" onClick={() => alert('Editing permissions...')}>Edit Permissions</button>
+                    <button className="admin-button admin-button-primary" onClick={() => alert('Customize permissions: coming soon. Change role in Staff Management to update access.')}>Edit Permissions</button>
                 </footer>
             </div>
 
