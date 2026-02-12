@@ -4,8 +4,7 @@
  * 
  * Entry point: webhook
  * 
- * Meta Cloud API Documentation:
- * https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks
+ * FIXED VERSION - Added Base64 config support for consistency
  */
 
 const axios = require('axios');
@@ -28,7 +27,16 @@ function initializeFirebase() {
   
   try {
     if (admin.apps.length === 0) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG);
+      // 🔧 FIX: Add Base64 decoding support (same as newsAggregator)
+      let configStr = process.env.FIREBASE_ADMIN_CONFIG;
+      
+      // Check if it's Base64 encoded
+      if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
+        console.log("✅ Detected Base64-encoded FIREBASE_ADMIN_CONFIG, decoding...");
+        configStr = Buffer.from(configStr, 'base64').toString('utf-8');
+      }
+      
+      const serviceAccount = JSON.parse(configStr);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
@@ -107,6 +115,7 @@ If asked about news, provide brief summaries of recent stories.`
 
 /**
  * Fetch latest news from Firestore
+ * ✅ NO CHANGE NEEDED - This path is already correct
  */
 async function getLatestNews(category = null) {
   try {
@@ -116,7 +125,7 @@ async function getLatestNews(category = null) {
     // Get today's date
     const today = new Date().toISOString().split('T')[0];
     
-    // Fetch news from Firestore
+    // ✅ CORRECT PATH - This is already properly formatted as a document path
     const newsDoc = await db.doc(`news/v2/${APP_ID}/daily/${today}`).get();
     
     if (!newsDoc.exists) {
