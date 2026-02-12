@@ -1,16 +1,26 @@
+/**
+ * Morning Pulse - Cloud Functions Index
+ * Central export file for all Cloud Functions
+ */
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
+// Initialize Firebase Admin (only once)
 if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
+// ============================================
+// ANALYTICS FUNCTIONS (Firestore Triggers)
+// ============================================
 const { aggregateDailyStats, onArticlePublished } = require("./analyticsAggregator");
-
 exports.aggregateDailyStats = aggregateDailyStats;
 exports.onArticlePublished = onArticlePublished;
 
+// ============================================
+// STAFF MANAGEMENT (Firestore Trigger)
+// ============================================
 exports.setRoleOnStaffChange = functions.firestore
   .document('staff/{staffId}')
   .onWrite(async (change, context) => {
@@ -46,3 +56,59 @@ exports.setRoleOnStaffChange = functions.firestore
       console.error(`Error setting custom claim for ${staffId}:`, error);
     }
   });
+
+// ============================================
+// WHATSAPP BOT (HTTP Function)
+// ============================================
+const { webhook } = require('./webhook');
+exports.webhook = webhook;
+
+// ============================================
+// NEWS AGGREGATION (HTTP Function)
+// ============================================
+const { newsAggregator } = require('./newsAggregator');
+exports.newsAggregator = newsAggregator;
+
+// ============================================
+// AI PROXY (HTTP Function)
+// ============================================
+const { askPulseAIProxy } = require('./askPulseAIProxy');
+exports.askPulseAIProxy = askPulseAIProxy;
+
+// ============================================
+// UNSPLASH IMAGE PROXY (HTTP Function)
+// ============================================
+const { unsplashImage } = require('./unsplashProxy');
+exports.unsplashImage = unsplashImage;
+
+// ============================================
+// NEWSLETTER FUNCTIONS (HTTP Functions)
+// ============================================
+const { 
+  sendNewsletter, 
+  manageSubscription, 
+  sendScheduledNewsletter 
+} = require('./newsletter');
+
+exports.sendNewsletter = sendNewsletter;
+exports.manageSubscription = manageSubscription;
+exports.sendScheduledNewsletter = sendScheduledNewsletter;
+
+// ============================================
+// WRITER MANAGEMENT FUNCTIONS (HTTP Functions)
+// ============================================
+const { 
+  computeWriterMetrics, 
+  generateWriterStatements 
+} = require('./writer');
+
+exports.computeWriterMetrics = computeWriterMetrics;
+exports.generateWriterStatements = generateWriterStatements;
+
+// ============================================
+// AUTO-PUBLISH FUNCTION (HTTP Function)
+// ============================================
+const { autoPublishScheduledStories } = require('./autoPublish');
+exports.autoPublishScheduledStories = autoPublishScheduledStories;
+
+console.log('✅ All Cloud Functions exported successfully');
