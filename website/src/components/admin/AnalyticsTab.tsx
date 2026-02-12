@@ -13,6 +13,7 @@ import {
   Legend
 } from 'recharts';
 import { exportToCSV } from '../../services/csvExportService';
+import MetricCard from './widgets/MetricCard';
 import './AdminDashboard.css';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -93,8 +94,8 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         {/* Main Traffic Chart */}
         <div className="admin-card" style={{ padding: '24px' }}>
           <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>Traffic Volume (Weekly)</h3>
-          <div style={{ height: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div style={{ height: 300, minHeight: 300, width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
               <BarChart data={trafficData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
@@ -112,8 +113,8 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         {/* Content Breakdown */}
         <div className="admin-card" style={{ padding: '24px' }}>
           <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>Categorical Distribution</h3>
-          <div style={{ height: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div style={{ height: 300, minHeight: 300, width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
               <PieChart>
                 <Pie
                   data={categoryData}

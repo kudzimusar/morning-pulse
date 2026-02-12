@@ -12,6 +12,7 @@ import {
     Cell
 } from 'recharts';
 import { exportToCSV } from '../../services/csvExportService';
+import MetricCard from './widgets/MetricCard';
 import './AdminDashboard.css';
 
 const RevenueTab: React.FC = () => {
@@ -73,8 +74,8 @@ const RevenueTab: React.FC = () => {
                 {/* Revenue Growth Chart */}
                 <div className="admin-card" style={{ padding: '24px' }}>
                     <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>Monthly Revenue Growth (MRR)</h3>
-                    <div style={{ height: '300px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
+                    <div style={{ height: 300, minHeight: 300, width: '100%' }}>
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
                             <AreaChart data={revenueTrend}>
                                 <defs>
                                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
@@ -95,8 +96,8 @@ const RevenueTab: React.FC = () => {
                 {/* Subscription Mix */}
                 <div className="admin-card" style={{ padding: '24px' }}>
                     <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px' }}>Subscription Tier Mix</h3>
-                    <div style={{ height: '300px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
+                    <div style={{ height: 300, minHeight: 300, width: '100%' }}>
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
                             <BarChart data={subscriptionMix} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
                                 <XAxis type="number" hide />
