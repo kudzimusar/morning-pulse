@@ -11,7 +11,17 @@ function initializeFirebase() {
     return;
   }
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG);
+    // 🔧 FIX: Decode Base64-encoded FIREBASE_ADMIN_CONFIG before parsing
+    let configStr = process.env.FIREBASE_ADMIN_CONFIG;
+    
+    // Check if it's Base64 encoded (contains only Base64 characters)
+    if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
+      console.log("✅ Detected Base64-encoded FIREBASE_ADMIN_CONFIG, decoding...");
+      configStr = Buffer.from(configStr, 'base64').toString('utf-8');
+      console.log("✅ Successfully decoded Base64 config");
+    }
+    
+    const serviceAccount = JSON.parse(configStr);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       databaseURL: `https://gen-lang-client-0999441419.firebaseio.com`
@@ -19,10 +29,10 @@ function initializeFirebase() {
     console.log("✅ Firebase Admin initialized successfully.");
     firebaseAdminInitialized = true;
   } catch (error) {
-    console.error("❌ Parsed Firebase config from FIREBASE_ADMIN_CONFIG failed", error);
+    console.error("❌ Firebase config parsing failed:", error);
     // Fallback for local testing if needed
     if (process.env.NODE_ENV !== 'production') {
-        const serviceAccount = require("./serviceAccountKey.json"); // Ensure this path is correct for local
+        const serviceAccount = require("./serviceAccountKey.json");
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
@@ -46,7 +56,7 @@ function getGeminiApiKey() {
 async function fetchNewsForCategory(genAI, category, country = "Zimbabwe", retries = 3) {
     console.log(`🌀 Fetching news for category: ${category} in ${country}...`);
     
-    // FIXED: Use the current Gemini model instead of deprecated gemini-pro
+    // ✅ ALREADY FIXED: Using gemini-1.5-flash (not deprecated gemini-pro)
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `Provide a list of 5 recent, real, and verifiable news headlines for the category "${category}" from ${country}. Present them as a VALID JSON array where each object has "headline", "detail", "source", and "url".`;
@@ -66,12 +76,12 @@ async function fetchNewsForCategory(genAI, category, country = "Zimbabwe", retri
         } catch (error) {
             console.error(`❌ Error fetching news for category: ${category} on attempt ${i + 1}`, error);
             if (i < retries - 1) {
-                await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
+                await new Promise(res => setTimeout(res, 1000));
             }
         }
     }
     console.error(`❌ Failed to fetch news for category: ${category} after ${retries} attempts.`);
-    return []; // Return empty array on failure to avoid breaking Promise.all
+    return [];
 }
 
 exports.newsAggregator = functions
@@ -115,7 +125,7 @@ exports.newsAggregator = functions
 
             console.log(`✅ News aggregation complete. Total articles: ${allArticles.length}`);
 
-            const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const date = new Date().toISOString().split('T')[0];
             const dbPath = `news/v2/${appId}/daily/${date}`;
 
             await admin.firestore().doc(dbPath).set({
