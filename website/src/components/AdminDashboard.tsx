@@ -38,7 +38,9 @@ const WriterHub = React.lazy(() => import('./admin/WriterHub'));
 const DashboardOverviewTab = React.lazy(() => import('./admin/DashboardOverviewTab'));
 const RevenueTab = React.lazy(() => import('./admin/RevenueTab'));
 const SystemTab = React.lazy(() => import('./admin/SystemTab'));
+const QuickActionsFab = React.lazy(() => import('./admin/QuickActionsFab'));
 import { updateLastActive } from '../services/staffService';
+import './admin/AdminDashboard.css';
 import { Suspense } from 'react';
 // Constants
 const APP_ID = "morning-pulse-app";
@@ -99,26 +101,80 @@ const AdminDashboard: React.FC = () => {
 
   // UI state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Keyboard shortcuts for tab navigation
+  // Notifications (system + pending review)
+  const notifications = React.useMemo(() => {
+    const list: { id: string; type: string; title: string; message: string; time: string }[] = [];
+    if (pendingOpinions.length > 0) {
+      list.push({
+        id: 'pending-review',
+        type: 'info',
+        title: 'Pending review',
+        message: `${pendingOpinions.length} item${pendingOpinions.length === 1 ? '' : 's'} need review`,
+        time: 'Just now',
+      });
+    }
+    list.push({ id: 'system', type: 'success', title: 'System', message: 'All systems operational', time: 'Just now' });
+    return list;
+  }, [pendingOpinions.length]);
+
+  // Keyboard shortcuts: Cmd/Ctrl+K (search), Cmd/Ctrl+N (new article), Cmd/Ctrl+/ (help), 1-9 (tabs)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only trigger if no input is focused
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')) return;
+      const isInputFocused = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '');
+      const mod = e.metaKey || e.ctrlKey;
 
-      const key = e.key;
-      if (key >= '1' && key <= '9') {
-        const index = parseInt(key) - 1;
-        if (ALL_TABS[index]) {
-          setActiveTab(ALL_TABS[index].id);
-          showToast(`Switched to ${ALL_TABS[index].label}`, 'success');
+      if (e.key === 'Escape') {
+        setShowShortcutsModal(false);
+        setSearchOpen(false);
+        setNotificationPanelOpen(false);
+        return;
+      }
+
+      if (mod && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (!searchOpen) setSearchOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+        return;
+      }
+      if (mod && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        if (!isInputFocused) {
+          setActiveTab('editorial-queue');
+          showToast('Switched to Editorial Queue', 'success');
+        }
+        return;
+      }
+      if (mod && e.key === '/') {
+        e.preventDefault();
+        if (!isInputFocused) setShowShortcutsModal(true);
+        return;
+      }
+
+      if (!isInputFocused) {
+        const key = e.key;
+        if (key >= '1' && key <= '9') {
+          const index = parseInt(key) - 1;
+          if (ALL_TABS[index]) {
+            setActiveTab(ALL_TABS[index].id);
+            showToast(`Switched to ${ALL_TABS[index].label}`, 'success');
+          }
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [searchOpen]);
+
+  // Focus search input when search overlay opens
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
+  }, [searchOpen]);
 
   // Firebase instances
   const [firebaseInstances, setFirebaseInstances] = useState<{
@@ -389,6 +445,12 @@ const AdminDashboard: React.FC = () => {
     return true;
   });
 
+  const handleShortcutAction = (tabId: TabId) => {
+    setActiveTab(tabId);
+    setSearchOpen(false);
+    showToast(`Switched to ${ALL_TABS.find(t => t.id === tabId)?.label || tabId}`, 'success');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#fff', fontFamily: 'system-ui, sans-serif' }}>
       {/* Toast Notifications */}
@@ -404,6 +466,43 @@ const AdminDashboard: React.FC = () => {
       <div style={{ backgroundColor: '#000', color: '#fff', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #fff' }}>
         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>Editorial Dashboard</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            style={{ padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.1)', color: '#9ca3af', border: '1px solid #4b5563', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+            title="Search / Quick switch (⌘K)"
+          >
+            Search ⌘K
+          </button>
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setNotificationPanelOpen((o) => !o)}
+              style={{ padding: '8px', background: 'none', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '6px', position: 'relative' }}
+              title="Notifications"
+              aria-label="Notifications"
+            >
+              <span style={{ fontSize: '20px' }}>🔔</span>
+              {pendingOpinions.length > 0 && (
+                <span style={{ position: 'absolute', top: '4px', right: '4px', minWidth: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#ef4444', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{pendingOpinions.length}</span>
+              )}
+            </button>
+            {notificationPanelOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setNotificationPanelOpen(false)} aria-hidden="true" />
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '320px', maxHeight: '400px', overflowY: 'auto', backgroundColor: '#fff', color: '#111', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 9999, padding: '8px 0' }}>
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '14px' }}>Notifications</div>
+                  {notifications.map((n) => (
+                    <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', fontSize: '13px' }}>
+                      <div style={{ fontWeight: '600', color: '#111' }}>{n.title}</div>
+                      <div style={{ color: '#6b7280', marginTop: '4px' }}>{n.message}</div>
+                      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{n.time}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           <span style={{ fontSize: '14px', color: '#9ca3af' }}>{user.email} {isSuperAdmin ? '(Super Admin)' : isAdmin ? '(Admin)' : '(Editor)'}</span>
           <button onClick={handleLogout} style={{ padding: '8px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>Logout</button>
         </div>
@@ -508,6 +607,62 @@ const AdminDashboard: React.FC = () => {
           </Suspense>
         </div>
       </div>
+
+      {/* Quick Actions FAB */}
+      <Suspense fallback={null}>
+        <QuickActionsFab
+          onNewArticle={() => setActiveTab('editorial-queue')}
+          onInviteStaff={() => setActiveTab('staff-management')}
+          onGenerateReport={() => setActiveTab('analytics')}
+          onNotifications={() => setNotificationPanelOpen(true)}
+        />
+      </Suspense>
+
+      {/* Search overlay (⌘K) */}
+      {searchOpen && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 10001 }} onClick={() => setSearchOpen(false)} aria-hidden="true" />
+          <div style={{ position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 'min(420px, 90vw)', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 25px 50px rgba(0,0,0,0.25)', zIndex: 10002, padding: '16px', overflow: 'hidden' }}>
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search tabs..."
+              onKeyDown={(e) => { if (e.key === 'Escape') setSearchOpen(false); }}
+              style={{ width: '100%', padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', marginBottom: '12px' }}
+            />
+            <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleShortcutAction(tab.id)}
+                  style={{ width: '100%', padding: '10px 16px', textAlign: 'left', border: 'none', background: activeTab === tab.id ? '#f3f4f6' : 'transparent', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Shortcuts help modal (⌘/) */}
+      {showShortcutsModal && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 10001 }} onClick={() => setShowShortcutsModal(false)} aria-hidden="true" />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'min(360px, 90vw)', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 25px 50px rgba(0,0,0,0.25)', zIndex: 10002, padding: '24px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '600' }}>Keyboard shortcuts</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Search / Quick switch</span><kbd style={{ padding: '2px 8px', background: '#f3f4f6', borderRadius: '4px' }}>⌘K</kbd></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>New article</span><kbd style={{ padding: '2px 8px', background: '#f3f4f6', borderRadius: '4px' }}>⌘N</kbd></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Show shortcuts</span><kbd style={{ padding: '2px 8px', background: '#f3f4f6', borderRadius: '4px' }}>⌘/</kbd></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Switch to tab 1–9</span><kbd style={{ padding: '2px 8px', background: '#f3f4f6', borderRadius: '4px' }}>1–9</kbd></div>
+            </div>
+            <p style={{ margin: '16px 0 0 0', fontSize: '12px', color: '#6b7280' }}>Press Escape to close</p>
+          </div>
+        </>
+      )}
     </div>
   );
 };
