@@ -94,42 +94,63 @@ export const signInReader = async (email: string, password: string): Promise<Use
   }
 };
 
+const toReader = (uid: string, data: Record<string, any>): Reader => ({
+  uid,
+  email: data.email || '',
+  name: data.name || '',
+  role: 'reader',
+  preferences: {
+    categories: data.preferences?.categories || [],
+    newsletterSubscribed: data.preferences?.newsletterSubscribed || false,
+    newsletterTrialUsed: data.preferences?.newsletterTrialUsed || false,
+    newsletterTrialEndDate: data.preferences?.newsletterTrialEndDate?.toDate?.() || undefined,
+  },
+  createdAt: data.createdAt?.toDate?.() || new Date(),
+  updatedAt: data.updatedAt?.toDate?.() || undefined,
+});
+
+/** Get doc ref where reader exists - artifacts path first (AuthPage), then readers/ */
+const getReaderDocRef = async (uid: string) => {
+  const db = getDb();
+  const artifactsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid);
+  const readersRef = doc(db, 'readers', uid);
+  try {
+    const snap = await getDoc(artifactsRef);
+    if (snap.exists()) return artifactsRef;
+  } catch (_) {}
+  try {
+    const snap = await getDoc(readersRef);
+    if (snap.exists()) return readersRef;
+  } catch (_) {}
+  return artifactsRef; // default for writes (AuthPage path)
+};
+
 /**
- * Get reader by UID
+ * Get reader by UID - checks artifacts path first (AuthPage), then readers/ (legacy)
  */
 export const getReader = async (uid: string): Promise<Reader | null> => {
   const db = getDb();
-  const readerRef = doc(db, 'readers', uid);
-
+  const artifactsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'readers', uid);
   try {
-    const snap = await getDoc(readerRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      return {
-        uid: snap.id,
-        email: data.email || '',
-        name: data.name || '',
-        role: 'reader',
-        preferences: {
-          categories: data.preferences?.categories || [],
-          newsletterSubscribed: data.preferences?.newsletterSubscribed || false,
-          newsletterTrialUsed: data.preferences?.newsletterTrialUsed || false,
-          newsletterTrialEndDate: data.preferences?.newsletterTrialEndDate?.toDate?.() || undefined,
-        },
-        createdAt: data.createdAt?.toDate?.() || new Date(),
-        updatedAt: data.updatedAt?.toDate?.() || undefined,
-      };
+    const snap = await getDoc(artifactsRef);
+    if (snap.exists()) return toReader(uid, snap.data() || {});
+  } catch (e: any) {
+    if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
+      console.warn('Artifacts reader path failed:', e?.message);
     }
-    return null;
+  }
+  const readersRef = doc(db, 'readers', uid);
+  try {
+    const snap = await getDoc(readersRef);
+    if (snap.exists()) return toReader(uid, snap.data() || {});
   } catch (error: any) {
-    // Handle permission errors gracefully
     if (error.code === 'permission-denied' || error.message?.includes('permissions') || error.message?.includes('Missing or insufficient permissions')) {
       console.warn('⚠️ Reader document access denied for uid:', uid);
       return null;
     }
     console.error('Error fetching reader:', error);
-    return null; // Return null instead of throwing
   }
+  return null;
 };
 
 /**
@@ -163,14 +184,34 @@ export const getCurrentReader = async (): Promise<Reader | null> => {
 };
 
 /**
+ * Update reader profile (name)
+ */
+export const updateReaderProfile = async (
+  uid: string,
+  updates: { name?: string }
+): Promise<void> => {
+  const readerRef = await getReaderDocRef(uid);
+
+  try {
+    const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() };
+    if (updates.name !== undefined) updateData.name = updates.name.trim();
+
+    await updateDoc(readerRef, updateData);
+    console.log('✅ Reader profile updated');
+  } catch (error: any) {
+    console.error('❌ Failed to update reader profile:', error);
+    throw new Error(`Failed to update profile: ${error.message}`);
+  }
+};
+
+/**
  * Update reader preferences
  */
 export const updateReaderPreferences = async (
   uid: string,
   preferences: { categories: string[] }
 ): Promise<void> => {
-  const db = getDb();
-  const readerRef = doc(db, 'readers', uid);
+  const readerRef = await getReaderDocRef(uid);
 
   try {
     await updateDoc(readerRef, {
@@ -190,21 +231,9 @@ export const updateReaderPreferences = async (
 export const loadReaderPreferences = async (
   uid: string
 ): Promise<{ categories: string[] } | null> => {
-  const db = getDb();
-  const readerRef = doc(db, 'readers', uid);
-
-  try {
-    const snap = await getDoc(readerRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      const prefs = data.preferences || {};
-      return { categories: prefs.categories || [] };
-    }
-    return null;
-  } catch (error: any) {
-    console.error('Error loading reader preferences:', error);
-    return null;
-  }
+  const reader = await getReader(uid);
+  if (!reader) return null;
+  return { categories: reader.preferences?.categories || [] };
 };
 
 /**
@@ -214,8 +243,7 @@ export const activateNewsletterTrial = async (
   uid: string,
   email: string
 ): Promise<void> => {
-  const db = getDb();
-  const readerRef = doc(db, 'readers', uid);
+  const readerRef = await getReaderDocRef(uid);
 
   try {
     const trialEndDate = new Date();
@@ -232,6 +260,20 @@ export const activateNewsletterTrial = async (
   } catch (error: any) {
     console.error('❌ Failed to activate newsletter trial:', error);
     throw new Error(`Failed to activate trial: ${error.message}`);
+  }
+};
+
+/**
+ * Sign out the current reader
+ */
+export const signOutReader = async (): Promise<void> => {
+  const auth = getAuthInstance();
+  try {
+    await signOut(auth);
+    console.log('✅ Reader signed out');
+  } catch (error: any) {
+    console.error('❌ Sign out failed:', error);
+    throw new Error(`Failed to sign out: ${error.message}`);
   }
 };
 
