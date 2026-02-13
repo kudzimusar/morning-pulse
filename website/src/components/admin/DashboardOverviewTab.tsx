@@ -100,13 +100,37 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 </div>
             </header>
 
-            {/* Quick Stats Bar */}
-            <div className="admin-card" style={{ marginBottom: 0, padding: '12px 20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Quick Actions:</span>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                    <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('ad-management'); }} style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>📢 Manage Ads</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('newsletter-hub'); }} style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>📧 Send Newsletter</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('analytics'); }} style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>📈 View Report</a>
+            {/* Quick Actions Bar - FAB-style buttons */}
+            <div className="admin-card" style={{ marginBottom: 0, padding: '16px 24px' }}>
+                <div className="quick-actions-bar">
+                    <span className="quick-actions-bar-label">Quick Actions</span>
+                    <button
+                        type="button"
+                        className="quick-action-btn quick-action-ads"
+                        onClick={() => onNavigate('ad-management')}
+                        aria-label="Manage Ads"
+                    >
+                        <span aria-hidden="true">📢</span>
+                        Manage Ads
+                    </button>
+                    <button
+                        type="button"
+                        className="quick-action-btn quick-action-newsletter"
+                        onClick={() => onNavigate('newsletter-hub')}
+                        aria-label="Send Newsletter"
+                    >
+                        <span aria-hidden="true">📧</span>
+                        Send Newsletter
+                    </button>
+                    <button
+                        type="button"
+                        className="quick-action-btn quick-action-report"
+                        onClick={() => onNavigate('analytics')}
+                        aria-label="View Report"
+                    >
+                        <span aria-hidden="true">📈</span>
+                        View Report
+                    </button>
                 </div>
             </div>
 
