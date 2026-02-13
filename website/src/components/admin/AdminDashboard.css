@@ -99,6 +99,38 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.75;
+  color: rgba(255, 255, 255, 0.8);
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.admin-nav-item .admin-nav-icon svg {
+  stroke-width: 2;
+}
+
+/* Text stands out as primary; icons are supporting */
+.admin-nav-item span:not(.admin-nav-icon) {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+}
+
+.admin-nav-item:hover .admin-nav-icon {
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.admin-nav-item:hover span:not(.admin-nav-icon) {
+  color: #fff;
+}
+
+.admin-nav-item.active .admin-nav-icon {
+  opacity: 1;
+  color: var(--admin-primary);
+}
+
+.admin-nav-item.active span:not(.admin-nav-icon) {
+  color: #fff;
+  font-weight: 600;
 }
 
 .admin-nav-item:hover {
@@ -318,6 +350,20 @@
   overflow: hidden;
 }
 
+/* Icon/text contrast in card headers */
+.admin-card h2 svg,
+.admin-card h3 svg,
+.admin-card h4 svg {
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.admin-card h2:hover svg,
+.admin-card h3:hover svg,
+.admin-card h4:hover svg {
+  opacity: 1;
+}
+
 /* ============================================
    PHASE 7: Table Modernization
    ============================================ */
@@ -445,10 +491,28 @@
   background-color: #4338ca;
 }
 
+.admin-button-primary svg {
+  opacity: 0.9;
+}
+
+.admin-button-primary:hover svg {
+  opacity: 1;
+}
+
 .admin-button-secondary {
   background-color: white;
   border: 1px solid var(--admin-border);
   color: var(--admin-text-main);
+}
+
+.admin-button-secondary svg {
+  opacity: 0.85;
+  color: var(--admin-text-muted);
+}
+
+.admin-button-secondary:hover svg {
+  opacity: 1;
+  color: var(--admin-primary);
 }
 
 .admin-button-secondary:hover {
@@ -609,10 +673,22 @@
   gap: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
+  color: var(--admin-text-main);
+  font-weight: 500;
+}
+
+.quick-actions-fab-item span[aria-hidden] {
+  color: var(--admin-primary);
+  opacity: 0.9;
 }
 
 .quick-actions-fab-item:hover {
   background: var(--admin-bg);
+}
+
+.quick-actions-fab-item:hover span[aria-hidden] {
+  opacity: 1;
+  color: var(--admin-primary);
 }
 
 /* Quick Actions Bar - FAB-style buttons */
@@ -647,6 +723,15 @@
   text-decoration: none;
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.quick-action-btn svg {
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.quick-action-btn:hover svg {
+  opacity: 1;
 }
 
 .quick-action-btn:hover {
