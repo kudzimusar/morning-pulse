@@ -102,17 +102,20 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
           >
             <div style={{
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               marginBottom: '8px',
-              minWidth: 0
+              minWidth: 0,
+              gap: '8px'
             }}>
-              <span style={{ fontSize: '24px', marginRight: '8px', flexShrink: 0 }}>
+              <span style={{ fontSize: '24px', flexShrink: 0, lineHeight: 1 }}>
                 {priority.icon}
               </span>
               <span className="priority-label" style={{
                 fontSize: '14px',
                 fontWeight: '600',
-                color: '#111827'
+                color: '#111827',
+                flex: 1,
+                minWidth: 0
               }}>
                 {priority.label}
               </span>

@@ -101,7 +101,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </header>
 
             {/* Quick Actions Bar - FAB-style buttons */}
-            <div className="admin-card" style={{ marginBottom: 0, padding: '16px 24px' }}>
+            <div className="admin-card quick-actions-card" style={{ marginBottom: 0, padding: '16px 24px' }}>
                 <div className="quick-actions-bar">
                     <span className="quick-actions-bar-label">Quick Actions</span>
                     <button
