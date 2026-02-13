@@ -104,6 +104,7 @@ const AdminDashboard: React.FC = () => {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   // Notifications (system + pending review)
@@ -132,6 +133,7 @@ const AdminDashboard: React.FC = () => {
         setShowShortcutsModal(false);
         setSearchOpen(false);
         setNotificationPanelOpen(false);
+        setSidebarOpen(false);
         return;
       }
 
@@ -452,98 +454,101 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#fff', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Toast Notifications */}
-      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 10000, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div className="admin-shell">
+      {/* Toast Notifications - keep dynamic colors inline */}
+      <div className="admin-toast-container">
         {toasts.map(toast => (
-          <div key={toast.id} style={{ padding: '12px 20px', backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white', borderRadius: '4px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', fontSize: '0.875rem', fontWeight: '500', minWidth: '200px' }}>
+          <div key={toast.id} className="admin-toast" style={{ backgroundColor: toast.type === 'success' ? 'var(--admin-success)' : 'var(--admin-error)' }}>
             {toast.message}
           </div>
         ))}
       </div>
 
-      {/* Header */}
-      <div style={{ backgroundColor: '#000', color: '#fff', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #fff' }}>
-        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>Editorial Dashboard</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            style={{ padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.1)', color: '#9ca3af', border: '1px solid #4b5563', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
-            title="Search / Quick switch (⌘K)"
-          >
-            Search ⌘K
-          </button>
-          <div style={{ position: 'relative' }}>
-            <button
-              type="button"
-              onClick={() => setNotificationPanelOpen((o) => !o)}
-              style={{ padding: '8px', background: 'none', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '6px', position: 'relative' }}
-              title="Notifications"
-              aria-label="Notifications"
-            >
-              <span style={{ fontSize: '20px' }}>🔔</span>
-              {pendingOpinions.length > 0 && (
-                <span style={{ position: 'absolute', top: '4px', right: '4px', minWidth: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#ef4444', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{pendingOpinions.length}</span>
-              )}
-            </button>
-            {notificationPanelOpen && (
-              <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setNotificationPanelOpen(false)} aria-hidden="true" />
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '320px', maxHeight: '400px', overflowY: 'auto', backgroundColor: '#fff', color: '#111', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 9999, padding: '8px 0' }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', fontSize: '14px' }}>Notifications</div>
-                  {notifications.map((n) => (
-                    <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', fontSize: '13px' }}>
-                      <div style={{ fontWeight: '600', color: '#111' }}>{n.title}</div>
-                      <div style={{ color: '#6b7280', marginTop: '4px' }}>{n.message}</div>
-                      <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{n.time}</div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-          <span style={{ fontSize: '14px', color: '#9ca3af' }}>{user.email} {isSuperAdmin ? '(Super Admin)' : isAdmin ? '(Admin)' : '(Editor)'}</span>
-          <button onClick={handleLogout} style={{ padding: '8px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>Logout</button>
-        </div>
-      </div>
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="admin-sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+      )}
 
-      {/* Main Layout */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div className="admin-layout">
         {/* Sidebar */}
-        <div style={{ width: '240px', backgroundColor: '#f9fafb', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-          <nav style={{ padding: '16px' }}>
+        <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <nav className="admin-sidebar-nav">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  marginBottom: '4px',
-                  textAlign: 'left',
-                  backgroundColor: activeTab === tab.id ? '#000' : 'transparent',
-                  color: activeTab === tab.id ? '#fff' : '#374151',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: activeTab === tab.id ? '600' : '500',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
-                }}
+                type="button"
+                onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
+                className={`admin-nav-item ${activeTab === tab.id ? 'active' : ''}`}
+                aria-label={`Switch to ${tab.label}`}
               >
-                <span>{tab.icon}</span>
+                <span aria-hidden="true">{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             ))}
           </nav>
-        </div>
+        </aside>
 
-        {/* Content Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', backgroundColor: '#fff' }}>
+        {/* Main content area */}
+        <div className="admin-main">
+          {/* Topbar */}
+          <header className="admin-topbar">
+            <div className="admin-topbar-left">
+              <button
+                type="button"
+                className="admin-topbar-menu-btn"
+                onClick={() => setSidebarOpen((o) => !o)}
+                aria-label="Open navigation menu"
+              >
+                <span aria-hidden="true">☰</span>
+              </button>
+              <h1 className="admin-topbar-title">Editorial Dashboard</h1>
+            </div>
+            <div className="admin-topbar-right">
+              <button
+                type="button"
+                className="admin-topbar-btn"
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search tabs (⌘K)"
+                title="Search / Quick switch (⌘K)"
+              >
+                Search ⌘K
+              </button>
+              <div className="admin-topbar-notifications">
+                <button
+                  type="button"
+                  className="admin-topbar-icon-btn"
+                  onClick={() => setNotificationPanelOpen((o) => !o)}
+                  aria-label={`Notifications${pendingOpinions.length > 0 ? `, ${pendingOpinions.length} pending` : ''}`}
+                  title="Notifications"
+                >
+                  <span aria-hidden="true">🔔</span>
+                  {pendingOpinions.length > 0 && (
+                    <span className="admin-notification-badge">{pendingOpinions.length}</span>
+                  )}
+                </button>
+                {notificationPanelOpen && (
+                  <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setNotificationPanelOpen(false)} aria-hidden="true" />
+                    <div className="admin-notification-panel">
+                      <div className="admin-notification-panel-header">Notifications</div>
+                      {notifications.map((n) => (
+                        <div key={n.id} className="admin-notification-item">
+                          <div className="admin-notification-title">{n.title}</div>
+                          <div className="admin-notification-message">{n.message}</div>
+                          <div className="admin-notification-time">{n.time}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <span className="admin-topbar-user">{user.email} {isSuperAdmin ? '(Super Admin)' : isAdmin ? '(Admin)' : '(Editor)'}</span>
+              <button type="button" className="admin-topbar-logout" onClick={handleLogout}>Logout</button>
+            </div>
+          </header>
+
+          {/* Content Area */}
+          <main className="admin-content">
           <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Processing...</div>}>
             {activeTab === 'dashboard' && (
               <DashboardOverviewTab
@@ -605,8 +610,9 @@ const AdminDashboard: React.FC = () => {
               <SettingsTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
             )}
           </Suspense>
-        </div>
+        </main>
       </div>
+    </div>
 
       {/* Quick Actions FAB */}
       <Suspense fallback={null}>

@@ -61,12 +61,9 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
   ];
 
   return (
-    <div style={{
-      backgroundColor: '#f9fafb',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      padding: '24px',
-      marginBottom: '24px'
+    <div className="admin-card" style={{
+      marginBottom: 0,
+      backgroundColor: '#f9fafb'
     }}>
       <h2 style={{
         margin: '0 0 20px 0',

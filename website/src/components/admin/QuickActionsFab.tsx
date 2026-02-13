@@ -37,7 +37,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="quick-actions-fab-main"
-        aria-label="Quick actions"
+        aria-label={open ? 'Close quick actions menu' : 'Open quick actions menu'}
       >
         {open ? '✕' : '+'}
       </button>

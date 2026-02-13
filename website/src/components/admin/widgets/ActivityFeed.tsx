@@ -86,8 +86,8 @@ const ActivityFeed: React.FC = () => {
     }
 
     return (
-        <div style={{
-            backgroundColor: 'white',
+        <div className="admin-card" style={{
+            marginBottom: 0,
             border: '1px solid #e5e7eb',
             borderRadius: '12px',
             overflow: 'hidden'

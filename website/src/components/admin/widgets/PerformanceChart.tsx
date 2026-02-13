@@ -31,10 +31,8 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     height = 300
 }) => {
     return (
-        <div style={{
-            backgroundColor: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '12px',
+        <div className="admin-card" style={{
+            marginBottom: 0,
             padding: '20px',
             height: '100%',
             display: 'flex',

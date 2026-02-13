@@ -101,15 +101,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </header>
 
             {/* Quick Stats Bar */}
-            <div style={{
-                backgroundColor: '#f9fafb',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '12px 20px',
-                display: 'flex',
-                gap: '24px',
-                alignItems: 'center'
-            }}>
+            <div className="admin-card" style={{ marginBottom: 0, padding: '12px 20px' }}>
                 <span style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>Quick Actions:</span>
                 <div style={{ display: 'flex', gap: '16px' }}>
                     <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('ad-management'); }} style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>📢 Manage Ads</a>
@@ -119,11 +111,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </div>
 
             {/* KPI Section */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '20px'
-            }}>
+            <div className="kpi-grid">
                 <MetricCard
                     title="Total Readers"
                     value={stats?.totalUsers || 0}
@@ -158,11 +146,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 />
             </div>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr',
-                gap: '24px'
-            }}>
+            <div className="admin-dashboard-grid-2-1">
                 {/* Left Column: Charts & Priority */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <PerformanceChart
@@ -174,15 +158,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     />
 
                     {/* Content Status (This Week) / Pipeline */}
-                    <div style={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '12px',
-                        padding: '20px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        height: '100%'
-                    }}>
+                    <div className="admin-card" style={{ marginBottom: 0, flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '600', color: '#111827' }}>
                             Content Status (This Week)
                         </h3>
@@ -216,11 +192,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </div>
 
             {/* Engagement Section */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '24px'
-            }}>
+            <div className="admin-dashboard-grid-1-1">
                 <PerformanceChart
                     title="User Growth"
                     data={userData}
@@ -237,15 +209,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     color="#10b981"
                     height={200}
                 />
-                <div style={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    padding: '24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center'
-                }}>
+                <div className="admin-card" style={{ marginBottom: 0, justifyContent: 'center' }}>
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>System Health</h3>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                         <div style={{ flex: 1, minWidth: '120px', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>

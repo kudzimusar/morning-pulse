@@ -1,6 +1,11 @@
 /* Enterprise-Grade Admin Dashboard Styles */
+/* Enterprise SaaS + Editorial Grid Hybrid */
 
+/* ============================================
+   PHASE 2: Design Tokens
+   ============================================ */
 :root {
+  /* Legacy (keep for gradual migration) */
   --admin-primary: #4f46e5;
   --admin-success: #10b981;
   --admin-warning: #f59e0b;
@@ -10,16 +15,305 @@
   --admin-text-main: #111827;
   --admin-text-muted: #6b7280;
   --admin-border: #e5e7eb;
+
+  /* New design system tokens */
+  --admin-bg-main: #f4f6fa;
+  --admin-bg-surface: #ffffff;
+  --admin-bg-sidebar: #0f172a;
+
+  --admin-text-primary: #0f172a;
+  --admin-text-muted-new: #64748b;
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --shadow-card: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
-.admin-card {
-  background: white;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+/* ============================================
+   PHASE 1: Layout Shell
+   ============================================ */
+.admin-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--admin-bg-main);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.admin-layout {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }
 
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ============================================
+   PHASE 3: Sidebar
+   ============================================ */
+.admin-sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--admin-bg-sidebar);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+
+.admin-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.admin-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-nav-item.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-left: 3px solid var(--admin-primary);
+  margin-left: -3px;
+  padding-left: 17px;
+}
+
+.admin-sidebar-overlay {
+  display: none;
+}
+
+/* ============================================
+   PHASE 4: Topbar
+   ============================================ */
+.admin-topbar {
+  height: 64px;
+  min-height: 64px;
+  background: var(--admin-bg-surface);
+  border-bottom: 1px solid var(--admin-border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.admin-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-topbar-menu-btn {
+  display: none;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg-surface);
+  cursor: pointer;
+  font-size: 18px;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-topbar-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.admin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-topbar-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+  color: var(--admin-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-topbar-icon-btn {
+  position: relative;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--admin-error);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.admin-topbar-notifications {
+  position: relative;
+}
+
+.admin-notification-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--admin-bg-surface);
+  color: var(--admin-text-primary);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  padding: 8px 0;
+}
+
+.admin-notification-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-border);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.admin-notification-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-bg);
+  font-size: 13px;
+}
+
+.admin-notification-title {
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.admin-notification-message {
+  color: var(--admin-text-muted);
+  margin-top: 4px;
+}
+
+.admin-notification-time {
+  font-size: 11px;
+  color: var(--admin-text-muted);
+  margin-top: 4px;
+}
+
+.admin-topbar-user {
+  font-size: 14px;
+  color: var(--admin-text-muted);
+}
+
+.admin-topbar-logout {
+  min-height: 44px;
+  padding: 0 16px;
+  background-color: var(--admin-error);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ============================================
+   Toast
+   ============================================ */
+.admin-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-toast {
+  padding: 12px 20px;
+  color: white;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 200px;
+}
+
+/* ============================================
+   Content Area
+   ============================================ */
+.admin-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background-color: var(--admin-bg-main);
+}
+
+/* ============================================
+   PHASE 5: Card System
+   ============================================ */
+.admin-card {
+  background: var(--admin-bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 32px;
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+}
+
+/* ============================================
+   PHASE 7: Table Modernization
+   ============================================ */
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -28,24 +322,23 @@
 
 .admin-table th {
   text-align: left;
-  padding: 12px 16px;
-  background: var(--admin-bg);
-  border-bottom: 1px solid var(--admin-border);
-  color: var(--admin-text-muted);
-  font-weight: 600;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 11px;
+  color: var(--admin-text-muted);
+  padding: 12px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--admin-border);
 }
 
 .admin-table td {
-  padding: 16px;
-  border-bottom: 1px solid var(--admin-border);
+  padding: 14px 0;
+  border-top: 1px solid var(--admin-border);
   color: var(--admin-text-main);
 }
 
 .admin-table tr:hover {
-  background-color: #f9fafb;
+  background-color: var(--admin-bg);
 }
 
 .permission-matrix th,
@@ -190,9 +483,8 @@
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Modal Styles */
+/* Modal Styles - No backdrop-filter for Google Play compatibility */
 .modal-overlay {
-  position: 固定;
   position: fixed;
   top: 0;
   left: 0;
@@ -203,7 +495,6 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -315,4 +606,137 @@
 
 .quick-actions-fab-item:hover {
   background: var(--admin-bg);
+}
+
+/* ============================================
+   PHASE 6: KPI Grid
+   ============================================ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.admin-dashboard-grid-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.admin-dashboard-grid-1-1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .admin-dashboard-grid-2-1,
+  .admin-dashboard-grid-1-1 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   PHASE 9: Accessibility - Focus Visible
+   ============================================ */
+.admin-shell button:focus-visible,
+.admin-shell a:focus-visible,
+.admin-shell input:focus-visible,
+.admin-shell select:focus-visible,
+.admin-shell textarea:focus-visible {
+  outline: 2px solid var(--admin-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   PHASE 3.2 + 8: Mobile-First Responsive
+   ============================================ */
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 200;
+    transform: translateX(-100%);
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 199;
+  }
+
+  .admin-topbar-menu-btn {
+    display: flex;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    padding: 16px;
+  }
+
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tr {
+    display: block;
+    margin-bottom: 16px;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  .admin-table td {
+    display: block;
+    padding: 8px 0;
+    border-top: none;
+  }
+
+  .admin-table td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--admin-text-muted);
+    font-size: 12px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .admin-topbar {
+    padding: 0 16px;
+  }
+
+  .admin-topbar-user {
+    display: none;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .quick-actions-fab-main {
+    width: 52px;
+    height: 52px;
+  }
+
+  .admin-topbar-btn {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-topbar-right {
+    gap: 8px;
+  }
 }

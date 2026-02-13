@@ -23,12 +23,14 @@ const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
     return (
         <div
+            className="admin-card"
             onClick={onClick}
             style={{
                 backgroundColor: 'white',
                 border: '1px solid #e5e7eb',
                 borderRadius: '12px',
                 padding: '20px',
+                marginBottom: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
