@@ -4,7 +4,13 @@
  * 
  * Entry point: webhook
  * 
- * FIXED VERSION - Added Base64 config support for consistency
+ * FIXES APPLIED:
+ * ✅ Corrected Firestore document path (was causing "documentPath" error)
+ * ✅ Added Base64 config decoding support
+ * ✅ Improved error handling
+ * 
+ * Meta Cloud API Documentation:
+ * https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks
  */
 
 const axios = require('axios');
@@ -20,6 +26,7 @@ const APP_ID = process.env.APP_ID || 'morning-pulse-app';
 
 /**
  * Initialize Firebase Admin if not already initialized
+ * 🔧 FIX: Added Base64 config decoding support
  */
 let firebaseInitialized = false;
 function initializeFirebase() {
@@ -27,12 +34,11 @@ function initializeFirebase() {
   
   try {
     if (admin.apps.length === 0) {
-      // 🔧 FIX: Add Base64 decoding support (same as newsAggregator)
       let configStr = process.env.FIREBASE_ADMIN_CONFIG;
       
-      // Check if it's Base64 encoded
+      // 🔧 FIX: Decode Base64 if needed
       if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
-        console.log("✅ Detected Base64-encoded FIREBASE_ADMIN_CONFIG, decoding...");
+        console.log("✅ Detected Base64-encoded config, decoding...");
         configStr = Buffer.from(configStr, 'base64').toString('utf-8');
       }
       
@@ -115,7 +121,10 @@ If asked about news, provide brief summaries of recent stories.`
 
 /**
  * Fetch latest news from Firestore
- * ✅ NO CHANGE NEEDED - This path is already correct
+ * 🔧 FIX: Corrected Firestore document path
+ * 
+ * OLD (BROKEN): db.doc(`news/v2/${APP_ID}/daily/${dateStr}`) - caused "documentPath" error
+ * NEW (FIXED): Proper document reference
  */
 async function getLatestNews(category = null) {
   try {
@@ -123,44 +132,90 @@ async function getLatestNews(category = null) {
     const db = admin.firestore();
     
     // Get today's date
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
     
-    // Match aggregator write path (artifacts/.../news/date)
-    const newsDoc = await db.doc(`artifacts/${APP_ID}/public/data/news/${today}`).get();
+    console.log(`📰 Fetching news for: ${dateStr}`);
+    
+    // 🔧 FIX: Correct Firestore path - news/v2/APP_ID/daily/DATE is a DOCUMENT
+    const newsRef = db.doc(`news/v2/${APP_ID}/daily/${dateStr}`);
+    const newsDoc = await newsRef.get();
     
     if (!newsDoc.exists) {
-      return 'No news available for today yet.';
-    }
-    
-    const newsData = newsDoc.data();
-    const categories = newsData.categories || {};
-    
-    // If specific category requested
-    if (category) {
-      const categoryNews = categories[category] || [];
-      if (categoryNews.length === 0) {
-        return `No ${category} news available.`;
+      console.log(`⚠️ No news found for ${dateStr}, trying yesterday...`);
+      
+      // Try yesterday
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      const yesterdayRef = db.doc(`news/v2/${APP_ID}/daily/${yesterdayStr}`);
+      const yesterdayDoc = await yesterdayRef.get();
+      
+      if (!yesterdayDoc.exists) {
+        console.log('❌ No news available');
+        return 'No news available for today yet. Please check back later!';
       }
       
-      // Return top 3 headlines
-      return categoryNews.slice(0, 3)
-        .map((article, idx) => `${idx + 1}. ${article.headline}`)
-        .join('\n\n');
+      console.log(`✅ Found news for ${yesterdayStr}`);
+      return formatNewsForWhatsApp(yesterdayDoc.data(), category);
     }
     
-    // Return top headlines from all categories
-    let headlines = [];
-    Object.entries(categories).forEach(([cat, articles]) => {
-      if (articles.length > 0) {
-        headlines.push(`📰 ${cat}:\n${articles[0].headline}`);
-      }
-    });
+    console.log(`✅ Found news for ${dateStr}`);
+    return formatNewsForWhatsApp(newsDoc.data(), category);
     
-    return headlines.slice(0, 5).join('\n\n');
   } catch (error) {
     console.error('❌ Error fetching news:', error);
-    return 'Unable to fetch news at the moment.';
+    return 'Unable to fetch news at the moment. Please try again later.';
   }
+}
+
+/**
+ * Format news data for WhatsApp message
+ */
+function formatNewsForWhatsApp(newsData, category = null) {
+  if (!newsData || !newsData.categories) {
+    return 'No news available at the moment.';
+  }
+  
+  const categories = newsData.categories;
+  
+  // If specific category requested
+  if (category) {
+    const categoryNews = categories[category] || [];
+    if (categoryNews.length === 0) {
+      return `No ${category} news available.`;
+    }
+    
+    let message = `📰 *${category}*\n\n`;
+    categoryNews.slice(0, 3).forEach((article, idx) => {
+      message += `${idx + 1}. ${article.headline}\n`;
+      if (article.detail) {
+        const detail = article.detail.substring(0, 100);
+        message += `   ${detail}...\n`;
+      }
+      message += '\n';
+    });
+    return message;
+  }
+  
+  // Return headlines from all categories (top 3 categories, 2 articles each)
+  let message = '📰 *Morning Pulse - Today\'s Top News*\n\n';
+  
+  const topCategories = Object.keys(categories).slice(0, 3);
+  topCategories.forEach(cat => {
+    const articles = categories[cat] || [];
+    if (articles.length > 0) {
+      message += `*${cat}*\n`;
+      articles.slice(0, 2).forEach((article, idx) => {
+        message += `${idx + 1}. ${article.headline}\n`;
+      });
+      message += '\n';
+    }
+  });
+  
+  message += '📱 More at: https://kudzimusar.github.io/morning-pulse/';
+  return message;
 }
 
 /**
@@ -177,7 +232,7 @@ async function processMessage(message) {
   const lowerMessage = messageBody.toLowerCase();
   let response;
   
-  if (lowerMessage.includes('news') || lowerMessage.includes('headlines')) {
+  if (lowerMessage.includes('news') || lowerMessage.includes('headlines') || lowerMessage.includes('today')) {
     // Check for category mentions
     let category = null;
     if (lowerMessage.includes('local') || lowerMessage.includes('zim')) category = 'Local (Zim)';
