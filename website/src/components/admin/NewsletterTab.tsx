@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { Zap, Mail, Loader2, Sparkles, Check, XCircle, Eye, Download, ListOrdered, BookOpen, Clock, Calendar, BarChart3, Lightbulb, Info } from 'lucide-react';
 import { generateNewsletter, downloadNewsletter, previewNewsletter, sendNewsletter, sendScheduledNewsletter, NewsletterOptions } from '../../services/newsletterService';
 
 const NewsletterTab: React.FC = () => {
@@ -113,8 +114,8 @@ const NewsletterTab: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <h2 style={{ marginTop: 0, marginBottom: '24px', fontSize: '24px', fontWeight: '600' }}>
-        📧 Newsletter Generator
+      <h2 style={{ marginTop: 0, marginBottom: '24px', fontSize: '24px', fontWeight: '600', display: 'flex', alignItems: 'center' }}>
+        <Mail size={24} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> Newsletter Generator
       </h2>
 
       <div style={{
@@ -130,7 +131,7 @@ const NewsletterTab: React.FC = () => {
           fontWeight: '600',
           marginBottom: '8px'
         }}>
-          ℹ️ How It Works
+          <Info size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> How It Works
         </div>
         <div style={{ fontSize: '13px', color: '#0369a1', lineHeight: '1.6' }}>
           This tool auto-generates beautiful HTML email newsletters from your published content.
@@ -267,7 +268,7 @@ const NewsletterTab: React.FC = () => {
             opacity: generating ? 0.6 : 1
           }}
         >
-          {generating ? '⏳ Generating...' : '✨ Generate Newsletter'}
+          {generating ? <><Loader2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Generating...</> : <><Sparkles size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Generate Newsletter</>}
         </button>
       </div>
 
@@ -280,7 +281,7 @@ const NewsletterTab: React.FC = () => {
           backgroundColor: '#fff'
         }}>
           <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>
-            ✅ Newsletter Ready
+            <Check size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> Newsletter Ready
           </h3>
 
           <div style={{
@@ -312,7 +313,7 @@ const NewsletterTab: React.FC = () => {
                 fontWeight: '600'
               }}
             >
-              👁️ Preview in Browser
+              <Eye size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Preview in Browser
             </button>
 
             <button
@@ -328,7 +329,7 @@ const NewsletterTab: React.FC = () => {
                 fontWeight: '600'
               }}
             >
-              ⬇️ Download HTML
+              <Download size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Download HTML
             </button>
 
             <button
@@ -346,7 +347,7 @@ const NewsletterTab: React.FC = () => {
                 opacity: sending ? 0.6 : 1
               }}
             >
-              {sending ? '📧 Sending...' : '📧 Send Newsletter'}
+              {sending ? <><Mail size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Sending...</> : <><Mail size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Send Newsletter</>}
             </button>
           </div>
 
@@ -365,7 +366,7 @@ const NewsletterTab: React.FC = () => {
                 color: sendResult.success ? '#166534' : '#991b1b',
                 marginBottom: '4px'
               }}>
-                {sendResult.success ? '✅ Send Successful' : '❌ Send Failed'}
+                {sendResult.success ? <><Check size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Send Successful</> : <><XCircle size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Send Failed</>}
               </div>
               <div style={{
                 fontSize: '13px',
@@ -394,7 +395,7 @@ const NewsletterTab: React.FC = () => {
             border: '1px solid #e5e5e5'
           }}>
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px', fontWeight: '600' }}>
-              📋 Next Steps:
+              <ListOrdered size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Next Steps:
             </div>
             <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#666', lineHeight: '1.8' }}>
               <li>Preview the newsletter to ensure formatting looks good</li>
@@ -415,7 +416,7 @@ const NewsletterTab: React.FC = () => {
         marginTop: '32px'
       }}>
         <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px', fontWeight: '600' }}>
-          📚 Newsletter Best Practices
+          <BookOpen size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> Newsletter Best Practices
         </h3>
         <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#666', lineHeight: '1.8' }}>
           <li><strong>Daily Digest:</strong> Use "Today's Articles" with 5-8 articles</li>
@@ -436,7 +437,7 @@ const NewsletterTab: React.FC = () => {
         marginTop: '32px'
       }}>
         <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-          ⏰ Scheduled Newsletters
+          <Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> Scheduled Newsletters
         </h3>
 
         <div style={{
@@ -447,7 +448,7 @@ const NewsletterTab: React.FC = () => {
           marginBottom: '20px'
         }}>
           <div style={{ fontSize: '14px', color: '#0c4a6e', fontWeight: '600', marginBottom: '8px' }}>
-            ⚡ Automated Delivery
+            <Zap size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> Automated Delivery
           </div>
           <div style={{ fontSize: '13px', color: '#0369a1', lineHeight: '1.6' }}>
             These buttons send automated newsletters based on recently published content.
@@ -472,7 +473,7 @@ const NewsletterTab: React.FC = () => {
               opacity: sending ? 0.6 : 1
             }}
           >
-            {sending ? '⏳ Sending...' : '📅 Send Daily Digest'}
+            {sending ? <><Loader2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Sending...</> : <><Calendar size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Send Daily Digest</>}
           </button>
 
           <button
@@ -490,7 +491,7 @@ const NewsletterTab: React.FC = () => {
               opacity: sending ? 0.6 : 1
             }}
           >
-            {sending ? '⏳ Sending...' : '📊 Send Weekly Digest'}
+            {sending ? <><Loader2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Sending...</> : <><BarChart3 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Send Weekly Digest</>}
           </button>
         </div>
 
@@ -502,7 +503,7 @@ const NewsletterTab: React.FC = () => {
           backgroundColor: '#f9fafb',
           borderRadius: '4px'
         }}>
-          <strong>💡 Pro Tip:</strong> Set up Google Cloud Scheduler to call these endpoints automatically:
+          <strong><Lightbulb size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Pro Tip:</strong> Set up Google Cloud Scheduler to call these endpoints automatically:
           <br />• Daily: Every day at 6:00 AM
           <br />• Weekly: Every Monday at 8:00 AM
           <br />

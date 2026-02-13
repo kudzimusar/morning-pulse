@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { DollarSign } from 'lucide-react';
 import { 
   getAllPaymentStatements, 
   updatePaymentStatementStatus,
@@ -509,7 +510,7 @@ const WriterPaymentsAdmin: React.FC<WriterPaymentsAdminProps> = ({ userRoles }) 
                           }}
                           title="Mark as paid"
                         >
-                          💰 Mark Paid
+                          <DollarSign size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /> Mark Paid
                         </button>
                       )}
                       {statement.status === 'paid' && statement.paidAt && (

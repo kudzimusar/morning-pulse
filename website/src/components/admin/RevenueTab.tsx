@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { DollarSign, Users, Megaphone, TrendingDown } from 'lucide-react';
 import {
     AreaChart,
     Area,
@@ -62,10 +63,10 @@ const RevenueTab: React.FC = () => {
 
             {/* KPI Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
-                <MetricCard title="MTD Revenue" value={`$${(metrics?.mtdRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="neutral" icon="💰" color="#10b981" />
-                <MetricCard title="Active Subs" value={(metrics?.activeSubs || 0).toLocaleString()} trend="neutral" icon="👥" color="#f59e0b" />
-                <MetricCard title="Ad Impressions" value={(metrics?.adImpressions || 0).toLocaleString()} trend="neutral" icon="📢" color="#3b82f6" />
-                <MetricCard title="Ad Revenue" value={`$${(metrics?.adRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="neutral" icon="📉" color="#8b5cf6" />
+                <MetricCard title="MTD Revenue" value={`$${(metrics?.mtdRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="neutral" icon={<DollarSign size={18} />} color="#10b981" />
+                <MetricCard title="Active Subs" value={(metrics?.activeSubs || 0).toLocaleString()} trend="neutral" icon={<Users size={18} />} color="#f59e0b" />
+                <MetricCard title="Ad Impressions" value={(metrics?.adImpressions || 0).toLocaleString()} trend="neutral" icon={<Megaphone size={18} />} color="#3b82f6" />
+                <MetricCard title="Ad Revenue" value={`$${(metrics?.adRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="neutral" icon={<TrendingDown size={18} />} color="#8b5cf6" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
@@ -115,7 +116,7 @@ const RevenueTab: React.FC = () => {
             {/* Ad Inventory Performance */}
             <div className="admin-card" style={{ padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px' }}>📢 Advertising Hub Performance</h3>
+                    <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Megaphone size={18} aria-hidden /> Advertising Hub Performance</h3>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
                     <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>

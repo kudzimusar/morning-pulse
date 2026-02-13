@@ -42,6 +42,23 @@ const QuickActionsFab = React.lazy(() => import('./admin/QuickActionsFab'));
 import { updateLastActive } from '../services/staffService';
 import './admin/AdminDashboard.css';
 import { Suspense } from 'react';
+import {
+  LayoutDashboard,
+  FileEdit,
+  CheckCircle,
+  Users,
+  PenLine,
+  User,
+  Megaphone,
+  DollarSign,
+  TrendingUp,
+  Zap,
+  Mail,
+  Image as ImageIcon,
+  Plug,
+  Settings,
+  Bell
+} from 'lucide-react';
 // Constants
 const APP_ID = "morning-pulse-app";
 
@@ -62,21 +79,23 @@ interface ToastMessage {
 
 type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'subscriber-management' | 'ad-management' | 'analytics' | 'revenue' | 'system-health' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
 
+const ICON_SIZE = 16;
+
 const ALL_TABS = [
-  { id: 'dashboard' as TabId, label: 'Command Center', icon: '🏰' },
-  { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: '📝' },
-  { id: 'published-content' as TabId, label: 'Published Content', icon: '✅' },
-  { id: 'staff-management' as TabId, label: 'Staff Management', icon: '👥', adminOnly: true },
-  { id: 'writer-hub' as TabId, label: 'Writer Management', icon: '✍️', adminOnly: true },
-  { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: '👤', adminOnly: true },
-  { id: 'ad-management' as TabId, label: 'Ad Management', icon: '📢', adminOnly: true },
-  { id: 'revenue' as TabId, label: 'Revenue Dashboard', icon: '💰', superAdminOnly: true },
-  { id: 'analytics' as TabId, label: 'Analytics Hub', icon: '📈', superAdminOnly: true },
-  { id: 'system-health' as TabId, label: 'System Health', icon: '⚡', superAdminOnly: true },
-  { id: 'newsletter-hub' as TabId, label: 'Newsletter Hub', icon: '📧', superAdminOnly: true },
-  { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: '🖼️', superAdminOnly: true },
-  { id: 'integrations' as TabId, label: 'Integrations', icon: '🔌', adminOnly: true },
-  { id: 'settings' as TabId, label: 'Settings', icon: '⚙️' },
+  { id: 'dashboard' as TabId, label: 'Command Center', icon: <LayoutDashboard size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: false },
+  { id: 'editorial-queue' as TabId, label: 'Editorial Queue', icon: <FileEdit size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: false },
+  { id: 'published-content' as TabId, label: 'Published Content', icon: <CheckCircle size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: false },
+  { id: 'staff-management' as TabId, label: 'Staff Management', icon: <Users size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'writer-hub' as TabId, label: 'Writer Management', icon: <PenLine size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: <User size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'ad-management' as TabId, label: 'Ad Management', icon: <Megaphone size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'revenue' as TabId, label: 'Revenue Dashboard', icon: <DollarSign size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
+  { id: 'analytics' as TabId, label: 'Analytics Hub', icon: <TrendingUp size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
+  { id: 'system-health' as TabId, label: 'System Health', icon: <Zap size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
+  { id: 'newsletter-hub' as TabId, label: 'Newsletter Hub', icon: <Mail size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
+  { id: 'image-compliance' as TabId, label: 'Image Compliance', icon: <ImageIcon size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
+  { id: 'integrations' as TabId, label: 'Integrations', icon: <Plug size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'settings' as TabId, label: 'Settings', icon: <Settings size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: false },
 ];
 
 const AdminDashboard: React.FC = () => {
@@ -481,7 +500,7 @@ const AdminDashboard: React.FC = () => {
                 className={`admin-nav-item ${activeTab === tab.id ? 'active' : ''}`}
                 aria-label={`Switch to ${tab.label}`}
               >
-                <span aria-hidden="true">{tab.icon}</span>
+                <span className="admin-nav-icon" aria-hidden="true">{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -521,7 +540,7 @@ const AdminDashboard: React.FC = () => {
                   aria-label={`Notifications${pendingOpinions.length > 0 ? `, ${pendingOpinions.length} pending` : ''}`}
                   title="Notifications"
                 >
-                  <span aria-hidden="true">🔔</span>
+                  <Bell size={20} aria-hidden />
                   {pendingOpinions.length > 0 && (
                     <span className="admin-notification-badge">{pendingOpinions.length}</span>
                   )}

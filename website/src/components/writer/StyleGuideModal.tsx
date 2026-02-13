@@ -7,6 +7,7 @@
  */
 
 import React, { useState } from 'react';
+import { FileEdit } from 'lucide-react';
 
 interface StyleGuideModalProps {
   isOpen: boolean;
@@ -85,9 +86,11 @@ const StyleGuideModal: React.FC<StyleGuideModalProps> = ({
               fontSize: '1.25rem', 
               fontWeight: '700', 
               color: '#1f2937',
-              marginBottom: '0.25rem'
+              marginBottom: '0.25rem',
+              display: 'flex',
+              alignItems: 'center'
             }}>
-              📝 Editorial Style Guide
+              <FileEdit size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> Editorial Style Guide
             </h2>
             <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
               {writerName ? `Welcome, ${writerName}!` : ''} Please review and acknowledge our editorial standards.

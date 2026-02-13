@@ -27,7 +27,6 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
       label: 'Pending Approval',
       count: pendingCount,
       color: '#ef4444',
-      icon: '🔴',
       description: 'Blocking publication',
       onClick: () => onNavigate('editorial-queue'),
     },
@@ -36,7 +35,6 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
       label: 'Image Issues',
       count: imageIssuesCount,
       color: '#f97316',
-      icon: '🟠',
       description: 'Awaiting image replacement',
       onClick: () => onNavigate('image-compliance'),
     },
@@ -45,7 +43,6 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
       label: 'Scheduled Today',
       count: scheduledCount,
       color: '#eab308',
-      icon: '🟡',
       description: 'Ready to publish',
       onClick: () => onNavigate('editorial-queue'),
     },
@@ -54,7 +51,6 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
       label: 'Recently Published',
       count: recentlyPublishedCount,
       color: '#10b981',
-      icon: '🟢',
       description: 'Last 24 hours',
       onClick: () => onNavigate('published-content'),
     },
@@ -107,9 +103,11 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
               minWidth: 0,
               gap: '8px'
             }}>
-              <span style={{ fontSize: '24px', flexShrink: 0, lineHeight: 1 }}>
-                {priority.icon}
-              </span>
+              <span
+                className="priority-status-dot"
+                style={{ backgroundColor: priority.color, flexShrink: 0 }}
+                aria-hidden
+              />
               <span className="priority-label" style={{
                 fontSize: '14px',
                 fontWeight: '600',

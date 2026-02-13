@@ -50,6 +50,7 @@ import {
   notifyWriterArticleReturned,
   notifyWriterArticleClaimed
 } from '../../services/notificationService';
+import { PenLine, FileEdit, Clock, Loader2, Calendar, Lock, MessageCircle, RotateCcw, Flame, ArrowUp, ArrowDown } from 'lucide-react';
 // Temporarily disabled due to Firebase initialization issues
 // import InlineComments from '../InlineComments';
 
@@ -1183,7 +1184,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             gap: '8px'
           }}
         >
-          ✏️ Create New Editorial
+          <PenLine size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Create New Editorial
         </button>
       </div>
 
@@ -1198,7 +1199,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           border: '1px solid #e5e5e5'
         }}>
           <div style={{ marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-            ⏳ Connecting to Editorial Queue...
+            <Loader2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Connecting to Editorial Queue...
           </div>
           <div style={{ fontSize: '12px', color: '#6b7280' }}>
             Retrying connection if needed...
@@ -1249,7 +1250,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <span>📝 Drafts</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FileEdit size={14} aria-hidden /> Drafts</span>
                 <span style={{
                   backgroundColor: '#e5e7eb',
                   padding: '2px 8px',
@@ -1330,7 +1331,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <span>⏳ Pending Review</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} aria-hidden /> Pending Review</span>
                 <span style={{
                   backgroundColor: '#fde68a',
                   padding: '2px 8px',
@@ -1387,7 +1388,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         display: 'inline-block',
                         marginBottom: '6px'
                       }}>
-                        {priority === 'urgent' ? '🔥 ' : priority === 'high' ? '⬆️ ' : '⬇️ '}{priority}
+                        {priority === 'urgent' ? <><Flame size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></> : priority === 'high' ? <><ArrowUp size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></> : <><ArrowDown size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></>}{priority}
                       </div>
                     )}
                     <div style={{
@@ -1413,9 +1414,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       gap: '8px',
                       alignItems: 'center'
                     }}>
-                      <span>⏱️ {elapsedTime} waiting</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={10} aria-hidden /> {elapsedTime} waiting</span>
                       {returnCount > 0 && (
-                        <span style={{ color: '#f59e0b' }}>↩️ {returnCount}x returned</span>
+                        <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><RotateCcw size={10} aria-hidden /> {returnCount}x returned</span>
                       )}
                     </div>
                     {opinion.editorNotes && (
@@ -1427,7 +1428,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         fontSize: '10px',
                         color: '#92400e'
                       }}>
-                        💬 Has feedback
+                        <MessageCircle size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /> Has feedback
                       </div>
                     )}
                   </div>
@@ -1450,7 +1451,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <span>✍️ In Edit</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><PenLine size={14} aria-hidden /> In Edit</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {/* Sprint 5: Manual auto-publish trigger button */}
                   <button
@@ -1470,7 +1471,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       gap: '4px'
                     }}
                   >
-                    {triggeringAutoPublish ? '⏳' : '🕐'} Check Scheduled
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{triggeringAutoPublish ? <Loader2 size={12} aria-hidden /> : <Clock size={12} aria-hidden />} Check Scheduled</span>
                   </button>
                   <span style={{
                     backgroundColor: '#93c5fd',
@@ -1527,7 +1528,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         alignItems: 'center',
                         gap: '6px'
                       }}>
-                        {isScheduled && <span style={{ fontSize: '14px' }}>📅</span>}
+                        {isScheduled && <span style={{ fontSize: '14px', display: 'inline-flex' }}><Calendar size={14} aria-hidden /></span>}
                         {opinion.headline || 'Untitled'}
                       </div>
                       <div style={{
@@ -1551,7 +1552,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                           marginBottom: '6px',
                           fontWeight: '600'
                         }}>
-                          📅 Goes live: {opinion.scheduledFor.toLocaleString()}
+                          <Calendar size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /> Goes live: {opinion.scheduledFor.toLocaleString()}
                         </div>
                       )}
                       <div style={{
@@ -1568,7 +1569,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                           borderRadius: '2px',
                           color: isClaimedByMe ? '#065f46' : '#1e40af'
                         }}>
-                          {isClaimedByMe ? '✓ You' : `🔒 ${opinion.claimedByName || 'Claimed'}`}
+                          {isClaimedByMe ? '✓ You' : <><Lock size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden />{opinion.claimedByName || 'Claimed'}</>}
                         </span>
                         {isScheduled && (
                           <span style={{
@@ -1578,7 +1579,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                             borderRadius: '2px',
                             color: '#4338ca'
                           }}>
-                            ⏰ Scheduled
+                            <Clock size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /> Scheduled
                           </span>
                         )}
                       </div>
@@ -1626,7 +1627,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   fontWeight: '600'
                 }}
               >
-                ✏️ Create New Editorial
+                <PenLine size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Create New Editorial
               </button>
             </div>
           ) : (
@@ -1639,7 +1640,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
               {isNewArticle ? (
                 <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '2px solid #000' }}>
                   <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#000' }}>
-                    ✏️ New Editorial Article
+                    <PenLine size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> New Editorial Article
                   </h3>
                   <button
                     onClick={handleCancelNewArticle}
@@ -1695,7 +1696,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                             backgroundColor: '#fde68a',
                             color: '#92400e'
                           }}>
-                            🔒 Claimed by {selectedOpinion.claimedByName}
+                            <Lock size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} aria-hidden /> Claimed by {selectedOpinion.claimedByName}
                           </span>
                         )}
                       </div>
@@ -1816,7 +1817,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         color: '#6b7280',
                         fontWeight: '400'
                       }}>
-                        ⏱️ In review for {getElapsedTime((selectedOpinion as any).editorialMeta?.firstResponseAt)}
+                        <Clock size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} aria-hidden /> In review for {getElapsedTime((selectedOpinion as any).editorialMeta?.firstResponseAt)}
                       </span>
                     )}
                   </label>
@@ -1835,10 +1836,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         backgroundColor: savingPriority ? '#f3f4f6' : '#fff'
                       }}
                     >
-                      <option value="low">⬇️ Low</option>
+                      <option value="low">Low</option>
                       <option value="normal">➡️ Normal</option>
-                      <option value="high">⬆️ High</option>
-                      <option value="urgent">🔥 Urgent</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
                     </select>
                     {savingPriority && (
                       <span style={{ fontSize: '12px', color: '#6b7280' }}>Saving...</span>
@@ -1853,7 +1854,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       padding: '4px 8px',
                       borderRadius: '4px'
                     }}>
-                      ↩️ This story has been returned {(selectedOpinion as any).editorialMeta.returnCount} time(s)
+                      <RotateCcw size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} aria-hidden /> This story has been returned {(selectedOpinion as any).editorialMeta.returnCount} time(s)
                     </div>
                   )}
                 </div>
@@ -2110,7 +2111,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
                       }}>
-                        ✍️ Your Edit
+                        <PenLine size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} aria-hidden /> Your Edit
                       </div>
                       <RichTextEditor
                         value={editedBody}
@@ -2217,7 +2218,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         marginLeft: 'auto'
                       }}
                     >
-                      {saving ? 'Publishing...' : '📝 Post to Website'}
+                      {saving ? 'Publishing...' : <><FileEdit size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Post to Website</>}
                     </button>
                   </>
                 ) : selectedOpinion?.status === 'pending' ? (
@@ -2344,7 +2345,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                             marginLeft: 'auto'
                           }}
                         >
-                          📅 Schedule
+                          <Calendar size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Schedule
                         </button>
                         
                         <button
@@ -2378,7 +2379,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                           borderRadius: '4px'
                         }}>
                           <span style={{ fontSize: '14px', fontWeight: '600', color: '#4338ca' }}>
-                            📅 Schedule for:
+                            <Calendar size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Schedule for:
                           </span>
                           <input
                             type="date"

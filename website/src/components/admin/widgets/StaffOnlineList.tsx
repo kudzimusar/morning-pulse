@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Users } from 'lucide-react';
 import {
     collection,
     query,
@@ -67,8 +68,8 @@ const StaffOnlineList: React.FC = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827' }}>
-                    👥 Staff Presence
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Users size={18} aria-hidden /> Staff Presence
                 </h3>
                 <span style={{
                     fontSize: '11px',

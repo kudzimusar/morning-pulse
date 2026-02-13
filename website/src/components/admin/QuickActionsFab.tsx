@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FileEdit, Users, TrendingUp, Bell } from 'lucide-react';
 
 interface QuickActionsFabProps {
   onNewArticle: () => void;
@@ -20,16 +21,16 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({
       {open && (
         <div className="quick-actions-fab-menu">
           <button type="button" onClick={() => { onNewArticle(); setOpen(false); }} className="quick-actions-fab-item">
-            <span>📝</span> New article
+            <span className="inline-flex items-center justify-center w-4 h-4 mr-1" aria-hidden><FileEdit size={16} /></span> New article
           </button>
           <button type="button" onClick={() => { onInviteStaff(); setOpen(false); }} className="quick-actions-fab-item">
-            <span>👥</span> Invite staff
+            <span className="inline-flex items-center justify-center w-4 h-4 mr-1" aria-hidden><Users size={16} /></span> Invite staff
           </button>
           <button type="button" onClick={() => { onGenerateReport(); setOpen(false); }} className="quick-actions-fab-item">
-            <span>📈</span> Generate report
+            <span className="inline-flex items-center justify-center w-4 h-4 mr-1" aria-hidden><TrendingUp size={16} /></span> Generate report
           </button>
           <button type="button" onClick={() => { onNotifications(); setOpen(false); }} className="quick-actions-fab-item">
-            <span>🔔</span> Notifications
+            <span className="inline-flex items-center justify-center w-4 h-4 mr-1" aria-hidden><Bell size={16} /></span> Notifications
           </button>
         </div>
       )}

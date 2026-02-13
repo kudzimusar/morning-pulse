@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Newspaper, Eye, TrendingUp, Flame } from 'lucide-react';
 import { StaffMember } from '../../../types';
 import type { StaffRole } from '../../../types';
 import { getStaffMetrics, StaffMetrics } from '../../../services/staffMetricsService';
@@ -39,10 +40,10 @@ const StaffProfileModal: React.FC<StaffProfileModalProps> = ({ member, onClose }
     }, [member.uid]);
 
     const stats = [
-        { title: 'Articles', value: metrics?.articlesPublished || 0, icon: '📰', color: '#3b82f6' },
-        { title: 'Total Views', value: (metrics?.totalViews || 0).toLocaleString(), icon: '👁️', color: '#10b981' },
-        { title: 'Avg Views', value: metrics?.avgViewsPerArticle || 0, icon: '📈', color: '#f59e0b' },
-        { title: 'Engagement', value: `${metrics?.totalEngagement || 0}%`, icon: '🔥', color: '#8b5cf6' },
+        { title: 'Articles', value: metrics?.articlesPublished || 0, Icon: Newspaper, color: '#3b82f6' },
+        { title: 'Total Views', value: (metrics?.totalViews || 0).toLocaleString(), Icon: Eye, color: '#10b981' },
+        { title: 'Avg Views', value: metrics?.avgViewsPerArticle || 0, Icon: TrendingUp, color: '#f59e0b' },
+        { title: 'Engagement', value: `${metrics?.totalEngagement || 0}%`, Icon: Flame, color: '#8b5cf6' },
     ];
 
     const roles = member.roles?.length ? member.roles : [member.role].filter(Boolean);
@@ -73,7 +74,7 @@ const StaffProfileModal: React.FC<StaffProfileModalProps> = ({ member, onClose }
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
                                 {stats.map(stat => (
                                     <div key={stat.title} className="mini-metric-card">
-                                        <span style={{ fontSize: '20px' }}>{stat.icon}</span>
+                                        <span style={{ fontSize: '20px', display: 'flex', alignItems: 'center' }}><stat.Icon size={20} style={{ color: stat.color }} aria-hidden /></span>
                                         <div>
                                             <div style={{ fontSize: '12px', color: '#6b7280' }}>{stat.title}</div>
                                             <div style={{ fontSize: '18px', fontWeight: '700' }}>{stat.value}</div>

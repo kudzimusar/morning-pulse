@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { FileEdit, Users, Shield, DollarSign, Newspaper, Megaphone, Mail, TrendingUp } from 'lucide-react';
 import MetricCard from './widgets/MetricCard';
 import ActivityFeed from './widgets/ActivityFeed';
 import StaffOnlineList from './widgets/StaffOnlineList';
@@ -88,14 +89,16 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                         className="admin-button admin-button-primary"
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px' }}
                     >
-                        <span>📝</span> Create Article
+                        <FileEdit size={16} aria-hidden />
+                        Create Article
                     </button>
                     <button
                         onClick={() => onNavigate('staff-management')}
                         className="admin-button admin-button-secondary"
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px' }}
                     >
-                        <span>👥</span> Invite Staff
+                        <Users size={16} aria-hidden />
+                        Invite Staff
                     </button>
                 </div>
             </header>
@@ -110,7 +113,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                         onClick={() => onNavigate('ad-management')}
                         aria-label="Manage Ads"
                     >
-                        <span aria-hidden="true">📢</span>
+                        <Megaphone size={16} aria-hidden />
                         Manage Ads
                     </button>
                     <button
@@ -119,7 +122,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                         onClick={() => onNavigate('newsletter-hub')}
                         aria-label="Send Newsletter"
                     >
-                        <span aria-hidden="true">📧</span>
+                        <Mail size={16} aria-hidden />
                         Send Newsletter
                     </button>
                     <button
@@ -128,7 +131,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                         onClick={() => onNavigate('analytics')}
                         aria-label="View Report"
                     >
-                        <span aria-hidden="true">📈</span>
+                        <TrendingUp size={16} aria-hidden />
                         View Report
                     </button>
                 </div>
@@ -140,7 +143,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     title="Total Readers"
                     value={stats?.totalUsers || 0}
                     trend="neutral"
-                    icon="👥"
+                    icon={<Users size={18} />}
                     color="#3b82f6"
                     description="Global audience reach"
                 />
@@ -148,7 +151,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     title="Active Staff"
                     value={stats?.activeStaff || 0}
                     trend="neutral"
-                    icon="🛡️"
+                    icon={<Shield size={18} />}
                     color="#8b5cf6"
                     description="Editorial team strength"
                 />
@@ -156,7 +159,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     title="Revenue MTD"
                     value={`$${(stats?.revenueMTD || 0).toLocaleString()}`}
                     trend="neutral"
-                    icon="💰"
+                    icon={<DollarSign size={18} />}
                     color="#10b981"
                     description="Subscription & Ad income"
                 />
@@ -164,7 +167,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     title="Published"
                     value={stats?.publishedContent || 0}
                     trend="neutral"
-                    icon="📰"
+                    icon={<Newspaper size={18} />}
                     color="#f59e0b"
                     description="Articles live"
                 />

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, Loader2, ArrowUp, ExternalLink, Clock, BookOpen } from 'lucide-react';
+import { Send, Sparkles, Loader2, ArrowUp, ExternalLink, Clock, BookOpen, Newspaper, MessageCircle } from 'lucide-react';
 import { generateAskPulseAIResponseStream, convertToChatHistory, formatResponseWithCitations, resetConversation } from '../services/askPulseAIService';
 import { subscribeToPublishedOpinions } from '../services/opinionsService';
 import { NewsStory, Opinion } from '../../types';
@@ -799,7 +799,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
           e.currentTarget.style.transform = 'translateX(0)';
         }}
       >
-        <div style={{ fontSize: '2rem', flexShrink: 0 }}>💭</div>
+        <div style={{ fontSize: '2rem', flexShrink: 0, display: 'flex', alignItems: 'center' }}><MessageCircle size={32} aria-hidden /></div>
         <div style={{ flex: 1 }}>
           <div style={{
             fontSize: '0.75rem',
@@ -996,9 +996,11 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                             color: '#6b7280',
                             marginBottom: '12px',
                             textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
+                            letterSpacing: '0.5px',
+                            display: 'flex',
+                            alignItems: 'center'
                           }}>
-                            📰 Related Articles ({message.articles.length})
+                            <Newspaper size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Related Articles ({message.articles.length})
                           </div>
                           <div style={{
                             display: 'flex',
@@ -1027,7 +1029,7 @@ const AskPulseAI: React.FC<AskPulseAIProps> = ({ onClose, newsData }) => {
                             marginBottom: '8px',
                             textTransform: 'uppercase'
                           }}>
-                            💭 Related Opinions
+                            <MessageCircle size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Related Opinions
                           </div>
                           {message.opinions.map((opinion, idx) => (
                             <OpinionCard key={idx} opinion={opinion} />

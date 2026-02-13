@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Clock, DoorOpen, BookOpen, Link2, Trophy, PenLine } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -75,7 +76,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           const authors = (summary.topAuthors || []).slice(0, 5).map((a: any, i: number) => ({
             name: a.authorName,
             avg: a.avgViewsPerArticle || 0,
-            rank: i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}th`,
+            rank: i === 0 ? '1st' : i === 1 ? '2nd' : i === 2 ? '3rd' : `${i + 1}th`,
           }));
           setWriterData(authors);
         } else {
@@ -114,10 +115,10 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
-        <MetricCard title="Avg Session" value={kpis.avgSession} trend="neutral" icon="⏱️" color="#3b82f6" />
-        <MetricCard title="Bounce Rate" value={`${kpis.bounceRate.toFixed(1)}%`} trend="neutral" icon="🚪" color="#ef4444" />
-        <MetricCard title="Pages/Session" value={kpis.pagesPerSession} trend="neutral" icon="📖" color="#10b981" />
-        <MetricCard title="Total Views" value={kpis.totalShares.toLocaleString()} trend="neutral" icon="🔗" color="#8b5cf6" />
+        <MetricCard title="Avg Session" value={kpis.avgSession} trend="neutral" icon={<Clock size={18} />} color="#3b82f6" />
+        <MetricCard title="Bounce Rate" value={`${kpis.bounceRate.toFixed(1)}%`} trend="neutral" icon={<DoorOpen size={18} />} color="#ef4444" />
+        <MetricCard title="Pages/Session" value={kpis.pagesPerSession} trend="neutral" icon={<BookOpen size={18} />} color="#10b981" />
+        <MetricCard title="Total Views" value={kpis.totalShares.toLocaleString()} trend="neutral" icon={<Link2 size={18} />} color="#8b5cf6" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
@@ -171,7 +172,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <div className="admin-card">
           <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '16px' }}>🏆 Top Articles</h3>
+            <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Trophy size={18} aria-hidden /> Top Articles</h3>
             <button className="admin-button admin-button-secondary" style={{ fontSize: '12px' }} onClick={handleExport}>Export</button>
           </div>
           <table className="admin-table">
@@ -196,7 +197,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
         <div className="admin-card">
           <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '16px' }}>✍️ Writer Efficiency (ROI)</h3>
+            <h3 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><PenLine size={18} aria-hidden /> Writer Efficiency (ROI)</h3>
             <button className="admin-button admin-button-secondary" style={{ fontSize: '12px' }}>Details</button>
           </div>
           <table className="admin-table">

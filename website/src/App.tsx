@@ -84,6 +84,7 @@ import AdvertiserDashboard from './components/AdvertiserDashboard';
 import AdSubmissionForm from './components/AdSubmissionForm';
 import JoinPage from './components/JoinPage';
 import AuthPage from './components/AuthPage';
+import ReaderProfilePage from './components/ReaderProfilePage';
 // Import admin auth service (will only be used when admin mode is enabled)
 import {
   getCurrentEditor,
@@ -98,6 +99,7 @@ import { NewsStory } from '../types';
 import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
 import { initAnalytics, trackPageView, trackArticleView } from './services/analyticsService';
 import { setupScrollMemory, saveScrollPosition, restoreScrollPosition } from './utils/scrollMemory';
+import { Newspaper } from 'lucide-react';
 
 // Helper function to get page title for analytics
 const getPageTitle = (hash: string): string => {
@@ -116,6 +118,8 @@ const getPageTitle = (hash: string): string => {
     'auth': 'Morning Pulse - Sign In',
     'signin': 'Morning Pulse - Sign In',
     'signup': 'Morning Pulse - Sign Up',
+    'profile': 'Morning Pulse - Profile',
+    'preferences': 'Morning Pulse - Profile & Preferences',
     'writer-register': 'Morning Pulse - Writer Registration',
     'writer-login': 'Morning Pulse - Writer Login',
     'writer-dashboard': 'Morning Pulse - Writer Dashboard',
@@ -429,6 +433,11 @@ const App: React.FC = () => {
         setView('public');
         setShowAdminLogin(false);
         console.log('🔗 [ROUTING] Auth page detected, hash:', hash);
+      } else if (path === 'profile' || path === 'preferences') {
+        // Profile & preferences (combined on one page)
+        setCurrentPage('profile');
+        setMobileActiveTab('latest');
+        setView('public');
       } else if (path === 'join' || hash.startsWith('join?')) {
         // ✅ NEW: Staff invitation join page
         // Handle both #join?token=... and #join
@@ -570,57 +579,82 @@ const App: React.FC = () => {
     };
   }, [isAdminMode]);
 
-  // ✅ NEW: Listen for reader authentication state changes
+  // ✅ Unified: Listen for auth state + run anonymous sign-in ONLY after first auth emission
   useEffect(() => {
     const checkReaderAuth = async () => {
       try {
         const { getCurrentReader } = await import('./services/readerService');
-        const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+        let authReady = false;
 
-        const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-          console.log('🔄 Auth state changed:', {
-            hasUser: !!user,
-            isAnonymous: user?.isAnonymous,
-            uid: user?.uid?.substring(0, 8) + '...'
-          });
+          if (!authReady) {
+            authReady = true;
+            // First emission: Firebase has restored persistence (or confirmed no user)
+            // ONLY sign in anonymously when there is NO user (don't overwrite existing sessions)
+            if (!user) {
+              const hash = window.location.hash.replace('#', '');
+              const pathname = window.location.pathname;
+              const isPublicRoute = (hash === '' || hash === 'news' || hash === 'opinion' || hash.startsWith('opinion/') || hash === 'profile' || hash === 'preferences') &&
+                (pathname === '/' || pathname === '/morning-pulse' || pathname === '/morning-pulse/');
+              const isAdminRoute = hash === 'admin' || hash === 'dashboard' || pathname?.includes('/admin');
+
+              if (isPublicRoute && !isAdminRoute) {
+                try {
+                  await signInAnonymously(auth);
+                  console.log('✅ App: Anonymous auth for guest (after auth ready)');
+                } catch (err: any) {
+                  if (err?.code !== 'auth/operation-not-allowed') {
+                    console.warn('Anonymous auth failed:', err);
+                  }
+                }
+              }
+              return; // Anonymous sign-in will trigger another auth state change
+            }
+          }
+
+          console.log('🔄 Auth state changed:', { hasUser: !!user, isAnonymous: user?.isAnonymous });
 
           if (user && !user.isAnonymous) {
-            // Check if user is a reader
             try {
-              console.log('🔍 Checking if user is a reader...');
               const reader = await getCurrentReader();
               if (reader) {
-                console.log('✅ User is a reader:', reader.name, reader.email);
                 setIsReaderAuthenticated(true);
-                setReaderInfo({
-                  name: reader.name,
-                  email: reader.email
-                });
-                // If user doesn't have staff role, ensure they have reader role
+                setReaderInfo({ name: reader.name, email: reader.email });
                 if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
                   setUserRole(['reader']);
                 }
               } else {
-                console.log('ℹ️ User is authenticated but not a reader (might be staff)');
-                // User is authenticated but not a reader - might be staff
-                // Don't clear state if they're staff
-                if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
+                // User is authenticated but reader doc not found - use auth user as fallback
+                // (e.g. signed in via AuthPage, reader doc may be in artifacts path)
+                const fallbackName = user.displayName || user.email?.split('@')[0] || 'Reader';
+                const fallbackEmail = user.email || '';
+                if (fallbackEmail) {
+                  setIsReaderAuthenticated(true);
+                  setReaderInfo({ name: fallbackName, email: fallbackEmail });
+                  if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
+                    setUserRole(['reader']);
+                  }
+                } else if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
                   setIsReaderAuthenticated(false);
                   setReaderInfo(null);
                 }
               }
             } catch (error) {
-              console.error('❌ Error checking reader:', error);
-              // Don't clear state if user has staff role
-              if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
+              // Fallback to auth user data on error
+              const fallbackName = user.displayName || user.email?.split('@')[0] || 'Reader';
+              const fallbackEmail = user.email || '';
+              if (fallbackEmail) {
+                setIsReaderAuthenticated(true);
+                setReaderInfo({ name: fallbackName, email: fallbackEmail });
+                if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
+                  setUserRole(['reader']);
+                }
+              } else if (!userRole || (Array.isArray(userRole) && userRole.length === 0)) {
                 setIsReaderAuthenticated(false);
                 setReaderInfo(null);
               }
             }
           } else {
-            // User is not authenticated or is anonymous
-            console.log('ℹ️ User is not authenticated or is anonymous');
             setIsReaderAuthenticated(false);
             setReaderInfo(null);
           }
@@ -628,15 +662,13 @@ const App: React.FC = () => {
 
         return unsubscribe;
       } catch (error) {
-        console.error('Error setting up reader auth listener:', error);
+        console.error('Error setting up auth listener:', error);
         return () => { };
       }
     };
 
-    const cleanupPromise = checkReaderAuth();
-    return () => {
-      cleanupPromise.then(unsub => unsub && unsub());
-    };
+    const p = checkReaderAuth();
+    return () => { p.then(unsub => unsub?.()); };
   }, [userRole]);
 
   // Debug: Log auth state changes
@@ -813,61 +845,8 @@ const App: React.FC = () => {
       .map(article => article.headline);
   }, [newsData]);
 
-  // CRITICAL: Sign in anonymously on app load for public access
-  // BUT: ONLY on root path, NOT on admin routes
-  useEffect(() => {
-    const initializeAuth = async () => {
-      // ✅ FIX: More robust admin route detection
-      const hash = window.location.hash.replace('#', '');
-      const pathname = window.location.pathname;
-
-      // Allow anonymous auth on root, news, AND opinion pages (but not admin)
-      const isPublicRoute = (hash === '' || hash === 'news' || hash === 'opinion' || hash.startsWith('opinion/')) &&
-        (pathname === '/' || pathname === '/morning-pulse' || pathname === '/morning-pulse/');
-      const isAdminRoute = hash === 'admin' ||
-        hash === 'dashboard' ||
-        hash.includes('dashboard') ||
-        pathname === '/admin' ||
-        pathname.includes('/admin');
-
-      // ✅ FIX: Sign in anonymously on public routes (not just root)
-      if (!isPublicRoute || isAdminRoute) {
-        console.log('🔐 Skipping anonymous auth - not on public route or on admin route');
-        return;
-      }
-
-      try {
-        // ✅ FIX: Sign in anonymously on public routes (not just root)
-        // BUT: Only if user is not already authenticated with email/password
-        const currentUser = auth.currentUser;
-        const isAlreadyAuthenticated = currentUser && !currentUser.isAnonymous;
-
-        if (!isAlreadyAuthenticated && isPublicRoute && !isAdminRoute) {
-          console.log('🔐 App: Signing in anonymously for public access...');
-          try {
-            await signInAnonymously(auth);
-            console.log('✅ App: Anonymous authentication successful');
-          } catch (error: any) {
-            // If already signed in, that's fine
-            if (error.code === 'auth/operation-not-allowed') {
-              console.log('ℹ️ Anonymous auth not enabled, continuing...');
-            } else {
-              console.error('❌ App: Anonymous authentication failed:', error);
-            }
-          }
-        } else if (isAlreadyAuthenticated) {
-          console.log('ℹ️ User already authenticated, skipping anonymous sign-in');
-        }
-      } catch (error: any) {
-        console.error('❌ App: Anonymous authentication failed:', error);
-        if (error.code === 'auth/configuration-not-found') {
-          console.error('CRITICAL: Enable Anonymous Auth in Firebase Console > Authentication > Sign-in Method.');
-        }
-      }
-    };
-
-    initializeAuth();
-  }, []);
+  // Anonymous sign-in is now handled inside onAuthStateChanged (after first auth emission)
+  // to avoid overwriting persisted sessions on reload
 
   return (
     <div className="app">
@@ -1180,9 +1159,8 @@ const App: React.FC = () => {
           {currentPage === 'auth' && (
             <AuthPage
               onSuccess={() => {
-                // Refresh user role and redirect
                 window.location.hash = 'news';
-                window.location.reload();
+                // No reload - auth state listener will update UI
               }}
               onBack={() => {
                 window.location.hash = 'news';
@@ -1193,6 +1171,10 @@ const App: React.FC = () => {
 
           {currentPage === 'join' && (
             <JoinPage />
+          )}
+
+          {currentPage === 'profile' && (
+            <ReaderProfilePage onBack={handleBackToNews} />
           )}
 
           {currentPage === 'writer-register' && (
@@ -1305,7 +1287,7 @@ const App: React.FC = () => {
                   margin: '40px auto',
                   maxWidth: '600px'
                 }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📰</div>
+                  <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}><Newspaper size={48} strokeWidth={1.5} aria-hidden /></div>
                   <h2 style={{ marginBottom: '12px', color: '#333' }}>No News Available</h2>
                   <p style={{ color: '#666', marginBottom: '24px' }}>
                     We're currently updating our news feed. Please check back in a few minutes.

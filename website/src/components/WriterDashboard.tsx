@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FileEdit, PenLine } from 'lucide-react';
 import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getCurrentWriter, updateWriterProfile, Writer, acknowledgeStyleGuide } from '../services/writerService';
 import { getPublishedOpinions, Opinion, submitForReview } from '../services/opinionsService';
@@ -643,7 +644,7 @@ const WriterDashboard: React.FC = () => {
                   alignItems: 'center',
                   gap: '8px'
                 }}>
-                  📝 Drafts ({drafts.length})
+                  <FileEdit size={18} style={{ marginRight: '6px' }} aria-hidden /> Drafts ({drafts.length})
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {drafts.map((draft) => (
@@ -990,7 +991,7 @@ const WriterDashboard: React.FC = () => {
                                 fontWeight: '500'
                               }}
                             >
-                              ✍️ Write This Article
+                              <PenLine size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Write This Article
                             </a>
                           </div>
                         )}
@@ -1409,7 +1410,7 @@ const WriterDashboard: React.FC = () => {
                         gap: '6px'
                       }}
                     >
-                      📝 View Style Guide
+                      <FileEdit size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> View Style Guide
                     </button>
                   </div>
                 </div>

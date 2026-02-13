@@ -94,6 +94,13 @@
   transition: background 0.2s;
 }
 
+.admin-nav-item .admin-nav-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .admin-nav-item:hover {
   background: rgba(255, 255, 255, 0.08);
 }
@@ -754,6 +761,23 @@
 
 .priority-summary-card {
   min-width: 0;
+}
+
+.priority-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.live-activity-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #ef4444;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .priority-summary-card .priority-label,

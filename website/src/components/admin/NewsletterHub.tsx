@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { FileEdit, Users, BarChart3, Settings, Mail, Lightbulb, Clock } from 'lucide-react';
 import { getFirestore, collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 import NewsletterTab from './NewsletterTab';
@@ -90,10 +91,10 @@ const NewsletterHub: React.FC = () => {
   };
 
   const subTabs = [
-    { id: 'compose' as SubTab, label: 'Compose & Send', icon: '📝', description: 'Create and send newsletters' },
-    { id: 'subscribers' as SubTab, label: 'Subscribers', icon: '👥', description: 'Manage your audience' },
-    { id: 'history' as SubTab, label: 'Send History', icon: '📊', description: 'Track past newsletters' },
-    { id: 'settings' as SubTab, label: 'Settings', icon: '⚙️', description: 'Configure preferences' }
+    { id: 'compose' as SubTab, label: 'Compose & Send', Icon: FileEdit, description: 'Create and send newsletters' },
+    { id: 'subscribers' as SubTab, label: 'Subscribers', Icon: Users, description: 'Manage your audience' },
+    { id: 'history' as SubTab, label: 'Send History', Icon: BarChart3, description: 'Track past newsletters' },
+    { id: 'settings' as SubTab, label: 'Settings', Icon: Settings, description: 'Configure preferences' }
   ];
 
   const formatDate = (date: Date | null) => {
@@ -118,7 +119,7 @@ const NewsletterHub: React.FC = () => {
           alignItems: 'center',
           gap: '12px'
         }}>
-          📧 Newsletter Hub
+          <Mail size={24} aria-hidden /> Newsletter Hub
         </h2>
         <p style={{ 
           margin: '8px 0 0 0', 
@@ -243,7 +244,7 @@ const NewsletterHub: React.FC = () => {
               }
             }}
           >
-            <span>{tab.icon}</span>
+            <span><tab.Icon size={16} aria-hidden /></span>
             <span>{tab.label}</span>
           </button>
         ))}
@@ -296,8 +297,8 @@ const NewsletterSettings: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '600px' }}>
-      <h3 style={{ marginTop: 0, marginBottom: '24px', fontSize: '20px', fontWeight: '600' }}>
-        ⚙️ Newsletter Settings
+      <h3 style={{ marginTop: 0, marginBottom: '24px', fontSize: '20px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Settings size={20} aria-hidden /> Newsletter Settings
       </h3>
 
       {/* Email Settings */}
@@ -308,8 +309,8 @@ const NewsletterSettings: React.FC = () => {
         borderRadius: '8px',
         border: '1px solid #e5e7eb'
       }}>
-        <h4 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px', fontWeight: '600' }}>
-          📧 Email Configuration
+        <h4 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Mail size={16} aria-hidden /> Email Configuration
         </h4>
 
         <div style={{ marginBottom: '16px' }}>
@@ -377,7 +378,7 @@ const NewsletterSettings: React.FC = () => {
         border: '1px solid #bae6fd'
       }}>
         <h4 style={{ marginTop: 0, marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#0c4a6e' }}>
-          ⏰ Automation (Coming Soon)
+          <Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} aria-hidden /> Automation (Coming Soon)
         </h4>
 
         <div style={{ 
@@ -410,7 +411,7 @@ const NewsletterSettings: React.FC = () => {
           fontSize: '12px',
           color: '#0c4a6e'
         }}>
-          💡 <strong>Tip:</strong> For now, use Google Cloud Scheduler to call the newsletter endpoints at your preferred times.
+          <Lightbulb size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} aria-hidden /><strong>Tip:</strong> For now, use Google Cloud Scheduler to call the newsletter endpoints at your preferred times.
         </div>
       </div>
 

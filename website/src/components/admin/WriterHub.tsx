@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { PenLine, Lightbulb, DollarSign } from 'lucide-react';
 import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 import WriterManagementTab from './WriterManagementTab';
@@ -93,7 +94,7 @@ const WriterHub: React.FC<WriterHubProps> = ({ userRoles }) => {
     { 
       id: 'writers' as SubTab, 
       label: 'Writers', 
-      icon: '✍️', 
+      Icon: PenLine, 
       description: 'Applications & Governance',
       badge: stats.pendingWriters > 0 ? stats.pendingWriters : undefined,
       badgeColor: '#dc2626'
@@ -101,7 +102,7 @@ const WriterHub: React.FC<WriterHubProps> = ({ userRoles }) => {
     { 
       id: 'pitches' as SubTab, 
       label: 'Story Pitches', 
-      icon: '💡', 
+      Icon: Lightbulb, 
       description: 'Review pitch submissions',
       badge: stats.pendingPitches > 0 ? stats.pendingPitches : undefined,
       badgeColor: '#d97706'
@@ -109,7 +110,7 @@ const WriterHub: React.FC<WriterHubProps> = ({ userRoles }) => {
     { 
       id: 'payments' as SubTab, 
       label: 'Payments', 
-      icon: '💰', 
+      Icon: DollarSign, 
       description: 'Contributor compensation',
       badge: stats.pendingPayments > 0 ? stats.pendingPayments : undefined,
       badgeColor: '#059669'
@@ -137,7 +138,7 @@ const WriterHub: React.FC<WriterHubProps> = ({ userRoles }) => {
               alignItems: 'center',
               gap: '8px'
             }}>
-              ✍️ Writer Management
+              <PenLine size={24} aria-hidden /> Writer Management
             </h2>
             <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
               Manage writers, review pitches, and handle contributor payments
@@ -224,7 +225,7 @@ const WriterHub: React.FC<WriterHubProps> = ({ userRoles }) => {
                 position: 'relative'
               }}
             >
-              <span>{tab.icon}</span>
+              <span><tab.Icon size={16} aria-hidden /></span>
               <span>{tab.label}</span>
               {tab.badge && (
                 <span style={{

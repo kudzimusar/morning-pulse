@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Rocket, FileEdit, PenLine, XCircle, Key, Users, Bell } from 'lucide-react';
 import {
     collection,
     query,
@@ -72,13 +73,14 @@ const ActivityFeed: React.FC = () => {
 
     const getActionIcon = (action: string) => {
         const a = action.toLowerCase();
-        if (a.includes('publish') || a.includes('approve')) return '🚀';
-        if (a.includes('submit') || a.includes('create')) return '📝';
-        if (a.includes('edit') || a.includes('update')) return '✏️';
-        if (a.includes('delete') || a.includes('reject')) return '❌';
-        if (a.includes('login')) return '🔑';
-        if (a.includes('subscriber')) return '👥';
-        return '🔔';
+        const iconProps = { size: 18 };
+        if (a.includes('publish') || a.includes('approve')) return <Rocket {...iconProps} aria-hidden />;
+        if (a.includes('submit') || a.includes('create')) return <FileEdit {...iconProps} aria-hidden />;
+        if (a.includes('edit') || a.includes('update')) return <PenLine {...iconProps} aria-hidden />;
+        if (a.includes('delete') || a.includes('reject')) return <XCircle {...iconProps} aria-hidden />;
+        if (a.includes('login')) return <Key {...iconProps} aria-hidden />;
+        if (a.includes('subscriber')) return <Users {...iconProps} aria-hidden />;
+        return <Bell {...iconProps} aria-hidden />;
     };
 
     if (loading) {
@@ -99,8 +101,9 @@ const ActivityFeed: React.FC = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827' }}>
-                    🔴 Live Activity
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="live-activity-dot" aria-hidden />
+                    Live Activity
                 </h3>
                 <span style={{ fontSize: '12px', color: '#6b7280', backgroundColor: '#f3f4f6', padding: '2px 8px', borderRadius: '12px' }}>
                     {activities.length} Recent

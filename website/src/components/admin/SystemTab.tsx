@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Zap, Radio, AlertTriangle, Database } from 'lucide-react';
 import { Firestore } from 'firebase/firestore';
 import MetricCard from './widgets/MetricCard';
 import {
@@ -98,7 +99,7 @@ const SystemTab: React.FC<SystemTabProps> = ({ firebaseInstances, onNavigateToTa
           title="Uptime"
           value="99.99%"
           trend="neutral"
-          icon="⚡"
+          icon={<Zap size={18} />}
           color="#10b981"
           description="Last 30 days performance"
         />
@@ -106,7 +107,7 @@ const SystemTab: React.FC<SystemTabProps> = ({ firebaseInstances, onNavigateToTa
           title="Firestore latency"
           value={latencyValue}
           trend={latencyTrend}
-          icon="📡"
+          icon={<Radio size={18} />}
           color={health.status === 'critical' ? '#ef4444' : health.status === 'warning' ? '#f59e0b' : '#3b82f6'}
           description={health.lastChecked ? 'Live ping' : 'Enable Firebase for live data'}
         />
@@ -115,14 +116,14 @@ const SystemTab: React.FC<SystemTabProps> = ({ firebaseInstances, onNavigateToTa
           value="0.04%"
           change={5}
           trend="down"
-          icon="⚠️"
+          icon={<AlertTriangle size={18} />}
           color="#ef4444"
           description="Request failure frequency"
         />
         <MetricCard
           title="DB Storage"
           value="2.3 GB"
-          icon="💾"
+          icon={<Database size={18} />}
           color="#8b5cf6"
           description="23% of allocated quota"
         />
@@ -140,7 +141,7 @@ const SystemTab: React.FC<SystemTabProps> = ({ firebaseInstances, onNavigateToTa
           gap: '16px',
         }}
       >
-        <div style={{ fontSize: '24px' }}>⚡</div>
+        <div style={{ fontSize: '24px', display: 'flex', alignItems: 'center' }}><Zap size={24} aria-hidden /></div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '14px', fontWeight: '600', color: health.status === 'healthy' ? '#1e40af' : health.status === 'critical' ? '#991b1b' : '#92400e' }}>
             Infrastructure Pulse: {health.status === 'healthy' ? 'Low Latency Mode' : health.status === 'critical' ? 'High Latency' : 'Elevated Latency'}
