@@ -185,7 +185,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 </div>
 
                 {/* Right Column: Activity & Presence */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div className="admin-command-center-right">
                     <ActivityFeed />
                     <StaffOnlineList />
                 </div>

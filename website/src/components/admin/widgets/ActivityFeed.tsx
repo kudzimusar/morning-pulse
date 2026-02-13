@@ -109,7 +109,7 @@ const ActivityFeed: React.FC = () => {
 
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {activities.length === 0 ? (
-                    <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9ca3af' }}>
+                    <div style={{ padding: '24px 20px', textAlign: 'center', color: '#9ca3af' }}>
                         No recent activity detected.
                     </div>
                 ) : (

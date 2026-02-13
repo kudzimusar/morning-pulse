@@ -74,11 +74,7 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
         Priority Summary
       </h2>
       
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '16px'
-      }}>
+      <div className="priority-summary-grid">
         {priorities.map((priority) => (
           <div
             key={priority.id}

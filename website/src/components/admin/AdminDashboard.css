@@ -617,10 +617,43 @@
   gap: 24px;
 }
 
+/* Priority Summary - 4 equal columns on desktop, no orphaned 4th card */
+.priority-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .priority-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .priority-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .admin-dashboard-grid-2-1 {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1.75fr 1fr;
   gap: 24px;
+  align-items: stretch;
+}
+
+/* Right column: Activity & Staff - fill vertical space */
+.admin-command-center-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+}
+
+.admin-command-center-right > *:last-child {
+  flex: 1;
+  min-height: 200px;
 }
 
 .admin-dashboard-grid-1-1 {
