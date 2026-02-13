@@ -12,6 +12,7 @@ import {
     Cell
 } from 'recharts';
 import { exportToCSV } from '../../services/csvExportService';
+import { fetchRevenueMetrics } from '../../services/dashboardService';
 import MetricCard from './widgets/MetricCard';
 import './AdminDashboard.css';
 
@@ -19,28 +20,25 @@ const RevenueTab: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [revenueTrend, setRevenueTrend] = useState<any[]>([]);
     const [subscriptionMix, setSubscriptionMix] = useState<any[]>([]);
+    const [metrics, setMetrics] = useState<{ mtdRevenue: number; activeSubs: number; adImpressions: number; adClicks: number; adRevenue: number } | null>(null);
 
     useEffect(() => {
-        // Simulating monetization data fetch
-        setTimeout(() => {
-            setRevenueTrend([
-                { month: 'Jan', revenue: 32000, churn: 120 },
-                { month: 'Feb', revenue: 35000, churn: 140 },
-                { month: 'Mar', revenue: 38000, churn: 130 },
-                { month: 'Apr', revenue: 42000, churn: 110 },
-                { month: 'May', revenue: 45000, churn: 95 },
-                { month: 'Jun', revenue: 52000, churn: 80 },
-            ]);
-
-            setSubscriptionMix([
-                { name: 'Free', count: 12500, color: '#9ca3af' },
-                { name: 'Pro', count: 4800, color: '#3b82f6' },
-                { name: 'Premium', count: 1200, color: '#f59e0b' },
-                { name: 'Corporate', count: 150, color: '#8b5cf6' },
-            ]);
-
-            setLoading(false);
-        }, 1200);
+        const load = async () => {
+            setLoading(true);
+            try {
+                const m = await fetchRevenueMetrics();
+                setMetrics(m);
+                setRevenueTrend(m.revenueTrend.length > 0 ? m.revenueTrend : [{ month: '—', revenue: 0 }]);
+                setSubscriptionMix(m.subscriptionMix);
+            } catch (e) {
+                console.error('Revenue load error:', e);
+                setRevenueTrend([{ month: '—', revenue: 0 }]);
+                setSubscriptionMix([{ name: 'No data', count: 1, color: '#9ca3af' }]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
     }, []);
 
     if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading financial oversight engine...</div>;
@@ -64,10 +62,10 @@ const RevenueTab: React.FC = () => {
 
             {/* KPI Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
-                <MetricCard title="MTD Revenue" value="$52,430" trend="up" change={15} icon="💰" color="#10b981" />
-                <MetricCard title="Avg MRR" value="$45,200" trend="up" change={12} icon="🔄" color="#3b82f6" />
-                <MetricCard title="Active Subs" value="6,150" trend="up" change={5} icon="👥" color="#f59e0b" />
-                <MetricCard title="Churn Rate" value="1.8%" trend="down" change={0.5} icon="📉" color="#ef4444" />
+                <MetricCard title="MTD Revenue" value={`$${(metrics?.mtdRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="neutral" icon="💰" color="#10b981" />
+                <MetricCard title="Active Subs" value={(metrics?.activeSubs || 0).toLocaleString()} trend="neutral" icon="👥" color="#f59e0b" />
+                <MetricCard title="Ad Impressions" value={(metrics?.adImpressions || 0).toLocaleString()} trend="neutral" icon="📢" color="#3b82f6" />
+                <MetricCard title="Ad Revenue" value={`$${(metrics?.adRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="neutral" icon="📉" color="#8b5cf6" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
@@ -114,26 +112,25 @@ const RevenueTab: React.FC = () => {
                 </div>
             </div>
 
-            {/* Ad Inventory Performance placeholder */}
+            {/* Ad Inventory Performance */}
             <div className="admin-card" style={{ padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h3 style={{ margin: 0, fontSize: '16px' }}>📢 Advertising Hub Performance</h3>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <span style={{ fontSize: '12px', padding: '4px 8px', backgroundColor: '#ecfdf5', color: '#047857', borderRadius: '12px', fontWeight: '500' }}>Inventory: 94% full</span>
-                    </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
                     <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
                         <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>Total Impressions</p>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>1.2M</p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>{(metrics?.adImpressions || 0).toLocaleString()}</p>
                     </div>
                     <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
-                        <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>Avg eCPM</p>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>$12.40</p>
+                        <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>Total Clicks</p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>{(metrics?.adClicks || 0).toLocaleString()}</p>
                     </div>
                     <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
-                        <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>Ad Fill Rate</p>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>98.2%</p>
+                        <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>CTR</p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: '700' }}>
+                            {metrics?.adImpressions ? `${((metrics.adClicks / metrics.adImpressions) * 100).toFixed(2)}%` : '0%'}
+                        </p>
                     </div>
                 </div>
             </div>

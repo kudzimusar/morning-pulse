@@ -5,7 +5,7 @@ import ActivityFeed from './widgets/ActivityFeed';
 import StaffOnlineList from './widgets/StaffOnlineList';
 import PerformanceChart from './widgets/PerformanceChart';
 import PrioritySummary from './PrioritySummary';
-import { fetchDashboardStats, fetchTrendData, fetchContentPipelineCounts, DashboardStats, ContentPipelineCount } from '../../services/dashboardService';
+import { fetchDashboardStats, fetchTrendData, fetchContentPipelineCounts, fetchPriorityCounts, DashboardStats, ContentPipelineCount } from '../../services/dashboardService';
 
 interface DashboardOverviewTabProps {
     onNavigate: (tab: string) => void;
@@ -23,18 +23,20 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
     const [userData, setUserData] = useState<any[]>([]);
     const [contentPipelineData, setContentPipelineData] = useState<ContentPipelineCount[]>([]);
     const [subscriberData, setSubscriberData] = useState<any[]>([]);
+    const [priorityCounts, setPriorityCounts] = useState<{ scheduledCount: number; imageIssuesCount: number }>({ scheduledCount: 0, imageIssuesCount: 0 });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [dashboardStats, revenueStats, userStats, pipelineCounts, subscriberTrend] = await Promise.all([
+                const [dashboardStats, revenueStats, userStats, pipelineCounts, subscriberTrend, counts] = await Promise.all([
                     fetchDashboardStats(),
                     fetchTrendData('revenue'),
                     fetchTrendData('users'),
                     fetchContentPipelineCounts(),
-                    fetchTrendData('subscribers')
+                    fetchTrendData('subscribers'),
+                    fetchPriorityCounts()
                 ]);
 
                 setStats(dashboardStats);
@@ -42,6 +44,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 setUserData(userStats);
                 setContentPipelineData(pipelineCounts);
                 setSubscriberData(subscriberTrend);
+                setPriorityCounts(counts);
             } catch (error) {
                 console.error("Error loading dashboard data:", error);
             } finally {
@@ -124,8 +127,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 <MetricCard
                     title="Total Readers"
                     value={stats?.totalUsers || 0}
-                    change={12}
-                    trend="up"
+                    trend="neutral"
                     icon="👥"
                     color="#3b82f6"
                     description="Global audience reach"
@@ -133,7 +135,6 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 <MetricCard
                     title="Active Staff"
                     value={stats?.activeStaff || 0}
-                    change={2}
                     trend="neutral"
                     icon="🛡️"
                     color="#8b5cf6"
@@ -142,8 +143,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 <MetricCard
                     title="Revenue MTD"
                     value={`$${(stats?.revenueMTD || 0).toLocaleString()}`}
-                    change={15}
-                    trend="up"
+                    trend="neutral"
                     icon="💰"
                     color="#10b981"
                     description="Subscription & Ad income"
@@ -151,11 +151,10 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 <MetricCard
                     title="Published"
                     value={stats?.publishedContent || 0}
-                    change={8}
-                    trend="up"
+                    trend="neutral"
                     icon="📰"
                     color="#f59e0b"
-                    description="Articles live this month"
+                    description="Articles live"
                 />
             </div>
 
@@ -202,8 +201,8 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
                     <PrioritySummary
                         pendingCount={initialPending}
-                        imageIssuesCount={0}
-                        scheduledCount={0}
+                        imageIssuesCount={priorityCounts.imageIssuesCount}
+                        scheduledCount={priorityCounts.scheduledCount}
                         recentlyPublishedCount={initialPublished}
                         onNavigate={onNavigate}
                     />

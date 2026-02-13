@@ -13,6 +13,7 @@ import {
   Legend
 } from 'recharts';
 import { exportToCSV } from '../../services/csvExportService';
+import { getAnalyticsSummary } from '../../services/analyticsService';
 import MetricCard from './widgets/MetricCard';
 import './AdminDashboard.css';
 
@@ -24,6 +25,13 @@ interface AnalyticsTabProps {
   userRoles?: string[];
 }
 
+const formatTime = (seconds: number) => {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s}s`;
+};
+
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   firebaseInstances,
   isAuthorized,
@@ -33,39 +41,61 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   const [trafficData, setTrafficData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [topArticles, setTopArticles] = useState<any[]>([]);
+  const [kpis, setKpis] = useState<{ avgSession: string; bounceRate: number; pagesPerSession: number; totalShares: number }>({ avgSession: '—', bounceRate: 0, pagesPerSession: 0, totalShares: 0 });
+  const [writerData, setWriterData] = useState<any[]>([]);
 
   useEffect(() => {
-    // Simulating data load from analyticsService
-    setTimeout(() => {
-      setTrafficData([
-        { date: 'Mon', views: 4200, users: 1200 },
-        { date: 'Tue', views: 3800, users: 1100 },
-        { date: 'Wed', views: 5100, users: 1500 },
-        { date: 'Thu', views: 4800, users: 1400 },
-        { date: 'Fri', views: 6200, users: 1900 },
-        { date: 'Sat', views: 7500, users: 2400 },
-        { date: 'Sun', views: 8900, users: 2800 },
-      ]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const db = firebaseInstances?.db;
+        const summary = db ? await getAnalyticsSummary(db) : null;
 
-      setCategoryData([
-        { name: 'Politics', value: 35 },
-        { name: 'Business', value: 25 },
-        { name: 'Tech', value: 20 },
-        { name: 'Lifestyle', value: 15 },
-        { name: 'Other', value: 5 },
-      ]);
-
-      setTopArticles([
-        { id: '1', title: 'The Future of AI in Journalism', views: 12450, ctr: '4.2%' },
-        { id: '2', title: 'Global Economy Trends 2026', views: 9800, ctr: '3.8%' },
-        { id: '3', title: 'Climate Change: Local Impact', views: 8200, ctr: '5.1%' },
-        { id: '4', title: 'Morning Pulse Exceeds Growth Target', views: 7600, ctr: '4.5%' },
-        { id: '5', title: 'New Tech Hub in Nairobi', views: 6400, ctr: '2.9%' },
-      ]);
-
-      setLoading(false);
-    }, 1000);
-  }, []);
+        if (summary) {
+          setTrafficData((summary.dailyTraffic || []).map((d) => ({
+            date: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
+            views: d.views || 0,
+            users: Math.round((d.views || 0) * 0.4),
+          })));
+          const catEntries = summary.categoryDistribution ? Object.entries(summary.categoryDistribution).map(([name, value]) => ({ name, value })) : [];
+          setCategoryData(catEntries.length > 0 ? catEntries : [{ name: 'No data', value: 1 }]);
+          const articles = (summary.topArticles || summary.topOpinions || []).slice(0, 5).map((a: any) => ({
+            id: a.id,
+            title: a.title || a.headline || 'Untitled',
+            views: a.views || 0,
+            ctr: a.engagement ? `${((a.engagement / (a.views || 1)) * 100).toFixed(1)}%` : '—',
+          }));
+          setTopArticles(articles);
+          setKpis({
+            avgSession: formatTime(summary.avgTimeOnPage || 0),
+            bounceRate: summary.bounceRate ?? 0,
+            pagesPerSession: summary.uniqueVisitors > 0 ? Number(((summary.totalViews || 0) / summary.uniqueVisitors).toFixed(1)) : 0,
+            totalShares: summary.totalViews || 0,
+          });
+          const authors = (summary.topAuthors || []).slice(0, 5).map((a: any, i: number) => ({
+            name: a.authorName,
+            avg: a.avgViewsPerArticle || 0,
+            rank: i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}th`,
+          }));
+          setWriterData(authors);
+        } else {
+          setTrafficData([]);
+          setCategoryData([{ name: 'No data', value: 1 }]);
+          setTopArticles([]);
+          setWriterData([]);
+        }
+      } catch (e) {
+        console.error('Analytics load error:', e);
+        setTrafficData([]);
+        setCategoryData([{ name: 'No data', value: 1 }]);
+        setTopArticles([]);
+        setWriterData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [firebaseInstances?.db]);
 
   const handleExport = () => {
     exportToCSV(topArticles, 'Top_Articles');
@@ -84,10 +114,10 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
-        <MetricCard title="Avg Session" value="4m 32s" trend="up" change={5} icon="⏱️" color="#3b82f6" />
-        <MetricCard title="Bounce Rate" value="32.5%" trend="down" change={2} icon="🚪" color="#ef4444" />
-        <MetricCard title="Pages/Session" value="3.8" trend="up" change={12} icon="📖" color="#10b981" />
-        <MetricCard title="Total Shares" value="12,845" trend="up" change={8} icon="🔗" color="#8b5cf6" />
+        <MetricCard title="Avg Session" value={kpis.avgSession} trend="neutral" icon="⏱️" color="#3b82f6" />
+        <MetricCard title="Bounce Rate" value={`${kpis.bounceRate.toFixed(1)}%`} trend="neutral" icon="🚪" color="#ef4444" />
+        <MetricCard title="Pages/Session" value={kpis.pagesPerSession} trend="neutral" icon="📖" color="#10b981" />
+        <MetricCard title="Total Views" value={kpis.totalShares.toLocaleString()} trend="neutral" icon="🔗" color="#8b5cf6" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
@@ -178,19 +208,15 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
               </tr>
             </thead>
             <tbody>
-              {[
-                { name: 'John Doe', avg: 12450, rank: '🥇' },
-                { name: 'Sarah Chen', avg: 9800, rank: '🥈' },
-                { name: 'Mike Brown', avg: 8200, rank: '🥉' },
-                { name: 'Emily White', avg: 7600, rank: '4th' },
-                { name: 'David Black', avg: 6400, rank: '5th' },
-              ].map((writer, i) => (
+              {writerData.length > 0 ? writerData.map((writer, i) => (
                 <tr key={i}>
                   <td style={{ fontWeight: '500', fontSize: '13px' }}>{writer.name}</td>
                   <td style={{ fontSize: '13px' }}>{writer.avg.toLocaleString()}</td>
                   <td style={{ fontSize: '13px' }}>{writer.rank}</td>
                 </tr>
-              ))}
+              )) : (
+                <tr><td colSpan={3} style={{ color: '#6b7280', fontSize: '13px' }}>No writer data yet</td></tr>
+              )}
             </tbody>
           </table>
         </div>
