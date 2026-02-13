@@ -125,8 +125,8 @@ async function getLatestNews(category = null) {
     // Get today's date
     const today = new Date().toISOString().split('T')[0];
     
-    // ✅ CORRECT PATH - This is already properly formatted as a document path
-    const newsDoc = await db.doc(`news/v2/${APP_ID}/daily/${today}`).get();
+    // Match aggregator write path (artifacts/.../news/date)
+    const newsDoc = await db.doc(`artifacts/${APP_ID}/public/data/news/${today}`).get();
     
     if (!newsDoc.exists) {
       return 'No news available for today yet.';

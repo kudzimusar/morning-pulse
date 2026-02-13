@@ -126,7 +126,7 @@ exports.newsAggregator = functions
             console.log(`✅ News aggregation complete. Total articles: ${allArticles.length}`);
 
             const date = new Date().toISOString().split('T')[0];
-            const dbPath = `news/v2/${appId}/daily/${date}`;
+            const dbPath = `artifacts/${appId}/public/data/news/${date}`;
 
             await admin.firestore().doc(dbPath).set({
                 date,
