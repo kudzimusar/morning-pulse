@@ -72,7 +72,7 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="admin-dashboard-overview" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                     <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#111827' }}>
@@ -148,13 +148,14 @@ const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
             <div className="admin-dashboard-grid-2-1">
                 {/* Left Column: Charts & Priority */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0, overflow: 'hidden' }}>
                     <PerformanceChart
                         title="Revenue Performance (6 Months)"
                         data={revenueData}
                         xKey="name"
                         yKey="value"
                         color="#10b981"
+                        height={240}
                     />
 
                     {/* Content Status (This Week) / Pipeline */}

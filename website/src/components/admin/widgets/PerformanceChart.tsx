@@ -34,7 +34,6 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         <div className="admin-card" style={{
             marginBottom: 0,
             padding: '20px',
-            height: '100%',
             display: 'flex',
             flexDirection: 'column'
         }}>
@@ -47,7 +46,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 {title}
             </h3>
 
-            <div style={{ flex: 1, minHeight: height, width: '100%' }}>
+            <div style={{ height: height, width: '100%', minWidth: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     {type === 'area' ? (
                         <AreaChart data={data}>

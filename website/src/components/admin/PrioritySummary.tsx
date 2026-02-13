@@ -79,6 +79,7 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
           <div
             key={priority.id}
             onClick={priority.onClick}
+            className="priority-summary-card"
             style={{
               backgroundColor: 'white',
               border: `2px solid ${priority.color}`,
@@ -102,12 +103,13 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              marginBottom: '8px'
+              marginBottom: '8px',
+              minWidth: 0
             }}>
-              <span style={{ fontSize: '24px', marginRight: '8px' }}>
+              <span style={{ fontSize: '24px', marginRight: '8px', flexShrink: 0 }}>
                 {priority.icon}
               </span>
-              <span style={{
+              <span className="priority-label" style={{
                 fontSize: '14px',
                 fontWeight: '600',
                 color: '#111827'
@@ -125,7 +127,7 @@ const PrioritySummary: React.FC<PrioritySummaryProps> = ({
               {priority.count}
             </div>
             
-            <div style={{
+            <div className="priority-description" style={{
               fontSize: '12px',
               color: '#6b7280'
             }}>
