@@ -668,32 +668,55 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 768px) {
+/* Tablet: compact horizontal grid, proportionate sizing */
+@media (max-width: 1024px) {
   .quick-actions-bar {
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
   }
 
   .quick-actions-bar-label {
-    margin-right: 0;
-    margin-bottom: 0;
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
   }
 
   .quick-action-btn {
+    padding: 10px 12px;
+    font-size: 13px;
+    min-height: 40px;
     justify-content: center;
-    width: 100%;
   }
 }
 
-@media (max-width: 480px) {
+/* Mobile: 2-column grid, smaller buttons */
+@media (max-width: 640px) {
+  .quick-actions-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
   .quick-actions-card {
-    padding: 12px 16px !important;
+    padding: 12px 14px !important;
   }
 
   .quick-action-btn {
-    padding: 14px 16px;
-    font-size: 15px;
+    padding: 8px 10px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+}
+
+/* Small mobile: keep 2 columns, minimal padding */
+@media (max-width: 400px) {
+  .quick-actions-card {
+    padding: 10px 12px !important;
+  }
+
+  .quick-action-btn {
+    padding: 8px;
+    font-size: 11px;
+    min-height: 34px;
   }
 }
 
