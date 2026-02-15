@@ -36,23 +36,23 @@ const setCorsHeaders = (res) => {
 function retrieveRelevantArticles(query, newsData, topK = 10) {
   const queryLower = query.toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
-  
+
   // Step 1: Score all articles based on question relevance
   const allArticles = [];
-  
+
   Object.entries(newsData || {}).forEach(([category, articles]) => {
     articles.forEach(article => {
       let score = 0;
-      
+
       const headlineLower = (article.headline || '').toLowerCase();
       const detailLower = (article.detail || '').toLowerCase();
       const categoryLower = category.toLowerCase();
-      
+
       // Exact phrase match in headline (very strong signal)
       if (headlineLower.includes(queryLower)) {
         score += 10;
       }
-      
+
       // Word matches (prioritize question intent over category)
       queryWords.forEach(word => {
         if (headlineLower.includes(word)) score += 3;
@@ -60,20 +60,20 @@ function retrieveRelevantArticles(query, newsData, topK = 10) {
         // Category match is less important than content match
         if (categoryLower.includes(word)) score += 1;
       });
-      
+
       // Recency boost
       if (article.timestamp) {
         const hoursSincePublished = (Date.now() - article.timestamp) / (1000 * 60 * 60);
         if (hoursSincePublished < 24) score += 2;
         else if (hoursSincePublished < 168) score += 1; // 1 week
       }
-      
+
       if (score > 0) {
         allArticles.push({ ...article, score, category });
       }
     });
   });
-  
+
   // Step 2: Group by category
   const articlesByCategory = {};
   allArticles.forEach(article => {
@@ -83,7 +83,7 @@ function retrieveRelevantArticles(query, newsData, topK = 10) {
     }
     articlesByCategory[cat].push(article);
   });
-  
+
   // Step 3: Take top 2 from each category (ensuring variety)
   const diverseArticles = [];
   Object.keys(articlesByCategory).forEach(category => {
@@ -93,7 +93,7 @@ function retrieveRelevantArticles(query, newsData, topK = 10) {
     const topFromCategory = sorted.slice(0, 2);
     diverseArticles.push(...topFromCategory);
   });
-  
+
   // Step 4: Sort by score and return top K
   return diverseArticles
     .sort((a, b) => b.score - a.score)
@@ -200,16 +200,16 @@ function buildSystemInstruction(articles, opinions, conversationHistory, previou
  */
 function buildContext(articles, opinions) {
   let context = `AVAILABLE ARTICLES (Use ONLY these for your answer):\n\n`;
-  
+
   articles.forEach((article, index) => {
     const title = article.headline || 'Untitled';
     const detail = article.detail || '';
     const category = article.category || '';
     const source = article.source || '';
-    const date = article.date || (article.timestamp 
+    const date = article.date || (article.timestamp
       ? new Date(article.timestamp).toLocaleDateString()
       : 'Recent');
-    
+
     context += `[${index + 1}] ${title}\n`;
     context += `Category: ${category}\n`;
     if (source) context += `Source: ${source}\n`;
@@ -270,7 +270,7 @@ function buildUserMessage(userQuestion, articles, opinions, conversationHistory)
 
   // Add the user's question
   userMessage += `\n\nUSER QUESTION: ${userQuestion}\n\n`;
-  
+
   // Add response instructions
   userMessage += `INSTRUCTIONS FOR YOUR RESPONSE:
 1. Analyze the question to understand what type of information is needed (who, what, where, when, why, how)
@@ -312,7 +312,7 @@ exports.askPulseAIProxy = async (req, res) => {
     // Validate API key
     if (!GEMINI_API_KEY) {
       console.error('❌ GEMINI_API_KEY not configured');
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Server configuration error',
         message: 'AI service is not properly configured'
       });
@@ -345,8 +345,8 @@ exports.askPulseAIProxy = async (req, res) => {
 
     // Initialize Gemini with system instruction
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
       systemInstruction: systemInstruction,
       generationConfig: {
         temperature: 0.7,
@@ -445,7 +445,7 @@ exports.askPulseAIProxy = async (req, res) => {
     }
   } catch (error) {
     console.error('❌ Ask Pulse AI Proxy error:', error);
-    
+
     res.status(500).json({
       error: 'AI service error',
       message: error.message || 'Failed to generate response'
