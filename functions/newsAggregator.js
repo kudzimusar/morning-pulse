@@ -55,8 +55,8 @@ function getGeminiApiKey() {
 async function fetchNewsForCategory(genAI, category, country = "Zimbabwe", retries = 3) {
     console.log(`🌀 Fetching news for category: ${category} in ${country}...`);
 
-    // Switch to stable gemini-1.5-flash model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Switch to gemini-1.5-flash-001 (specific version to avoid 404s)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
     const prompt = `Provide a list of 5 recent, real, and verifiable news headlines for the category "${category}" from ${country}. Present them as a VALID JSON array where each object has "headline", "detail", "source", and "url".`;
 
