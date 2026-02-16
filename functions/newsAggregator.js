@@ -3,15 +3,17 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 
 // --- UTILITIES ---
-let firebaseAdminInitialized = false;
 
+// 🔧 FIX #1: Check if Firebase is already initialized BEFORE trying to initialize
 function initializeFirebase() {
-  if (firebaseAdminInitialized) {
-    console.log("✅ Using existing Firebase Admin instance");
+  // Check if any Firebase apps already exist
+  if (admin.apps.length > 0) {
+    console.log("✅ Firebase Admin already initialized, reusing existing instance");
     return;
   }
+
   try {
-    // 🔧 FIX: Decode Base64 config before parsing
+    // 🔧 Decode Base64 config before parsing
     let configStr = process.env.FIREBASE_ADMIN_CONFIG;
     
     // Check if it's Base64 encoded (matches Base64 pattern)
@@ -26,17 +28,19 @@ function initializeFirebase() {
       databaseURL: `https://gen-lang-client-0999441419.firebaseio.com`
     });
     console.log("✅ Firebase Admin initialized successfully.");
-    firebaseAdminInitialized = true;
   } catch (error) {
-    console.error("❌ Parsed Firebase config from FIREBASE_ADMIN_CONFIG failed", error);
+    console.error("❌ Error initializing Firebase:", error.message);
     // Fallback for local testing if needed
     if (process.env.NODE_ENV !== 'production') {
-        const serviceAccount = require("./serviceAccountKey.json");
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-        console.log("✅ Firebase Admin initialized with local key.");
-        firebaseAdminInitialized = true;
+        try {
+            const serviceAccount = require("./serviceAccountKey.json");
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+            });
+            console.log("✅ Firebase Admin initialized with local key.");
+        } catch (localError) {
+            console.error("❌ Failed to initialize with local key:", localError.message);
+        }
     }
   }
 }
@@ -59,7 +63,7 @@ async function fetchNewsForCategory(genAI, category, country = "Global", retries
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // Enhanced prompt for global categories
-    const prompt = `Provide a list of 5 recent, real, and verifiable news headlines for the "${category}" category${country !== 'Global' ? ` with focus on ${country}` : ' from around the world'}. Present them as a VALID JSON array where each object has "headline", "detail", "source", and "url".`;
+    const prompt = `Provide a list of 5 recent, real, and verifiable news headlines for the "${category}" category${country !== 'Global' ? ` with focus on ${country}` : ' from around the world'}. Present them as a VALID JSON array where each object has "headline", "detail", "source", and "url". Return ONLY the JSON array, no other text.`;
 
     for (let i = 0; i < retries; i++) {
         try {
@@ -79,7 +83,7 @@ async function fetchNewsForCategory(genAI, category, country = "Global", retries
                 fetchedAt: new Date().toISOString()
             }));
         } catch (error) {
-            console.error(`❌ Error fetching news for category: ${category} on attempt ${i + 1}`, error);
+            console.error(`❌ Error fetching news for category: ${category} on attempt ${i + 1}`, error.message);
             if (i < retries - 1) {
                 await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
             }
@@ -93,12 +97,14 @@ exports.newsAggregator = functions
     .runWith({ timeoutSeconds: 540, memory: '1GB' })
     .https.onRequest(async (req, res) => {
         console.log("🚀 Starting daily news aggregation with 12 global categories...");
+        
+        // 🔧 FIX #1: Initialize Firebase safely
         initializeFirebase();
 
         const appId = process.env.APP_ID || "morning-pulse-app";
         const country = req.query.country || "Global";
         
-        // 🌍 NEW: 12 Global Categories for worldwide coverage
+        // 🌍 12 Global Categories for worldwide coverage
         const categories = [
             "Politics",              // Government, elections, policy
             "Finance & Economy",     // Markets, business, trade
@@ -148,23 +154,29 @@ exports.newsAggregator = functions
 
             const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
             
-            // 🔧 FIX: Correct Firestore path with EVEN number of segments
-            // OLD (BROKEN): news/v2/morning-pulse-app/daily/2026-02-16 = 5 segments (odd)
-            // NEW (FIXED): news/v2/morning-pulse-app/daily/dates/2026-02-16 = 6 segments (even)
-            const dbPath = `news/v2/${appId}/daily/dates/${date}`;
-
-            await admin.firestore().doc(dbPath).set({
+            // 🔧 FIX #2: Correct Firestore path with EVEN number of segments
+            // Structure: collection/doc/collection/doc/collection/doc
+            // We'll use: news/v2/morning-pulse-app/daily/dates/[date]
+            const newsCollection = admin.firestore()
+                .collection('news')
+                .doc('v2')
+                .collection(appId)
+                .doc('daily')
+                .collection('dates');
+            
+            await newsCollection.doc(date).set({
                 date,
                 country,
                 categories: newsByCategories,
                 totalArticles: allArticles.length,
                 categoryCount: Object.keys(newsByCategories).length,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                version: "2.0", // Upgraded to 12 global categories
+                version: "2.0",
                 globalCoverage: true
             });
 
-            console.log(`✅ News stored successfully for ${date} at ${dbPath}`);
+            console.log(`✅ News stored successfully for ${date}`);
+            console.log(`📍 Firestore path: news/v2/${appId}/daily/dates/${date}`);
             console.log(`📈 Coverage: ${Object.keys(newsByCategories).length} categories, ${allArticles.length} total articles`);
 
             res.status(200).json({
@@ -175,9 +187,10 @@ exports.newsAggregator = functions
                 categoryBreakdown: Object.fromEntries(
                     Object.entries(newsByCategories).map(([cat, articles]) => [cat, articles.length])
                 ),
-                message: "News aggregated successfully",
+                message: "News aggregated successfully with 12 global categories",
                 version: "2.0",
-                globalCoverage: true
+                globalCoverage: true,
+                firestorePath: `news/v2/${appId}/daily/dates/${date}`
             });
         } catch (error) {
             console.error("❌ Critical error in news aggregation function:", error);
@@ -195,10 +208,16 @@ try {
     const unsplashProxy = require('./unsplashProxy');
     exports.unsplashImage = unsplashProxy.unsplashImage;
     console.log("✅ unsplashImage function exported successfully.");
-} catch (e) { console.error("Could not export unsplashImage", e); }
+} catch (e) { 
+    console.log("ℹ️ unsplashImage not available (optional)"); 
+}
 
 try {
     const askPulseAIProxy = require('./askPulseAIProxy');
     exports.askPulseAIProxy = askPulseAIProxy.askPulseAIProxy;
     console.log("✅ askPulseAIProxy function exported successfully.");
-} catch(e) { console.error("Could not export askPulseAIProxy", e); }
+} catch(e) { 
+    console.log("ℹ️ askPulseAIProxy not available (optional)"); 
+}
+
+console.log("✅ All Cloud Functions loaded");
