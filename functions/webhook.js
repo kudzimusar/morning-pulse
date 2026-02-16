@@ -138,7 +138,7 @@ async function getLatestNews(category = null) {
     console.log(`📰 Fetching news for: ${dateStr}`);
     
     // 🔧 FIX: Correct Firestore path - news/v2/APP_ID/daily/DATE is a DOCUMENT
-    const newsRef = db.doc(`news/v2/${APP_ID}/daily/${dateStr}`);
+   const newsRef = db.doc(`news/v2/${APP_ID}/daily/dates/${dateStr}`);
     const newsDoc = await newsRef.get();
     
     if (!newsDoc.exists) {
@@ -149,7 +149,7 @@ async function getLatestNews(category = null) {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       
-      const yesterdayRef = db.doc(`news/v2/${APP_ID}/daily/${yesterdayStr}`);
+      const yesterdayRef = db.doc(`news/v2/${APP_ID}/daily/dates/${yesterdayStr}`);
       const yesterdayDoc = await yesterdayRef.get();
       
       if (!yesterdayDoc.exists) {
