@@ -6,39 +6,39 @@ const admin = require("firebase-admin");
 let firebaseAdminInitialized = false;
 
 function initializeFirebase() {
-    if (firebaseAdminInitialized) {
-        console.log("✅ Using existing Firebase Admin instance");
-        return;
+  if (firebaseAdminInitialized) {
+    console.log("✅ Using existing Firebase Admin instance");
+    return;
+  }
+  try {
+    // 🔧 FIX: Decode Base64 config before parsing
+    let configStr = process.env.FIREBASE_ADMIN_CONFIG;
+    
+    // Check if it's Base64 encoded (matches Base64 pattern)
+    if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
+      console.log("✅ Detected Base64-encoded config, decoding...");
+      configStr = Buffer.from(configStr, 'base64').toString('utf-8');
     }
-    try {
-        // 🔧 FIX: Decode Base64 config before parsing
-        let configStr = process.env.FIREBASE_ADMIN_CONFIG;
-
-        // Check if it's Base64 encoded (matches Base64 pattern)
-        if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
-            console.log("✅ Detected Base64-encoded config, decoding...");
-            configStr = Buffer.from(configStr, 'base64').toString('utf-8');
-        }
-
-        const serviceAccount = JSON.parse(configStr);
+    
+    const serviceAccount = JSON.parse(configStr);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: `https://gen-lang-client-0999441419.firebaseio.com`
+    });
+    console.log("✅ Firebase Admin initialized successfully.");
+    firebaseAdminInitialized = true;
+  } catch (error) {
+    console.error("❌ Parsed Firebase config from FIREBASE_ADMIN_CONFIG failed", error);
+    // Fallback for local testing if needed
+    if (process.env.NODE_ENV !== 'production') {
+        const serviceAccount = require("./serviceAccountKey.json"); // Ensure this path is correct for local
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            databaseURL: `https://gen-lang-client-0999441419.firebaseio.com`
+            credential: admin.credential.cert(serviceAccount)
         });
-        console.log("✅ Firebase Admin initialized successfully.");
+        console.log("✅ Firebase Admin initialized with local key.");
         firebaseAdminInitialized = true;
-    } catch (error) {
-        console.error("❌ Parsed Firebase config from FIREBASE_ADMIN_CONFIG failed", error);
-        // Fallback for local testing if needed
-        if (process.env.NODE_ENV !== 'production') {
-            const serviceAccount = require("./serviceAccountKey.json"); // Ensure this path is correct for local
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount)
-            });
-            console.log("✅ Firebase Admin initialized with local key.");
-            firebaseAdminInitialized = true;
-        }
     }
+  }
 }
 
 function getGeminiApiKey() {
@@ -54,9 +54,10 @@ function getGeminiApiKey() {
 
 async function fetchNewsForCategory(genAI, category, country = "Zimbabwe", retries = 3) {
     console.log(`🌀 Fetching news for category: ${category} in ${country}...`);
-
-    // Switch to gemini-1.5-flash-001 (specific version to avoid 404s)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+    
+    // ✅ CRITICAL FIX: Use gemini-1.5-flash-latest (stable, always available)
+    // This is the recommended stable version that doesn't get deprecated
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     const prompt = `Provide a list of 5 recent, real, and verifiable news headlines for the category "${category}" from ${country}. Present them as a VALID JSON array where each object has "headline", "detail", "source", and "url".`;
 
@@ -74,10 +75,6 @@ async function fetchNewsForCategory(genAI, category, country = "Zimbabwe", retri
             return articles.map(article => ({ ...article, category, id: Math.random().toString(36).substring(2, 15) }));
         } catch (error) {
             console.error(`❌ Error fetching news for category: ${category} on attempt ${i + 1}`, error);
-            // Log full error details for debugging
-            if (error.response) {
-                console.error("Error Response:", JSON.stringify(error.response, null, 2));
-            }
             if (i < retries - 1) {
                 await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
             }
@@ -121,9 +118,9 @@ exports.newsAggregator = functions
             });
 
             if (allArticles.length === 0) {
-                console.warn("⚠️ No articles were fetched across all categories. Aborting storage.");
-                res.status(500).json({ success: false, message: "No articles could be fetched." });
-                return;
+                 console.warn("⚠️ No articles were fetched across all categories. Aborting storage.");
+                 res.status(500).json({ success: false, message: "No articles could be fetched." });
+                 return;
             }
 
             console.log(`✅ News aggregation complete. Total articles: ${allArticles.length}`);
@@ -168,4 +165,4 @@ try {
     const askPulseAIProxy = require('./askPulseAIProxy');
     exports.askPulseAIProxy = askPulseAIProxy.askPulseAIProxy;
     console.log("✅ askPulseAIProxy function exported successfully.");
-} catch (e) { console.error("Could not export askPulseAIProxy", e); }
+} catch(e) { console.error("Could not export askPulseAIProxy", e); }
