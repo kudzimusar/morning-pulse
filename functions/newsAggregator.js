@@ -57,7 +57,7 @@ async function fetchNewsForCategory(genAI, category, country = "Zimbabwe", retri
     
     // ✅ CRITICAL FIX: Use gemini-1.5-flash-latest (stable, always available)
     // This is the recommended stable version that doesn't get deprecated
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `Provide a list of 5 recent, real, and verifiable news headlines for the category "${category}" from ${country}. Present them as a VALID JSON array where each object has "headline", "detail", "source", and "url".`;
 
