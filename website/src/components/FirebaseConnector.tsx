@@ -79,7 +79,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({
     const tryFetchNewsForDate = async (dateString: string, country: CountryInfo) => {
       try {
         const appId = 'morning-pulse-app';
-        const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', dateString);
+        // ✅ CORRECT Firestore path: news/v2/[appId]/daily/dates/[date]
+        const newsRef = doc(db, 'news', 'v2', appId, 'daily', 'dates', dateString);
         const snapshot = await getDoc(newsRef);
 
         if (snapshot.exists()) {
@@ -162,7 +163,8 @@ const FirebaseConnector: React.FC<FirebaseConnectorProps> = ({
 
           if (!unsubscribe) {
             const appId = 'morning-pulse-app';
-            const newsRef = doc(db, 'artifacts', appId, 'public', 'data', 'news', foundDate);
+            // ✅ CORRECT Firestore path: news/v2/[appId]/daily/dates/[date]
+            const newsRef = doc(db, 'news', 'v2', appId, 'daily', 'dates', foundDate);
             const enhancedFirestore = EnhancedFirestore.getInstance(db);
             unsubscribe = enhancedFirestore.subscribeWithRetry<any>(
               newsRef,

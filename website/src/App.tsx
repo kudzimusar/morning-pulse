@@ -215,7 +215,7 @@ const App: React.FC = () => {
   const [newsData, setNewsData] = useState<NewsData>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [useFirestore, setUseFirestore] = useState(false);
+  const [useFirestore, setUseFirestore] = useState(true);
   const [currentPage, setCurrentPage] = useState<string>('news');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentCountry, setCurrentCountry] = useState<CountryInfo>(() => {
