@@ -1,0 +1,76 @@
+name: Regenerate Static News Files
+
+on:
+  # Run after Cloud Functions deploy (when news gets updated)
+  workflow_run:
+    workflows: ["Deploy Cloud Functions"]
+    types:
+      - completed
+  
+  # Also allow manual trigger
+  workflow_dispatch:
+  
+  # Run daily at 7 AM UTC (after newsAggregator runs at 6 AM)
+  schedule:
+    - cron: '0 7 * * *'
+
+jobs:
+  regenerate-news:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          cd website && npm install
+
+      - name: Generate static news files
+        env:
+          FIREBASE_ADMIN_CONFIG: ${{ secrets.FIREBASE_ADMIN_CONFIG }}
+          APP_ID: morning-pulse-app
+        run: |
+          echo "🚀 Running static site generation..."
+          node scripts/generateStaticSite.js
+          
+          echo "📊 Generated files:"
+          ls -lh website/public/data/
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Add generated files
+          git add website/public/data/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "✅ No changes to commit"
+          else
+            git commit -m "chore: regenerate static news files [skip ci]"
+            git push
+            echo "✅ Static news files updated and pushed"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## 📰 Static News Regeneration Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Generated files:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ls -lh website/public/data/ >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Files will be deployed to GitHub Pages on next website build." >> $GITHUB_STEP_SUMMARY
