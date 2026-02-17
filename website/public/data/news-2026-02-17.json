@@ -1,570 +1,630 @@
 {
   "date": "2026-02-17",
-  "generatedAt": "2026-02-17T04:01:35.729Z",
-  "timestamp": 1771300895729,
+  "generatedAt": "2026-02-17T06:58:52.229Z",
+  "timestamp": 1771311532229,
   "categories": {
     "Politics": [
       {
-        "headline": "Congress sends $1.2 trillion spending package to Biden, averting shutdown",
-        "detail": "The House passed the legislation Friday morning, a day after the Senate approved it, just hours before funding was set to expire for a quarter of the federal government.",
-        "source": "NBC News",
-        "url": "https://www.nbcnews.com/politics/congress/congress-sends-1-2-trillion-spending-package-biden-averting-shutdown-rcna145000",
+        "headline": "Trump and Maryland Gov. Wes Moore Battle Over Potomac River Sewage Spill Response",
+        "detail": "President Donald Trump publicly criticized Maryland Governor Wes Moore's handling of a January pipe rupture that caused sewage to flow into the Potomac River, despite the water authority and federal government having jurisdiction. Trump threatened to exclude Moore from a White House dinner for governors amid their ongoing political sparring.",
+        "source": "Associated Press (via Click2Houston)",
+        "url": "https://www.click2houston.com/news/politics/2026/02/17/trump-and-maryland-governor-wes-moore-battle-over-potomac-river-sewage-spill-response/",
         "category": "Politics",
-        "id": "km7jwg631gj",
-        "fetchedAt": "2026-02-17T02:00:12.729Z"
+        "id": "ieebvswdin",
+        "fetchedAt": "2026-02-17T05:57:13.708Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "EU Parliament approves landmark migration and asylum pact",
-        "detail": "Lawmakers vote to approve a contentious set of laws aimed at overhauling the bloc’s migration and asylum rules, following years of debate.",
-        "source": "Al Jazeera",
-        "url": "https://www.aljazeera.com/news/2024/4/10/eu-parliament-approves-landmark-migration-and-asylum-pact",
+        "headline": "Land in focus at Geneva peace talks between Russia and Ukraine",
+        "detail": "Representatives from Ukraine and Russia are scheduled to meet in Geneva on Tuesday and Wednesday for U.S.-mediated peace talks, with discussions expected to concentrate on territorial disputes, a key sticking point in the conflict. U.S. President Donald Trump is urging both sides to reach a resolution to the conflict.",
+        "source": "The Japan Times",
+        "url": "https://www.japantimes.co.jp/news/2026/02/17/world/politics/russia-ukraine-peace-talks-geneva-land/",
         "category": "Politics",
-        "id": "8m542c6v7dx",
-        "fetchedAt": "2026-02-17T02:00:12.729Z"
+        "id": "wfqnqlkcys",
+        "fetchedAt": "2026-02-17T05:57:13.708Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Hamas says it is studying latest Israeli truce proposal",
-        "detail": "Egypt, Qatar and the US have been trying to mediate a new truce, which would see a hostage-prisoner exchange and increase in aid to Gaza.",
-        "source": "BBC News",
-        "url": "https://www.bbc.com/news/world-middle-east-68779917",
+        "headline": "Trump says Iran wants to make a deal, as US negotiators depart for 2nd round of talks",
+        "detail": "President Donald Trump stated he believes Iran is interested in making a deal as his top aides, Steve Witkoff and Jared Kushner, depart for a second round of nuclear talks in Geneva with Iranian negotiators. Trump indicated he would be indirectly involved in these crucial discussions.",
+        "source": "The Times of Israel",
+        "url": "https://www.timesofisrael.com/trump-says-iran-wants-to-make-a-deal-as-us-negotiators-depart-for-2nd-round-of-talks/",
         "category": "Politics",
-        "id": "i2xyxtw7weq",
-        "fetchedAt": "2026-02-17T02:00:12.729Z"
+        "id": "3h99sfv8acc",
+        "fetchedAt": "2026-02-17T05:57:13.708Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "South Korea's opposition set for landslide victory in parliamentary election",
-        "detail": "The win for the liberal opposition Democratic Party (DP) could deepen the political gridlock facing conservative President Yoon Suk Yeol.",
-        "source": "Reuters",
-        "url": "https://www.reuters.com/world/asia-pacific/south-koreas-opposition-set-landslide-victory-parliamentary-election-2024-04-10/",
+        "headline": "Australia won't repatriate 34 women and children from Syria",
+        "detail": "Australian Prime Minister Anthony Albanese announced that his government will not repatriate a group of 34 women and children with alleged links to the Islamic State group from Syria. This decision follows Syrian authorities turning back the group due to procedural issues.",
+        "source": "Associated Press (via CityNews Halifax)",
+        "url": "https://halifax.citynews.ca/national-news/australia-wont-repatriate-34-women-and-children-from-syria-8280628",
         "category": "Politics",
-        "id": "o0hoo3lsju",
-        "fetchedAt": "2026-02-17T02:00:12.729Z"
+        "id": "6p9etm0v1xt",
+        "fetchedAt": "2026-02-17T05:57:13.708Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Mexico cuts diplomatic ties with Ecuador after police raid its embassy",
-        "detail": "Ecuadorian police broke into the Mexican embassy in Quito to arrest former Vice President Jorge Glas, who had been granted political asylum.",
-        "source": "The Guardian",
-        "url": "https://www.theguardian.com/world/2024/apr/06/mexico-cuts-diplomatic-ties-with-ecuador-after-police-raid-its-embassy-to-arrest-former-vice-president",
+        "headline": "Hanson condemned for wild 'no good Muslims' claim",
+        "detail": "Australian One Nation leader Pauline Hanson faced strong condemnation from faith groups after claiming there were 'no good Muslims' in an anti-Muslim rant. Her comments suggested future generations would suffer if more Muslims were allowed into Australia, a claim firmly rejected by the Australian National Imams Council president.",
+        "source": "The New Daily",
+        "url": "https://thenewdaily.com.au/news/politics/2026/02/17/pauline-hanson-no-good-muslims-claim/",
         "category": "Politics",
-        "id": "y0cz95aqca",
-        "fetchedAt": "2026-02-17T02:00:12.729Z"
+        "id": "833iptlfmat",
+        "fetchedAt": "2026-02-17T05:57:13.708Z",
+        "date": "2026-02-17"
       }
     ],
     "Finance & Economy": [
       {
-        "headline": "Fed Officials Emphasize Data Dependency for Rate Cuts Amid Mixed Economic Signals",
-        "detail": "Federal Reserve officials, including New York Fed President John Williams, reiterated the need for more evidence of cooling inflation before considering interest rate cuts, even as some economic data show softening.",
-        "source": "Reuters",
-        "url": "https://www.reuters.com/markets/us/feds-williams-sees-interest-rate-cuts-some-point-time-this-year-2024-05-30/",
+        "headline": "Global Markets- Holiday Calm Before the Data Storm",
+        "detail": "Global markets are experiencing thin trading volumes due to Presidents' Day and Lunar New Year holidays, with investors keenly awaiting key economic data releases later this week, including FOMC minutes, January retail sales, and PCE inflation figures. Concerns about AI disruption continue to weigh on tech stocks, causing the Nasdaq Composite and S&P 500 to decline last week.",
+        "source": "HDFC Sky",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvl799DDfu1dAx9fA1neTzS6uPNXkUvhOyQiqlPIBq7gzygVawdpu_3i7IKTVrlBQD-4bYWXnypWJcya4K7VhYzqLARd1slOUs-lA-JYTChR5wbjTb7PRHhKMy-PTEsFF90D51zW6q_G1xw-Y-bBrElnRaA1qWG5C8P2QQtlKug39URe0s",
         "category": "Finance & Economy",
-        "id": "a8x9miph6vj",
-        "fetchedAt": "2026-02-17T02:00:13.864Z"
+        "id": "tj0ie6t19c",
+        "fetchedAt": "2026-02-17T05:57:16.099Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Eurozone Inflation Accelerates More Than Expected in May, Complicating ECB Rate Cut Plans",
-        "detail": "Preliminary data revealed that consumer price inflation in the Eurozone rose to 2.6% in May, higher than anticipated, raising questions about the pace of future interest rate cuts by the European Central Bank after an expected cut in June.",
-        "source": "Bloomberg",
-        "url": "https://www.bloomberg.com/news/articles/2024-05-31/euro-area-inflation-picks-up-more-than-expected-ahead-of-ecb-meeting",
+        "headline": "Copper powers profit surge at Australia's BHP",
+        "detail": "Australian resources giant BHP reported a significant jump in its half-year net profit, largely fueled by robust demand for copper, which is critical for expanding global electrical networks to support renewable energy. Copper has become the biggest contributor to BHP's overall earnings, with the company positioned for higher long-term copper prices.",
+        "source": "Bangladesh Sangbad Sangstha (BSS)",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGWu-2m8lpVf2ZlceNi5Xf8x1blxNPSPcKl0trFO4d78Pqd1j4319IkkA0hMj7nBNQ21tYLYqbd8PHKyR7XFXLWD7mLpSK0RTYMQLP0LcuablgR9An8KqwPYVuh7oPl9xaLBQ==",
         "category": "Finance & Economy",
-        "id": "oveymy6911l",
-        "fetchedAt": "2026-02-17T02:00:13.864Z"
+        "id": "yu2jja00zc",
+        "fetchedAt": "2026-02-17T05:57:16.099Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "China's Manufacturing PMI Unexpectedly Contracts in May, Signalling Economic Headwinds",
-        "detail": "Official data showed China's manufacturing purchasing managers' index (PMI) fell to 49.5 in May, indicating a contraction in factory activity and adding to concerns about the country's economic recovery and the need for more stimulus.",
-        "source": "Financial Times",
-        "url": "https://www.ft.com/content/2275b281-a9f7-41a4-9e73-d142d17c7689",
+        "headline": "RBA cites changing economic balance in February decision",
+        "detail": "The Reserve Bank of Australia increased its official cash rate to 3.85 percent in February 2026, driven by a reassessment of economic conditions including stronger demand, tighter capacity pressures, and easing financial conditions. Updated staff forecasts indicate stronger growth and higher inflation expectations, suggesting inflation will remain above target for an extended period.",
+        "source": "Super Review",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGr-kv8vPZ_T0kwmqHek-crQu8hajC7IRrylgsX7uszu3Mup65uYg93sFvq5siSGNBqQQYez_yebWi0QXMA5niYX2diWk-A-ijbsw_cOr8IAvdUPdY86F75MNrd1RMquAYEZ0NB-0xX4QPY3GR7mUFj40HVPrFm7s26nwKVUHBbE-g52gg1NPVGWVneOvwUNtWN5U=",
         "category": "Finance & Economy",
-        "id": "6n780it43ek",
-        "fetchedAt": "2026-02-17T02:00:13.864Z"
+        "id": "tga61ddniq",
+        "fetchedAt": "2026-02-17T05:57:16.099Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Nvidia Shares Continue Ascent Ahead of Stock Split, Driving Tech Market Gains",
-        "detail": "Nvidia's stock price surged further in anticipation of its 10-for-1 stock split on June 7, with the chipmaker's valuation continuing to climb amidst intense investor enthusiasm for artificial intelligence technologies.",
-        "source": "Wall Street Journal",
-        "url": "https://www.wsj.com/livecoverage/stock-market-today-nvidia-gains-pce-inflation-05-31-2024/card/nvidia-tops-1-100-ahead-of-stock-split-and-a-key-index-rebalancing-1d6uW3mHhJv4009B8W0Y",
+        "headline": "US markets shut as gold slides more than 1% and stronger dollar weighs on prices",
+        "detail": "Gold prices fell over 1% in thin global trading as major markets in the US and several Asian countries were closed for holidays, with a stronger US dollar adding further pressure. Investors are closely monitoring signals regarding the Federal Reserve's rate path ahead of its upcoming meeting on March 18.",
+        "source": "no-article",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-7jCejfOxJ1KgtEouZToXyynFut7hr2B95jfxzh3Kd9AJHnXmoIv5dwPtFhsRFcMgnZ2AWP5bHeN7a7TW98nmMFoGiJmvhVy7WHWlY4jilxczYgDae9QCc2tWQS_333jrvot2mvF-xf_kFCu9",
         "category": "Finance & Economy",
-        "id": "32uaj07c5y8",
-        "fetchedAt": "2026-02-17T02:00:13.864Z"
+        "id": "rdnsy3xrtco",
+        "fetchedAt": "2026-02-17T05:57:16.099Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "UK House Prices See Unexpected 0.4% Rise in May, Defying Expectations",
-        "detail": "Nationwide Building Society reported that average UK house prices rose by 0.4% month-on-month in May, an unexpected increase that suggests a degree of resilience in the property market despite higher borrowing costs.",
-        "source": "BBC News",
-        "url": "https://www.bbc.co.uk/news/business-69165207",
+        "headline": "Crude Oil Prices Hold Steady on Feb 17, 2026 Amid Geopolitical Tensions",
+        "detail": "Crude oil prices remained largely steady today as investors weighed geopolitical risks, particularly Iran's naval drills near the Strait of Hormuz and ongoing US-Iran nuclear talks, against cautious trading volumes due to holiday closures in Asian markets. WTI crude traded slightly up, while Brent crude saw a minor decrease.",
+        "source": "Angel One",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQETEMkeOG5H4VW3Wkr2U3INS2qK0mtZhw45VYu5ANqtIr4CZQYHXZtSLV3JGnZZsMJ-km_fGF-A2uCEjx7i0dSnHUeiyrLM_Fybj0dPdCr1goaUWd2vgybf-sgaUg1qnbOX-GhrYGZRVfgDUMlJf6zZLKFiYf93wRcR9vDI4IXFPAWrar58T4AZEHr81DyTrUMtlqm9G_XK6fJ2cuYnWTf10pF_ettYNUKCmg==",
         "category": "Finance & Economy",
-        "id": "eaflu44cul",
-        "fetchedAt": "2026-02-17T02:00:13.864Z"
+        "id": "4dpd4q7b5ct",
+        "fetchedAt": "2026-02-17T05:57:16.099Z",
+        "date": "2026-02-17"
       }
     ],
     "Technology": [
       {
-        "headline": "Nvidia Soars Past Expectations with Stellar Q1 Earnings Driven by AI Chip Demand",
-        "detail": "Nvidia reported record-breaking first-quarter earnings, significantly exceeding analyst expectations, primarily due to unprecedented demand for its AI chips used in data centers, further solidifying its dominant position in the artificial intelligence market.",
-        "source": "CNBC",
-        "url": "https://www.cnbc.com/2024/05/22/nvda-earnings-q1-2025-nvidia-reports.html",
+        "headline": "AI Summit 2026 LIVE updates Day 2: India provides 33% more data to ChatGPT than US, says NITI Aayog's Amitabh Kant",
+        "detail": "The AI Impact Summit 2026 is underway in New Delhi, focusing on the development and deployment of artificial intelligence for the public good. Day 2 of the summit features discussions on accelerating AI's adoption and impact across various sectors, with India showcasing its significant contribution to AI data.",
+        "source": "Hindustan Times",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGdgEHde4v8Pkzj4KYrkhdA7P77aLnDMxCLD51zDnV5-_MedkKx1LYyo0APitilyMZwHEGu-hgq6P9ikxMPdCQBmmYnjE_ney30yfULGL7hKL2vHTn9fY2Dgd20_u0T6wrRhTvTbqQS2ytfOskEHAOpk5rggZ4gB2UH6VAKreGSaoG-a1PqEwIqJcxxra4QAQf3dSHLalF_FjBAHtD8vG6jTncfq095VgInkcVOCGD8ITooAqVcD96J080XDU8nUD19nIDVpwKQ_YBfHIRGfpkxMQjh0vje-7Oe6SqSUSPSA6_0VPdxsvywqGliPNr4rg=",
         "category": "Technology",
-        "id": "kjxorfgxegl",
-        "fetchedAt": "2026-02-17T02:00:14.331Z"
+        "id": "hf60zsuga9p",
+        "fetchedAt": "2026-02-17T05:57:13.169Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Microsoft Unveils 'Copilot+ PCs,' Signaling New Era for AI-Powered Windows Computing",
-        "detail": "Microsoft introduced a new category of Windows PCs called 'Copilot+ PCs,' featuring dedicated AI chips (NPUs) and designed to run advanced AI features locally, including new recall capabilities and enhanced creative tools, aiming to redefine the personal computing experience.",
-        "source": "The Verge",
-        "url": "https://www.theverge.com/2024/5/20/24160351/microsoft-copilot-plus-pcs-new-ai-windows-experience",
+        "headline": "Humanoid robots take center stage at 2026 Spring Festival Gala, revealing China's latest robotics advances",
+        "detail": "Chinese robotics companies showcased their latest advancements at the 2026 Spring Festival Gala, with humanoid robots participating in various performances and interactive segments. This highlights China's rapid progress in humanoid robotics and its growing influence in the field.",
+        "source": "TechNode",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPiiY-lP_eNCYehHp4d2IsKX64hR5R_DBNII9dqKMpUG3a9Lq0gTJXLeYu68-DbGh4vu0dNNx6nb6VgxFrWuTmS3IRfNdCjfhNLLy8YMJYZxMMS9rd9le1tx7mPh5buLrYHGhrfGFcUIlNblS9_njuh1TG67iX8NrKCQZ7jeuABH8v4cccnjtmZi6fcrjMsQ6iZKAC_vPOh8UUATNM69Obd29mOCV3Wwli36G2c5lsC3TU6-FwzJbUsWwJ2WWVg6hm5TZzkQ==",
         "category": "Technology",
-        "id": "cxogfizoh1o",
-        "fetchedAt": "2026-02-17T02:00:14.331Z"
+        "id": "r2b30qf16y",
+        "fetchedAt": "2026-02-17T05:57:13.169Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Global Leaders Pledge to Develop International Network for AI Safety at Seoul Summit",
-        "detail": "Following the UK's Bletchley Park summit, the Seoul AI Safety Summit saw leaders from various nations and and tech companies commit to developing an international network for AI safety research and regulation, focusing on safe innovation and responsible deployment.",
-        "source": "Reuters",
-        "url": "https://www.reuters.com/technology/ai-safety-summit-korea-kicks-off-virtual-plenary-2024-05-21/",
+        "headline": "Irish watchdog opens EU data probe into Grok sexual AI imagery",
+        "detail": "Ireland's Data Protection Commission, acting on behalf of the EU, has launched a large-scale inquiry into Elon Musk's X over its AI chatbot Grok's alleged generation and publication of harmful, non-consensual intimate or sexualized images involving Europeans, including children. This probe relates to potential breaches of the bloc's General Data Protection Regulation (GDPR).",
+        "source": "Euractiv",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJYwloowmt3udwtHMVL9D-IQ7Vwg7Ma_86su1nBvuRNTG6q5wZdQVqqNH_GyJ-lYp8kmdoS51388QMV7KF5vAc8dD4mObMVBJQ0bz_dFQ1BpVgc2MnlcKwHD2_5h0JPVk8gt6ZJx_K6KZz2ZNzTKdkLW139ukbxuuHM7NN0IwzzUF_LpTYUAQjAicVQGax4bD4OO_P9cGPkg==",
         "category": "Technology",
-        "id": "xwn3ho40pk",
-        "fetchedAt": "2026-02-17T02:00:14.331Z"
+        "id": "k383llt5ci",
+        "fetchedAt": "2026-02-17T05:57:13.169Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Apple Reportedly Nears Deal with OpenAI to Integrate Generative AI into iOS 18",
-        "detail": "Reports suggest Apple is finalizing a deal with OpenAI to integrate some of its generative AI technology into iOS 18, expected to be unveiled at the upcoming Worldwide Developers Conference (WWDC), marking a significant push into AI for the iPhone maker.",
-        "source": "Bloomberg",
-        "url": "https://www.bloomberg.com/news/articles/2024-05-10/apple-aapl-nears-deal-with-openai-for-ios-18-ai-features",
+        "headline": "Google's ex CEO Eric Schmidt warns America: We are running out of …",
+        "detail": "Former Google CEO Eric Schmidt has cautioned that the United States is facing a critical energy shortage, needing an additional 92 gigawatts of power to sustain the rapid growth of artificial intelligence. This warning highlights the significant strain massive data centers and their cooling requirements are placing on the nation's electricity supply.",
+        "source": "The Times of India",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtGRN7rTxbZqKS7ph_vyDZba27PowUB4ECdxMgGktpYCtmhTG1L4GtSxImEBSIVrscibt3xSR7oT7dLTcFa9HzKPbewtdQhT-2SFZyeIFL57CKy1JPnH_vELlPljRR_FKGLb2_k8qmLmNa8_V-I9rFmaHWKdXkqSECJOcomFJRrShSVNc4Gnpl2zw0ozDY_66GzxXlmcfr1Lw0m14tKI7etpCj0jHlBi7WlAWU8HGuZcrnUZv8kd0EeUed2g3j_Z3wr6DMOTgnirpeDTKLAEM=",
         "category": "Technology",
-        "id": "9ut6f6k5qwj",
-        "fetchedAt": "2026-02-17T02:00:14.331Z"
+        "id": "9i3lgtuhfva",
+        "fetchedAt": "2026-02-17T05:57:13.169Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "EU Regulators Increase Scrutiny of Big Tech's Compliance with Digital Markets Act",
-        "detail": "European Union competition authorities are intensifying their oversight of major technology companies, including Apple, Google, and Meta, to ensure full compliance with the landmark Digital Markets Act (DMA), which aims to prevent anti-competitive practices by digital 'gatekeepers'.",
-        "source": "Politico",
-        "url": "https://www.politico.eu/article/apple-google-meta-amazon-digital-markets-act-dma-eu-fines-competition-regulators/",
+        "headline": "Cornell Drives Semiconductor Innovation with NY Vouchers",
+        "detail": "Several New York-based technology companies are accelerating next-generation semiconductor manufacturing with support from the NY THRIVE Innovation Voucher program, in collaboration with Cornell University. This initiative, alongside Tamil Nadu's recent MoUs with Japanese and Bengaluru-based firms for semiconductor and aerospace investments, underscores a global push to strengthen domestic semiconductor production and R&D.",
+        "source": "Mirage News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGu7iUA4fIXjro6Q9AQ8BYoUPGtbuBM4ysXwDnnSzBhKnqpl2UnE-JOQEjPtXkVIxegTQAONEJqCCVdXPo0F_IL1MPqQ95A7zHSHZOaJ_u_yqojMRtKJSm5GWcA8Sc2fyzeejs0mT6aaf97qgWZJImFf6HHkvah6R4E5Rs-ScSN2Uy_aPbP9JvdnQd32tdS",
         "category": "Technology",
-        "id": "o8hccp4y85b",
-        "fetchedAt": "2026-02-17T02:00:14.331Z"
+        "id": "7ar02gd4h79",
+        "fetchedAt": "2026-02-17T05:57:13.169Z",
+        "date": "2026-02-17"
       }
     ],
     "Science": [
       {
-        "headline": "Scientists Observe Elusive Dark Matter Effect on Ancient Galaxy",
-        "detail": "For the first time, researchers have directly observed the effect of dark matter on the internal motion of stars in an ancient galaxy, providing crucial evidence for its existence and distribution.",
-        "source": "University of Zurich / ScienceDaily",
-        "url": "https://www.media.uzh.ch/en/press-releases/2024/dark-matter-effects.html",
+        "headline": "Universe may end in a 'big crunch,' new dark energy data suggests",
+        "detail": "New data from major dark-energy observatories suggest the universe may not expand forever. A Cornell physicist calculates the cosmos could begin collapsing in about 11 billion years, ending in a 'big crunch' roughly 20 billion years from now.",
+        "source": "ScienceDaily",
+        "url": "https://www.sciencedaily.com/releases/2026/02/260215225537.htm",
         "category": "Science",
-        "id": "2vdf0a6q02z",
-        "fetchedAt": "2026-02-17T02:00:11.922Z"
+        "id": "jo58wesajuc",
+        "fetchedAt": "2026-02-17T05:57:10.507Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Antarctic Sea Ice Hits Historic Low for Third Year in a Row",
-        "detail": "Scientists have confirmed that Antarctic sea ice cover reached a new record low for the third consecutive year, raising concerns about the accelerating pace of climate change and its impact on polar ecosystems.",
-        "source": "The Guardian",
-        "url": "https://www.theguardian.com/environment/article/2024/may/22/antarctic-sea-ice-historic-low-third-year-in-a-row-scientists",
+        "headline": "Annular solar eclipse crosses Antarctica on February 17, 2026",
+        "detail": "An annular solar eclipse, also known as a 'ring of fire' eclipse, is occurring today, February 17, 2026, primarily visible over Antarctica. The Moon will pass in front of the Sun but not completely block it, leaving a bright ring of sunlight.",
+        "source": "Mint / The Watchers / Live Science",
+        "url": "https://www.livemint.com/science/news/solar-eclipse-on-february-17-2026-will-the-annular-ring-of-fire-be-visible-in-india-or-us-11708139599547.html",
         "category": "Science",
-        "id": "r954lvyj4a",
-        "fetchedAt": "2026-02-17T02:00:11.922Z"
+        "id": "7gp4d9fvs28",
+        "fetchedAt": "2026-02-17T05:57:10.507Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "A New Theory of How Life Got Its Start on Earth",
-        "detail": "Researchers propose a new hypothesis suggesting that life on Earth may have originated in warm, wet land environments rather than deep-sea vents, challenging long-held theories about abiogenesis.",
-        "source": "The New York Times",
-        "url": "https://www.nytimes.com/2024/05/22/science/origin-of-life-on-earth-theory.html",
+        "headline": "Microplastics have reached Antarctica's only native insect",
+        "detail": "Scientists have discovered that Belgica antarctica, a tiny midge and the southernmost insect on Earth, is ingesting microplastics in the wild. This finding indicates that even remote regions like Antarctica are not untouched by plastic pollution.",
+        "source": "ScienceDaily",
+        "url": "https://www.sciencedaily.com/releases/2026/02/260216110839.htm",
         "category": "Science",
-        "id": "war89rxoc7",
-        "fetchedAt": "2026-02-17T02:00:11.922Z"
+        "id": "j1whujh880h",
+        "fetchedAt": "2026-02-17T05:57:10.507Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "CRISPR Breakthrough Paves Way for Gene Editing in the Brain",
-        "detail": "Scientists have developed a method using CRISPR-Cas9 to safely and effectively edit genes directly within the brain, offering new therapeutic avenues for neurological disorders like Huntington's disease.",
-        "source": "Nature",
-        "url": "https://www.nature.com/articles/d41586-024-01397-x",
+        "headline": "Scientists Use AI To Convert Antibodies Into Intracellular Tools",
+        "detail": "Researchers have developed a new design strategy using artificial intelligence to create functional intracellular antibodies, or intrabodies. This breakthrough allows antibodies to work within living cells, opening up new applications in diagnostics and therapeutics.",
+        "source": "Technology Networks",
+        "url": "https://www.technologynetworks.com/tn/news/scientists-use-ai-to-convert-antibodies-into-intracellular-tools-384408",
         "category": "Science",
-        "id": "pfpifhlth9",
-        "fetchedAt": "2026-02-17T02:00:11.922Z"
+        "id": "i760iky5ct",
+        "fetchedAt": "2026-02-17T05:57:10.507Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "New AI Tool Identifies Individuals Through Unique Writing Styles",
-        "detail": "Researchers have developed an artificial intelligence system capable of identifying individuals based solely on their distinct writing patterns, even across different languages, raising questions about privacy and digital forensics.",
-        "source": "University of Cambridge / ScienceDaily",
-        "url": "https://www.cam.ac.uk/stories/AI-system-can-identify-individuals-through-unique-fingerprint-in-writing-style",
+        "headline": "Massive magma surge sparked 28,000 Santorini earthquakes",
+        "detail": "Tens of thousands of earthquakes that shook the Greek island of Santorini in early 2025 were caused by a massive surge of magma. Roughly 300 million cubic meters of molten rock rose through the crust, triggering intense seismic activity.",
+        "source": "ScienceDaily",
+        "url": "https://www.sciencedaily.com/releases/2026/02/260217112838.htm",
         "category": "Science",
-        "id": "ubobfs9j2m",
-        "fetchedAt": "2026-02-17T02:00:11.922Z"
+        "id": "g2tmrtuirue",
+        "fetchedAt": "2026-02-17T05:57:10.507Z",
+        "date": "2026-02-17"
       }
     ],
     "Health": [
       {
-        "headline": "WHO warns of growing global threat from avian influenza H5N1",
-        "detail": "The World Health Organization is urging countries to take immediate action as the H5N1 bird flu virus continues to spread and jump to more mammalian species, increasing concerns about potential human transmission.",
-        "source": "World Health Organization (WHO)",
-        "url": "https://www.who.int/news/item/07-06-2024-who-calls-for-urgent-action-to-contain-h5n1-avian-influenza-spread",
+        "headline": "NCDC raises alarm as Lassa Fever kills health workers, 16 infected as Benue confirms 11 cases, 4 deaths",
+        "detail": "The Nigeria Centre for Disease Control (NCDC) has issued an alert regarding the increasing spread of Lassa fever, which has resulted in the deaths of health workers and infected 16 people. Benue State alone has confirmed 11 cases and 4 deaths, highlighting the severity of the outbreak.",
+        "source": "Champion Newspapers LTD",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqMJ0KGT0AQEH6FwzLAEQ-eX6c77ng5FjDJayfY8shDVtsSQGBr6B33x3CJFg8MiOiD01jp3VPQ1a7mnLGDrKdKPSoyOKOMLyiPLnBpKvTYvLtXVpRD8rwrGoHrbAFSSJFgjxnzgYHRomqKehSaIXsmoJPJcRgJV2E1v0IVZkVVkvMAJ7APF4ncu3rfezw-efj585XzHGyg1vzmBQ7aup9RcgSCR-r4y18YIaEZbR_-aJUDkMYx63RYpc8tI_j3U6_Hs4riIky4p0=",
         "category": "Health",
-        "id": "ynlav1hpnlg",
-        "fetchedAt": "2026-02-17T02:00:17.631Z"
+        "id": "vwtiks105kr",
+        "fetchedAt": "2026-02-17T05:57:13.288Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Health warnings issued across Europe as record heatwaves intensify",
-        "detail": "Public health agencies across Europe are issuing severe warnings and implementing emergency measures as the continent faces intensifying heatwaves, posing serious health risks, especially for the elderly and those with chronic conditions.",
-        "source": "Reuters",
-        "url": "https://www.reuters.com/business/environment/southern-europe-faces-sweltering-heat-with-some-areas-reaching-40c-2024-06-13/",
+        "headline": "India's Health Minister to launch SAHI, BODH initiatives at India AI Summit 2026 on Feb 17",
+        "detail": "India's Union Health and Family Welfare Minister will launch two national initiatives, SAHI and BODH, at the India AI Summit today. These initiatives aim to strengthen the use of artificial intelligence in healthcare across the country.",
+        "source": "DD News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtjf_qsHlvxzr-1e-Hfuc8Xs72ugT2w-TQQcSk0fmjOx33ObkqZBj4hdxo22ssBnku7urs4isX_5qo9V_g4Vq3QBsVzP8ZdOm_God9_GuVC5BgTNUPFVeabNUWA6zMu-8hKD121hdJey1cKbrvdnw72mhKGfAZ15yyz6aURStJFn_LLfw5C7w177E1Sflf3BdDhWZdAUCMMZqHct4jt-9LexnBCTqbaAjdH4HIzw==",
         "category": "Health",
-        "id": "6shg1wzxomb",
-        "fetchedAt": "2026-02-17T02:00:17.631Z"
+        "id": "7qf95ss3wrp",
+        "fetchedAt": "2026-02-17T05:57:13.288Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "AI models show enhanced accuracy in detecting breast cancer from mammograms",
-        "detail": "Recent studies indicate that advanced artificial intelligence models are significantly improving the accuracy of breast cancer detection in mammography screenings, potentially leading to earlier diagnosis and better patient outcomes.",
-        "source": "The Guardian",
-        "url": "https://www.theguardian.com/society/article/2024/jun/05/ai-could-detect-breast-cancer-as-well-as-doctors-study-finds",
+        "headline": "Nearly 200,000 people reveal the real key to heart health",
+        "detail": "A decades-long study involving nearly 200,000 adults suggests that the quality of food in low-carb or low-fat diets is more crucial for heart health than simply cutting carbs or fat. Diets emphasizing whole grains, plant-based foods, and healthy fats were linked to a lower risk of heart disease.",
+        "source": "ScienceDaily",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFnA8e_ln_r2cZ-HY1n3L3vN5pQC9zTFEGrQOmHydyff3dz5kYStY-iFgO07fexjqFtfJBcXMXMw8wMelwAZNw1HjcqWVqrocLATuURnDM11o86Gil1ZktRPwX-RD5Cw4vIHgHcuX1hj4WdwBGXVY3q3mF41SSCqEw=",
         "category": "Health",
-        "id": "4st1rwdz1ul",
-        "fetchedAt": "2026-02-17T02:00:17.631Z"
+        "id": "3h5jp8qegf1",
+        "fetchedAt": "2026-02-17T05:57:13.288Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "G7 Health Ministers pledge strengthened global health security and pandemic preparedness",
-        "detail": "Health ministers from the G7 nations met to commit to bolstering global health security frameworks, enhancing pandemic preparedness, and ensuring equitable access to medical countermeasures in future health crises.",
-        "source": "Associated Press (AP)",
-        "url": "https://apnews.com/article/g7-health-ministers-italy-pandemic-preparedness-111d4d1253a992569e29a998c252ef5a",
+        "headline": "Government of Canada to announce funding to help address the illegal drug and overdose crisis in Northern and Western Canada",
+        "detail": "The Government of Canada is set to announce significant funding today under the Emergency Treatment Fund and the Substance Use and Addictions Program. This initiative aims to combat the illegal drug and overdose crisis prevalent in Northern and Western Canada.",
+        "source": "Canada.ca",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHln-pUWMyKkMuBbhApHDbFGAheRjaDVVdh_XYeqffvFKjfX2BMots8WA3lR5DrYht9ebtcrZ3cp1zW86pUpI6so8JigyRszhLmpXS2dEIa7FbPYmlZuiCKBUDULdlgM6sBw3guYmLpZ_zI0bAbhFdgd8oN1s3RUOZW463ASnD35eAyyM1ZJceGSkojnXYXvSSC1vQ7v9M-Kc_mM8KjZrTvgCzEPh9DV6IN6tON8gmmUDm_9iPeQvrshQtmtZS8Od2zVpK7oMuMpTGdO9WqV5sCZv1Y5oPvqhhMDtMuugLFExiaX-L5xC7t2aXiqFy-g3HJ",
         "category": "Health",
-        "id": "9lq7tt8i72l",
-        "fetchedAt": "2026-02-17T02:00:17.631Z"
+        "id": "x1vt8o7ccm8",
+        "fetchedAt": "2026-02-17T05:57:13.288Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "New research links long-term air pollution exposure to increased risk of cognitive decline",
-        "detail": "A recent international study has found a significant correlation between prolonged exposure to fine particulate matter in air pollution and an accelerated rate of cognitive decline, emphasizing the broad impact of environmental factors on brain health.",
-        "source": "CNN",
-        "url": "https://edition.cnn.com/2024/06/07/health/air-pollution-cognitive-decline-study-wellness/index.html",
+        "headline": "Medibank funding expansion signals momentum for Emyria's mental health model",
+        "detail": "Australian insurer Medibank has expanded its funding agreement to support Emyria's mental health services, including its new clinic in Victoria. This expansion will allow eligible members to access psychiatrist-led trauma programs for conditions like treatment-resistant depression and PTSD.",
+        "source": "Biotech",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMw2SYy78Vk4MZzklXsW9qztGctVDytgmtIfMIuSgVTfS4NsmqXcA0SEm7B355VWTjPSiZdyk1SqleHhjeNgaHw_SK1fgntnulXMHR9WkJRNKf8abTtqfE8YzZCmVeISr3Jhtg3I6UgUmBiY2nS7Zdtvf6Ce_FGRMqvVvnjSNRMe-6DCeEICsSzAiQ6JlZOmVR51v0c8pUQCKdx-a0OhQiYOVqHA8_sCJpJA==",
         "category": "Health",
-        "id": "7edz92temzh",
-        "fetchedAt": "2026-02-17T02:00:17.631Z"
+        "id": "92sofels2xj",
+        "fetchedAt": "2026-02-17T05:57:13.288Z",
+        "date": "2026-02-17"
       }
     ],
     "Sports": [
       {
-        "headline": "Celtics on verge of NBA title after taking 3-0 lead over Mavericks",
-        "detail": "The Boston Celtics are one win away from their 18th NBA championship after defeating the Dallas Mavericks in Game 3 to take a commanding 3-0 series lead in the NBA Finals.",
-        "source": "ESPN",
-        "url": "https://www.espn.com/nba/story/_/id/40342938/celtics-vs-mavericks-nba-finals-game-3-final-score-analysis-updates",
+        "headline": "Japan Ties Record Winter Games Medals with Figure Skating Pairs Gold",
+        "detail": "Japan's Riku Miura and Ryuichi Kihara secured gold in figure skating pairs at the Milan-Cortina Olympics on Monday, marking Japan's first Olympic medal in the event and contributing to the country's record-tying 18 Winter Olympic medals.",
+        "source": "nippon.com",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUxe33wugTtjhXqJW0xzO51OK4Ohk1N54JG5f5ehO1koVVaJQKjZQTP3YG_16I_58uIcQmj4F7iWswQy9WpIcKzHXcFd_94W7n9vm4Qe2Dz244KQaZCy1PR4dyhnnHUdo4DmSGanF3WxHB3g==",
         "category": "Sports",
-        "id": "r8pnmcr6z58",
-        "fetchedAt": "2026-02-17T02:00:11.755Z"
+        "id": "7x3hwwoxt92",
+        "fetchedAt": "2026-02-17T05:57:17.490Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Germany crush Scotland 5-1 in Euro 2024 opener",
-        "detail": "Hosts Germany kicked off their UEFA Euro 2024 campaign in spectacular fashion, securing a dominant 5-1 victory over Scotland in the opening match in Munich.",
-        "source": "BBC Sport",
-        "url": "https://www.bbc.com/sport/football/articles/crggy2w9n9zo",
+        "headline": "Five things to know from Monday at the 2026 Games",
+        "detail": "This article highlights key events from Monday at the Milan-Cortina 2026 Winter Olympics, including Canadian Megan Oldham's gold medal win in the women's freestyle skiing big air event.",
+        "source": "Globalnews.ca",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEgnm42oBMilH83_7Utn7Bc69OI6ZzoM614bU5RbUM9jQHCwlpIOhd-QxD4byiWRbpPCjf0Pq5I5Srh2Q4bvhHQDkJVE9w6di4TH1AI7_zTfzJiRz5kaWrgNv4t_bdLXsPOEb4BvZygbzUb8Sqmp1bV4DQp4ideMqp3sJlM3IwjdRuwFyZfroYUttIvYILnI72e",
         "category": "Sports",
-        "id": "vm478q6ejsh",
-        "fetchedAt": "2026-02-17T02:00:11.755Z"
+        "id": "dfp24kd73fr",
+        "fetchedAt": "2026-02-17T05:57:17.490Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Alcaraz defeats Zverev to win first French Open title",
-        "detail": "Carlos Alcaraz captured his first French Open men's singles title, defeating Alexander Zverev in a thrilling five-set final at Roland Garros.",
-        "source": "ESPN",
-        "url": "https://www.espn.com/tennis/story/_/id/40306173/carlos-alcaraz-wins-first-french-open-title-vs-alexander-zverev",
+        "headline": "Dolphins cut four, including stars Hill and Chubb",
+        "detail": "The Miami Dolphins have released four players, notably star athletes Tyreek Hill and Bradley Chubb, in a move to create salary cap flexibility.",
+        "source": "Altoona Mirror",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFQshrhJa0ymjhzCHV-mg91ESLrkhl7IO5v5f7lHyVYGildOaxdgn1GuP9NHhyro_P3xx0D7PSQMC71ZEyZvyCy5BYjUTajM_TV37X8GATRHg9ni9nCNulvW9iEmKAFx0YCGomNHlsrv627OEKY-hwJ7J1RnQe7TZcz792B8jv6WgGul8c4Zg9getkpMrm1FneOgNtYG2OkhMsnxhJd8boWIt3HZUUr54Wp",
         "category": "Sports",
-        "id": "fxap9mwemqe",
-        "fetchedAt": "2026-02-17T02:00:11.755Z"
+        "id": "re9arquj4wi",
+        "fetchedAt": "2026-02-17T05:57:17.490Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Pakistan eliminated from T20 World Cup after USA match washed out",
-        "detail": "Pakistan's T20 World Cup campaign ended prematurely as their crucial match against Ireland was washed out in Florida, securing USA's progression to the Super 8s.",
-        "source": "ICC Cricket",
-        "url": "https://www.icc-cricket.com/news/pakistan-out-of-t20-world-cup-after-washout",
+        "headline": "Malinin hints at 'inevitable crash' amid Olympic pressure",
+        "detail": "Figure skater Ilia Malinin shared his struggles with the immense pressure of the Olympics, alluding to an 'inevitable crash' after a less than perfect performance at the Games.",
+        "source": "Tribune Chronicle",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGsSarf4UjUNWQ4SBhaF0oUUvCLqNfGN7vV0kaan5_NJAeRqVq-gynsAzo9RTT24rSY0t0cw7ZenjBN_o_mL89ch03mog2KSl8A-tRqPj3dDgp1dawsKyJXLNuDjuHq_VpHoa4vHkHuqDh04udkPJ2wbItBTtzdNlE6NFdIcEyvyprl2olXUvPpGquDyYhoOUVXugMdNdT3UrxXCjw=",
         "category": "Sports",
-        "id": "hvuibedihba",
-        "fetchedAt": "2026-02-17T02:00:11.755Z"
+        "id": "hke9kg0audf",
+        "fetchedAt": "2026-02-17T05:57:17.490Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "U.S. Olympic Swimming Trials 2024 begin in Indianapolis",
-        "detail": "The United States Olympic Team Trials for swimming have commenced in Indianapolis, with athletes competing fiercely for spots on the Paris 2024 Olympic roster.",
-        "source": "NBC Sports",
-        "url": "https://www.nbcsports.com/olympics/news/u-s-olympic-swimming-trials-2024-begin-in-indianapolis",
+        "headline": "Poullas finds new avenue to continue wrestling",
+        "detail": "Canfield native Georgio Poullas is embarking on a new professional wrestling venture, preparing for a 175-pound Real American Freestyle (RAF) bout scheduled for February 28.",
+        "source": "The Vindicator",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyxGy-yPo6bUAx3FeSih_A8cDf7MRkk2l5kJMIA4oNaWhvj0vT6h-f2ByRaBR4u7hNgqqPUHmvia5xb1IZ9CiXyNNOAAW37NBVwQZ52Jjo7cuoUDGkA-J9d4Ygu3vwODptsqsgWuFBpFlLjxRMwFSkvfQ_MxpgoDwgDkviGoL3UgQ8hkv6PTW2Bir7RhXkCA==",
         "category": "Sports",
-        "id": "xd2jtemytx",
-        "fetchedAt": "2026-02-17T02:00:11.755Z"
+        "id": "igptvu9rto",
+        "fetchedAt": "2026-02-17T05:57:17.490Z",
+        "date": "2026-02-17"
       }
     ],
     "Entertainment": [
       {
-        "headline": "Anora wins Palme d'Or at Cannes Film Festival 2024",
-        "detail": "Sean Baker's 'Anora', a dark comedy about a sex worker from Brooklyn, took home the top prize at the 77th Cannes Film Festival, marking a significant win for the independent American film.",
-        "source": "BBC News",
-        "url": "https://www.bbc.com/news/articles/c4nn9z3yv8xo",
+        "headline": "Robert Duvall, Oscar-winning actor, dead at 95",
+        "detail": "Veteran actor Robert Duvall, known for iconic roles in films like 'The Godfather' and 'Apocalypse Now,' has passed away at the age of 95. His wife announced his death on Monday, February 16, 2026.",
+        "source": "CBS News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHxAMk5MDks70dIfCJbjFuDnIx94549vAAGKl8ubzEdj_Yg7NuJgTioZikqZ1eMYvv44SQB5gz1M-xbNkne6Na6kC0EP2b9BZwWmnSBy44-_caZUUHjQG670p6iNeVnUAd1",
         "category": "Entertainment",
-        "id": "lnde85411ke",
-        "fetchedAt": "2026-02-17T02:00:12.124Z"
+        "id": "die24oczmjl",
+        "fetchedAt": "2026-02-17T05:57:13.478Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "‘Bad Boys: Ride or Die’ Leads Box Office With $56M Debut",
-        "detail": "The latest installment in the Bad Boys franchise, starring Will Smith and Martin Lawrence, exceeded expectations with a strong opening weekend, revitalizing the summer box office.",
-        "source": "Variety",
-        "url": "https://variety.com/2024/film/news/bad-boys-ride-or-die-box-office-opening-weekend-1236029969/",
+        "headline": "'Tell Me Lies' to End with Season 3",
+        "detail": "Meaghan Oppenheimer, the showrunner for Hulu's 'Tell Me Lies,' has confirmed that the series will conclude with its third season. She stated that this was always the intended ending for the show.",
+        "source": "LatestLY",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHw4-pAJGnIgJm4ptUo5518uMjpPjQvOFzR6M8ui7dJUP3Ejh4ZbiKNVyjbDQfuLlEPApz7S6ad4TuEB_5Ou07lkiDUzwpmL7jaV56tFcF96aWW0pPlu4uD5medmiobrycf0_XhMSuH9LJpw6dWFjONiN_tcgeKP0Qbbe2XcQMbjkgBdzYzq_Qt9pwjRKx5C87Aug-d9bFnHhG3i5c2E1BiUA==",
         "category": "Entertainment",
-        "id": "hp373a0cbgs",
-        "fetchedAt": "2026-02-17T02:00:12.124Z"
+        "id": "bsj8fz9wzav",
+        "fetchedAt": "2026-02-17T05:57:13.478Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "‘House of the Dragon’ Season 2 Looks to Avoid the Sophomore Slump — and Embrace Westeros’ Civil War",
-        "detail": "As the highly anticipated second season of the 'Game of Thrones' prequel approaches, critics and fans are discussing the show's potential to live up to its acclaimed predecessor and fully dive into the Targaryen civil war.",
-        "source": "The Hollywood Reporter",
-        "url": "https://www.hollywoodreporter.com/tv/tv-features/house-of-the-dragon-season-2-emma-d-arcy-olivia-cooke-1235914104/",
+        "headline": "Soubin Shahir and Navya Nair's 'Pathirathri' set for digital premiere this February",
+        "detail": "The Malayalam film 'Pathirathri,' starring Soubin Shahir and Navya Nair, is slated for its digital premiere this February. This news was announced on February 17, 2026.",
+        "source": "Onmanorama",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE45_8X_WFWWzogL8MQC3XiE_TE2qbIdX-HDJ-PSJlS7DQw4eaBDVMqJ28Icdumb-B532Ka0gg2_MaDiQcIkM9dXjzxSzm3uaBvipoJ2RU0YmDj2n7Xe2-OSqLddLLuyelXmXgGAwpDEeMHz7XOe25KlAEmyew-vcT4BQiCi_mp9oaajMz3TYfCYFdz3mQFtFn_JUwtP3MVEzcbQePXQSAMXN6tMwX6V3-HXLUYn-LcCv5ebMlsQ8WWVhBeEOR63XAtD8a21ZUw1d-I",
         "category": "Entertainment",
-        "id": "7sbkx3iq45d",
-        "fetchedAt": "2026-02-17T02:00:12.124Z"
+        "id": "rqlr2wo36g9",
+        "fetchedAt": "2026-02-17T05:57:13.478Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "BTS' Jin discharges from military, first member to complete service",
-        "detail": "Jin, the oldest member of K-pop sensation BTS, became the first in the group to complete his mandatory South Korean military service, marking a step towards the group's potential reunion.",
-        "source": "Reuters",
-        "url": "https://www.reuters.com/lifestyle/bts-jin-discharges-military-first-member-complete-service-2024-06-11/",
+        "headline": "Rashmika Mandanna-Vijay Deverakonda to impose strict no-phone policy at their wedding",
+        "detail": "Amidst wedding rumors, reports suggest that popular Indian actors Rashmika Mandanna and Vijay Deverakonda will implement a strict no-phone policy at their upcoming wedding to prevent unauthorized photos and videos from circulating.",
+        "source": "News24",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEWUgrde4wsax-WdtSRVEduNVuYOiOVuEadKekMwI1Q0lIgebvXfQqObr8-Y9Vpm4QCcqm-X7N6AWn3jBs5kq0XPnIWSnbN6as2EQzEhKNeqBOzt-EFUR0Wex8vizmdeexMe1Bv1OFkTpI_-2j-6ldjmqFtHSYZTbPSua4_hBb64_OCvPPKivZm8gRfwj6wcql8GTqFRC5yziTRNt1lSSfPha3eJFgAQgBtYHs0jELJqgc9gk6NNGmjRivMY3UQia1W8jNLEx41n43tn9A8xP6piglc0Rq3NP8rMtsbHCxGwrY8P_FsaWg4FXLDSni8om2b6KeDab66ScwmbPoboLax2L3uYl2cNptZIo5ClN_q98PTOpKU7_zGrzewZ2VMbIKEpez-Arw1o4BJUsu_AMc=",
         "category": "Entertainment",
-        "id": "bdaaa9k6ixr",
-        "fetchedAt": "2026-02-17T02:00:12.124Z"
+        "id": "thso433vb6c",
+        "fetchedAt": "2026-02-17T05:57:13.478Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Inside Out 2 Review: Pixar is back",
-        "detail": "Pixar's latest animated feature, a sequel to the beloved 'Inside Out', is garnering overwhelmingly positive reviews from critics, praising its emotional depth and vibrant animation as a return to form for the studio.",
-        "source": "IGN",
-        "url": "https://www.ign.com/articles/inside-out-2-review",
+        "headline": "'Wuthering Heights' tops box office with $34.8 million debut",
+        "detail": "The film 'Wuthering Heights,' powered by women, achieved a strong opening weekend at the box office, raking in $34.8 million for a No. 1 debut. This success made it the biggest Valentine's Day box office result since 2016.",
+        "source": "AP News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYfWIBLCrnOuEemJLm7aCSJkD2ujmuuwQ0UxXuby9dwKfMhF3fGFb9JkdVQcNExjpwuPUluKTilhueT62WE-DEx9N6gp7TBogoNW-ja2BPKR7qk8eyoo4j",
         "category": "Entertainment",
-        "id": "7ctgrakkcl3",
-        "fetchedAt": "2026-02-17T02:00:12.124Z"
+        "id": "hjc54i5a19w",
+        "fetchedAt": "2026-02-17T05:57:13.478Z",
+        "date": "2026-02-17"
       }
     ],
     "Crime & Justice": [
       {
-        "headline": "Hunter Biden found guilty on all 3 counts in federal gun trial",
-        "detail": "President Joe Biden's son, Hunter Biden, has been convicted on all three felony gun charges in a historic trial, marking the first time a sitting president's child has been found guilty of a crime.",
-        "source": "CNN",
-        "url": "https://www.cnn.com/2024/06/11/politics/hunter-biden-trial-verdict/index.html",
+        "headline": "Rhode Island shooting: 2 killed, 3 critically injured at Pawtucket ice rink",
+        "detail": "A mass shooting at a high school ice hockey game in Pawtucket, Rhode Island, resulted in two deaths and three critical injuries. The suspected gunman also died, likely from a self-inflicted wound, in what appears to be a targeted family dispute.",
+        "source": "Al Jazeera",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGc9LGTDi4t90cZd-TdU5mqzIG796ciVXkoYSaoRRMb7d374u_8F7V8rAqU3m3n3lJJ4u4gUO1ulFClUbr1GrpZ9mYFUBYUjYH2ry7Tp-sJpOUASR4SRXUAfVxN6afRVodCYM8fITL2SwA9HcXFD53Dc0s1htEWYqRl0xppQOMKluyCozRw45m0tzBJpqxokj2DT3kiR7sW9Ec43xbVBCiYrJWrIpzy0OVLTVOtxw==",
         "category": "Crime & Justice",
-        "id": "nz3isyatmxa",
-        "fetchedAt": "2026-02-17T02:00:09.446Z"
+        "id": "vqrzgbwqnkr",
+        "fetchedAt": "2026-02-17T05:57:19.259Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "South Africa's top court dismisses Zuma's bid to avoid jail for contempt",
-        "detail": "South Africa's highest court has rejected former President Jacob Zuma's attempt to overturn a ruling that found him in contempt of court, meaning he could return to jail for refusing to testify at an corruption inquiry.",
-        "source": "Reuters",
-        "url": "https://www.reuters.com/world/africa/south-africas-top-court-dismisses-zumas-bid-avoid-jail-contempt-2024-06-10/",
+        "headline": "UN Experts: Epstein Files Flaws Undermine Justice",
+        "detail": "UN experts stated that the \"Epstein Files\" reveal credible evidence of systematic sexual abuse, trafficking, and exploitation, potentially amounting to sexual slavery and other grave crimes. They warned of serious compliance failures and botched redactions in the disclosure process, which exposed sensitive victim information.",
+        "source": "Mirage News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEuk18aw48iRJPRA87gou5-VySDX11sdET3An3anya3_39Wb6UywAgiCRk7cxLCwT01jT4oKdeGtk-8qXwjS6N2DAsKz1xm1zDiKwQUHQQqkDIJm6XDGhJERNfUW-K1vNAIWVhekP_wBT2fyzZVoegD_LjzjYGWkd7qIilvA6pHWWjsenAeYQ9PgpkLDgP9A==",
         "category": "Crime & Justice",
-        "id": "5ibwzyxzbiq",
-        "fetchedAt": "2026-02-17T02:00:09.446Z"
+        "id": "8fwuif3buho",
+        "fetchedAt": "2026-02-17T05:57:19.259Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Ontario to impose lifetime driving ban for repeat street racers, stunt drivers",
-        "detail": "The Ontario government is introducing new legislation that would allow for a lifetime driving ban for individuals convicted multiple times of street racing and stunt driving, alongside increased fines and longer license suspensions.",
-        "source": "CBC News",
-        "url": "https://www.cbc.ca/news/canada/toronto/ontario-street-racing-stunt-driving-bill-1.7225139",
+        "headline": "Met deploys drones and ebikes to help catch adolescent phone thieves",
+        "detail": "London's Metropolitan Police are deploying new resources, including drones and electric bikes, to combat a surge in phone snatching. Gangs are reportedly recruiting children via Snapchat to steal the latest iPhones.",
+        "source": "The Guardian",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGnrGjdy2o3if8e9JWCQ7oT4K2DjB-b1UZ4ZRrYCFalWqXw9fyHmsREKGOehd-6lefDDzGsoPCkjZYB7xU8-YbfoGgS3uTg9GpdAqxIC3NKiBnKH9J40zCcmHzsuZ9Ez3DR2MbaUjmQ37AgOmpn6MSKW_5I3EW7nxcL0u5VKRjRfcT2sw2wCEChX9Vj6gxZ1PIb9E-9grb0QP4ZpxTAPSkGHubGBfhgBXOZ9DSQPu9v",
         "category": "Crime & Justice",
-        "id": "9bjqubxtnqc",
-        "fetchedAt": "2026-02-17T02:00:09.446Z"
+        "id": "lpix187ltpd",
+        "fetchedAt": "2026-02-17T05:57:19.259Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Dutch police bust major cocaine lab in Rotterdam, seize €17 million in drugs",
-        "detail": "Dutch authorities have dismantled a large-scale cocaine production facility in Rotterdam and seized approximately €17 million worth of drugs, leading to several arrests as part of a crackdown on organized crime.",
-        "source": "NL Times",
-        "url": "https://nltimes.nl/2024/06/07/police-bust-major-cocaine-lab-rotterdam-seize-eu17m-drugs",
+        "headline": "One dead, two critically injured in Merrylands stabbing; suspect in custody as police investigate motive",
+        "detail": "A stabbing incident near a train station in Merrylands, western Sydney, resulted in one fatality and two critically injured individuals. Police have arrested a suspect and are investigating the motive, with no known link between the attacker and victims yet.",
+        "source": "The Economic Times",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFU7GBfeyvBU0A0itOW02eZ8dcswN6_G44tlI8_cfPEw-29gLoy43JHdn4ys5Dyjmmm49FJDC8krldsmbmWuNsDUJA27o6T-Q9B16qgj8AHtuhkjgTG4sC7VdwbfPPdkj6-2eYaCXlloTw_L3n8vjeoKYh68nuFCKmi5YnVpHc1U012AO4HVc9oMi5PI4NJpJfi2FvSfJinfW1X9BsXtpu0HRERw_cRdLKgjy0lVC0TRul196an1zIhtMK42Zpa6-qe2w0KTa7pTA0eq2syqTo2f-Q5zMdW7Fi59rh4KwqmyiI3x0OTlm6iMxB4FmICeIGcK0g3Q==",
         "category": "Crime & Justice",
-        "id": "phurtevrfli",
-        "fetchedAt": "2026-02-17T02:00:09.446Z"
+        "id": "6w6nhw7bosr",
+        "fetchedAt": "2026-02-17T05:57:19.259Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Massive drug haul in Chennai: Over 100kg hashish seized, 5 arrested",
-        "detail": "Indian law enforcement in Chennai, Tamil Nadu, has made a significant drug bust, seizing over 100 kilograms of hashish valued at millions and arresting five individuals in connection with an international smuggling ring.",
+        "headline": "Guatemala ends emergency powers after a monthlong crackdown sparked by 10 police killings",
+        "detail": "Guatemala has lifted emergency powers enacted a month ago following the killing of 10 police officers by suspected gang members. President Bernardo Arévalo reported 83 gang member arrests and a decrease in homicides and extortion during the period.",
         "source": "The Hindu",
-        "url": "https://www.thehindu.com/news/national/tamil-nadu/mass-drug-haul-in-chennai-over-100kg-hashish-seized/article68265005.ece",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9jtkfgzwQ9pppwNF_hYXPS9rWvXdZrRE7uf_6PCByet2z2kxPfccgdi33YXEm_VMrZFaxM5WbX-qSPafPEdjNiM6oBdWIdXdbwQvudHnBxLM-OfAdYUw-CSws8xL8ZTRpaszlh5v0wEPowUZgIJHGAycoHnoEbFAdB9gJsu4wGVeBj9tyGyhGsHkX52_bspwAxazbPtK6u4Nhmy7epuiNLnFfzGBRv4usoYhK2VTsZV182Y6Nd9Uxot7r9dMDCKDpLyPqmqJT61v6Sm7-SvhG2KpA==",
         "category": "Crime & Justice",
-        "id": "0zhzofd7p5cc",
-        "fetchedAt": "2026-02-17T02:00:09.446Z"
+        "id": "ziisbj7l95",
+        "fetchedAt": "2026-02-17T05:57:19.259Z",
+        "date": "2026-02-17"
       }
     ],
     "Education": [
       {
-        "headline": "UNESCO urges 'urgent' government regulation of generative AI in education",
-        "detail": "UNESCO published its first-ever global guidance on the use of generative AI in education and research, emphasizing the need for ethical integration, data privacy, and teacher training to harness its potential responsibly.",
-        "source": "UNESCO",
-        "url": "https://www.unesco.org/en/articles/unesco-urges-urgent-government-regulation-generative-ai-education",
+        "headline": "Sudanese teachers warn against separate exams in RSF-controlled areas",
+        "detail": "The Sudanese Teachers' Committee has issued a warning against the holding of independent secondary school certificate exams in areas controlled by the Rapid Support Forces (RSF), following an announcement by a rival administration to conduct its own testing. This move raises concerns about a deepening educational divide in the war-torn country.",
+        "source": "Sudan Tribune",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEloIGB40uyLr6hJVIlMqZZYZpS2lEKngk1bBMWRg_-TduzkFnNjodwFmK4wrVDfHhB-DXBmo2hzelzj4qhWFPWl2738Jf2AzfpfliB99fOXooJy-M8DoZWJiyf7PKe3cQmdw==",
         "category": "Education",
-        "id": "l7p1vk80ps",
-        "fetchedAt": "2026-02-17T02:00:13.323Z"
+        "id": "yegfb69kbk",
+        "fetchedAt": "2026-02-17T05:57:12.982Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "OECD report highlights global challenges for the teaching profession, including shortages and aging workforce",
-        "detail": "The 'Education at a Glance 2023' report from the OECD reveals persistent challenges in attracting and retaining qualified teachers across member countries, with an aging workforce and insufficient recruitment causing significant concern for educational quality.",
-        "source": "OECD",
-        "url": "https://www.oecd.org/education/education-at-a-glance/",
+        "headline": "Bleak future for West Bank pupils as budget cuts bite",
+        "detail": "A fiscal crisis has led to public schooling in the Israeli-occupied Palestinian territory being slashed from five days a week to three, impacting around 630,000 pupils. The deepening budget shortfall of the Ramallah-based Palestinian Authority has resulted in reduced salaries for teachers and mounting uncertainty for students' futures.",
+        "source": "Bangladesh Sangbad Sangstha (BSS)",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0AroPI30j3m_wDWmsz-2FMKvRMp5UwLaUqobH9skhyUq7Wgyy_zWCm3ALDxmi_ZCRfPNnolcouvHS00xwltOMvsZOvu1AQoRni3vvPLKMYJSGNulZLheWjBE4beE_cYqHLhP_oyep",
         "category": "Education",
-        "id": "yejtxuoi5i",
-        "fetchedAt": "2026-02-17T02:00:13.323Z"
+        "id": "m2avt5619r",
+        "fetchedAt": "2026-02-17T05:57:12.982Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Gaza conflict severely disrupts education for over 625,000 children, with schools destroyed and thousands displaced",
-        "detail": "The Education Cluster in Palestine reports widespread destruction of schools and displacement of students in Gaza, leaving over 625,000 children with no access to education due to the ongoing conflict and escalating humanitarian crisis.",
-        "source": "Education Cluster (ReliefWeb/OCHA)",
-        "url": "https://reliefweb.int/report/occupied-palestinian-territory/gaza-education-cluster-flash-update-no2-15-november-2023",
+        "headline": "Ireland to Curb English-Language Student Visas Amid Concerns They Are a 'Back Door' to Work Permits",
+        "detail": "Ireland is set to curb English-language student visas, with ministers arguing that uncontrolled growth risks undermining the country's reputation for high-quality education and exacerbating housing shortages. Industry bodies express support for quality-assurance but warn of potential negative impacts on legitimate learners.",
+        "source": "VisaHQ",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZ0_JmxBEivEVcUL619WiKafoFncxQJCa7tWJWA5jSi70U4L_8HJGiQ0b48KeYDH9H_CbktXoNlh4B_3nq9emTsVI93Arre129s9ZjPTgVU48mN5tJ1U2RZBo4SwSlUm8xeS52BcbZ7nmqD2CnpgVGV-DNyKmpclk8UV5Lbdy1mbOx1BlMD9I40uOYUmmAHn9WVzt8OE_CR1AqGGzD5Gy3ThW9GF8RvlIs3ZGxy7BgqvzUg5xrCOjG0UJVUSIH6g6Y_JQf6VxCcw==",
         "category": "Education",
-        "id": "guer81oh9lr",
-        "fetchedAt": "2026-02-17T02:00:13.323Z"
+        "id": "fslh5hpxswf",
+        "fetchedAt": "2026-02-17T05:57:12.982Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "European University Association calls for urgent action on sustainable funding for higher education",
-        "detail": "The European University Association (EUA) urged European leaders to prioritize sustainable and adequate funding for universities, emphasizing their critical role in innovation, research, and addressing global challenges, warning against chronic underinvestment.",
-        "source": "European University Association (EUA)",
-        "url": "https://eua.eu/news-media/news/283-eua-calls-for-urgent-action-on-sustainable-university-funding.html",
+        "headline": "Japan reaffirms support for Grand Egyptian Museum, education cooperation, and regional stability",
+        "detail": "Japan has reaffirmed its commitment to supporting Egypt, particularly in education cooperation, with Ambassador Iwai describing it as a priority area for 2026. This includes initiatives in technical and vocational education, and the expansion of Egyptian-Japanese schools incorporating Japanese educational methodologies.",
+        "source": "Dailynewsegypt",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGxrHmHIPn51axt-koDACe60yRpILJosTGldwBkuXwWvC6n5A6Hz-qqNDbg1KK8CaOIOSZZPErKhOqL7Qa-AWZJ0KvO50z76rjfS_mfe09rcv51BVDJVamfiBKXx1WiOXs4cN3ORYxf4RIo4vyKgazFfDGswnC1zyvqiJKp4DBfFHSShyknsYZC3iiOahHlCF242bs8g2OIxgBEDR6MzEVas4ab26KgBcDBsXzzeMg2IwTc7yVQkAKOWpKkQBYuWRtrfbgK8g==",
         "category": "Education",
-        "id": "khpmjrl9bnf",
-        "fetchedAt": "2026-02-17T02:00:13.323Z"
+        "id": "rxfqpj2ohh",
+        "fetchedAt": "2026-02-17T05:57:12.982Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "World Bank report urges digital education for all to catch up on lost learning and prepare for the future",
-        "detail": "A new World Bank report stresses the necessity of integrating digital learning solutions to address learning losses from the pandemic and equip students worldwide with skills for the future, calling for accessible and equitable digital education infrastructure.",
-        "source": "World Bank",
-        "url": "https://www.worldbank.org/en/news/press-release/2023/10/24/digital-education-for-all-how-to-catch-up-on-lost-learning-and-prepare-for-the-future",
+        "headline": "Helping veterans transition into higher education",
+        "detail": "The University of Western Australia has launched a new program, the Veteran Academic Preparatory Program (VAPP), to help defence veterans transition into higher education. This initiative, supported by a $250,000 grant, aims to build academic skills and confidence for veterans starting in 2026.",
+        "source": "University of Western Australia",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGviSh0BQ0pUP_fOyZfFmTkNNsjNqu4iMwJ9CL5UD5Bnqh41P7ePRGwS3xxn4cpQAW8gbsjiyLeOg0-2dsSpZw4aHXbavk0agv8zE6JbUQ1w_i4qSPLJjVPLp5IAJ3yf6YADYnpWmq-Keqyta1IMYa06G8Oz8OVLVzQ8HR4WnWUCY6YqQEZdfxGvIYDSGs1nMIb_3_UZXOnczQ9Sco96w==",
         "category": "Education",
-        "id": "2knitp4c9a2",
-        "fetchedAt": "2026-02-17T02:00:13.323Z"
+        "id": "j2dc4izz9tq",
+        "fetchedAt": "2026-02-17T05:57:12.982Z",
+        "date": "2026-02-17"
       }
     ],
     "Lifestyle": [
       {
-        "headline": "The surprising downsides of living in paradise",
-        "detail": "This article explores the unexpected challenges and realities faced by people who move to seemingly idyllic locations, revealing the less glamorous aspects of life in a 'paradise'.",
-        "source": "BBC Travel",
-        "url": "https://www.bbc.com/travel/article/20240429-the-surprising-downsides-of-living-in-paradise",
+        "headline": "More Than Lifestyle Changes Needed for Post-Pregnancy Heart Health",
+        "detail": "A new study reveals that women who experience high blood pressure during pregnancy may require more than just lifestyle adjustments to protect their long-term heart health, suggesting a need for proactive medical intervention.",
+        "source": "Mirage News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFVEbaThwEJjkPxh1iMzaOc1STu8OmCWqCWHWTPpWw3umch80nPNLBPuPaReMkKpZWa5hRUoMi_vclIb3_UKfnob93yoND04Gcvau0RDhoOx05HwWuQTVTQmMh4MB63srg2tob8Q0JW82zgCnkyeMz-gQExoFcx67Glzyn27gnuZ0uDAcyUiS_WbtQ==",
         "category": "Lifestyle",
-        "id": "ir4x3xuifja",
-        "fetchedAt": "2026-02-17T02:00:09.688Z"
+        "id": "a7qyp1n98a",
+        "fetchedAt": "2026-02-17T05:57:12.172Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "The return of the low-rise jean: the divisive style makes a comeback",
-        "detail": "Fashion experts and enthusiasts weigh in on the resurgence of low-rise jeans, discussing the polarizing trend and its place in contemporary style.",
-        "source": "The Guardian",
-        "url": "https://www.theguardian.com/fashion/article/2024/may/02/low-rise-jeans-trend-comeback-fashion",
+        "headline": "A Journey from Chronic Arthritis to Renewed Hope Through Yogic Healing",
+        "detail": "This article details a woman's significant improvement from chronic arthritis and weight loss through a holistic approach of yoga, pranayama, natural therapies, and balanced nutrition at Patanjali Yogpeeth.",
+        "source": "Times of India",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExMhqAD6GQyPbwEqL80b7dBDo5IEtPQDOXGYALyzHhu0s9GfMGyCGdSd8nq-qoV0qoyl4EHhd9t3s5FxM_DIEStpaT4Y5yhbThxBNvCVQ-I0PLerZx1Epn2FpkmX5X8V-WDlFUfRomHj-w-bO9clj5fimPdnYClCBbxj6TduEVUyG8ex377L9YXnnqEVtEgKNvxyaafK5e51SIWd_WJlOBQIReq1herfy9US0jEiiB0Pg8TWyPKaLIUL_DF8xpTtAoaOTL_T9JnpB9OkwcpxUVvR6t48TJiA==",
         "category": "Lifestyle",
-        "id": "ialnp36q8hp",
-        "fetchedAt": "2026-02-17T02:00:09.688Z"
+        "id": "jhle2t1z58c",
+        "fetchedAt": "2026-02-17T05:57:12.172Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "How to make friends as an adult, according to experts",
-        "detail": "Experts share advice and practical strategies for adults navigating the challenges of forming new friendships and building social connections in their busy lives.",
-        "source": "CNN",
-        "url": "https://edition.cnn.com/2024/05/01/health/make-friends-adult-wellness/index.html",
+        "headline": "Inside 72 year old Oprah Winfrey's strength training session as she nails planks with ease: 'If you want to age well…'",
+        "detail": "Oprah Winfrey, at 72, showcases her impressive strength training routine, including planks, emphasizing the importance of consistency for aging well, especially for women at risk of osteoporosis.",
+        "source": "Hindustan Times",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHo6h65FyIMy2TczvpfKXZEKRZpXGTXNsmUoB34tkWDF1nL9gbx8rhiHiG9mtotXaOgPtGCNS1o5hWWmJK5CnrMOBczo-CdheCMvv12vfwDxhyYr4jEP73Dj82k48Tmj3SMqqq6zjYi1d3tGr3N4OPQDuveaxlHX_mFuCvjjUa2FG4gxnuBk5B2BuMIqG_2DV8X0fLF_MjUCXEdFQ-AU1PBRU4CU_W-rWvJUfQJBk_QIoK5TtDIoAS1kzEjXMRIANZmdwrRKSTxNmcmRX_6gMBAq1J8nd8oFhjs7atVUHrFgfn8QmgVECyGvcWISTJ0F4OaYwbx-oU-lL0==",
         "category": "Lifestyle",
-        "id": "2n84t7f9ezp",
-        "fetchedAt": "2026-02-17T02:00:09.688Z"
+        "id": "hus043x6j4t",
+        "fetchedAt": "2026-02-17T05:57:12.172Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "The Best Way to Store Summer Tomatoes",
-        "detail": "A guide providing tips and techniques for properly storing summer tomatoes to preserve their freshness, flavor, and texture.",
-        "source": "The New York Times",
-        "url": "https://www.nytimes.com/2024/05/01/magazine/tomato-storage.html",
+        "headline": "The spices, secrets, and spirits of the Silk Road",
+        "detail": "This article explores the resurgence of 'Heritage Tourism' along the historic Silk Route, highlighting cities like Cappadocia and Samarkand that continue to echo the legacy of ancient trade and cultural exchange.",
+        "source": "The Indian Express",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJModrs3Dqj2Rv4euosTdLdxuyFO9r0LxRJKk_LlyjhDZTkOgyQdx9C4k_kJDK5msFri1s3yiq_httiUodhUTEyzz3OL46IykvL0dmDtKU-Fcum_l471HKuLY1VnJDSLuU9ga9sbtZ1lztfRdeiaeoancI6OTxoEuKq-mySbHG5W6D2j1JaWKDWIajmUoXnpZw36l6Z1b_oFH_V2lRywI==",
         "category": "Lifestyle",
-        "id": "itidjwabg09",
-        "fetchedAt": "2026-02-17T02:00:09.688Z"
+        "id": "41p2clqxtcs",
+        "fetchedAt": "2026-02-17T05:57:12.172Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "The enduring appeal of Japan’s traditional art of kintsugi",
-        "detail": "An exploration of kintsugi, the Japanese art of repairing broken pottery with gold, highlighting its philosophy of embracing imperfection and its continued relevance today.",
-        "source": "Al Jazeera English",
-        "url": "https://www.aljazeera.com/gallery/2024/4/29/the-enduring-appeal-of-japans-traditional-art-of-kintsugi",
+        "headline": "Why 2026 is the year to rethink your horoscope",
+        "detail": "As 2026 marks the Year of the Fire Horse, this article delves into the superstitions surrounding this Chinese zodiac sign, particularly in Japan, and prompts a reflection on how ancient astrological beliefs influence modern life.",
+        "source": "Lifestyle.INQ",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8WNG5eRmYwT0TaGNkA-RuCywMpdotR2qGCmTkCsDjK46oPykbcqhiEziDGxpOSulw3UzuFu-JOccNaGmPiLNE1H9IuCYoEhxrogDEv7wfv5KwDrt8XMVqccx9VNSWrhkUwFaVM_aFQIquvik67Rccc8efi3-cUNWKRj5pocViJwMS2qGl1jUl7HPH3BoyB_4==",
         "category": "Lifestyle",
-        "id": "obznazg284",
-        "fetchedAt": "2026-02-17T02:00:09.688Z"
+        "id": "9vqufjz2aad",
+        "fetchedAt": "2026-02-17T05:57:12.172Z",
+        "date": "2026-02-17"
       }
     ],
     "Opinion/Editorial": [
       {
-        "headline": "Does India Really Want to Be a Global Leader?",
-        "detail": "An op-ed questioning India's commitment and approach to global leadership, considering its internal challenges and foreign policy actions.",
-        "source": "The New York Times",
-        "url": "https://www.nytimes.com/2024/05/23/opinion/india-global-leader-narendra-modi.html",
+        "headline": "Desi AI: A blueprint for leadership.",
+        "detail": "This opinion piece argues that India's path to indigenous AI leadership should emulate the success of the Internet and UPI, with the government building the foundational infrastructure.",
+        "source": "The Financial Express",
+        "url": "https://www.financialexpress.com/opinion/desi-ai-a-blueprint-for-leadership/3001809/",
         "category": "Opinion/Editorial",
-        "id": "eavyzwraprk",
-        "fetchedAt": "2026-02-17T02:00:08.628Z"
+        "id": "4f44fq69abw",
+        "fetchedAt": "2026-02-17T05:57:12.741Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "The US election is forcing Republicans to abandon principles. It’s hard to watch",
-        "detail": "A former US labor secretary critiques the Republican party's shift in principles in the context of the upcoming US election.",
-        "source": "The Guardian",
-        "url": "https://www.theguardian.com/commentisfree/article/2024/may/23/us-election-republicans-trump-principles",
+        "headline": "Pluralism hits an off-key note.",
+        "detail": "An editorial discussing how pluralism is facing challenges, suggesting a discordant situation in current societal narratives.",
+        "source": "Deccan Herald",
+        "url": "https://www.deccanherald.com/opinion/editorial/pluralism-hits-an-off-key-note-2895692",
         "category": "Opinion/Editorial",
-        "id": "n1i9cyz2j0r",
-        "fetchedAt": "2026-02-17T02:00:08.647Z"
+        "id": "x84750mgq5",
+        "fetchedAt": "2026-02-17T05:57:12.741Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Why the ICC prosecutor’s move against Israeli leaders is historic",
-        "detail": "An analysis piece arguing for the historical significance of the International Criminal Court prosecutor's request for arrest warrants against Israeli officials.",
-        "source": "Al Jazeera",
-        "url": "https://www.aljazeera.com/opinions/2024/5/23/why-the-icc-prosecutors-move-against-israeli-leaders-is-historic",
+        "headline": "Eliminating dynasties.",
+        "detail": "This column addresses the issue of political dynasties, highlighting criticisms made by a former Chief Justice regarding their impact on Philippine democracy and governance.",
+        "source": "Philstar.com",
+        "url": "https://www.philstar.com/opinion/2026/02/17/3233215/eliminating-dynasties",
         "category": "Opinion/Editorial",
-        "id": "vzzuc19q448",
-        "fetchedAt": "2026-02-17T02:00:08.647Z"
+        "id": "622v5438anr",
+        "fetchedAt": "2026-02-17T05:57:12.741Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "The economic consequences of Britain’s election",
-        "detail": "An opinion piece discussing the potential economic outcomes and challenges for the UK following the upcoming general election.",
-        "source": "Financial Times",
-        "url": "https://www.ft.com/content/e760cf0b-6a9c-4ec7-b501-52f275681144",
+        "headline": "No more ghost classrooms?",
+        "detail": "An editorial questioning the ongoing issue of classroom shortages in public schools and the consequences of past delays in construction, despite government estimates.",
+        "source": "Inquirer.net",
+        "url": "https://opinion.inquirer.net/145400/no-more-ghost-classrooms",
         "category": "Opinion/Editorial",
-        "id": "mvqy9v79d",
-        "fetchedAt": "2026-02-17T02:00:08.647Z"
+        "id": "9mpchmm9hv",
+        "fetchedAt": "2026-02-17T05:57:12.741Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "China still hasn’t fully grasped why nations are wary of it",
-        "detail": "An op-ed suggesting that China's leadership misunderstands the root causes of international distrust and wariness towards its actions.",
-        "source": "The Japan Times",
-        "url": "https://www.japantimes.co.jp/opinion/2024/05/23/commentary/world/china-diplomacy-mistakes/",
+        "headline": "Rubio's Tough Love for Europe.",
+        "detail": "This editorial likely discusses Senator Marco Rubio's stance or remarks concerning Europe, offering a critical or challenging perspective on transatlantic relations.",
+        "source": "Wall Street Journal",
+        "url": "https://www.realclearpolitics.com/epubs/rcp_daily_newsletter_02162026.html",
         "category": "Opinion/Editorial",
-        "id": "z835cg3d4a",
-        "fetchedAt": "2026-02-17T02:00:08.647Z"
+        "id": "ojk3h1upx5q",
+        "fetchedAt": "2026-02-17T05:57:12.741Z",
+        "date": "2026-02-17"
       }
     ],
     "World": [
       {
-        "headline": "Macron's snap election call plunges France into political uncertainty",
-        "detail": "President Emmanuel Macron dissolved parliament and called a snap legislative election after his centrist party suffered a heavy defeat by the far-right National Rally in the European elections.",
-        "source": "The Guardian",
-        "url": "https://www.theguardian.com/world/article/2024/jun/09/macron-dissolves-french-parliament-and-calls-snap-election-after-eu-defeat",
+        "headline": "Moscow, Kyiv set for Geneva peace talks amid Russian attacks",
+        "detail": "Representatives from Ukraine and Russia are scheduled to meet in Geneva for a new round of US-mediated peace talks, with land disputes expected to be the main point of contention. This comes as Russia continues to press for Ukraine to cede control of remaining territories in Donetsk.",
+        "source": "Al Arabiya",
+        "url": "https://english.alarabiya.net/News/world/2026/02/17/Moscow-Kyiv-set-for-Geneva-peace-talks-amid-Russian-attacks",
         "category": "World",
-        "id": "dha9ujj9ej",
-        "fetchedAt": "2026-02-17T02:00:10.707Z"
+        "id": "qpzbwo37l",
+        "fetchedAt": "2026-02-17T05:57:09.752Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Malawi Vice President Saulos Chilima and 9 others killed in plane crash",
-        "detail": "Malawi's Vice President Saulos Chilima and nine other passengers died after a military plane they were traveling in crashed in a forest. The plane had gone missing the previous day.",
-        "source": "BBC News",
-        "url": "https://www.bbc.com/news/articles/c4nn93d395eo",
+        "headline": "Israeli airstrike in southern Lebanon kills Hezbollah member",
+        "detail": "An Israeli airstrike in southern Lebanon on Monday resulted in the death of a Hezbollah member. The Israeli military stated the strike was a response to alleged violations of a fragile ceasefire by the group.",
+        "source": "Xinhua",
+        "url": "https://www.china.org.cn/world/2026-02/17/content_117072621.htm",
         "category": "World",
-        "id": "u3ss8z5cqfh",
-        "fetchedAt": "2026-02-17T02:00:10.707Z"
+        "id": "b9gv6if7hzm",
+        "fetchedAt": "2026-02-17T05:57:09.752Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Israel continues Rafah offensive despite international pressure for ceasefire",
-        "detail": "Israeli forces pressed ahead with their offensive in Rafah, southern Gaza, amidst ongoing international efforts to broker a ceasefire and hostage release deal with Hamas.",
-        "source": "Al Jazeera",
-        "url": "https://www.aljazeera.com/news/2024/6/11/gaza-israel-war-latest-updates",
+        "headline": "Fire at Russia's Ilsky refinery after drone attack, officials say",
+        "detail": "A fire erupted at Russia's Ilsky refinery following a drone attack, according to officials. This incident highlights ongoing tensions and potential attacks on critical infrastructure.",
+        "source": "Al Arabiya",
+        "url": "https://english.alarabiya.net/News/world/2026/02/17/Fire-at-Russia-s-Ilsky-refinery-after-drone-attack-officials-say",
         "category": "World",
-        "id": "7io6sny9t2r",
-        "fetchedAt": "2026-02-17T02:00:10.707Z"
+        "id": "3bz4kessr8k",
+        "fetchedAt": "2026-02-17T05:57:09.752Z",
+        "date": "2026-02-17"
       },
       {
-        "headline": "Narendra Modi sworn in as India's Prime Minister for a third consecutive term",
-        "detail": "Narendra Modi took the oath of office for his third term as India's Prime Minister, leading a coalition government after his Bharatiya Janata Party (BJP) fell short of a majority in recent general elections.",
+        "headline": "Vietnam confirms top leader's US visit for 'Board of Peace' meeting",
+        "detail": "Vietnam's top leader, To Lam, will attend the inaugural meeting of President Donald Trump's 'Board of Peace' in the United States this week. The board, chaired by Trump, was initially established to oversee the rebuilding of the Gaza Strip but its scope appears to be broader.",
+        "source": "Bangladesh Sangbad Sangstha (BSS)",
+        "url": "https://bssnews.net/international/vietnam-confirms-top-leaders-us-visit-713203",
+        "category": "World",
+        "id": "ukh8xbkx02j",
+        "fetchedAt": "2026-02-17T05:57:09.752Z",
+        "date": "2026-02-17"
+      },
+      {
+        "headline": "India seizes three Iran-linked US-sanctioned tankers",
+        "detail": "India has seized three US-sanctioned oil tankers linked to Iran this month and increased maritime surveillance to curb illicit trade. This move aims to prevent Indian waters from being used for ship-to-ship transfers that obscure the origin of oil cargoes.",
         "source": "Reuters",
-        "url": "https://www.reuters.com/world/india/narendra-modi-sworn-indias-prime-minister-third-term-2024-06-09/",
+        "url": "https://www.reuters.com/markets/commodities/india-seizes-three-iran-linked-us-sanctioned-tankers-source-2026-02-17/",
         "category": "World",
-        "id": "klindwpdgkd",
-        "fetchedAt": "2026-02-17T02:00:10.707Z"
-      },
-      {
-        "headline": "G7 leaders gather in Italy with focus on Ukraine and global challenges",
-        "detail": "Leaders of the Group of Seven (G7) major democracies are meeting in southern Italy to discuss ongoing support for Ukraine, global economic stability, and other international challenges.",
-        "source": "Associated Press",
-        "url": "https://apnews.com/article/g7-summit-italy-ukraine-gaza-climate-ai-51152a5aa32a2ee72049e6f6ee50f78c",
-        "category": "World",
-        "id": "8spqgyh21ay",
-        "fetchedAt": "2026-02-17T02:00:10.707Z"
+        "id": "pxmw0j43ic8",
+        "fetchedAt": "2026-02-17T05:57:09.752Z",
+        "date": "2026-02-17"
       }
     ]
   }
