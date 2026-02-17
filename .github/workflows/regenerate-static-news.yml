@@ -38,7 +38,7 @@ jobs:
 
       - name: Generate static news files
         env:
-          FIREBASE_ADMIN_CONFIG: ${{ secrets.FIREBASE_ADMIN_CONFIG }}
+          FIREBASE_ADMIN_CONFIG: ${{ secrets.FIREBASE_ADMIN_CONFIG_BASE64 }}
           APP_ID: morning-pulse-app
         run: |
           echo "🚀 Running static site generation..."
