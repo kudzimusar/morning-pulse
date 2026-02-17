@@ -681,36 +681,11 @@ const App: React.FC = () => {
     });
   }, [isReaderAuthenticated, readerInfo, userRole]);
 
-  // Try to load static data first (Mode B), fallback to Firestore (Mode A)
+  // Always load from Firestore (live news from n8n)
   useEffect(() => {
-    const loadStaticData = async () => {
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const url = `/morning-pulse/data/news-${today}.json`;
-        console.log('🔍 Attempting to load static news from:', url);
-        const response = await fetch(url);
-        console.log('📡 Static news response status:', response.status);
-        if (response.ok) {
-          const data = await response.json();
-          const categoryCount = Object.keys(data.categories || {}).length;
-          console.log('✅ Static news loaded successfully:', categoryCount, 'categories');
-          setNewsData(data.categories || {});
-          setLoading(false);
-          setUseFirestore(false);
-          return;
-        } else {
-          console.log('ℹ️ Static news file not found (404), will try Firestore');
-        }
-      } catch (err) {
-        console.log('❌ Static data fetch error:', err);
-        console.log('🔄 Falling back to Firestore mode');
-      }
-      // If static data fails, use Firestore
-      setUseFirestore(true);
-      setLoading(false);
-    };
-
-    loadStaticData();
+    console.log('🔥 Loading live news from Firestore...');
+    setUseFirestore(true);
+    setLoading(false);
   }, []);
 
   // Memoize callbacks to prevent FirebaseConnector re-initialization
