@@ -95,7 +95,7 @@ import {
   requireEditor,
   logoutEditor
 } from './services/authService';
-import { NewsStory } from '../types';
+import { NewsStory } from './types';
 import { CountryInfo, getUserCountry, detectUserLocation, saveUserCountry, hasManualCountrySelection } from './services/locationService';
 import { initAnalytics, trackPageView, trackArticleView } from './services/analyticsService';
 import { setupScrollMemory, saveScrollPosition, restoreScrollPosition } from './utils/scrollMemory';
@@ -215,7 +215,7 @@ const App: React.FC = () => {
   const [newsData, setNewsData] = useState<NewsData>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [useFirestore, setUseFirestore] = useState(true);
+  const [useFirestore, setUseFirestore] = useState(false);
   const [currentPage, setCurrentPage] = useState<string>('news');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentCountry, setCurrentCountry] = useState<CountryInfo>(() => {
@@ -681,11 +681,37 @@ const App: React.FC = () => {
     });
   }, [isReaderAuthenticated, readerInfo, userRole]);
 
-  // Always load from Firestore (live news from n8n)
+  // Initialize news data (Static first, then Firestore fallback)
   useEffect(() => {
-    console.log('🔥 Loading live news from Firestore...');
-    setUseFirestore(true);
-    setLoading(false);
+    const loadNews = async () => {
+      try {
+        console.log('📄 Attempting to load static news...');
+        // Add timestamp to prevent caching
+        const response = await fetch(`data/news-latest.json?t=${new Date().getTime()}`);
+        if (!response.ok) {
+          throw new Error(`Static file missing: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data && data.categories) {
+          console.log('✅ Static news loaded successfully');
+          setNewsData(data.categories);
+          if (data.timestamp) {
+            setLastUpdated(new Date(data.timestamp));
+          }
+          setUseFirestore(false); // Don't use Firestore if static loaded
+          setLoading(false);
+          return;
+        }
+        throw new Error('Invalid static data format');
+      } catch (err) {
+        console.error('⚠️ Static load failed, falling back to Firestore:', err);
+        setUseFirestore(true);
+        // Don't set loading false yet - let FirebaseConnector handle it
+      }
+    };
+
+    loadNews();
   }, []);
 
   // Memoize callbacks to prevent FirebaseConnector re-initialization

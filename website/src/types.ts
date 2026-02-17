@@ -77,3 +77,22 @@ export interface AuditLog {
   newValue?: any;
   metadata?: { [key: string]: any };
 }
+
+// Represents a news story/article
+export interface NewsStory {
+  id: string;
+  headline: string;
+  detail: string;
+  source: string;
+  url: string;
+  category: string;
+  fetchedAt: string;
+  date: string;
+  timestamp?: number;
+  image?: string;
+  imageUrl?: string;
+  urlToImage?: string;
+  summary?: string;
+  // Optional fields for extensibility
+  [key: string]: any;
+}
