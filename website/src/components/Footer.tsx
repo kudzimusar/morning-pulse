@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Twitter, 
-  Linkedin, 
-  Facebook, 
-  MessageCircle, 
+import {
+  Twitter,
+  Linkedin,
+  Facebook,
+  MessageCircle,
   ArrowUp,
   Mail,
   Shield
@@ -45,14 +45,14 @@ const Footer: React.FC = () => {
       return;
     }
     e.preventDefault();
-    
+
     // If link has categoryParam, create hash with query parameter
     if (link.categoryParam) {
       window.location.hash = `${link.hash}?category=${encodeURIComponent(link.categoryParam)}`;
     } else if (link.hash) {
       window.location.hash = link.hash;
     }
-    
+
     // Scroll to top for hash navigation
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -77,9 +77,9 @@ const Footer: React.FC = () => {
       title: 'Sections',
       links: [
         { label: 'Opinion', hash: 'opinion' },
-        { label: 'Business', hash: 'news', categoryParam: 'Business' },
+        { label: 'Business', hash: 'news', categoryParam: 'Finance & Economy' },
         { label: 'Technology', hash: 'news', categoryParam: 'Technology' },
-        { label: 'World News', hash: 'news', categoryParam: 'World News' },
+        { label: 'World News', hash: 'news', categoryParam: 'World' },
       ],
     },
     company: {
@@ -142,8 +142,8 @@ const Footer: React.FC = () => {
             <p className="footer-copyright">
               © {currentYear} Morning Pulse Media Group. All rights reserved.
             </p>
-            <a 
-              href="#editorial" 
+            <a
+              href="#editorial"
               onClick={(e) => handleLinkClick(e, { label: 'Editorial Standards', hash: 'editorial' })}
               className="footer-standards-link"
             >
@@ -246,8 +246,8 @@ const Footer: React.FC = () => {
             <Mail size={16} />
             <span>info@morningpulse.net</span>
           </a>
-          <a 
-            href="mailto:tip@morningpulse.net?subject=Secure%20Tip" 
+          <a
+            href="mailto:tip@morningpulse.net?subject=Secure%20Tip"
             className="footer-contact-link footer-tip-line"
           >
             <Shield size={16} />

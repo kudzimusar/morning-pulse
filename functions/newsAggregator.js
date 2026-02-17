@@ -5,26 +5,26 @@ const admin = require("firebase-admin");
 // --- UTILITIES ---
 
 function initializeFirebase() {
-  if (admin.apps.length > 0) {
-    console.log("✅ Firebase Admin already initialized, reusing existing instance");
-    return;
-  }
-
-  try {
-    let configStr = process.env.FIREBASE_ADMIN_CONFIG;
-    if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
-      console.log("✅ Detected Base64-encoded config, decoding...");
-      configStr = Buffer.from(configStr, 'base64').toString('utf-8');
+    if (admin.apps.length > 0) {
+        console.log("✅ Firebase Admin already initialized, reusing existing instance");
+        return;
     }
-    const serviceAccount = JSON.parse(configStr);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: `https://gen-lang-client-0999441419.firebaseio.com`
-    });
-    console.log("✅ Firebase Admin initialized successfully.");
-  } catch (error) {
-    console.error("❌ Error initializing Firebase:", error.message);
-  }
+
+    try {
+        let configStr = process.env.FIREBASE_ADMIN_CONFIG;
+        if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
+            console.log("✅ Detected Base64-encoded config, decoding...");
+            configStr = Buffer.from(configStr, 'base64').toString('utf-8');
+        }
+        const serviceAccount = JSON.parse(configStr);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: `https://gen-lang-client-0999441419.firebaseio.com`
+        });
+        console.log("✅ Firebase Admin initialized successfully.");
+    } catch (error) {
+        console.error("❌ Error initializing Firebase:", error.message);
+    }
 }
 
 function getGeminiApiKey() {
@@ -123,7 +123,8 @@ exports.newsAggregator = functions
             "Education",
             "Lifestyle",
             "Opinion/Editorial",
-            "World"
+            "World",
+            "Zimbabwe"
         ];
 
         try {
@@ -216,7 +217,7 @@ try {
     const askPulseAIProxy = require('./askPulseAIProxy');
     exports.askPulseAIProxy = askPulseAIProxy.askPulseAIProxy;
     console.log("✅ askPulseAIProxy function exported successfully.");
-} catch(e) {
+} catch (e) {
     console.log("ℹ️ askPulseAIProxy not available");
 }
 

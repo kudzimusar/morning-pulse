@@ -46,25 +46,50 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
     };
   }, []);
 
-  // Define category order for display - Local category will be dynamic
-  const baseCategoryOrder = [
-    'Local', // Will be replaced with actual Local category name
+  // Define preferred category order for display
+  const preferredOrder = [
+    'Local (Zim)',
+    'Zimbabwe',
+    'Politics',
     'Business (Zim)',
+    'Finance & Economy',
     'African Focus',
+    'World',
     'Global',
     'Sports',
+    'Technology',
     'Tech',
+    'Science',
+    'Health',
+    'Entertainment',
+    'Lifestyle',
+    'Crime & Justice',
+    'Education',
     'General News'
   ];
 
-  // Get the actual Local category name from newsData
-  const localCategoryKey = Object.keys(newsData).find(key =>
-    key.startsWith('Local')
-  ) || 'Local (Zim)';
+  // Get all unique categories from newsData
+  const availableCategories = Object.keys(newsData);
 
-  const categoryOrder = baseCategoryOrder.map(cat =>
-    cat === 'Local' ? localCategoryKey : cat
-  );
+  // Sort available categories based on preferred order
+  const categoryOrder = useMemo(() => {
+    return availableCategories.sort((a, b) => {
+      const indexA = preferredOrder.indexOf(a);
+      const indexB = preferredOrder.indexOf(b);
+
+      // If both are in preferred list, sort by index
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+
+      // If only A is in list, A comes first
+      if (indexA !== -1) return -1;
+
+      // If only B is in list, B comes first
+      if (indexB !== -1) return 1;
+
+      // If neither, sort alphabetically
+      return a.localeCompare(b);
+    });
+  }, [availableCategories]);
 
   // Get all articles, sorted by timestamp (most recent first)
   const allArticles = useMemo(() => {
@@ -80,24 +105,30 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
     });
   }, [newsData]);
 
-  // Get hero article (top story from Local category or first article)
+  // Get hero article (top story from preferred categories or first available)
   const heroArticle = useMemo(() => {
     if (selectedCategory) {
       // If a category is selected, use first article from that category
       const categoryArticles = newsData[selectedCategory] || [];
       return categoryArticles.length > 0 ? categoryArticles[0] : null;
     }
-    // Otherwise, use top story from Local category (dynamic)
-    const localCategoryKey = Object.keys(newsData).find(key =>
-      key.startsWith('Local')
-    ) || 'Local (Zim)';
-    const localArticles = newsData[localCategoryKey] || [];
-    if (localArticles.length > 0) {
-      return localArticles[0];
+
+    // Try to find a hero from priority categories
+    for (const cat of ['Local (Zim)', 'Zimbabwe', 'Politics', 'World']) {
+      const articles = newsData[cat];
+      if (articles && articles.length > 0) return articles[0];
     }
-    // Fallback to first article overall
+
+    // Fallback: use the very first article from appropriate category
+    if (categoryOrder.length > 0) {
+      const firstCat = categoryOrder[0];
+      const articles = newsData[firstCat];
+      if (articles && articles.length > 0) return articles[0];
+    }
+
+    // Final fallback
     return allArticles.length > 0 ? allArticles[0] : null;
-  }, [newsData, selectedCategory, allArticles]);
+  }, [newsData, selectedCategory, allArticles, categoryOrder]);
 
   // Get grid articles (excluding hero article)
   const gridArticles = useMemo(() => {
@@ -111,14 +142,14 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
       // Get articles from all categories except the hero's category
       categoryOrder.forEach(category => {
         const categoryArticles = newsData[category] || [];
-        const heroCategory = heroArticle?.category || '';
-        if (category !== heroCategory) {
-          articles.push(...categoryArticles);
-        } else {
-          // Include all but the first (hero) from this category
-          articles.push(...categoryArticles.slice(1));
-        }
+        // We don't exclude the whole category of the hero anymore, just the hero article itself
+        articles.push(...categoryArticles);
       });
+
+      // Remove hero article instance
+      if (heroArticle) {
+        articles = articles.filter(a => a.id !== heroArticle.id);
+      }
     }
 
     // Sort by timestamp (most recent first)
