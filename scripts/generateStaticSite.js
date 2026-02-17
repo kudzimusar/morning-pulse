@@ -7,6 +7,14 @@ const admin = require('firebase-admin');
 const fs = require('fs');
 const path = require('path');
 
+let configStr = process.env.FIREBASE_ADMIN_CONFIG;
+
+if (configStr && configStr.match(/^[A-Za-z0-9+/]+=*$/)) {
+  console.log("✅ Detected Base64-encoded config, decoding...");
+  configStr = Buffer.from(configStr, 'base64').toString('utf-8');
+  process.env.FIREBASE_ADMIN_CONFIG = configStr;
+}
+
 // Initialize Firebase Admin
 // Handle base64-encoded config or plain JSON
 let serviceAccount = {};
@@ -47,10 +55,14 @@ const db = admin.firestore();
 /**
  * Generate static JSON file for today's news
  */
+/**
+ * Generate static JSON file for today's news
+ */
 async function generateStaticNews() {
   try {
     const today = new Date().toISOString().split('T')[0];
-    const newsPath = `artifacts/${APP_ID}/public/data/news/${today}`;
+    // 🔧 FIX: Use correct Firestore path structure
+    const newsPath = `news/v2/${APP_ID}/daily/dates/${today}`;
     const newsRef = db.doc(newsPath);
     
     console.log(`📡 Fetching news from Firestore: ${newsPath}`);
@@ -66,7 +78,8 @@ async function generateStaticNews() {
         const pastDate = new Date();
         pastDate.setDate(pastDate.getDate() - daysAgo);
         const dateStr = pastDate.toISOString().split('T')[0];
-        const pastNewsPath = `artifacts/${APP_ID}/public/data/news/${dateStr}`;
+        // 🔧 FIX: Use correct Firestore path structure
+        const pastNewsPath = `news/v2/${APP_ID}/daily/dates/${dateStr}`;
         const pastNewsRef = db.doc(pastNewsPath);
         const pastSnapshot = await pastNewsRef.get();
         
