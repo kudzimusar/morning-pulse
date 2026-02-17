@@ -1,40 +1,40 @@
 name: Regenerate Static News Files
 
 on:
-  # Run after Cloud Functions deploy (when news gets updated)
   workflow_run:
     workflows: ["Deploy Cloud Functions"]
     types:
       - completed
-  
-  # Also allow manual trigger
+
   workflow_dispatch:
-  
-  # Run daily at 7 AM UTC (after newsAggregator runs at 6 AM)
+
   schedule:
     - cron: '0 7 * * *'
+
+# ✅ FIX: Grant write permissions to push files back to repo
+permissions:
+  contents: write
 
 jobs:
   regenerate-news:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
-    
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          # ✅ FIX: Use PAT or persist credentials for push access
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: |
-          npm install
-          cd website && npm install
+      - name: Install root dependencies
+        run: npm install
 
       - name: Generate static news files
         env:
@@ -42,35 +42,26 @@ jobs:
           APP_ID: morning-pulse-app
         run: |
           echo "🚀 Running static site generation..."
+          echo "📅 Date: $(date)"
+          echo "🔑 Config length: ${#FIREBASE_ADMIN_CONFIG}"
           node scripts/generateStaticSite.js
-          
           echo "📊 Generated files:"
-          ls -lh website/public/data/
+          ls -lh website/public/data/ || echo "❌ No files generated!"
 
       - name: Commit and push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          
-          # Add generated files
           git add website/public/data/
-          
-          # Check if there are changes to commit
           if git diff --staged --quiet; then
-            echo "✅ No changes to commit"
+            echo "✅ No changes to commit - files up to date"
           else
             git commit -m "chore: regenerate static news files [skip ci]"
-            git push
-            echo "✅ Static news files updated and pushed"
+            git push origin main
+            echo "✅ Static news files updated and pushed!"
           fi
 
       - name: Summary
         run: |
           echo "## 📰 Static News Regeneration Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Generated files:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          ls -lh website/public/data/ >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Files will be deployed to GitHub Pages on next website build." >> $GITHUB_STEP_SUMMARY
+          ls -lh website/public/data/ >> $GITHUB_STEP_SUMMARY || echo "No files found" >> $GITHUB_STEP_SUMMARY
