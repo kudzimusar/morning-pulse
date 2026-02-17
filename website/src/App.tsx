@@ -215,7 +215,7 @@ const App: React.FC = () => {
   const [newsData, setNewsData] = useState<NewsData>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [useFirestore, setUseFirestore] = useState(true);
+  const [useFirestore, setUseFirestore] = useState(false);
   const [currentPage, setCurrentPage] = useState<string>('news');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentCountry, setCurrentCountry] = useState<CountryInfo>(() => {
@@ -715,13 +715,16 @@ const App: React.FC = () => {
 
   // Memoize callbacks to prevent FirebaseConnector re-initialization
   const handleNewsUpdate = React.useCallback((data: NewsData, timestamp?: Date) => {
-    setNewsData(data);
-    setLoading(false);
-    setError(null);
-    if (timestamp) {
-      setLastUpdated(timestamp);
+    // Only update from Firestore if static file failed
+    if (useFirestore) {
+      setNewsData(data);
+      setLoading(false);
+      setError(null);
+      if (timestamp) {
+        setLastUpdated(timestamp);
+      }
     }
-  }, []);
+  }, [useFirestore]);
 
   const handleError = React.useCallback((errorMessage: string) => {
     // Error handler - errors will be set by FirebaseConnector only if no news found
