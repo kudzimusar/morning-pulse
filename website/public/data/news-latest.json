@@ -1,0 +1,571 @@
+{
+  "date": "2026-02-17",
+  "generatedAt": "2026-02-17T04:01:35.729Z",
+  "timestamp": 1771300895729,
+  "categories": {
+    "Politics": [
+      {
+        "headline": "Congress sends $1.2 trillion spending package to Biden, averting shutdown",
+        "detail": "The House passed the legislation Friday morning, a day after the Senate approved it, just hours before funding was set to expire for a quarter of the federal government.",
+        "source": "NBC News",
+        "url": "https://www.nbcnews.com/politics/congress/congress-sends-1-2-trillion-spending-package-biden-averting-shutdown-rcna145000",
+        "category": "Politics",
+        "id": "km7jwg631gj",
+        "fetchedAt": "2026-02-17T02:00:12.729Z"
+      },
+      {
+        "headline": "EU Parliament approves landmark migration and asylum pact",
+        "detail": "Lawmakers vote to approve a contentious set of laws aimed at overhauling the bloc’s migration and asylum rules, following years of debate.",
+        "source": "Al Jazeera",
+        "url": "https://www.aljazeera.com/news/2024/4/10/eu-parliament-approves-landmark-migration-and-asylum-pact",
+        "category": "Politics",
+        "id": "8m542c6v7dx",
+        "fetchedAt": "2026-02-17T02:00:12.729Z"
+      },
+      {
+        "headline": "Hamas says it is studying latest Israeli truce proposal",
+        "detail": "Egypt, Qatar and the US have been trying to mediate a new truce, which would see a hostage-prisoner exchange and increase in aid to Gaza.",
+        "source": "BBC News",
+        "url": "https://www.bbc.com/news/world-middle-east-68779917",
+        "category": "Politics",
+        "id": "i2xyxtw7weq",
+        "fetchedAt": "2026-02-17T02:00:12.729Z"
+      },
+      {
+        "headline": "South Korea's opposition set for landslide victory in parliamentary election",
+        "detail": "The win for the liberal opposition Democratic Party (DP) could deepen the political gridlock facing conservative President Yoon Suk Yeol.",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/world/asia-pacific/south-koreas-opposition-set-landslide-victory-parliamentary-election-2024-04-10/",
+        "category": "Politics",
+        "id": "o0hoo3lsju",
+        "fetchedAt": "2026-02-17T02:00:12.729Z"
+      },
+      {
+        "headline": "Mexico cuts diplomatic ties with Ecuador after police raid its embassy",
+        "detail": "Ecuadorian police broke into the Mexican embassy in Quito to arrest former Vice President Jorge Glas, who had been granted political asylum.",
+        "source": "The Guardian",
+        "url": "https://www.theguardian.com/world/2024/apr/06/mexico-cuts-diplomatic-ties-with-ecuador-after-police-raid-its-embassy-to-arrest-former-vice-president",
+        "category": "Politics",
+        "id": "y0cz95aqca",
+        "fetchedAt": "2026-02-17T02:00:12.729Z"
+      }
+    ],
+    "Finance & Economy": [
+      {
+        "headline": "Fed Officials Emphasize Data Dependency for Rate Cuts Amid Mixed Economic Signals",
+        "detail": "Federal Reserve officials, including New York Fed President John Williams, reiterated the need for more evidence of cooling inflation before considering interest rate cuts, even as some economic data show softening.",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/markets/us/feds-williams-sees-interest-rate-cuts-some-point-time-this-year-2024-05-30/",
+        "category": "Finance & Economy",
+        "id": "a8x9miph6vj",
+        "fetchedAt": "2026-02-17T02:00:13.864Z"
+      },
+      {
+        "headline": "Eurozone Inflation Accelerates More Than Expected in May, Complicating ECB Rate Cut Plans",
+        "detail": "Preliminary data revealed that consumer price inflation in the Eurozone rose to 2.6% in May, higher than anticipated, raising questions about the pace of future interest rate cuts by the European Central Bank after an expected cut in June.",
+        "source": "Bloomberg",
+        "url": "https://www.bloomberg.com/news/articles/2024-05-31/euro-area-inflation-picks-up-more-than-expected-ahead-of-ecb-meeting",
+        "category": "Finance & Economy",
+        "id": "oveymy6911l",
+        "fetchedAt": "2026-02-17T02:00:13.864Z"
+      },
+      {
+        "headline": "China's Manufacturing PMI Unexpectedly Contracts in May, Signalling Economic Headwinds",
+        "detail": "Official data showed China's manufacturing purchasing managers' index (PMI) fell to 49.5 in May, indicating a contraction in factory activity and adding to concerns about the country's economic recovery and the need for more stimulus.",
+        "source": "Financial Times",
+        "url": "https://www.ft.com/content/2275b281-a9f7-41a4-9e73-d142d17c7689",
+        "category": "Finance & Economy",
+        "id": "6n780it43ek",
+        "fetchedAt": "2026-02-17T02:00:13.864Z"
+      },
+      {
+        "headline": "Nvidia Shares Continue Ascent Ahead of Stock Split, Driving Tech Market Gains",
+        "detail": "Nvidia's stock price surged further in anticipation of its 10-for-1 stock split on June 7, with the chipmaker's valuation continuing to climb amidst intense investor enthusiasm for artificial intelligence technologies.",
+        "source": "Wall Street Journal",
+        "url": "https://www.wsj.com/livecoverage/stock-market-today-nvidia-gains-pce-inflation-05-31-2024/card/nvidia-tops-1-100-ahead-of-stock-split-and-a-key-index-rebalancing-1d6uW3mHhJv4009B8W0Y",
+        "category": "Finance & Economy",
+        "id": "32uaj07c5y8",
+        "fetchedAt": "2026-02-17T02:00:13.864Z"
+      },
+      {
+        "headline": "UK House Prices See Unexpected 0.4% Rise in May, Defying Expectations",
+        "detail": "Nationwide Building Society reported that average UK house prices rose by 0.4% month-on-month in May, an unexpected increase that suggests a degree of resilience in the property market despite higher borrowing costs.",
+        "source": "BBC News",
+        "url": "https://www.bbc.co.uk/news/business-69165207",
+        "category": "Finance & Economy",
+        "id": "eaflu44cul",
+        "fetchedAt": "2026-02-17T02:00:13.864Z"
+      }
+    ],
+    "Technology": [
+      {
+        "headline": "Nvidia Soars Past Expectations with Stellar Q1 Earnings Driven by AI Chip Demand",
+        "detail": "Nvidia reported record-breaking first-quarter earnings, significantly exceeding analyst expectations, primarily due to unprecedented demand for its AI chips used in data centers, further solidifying its dominant position in the artificial intelligence market.",
+        "source": "CNBC",
+        "url": "https://www.cnbc.com/2024/05/22/nvda-earnings-q1-2025-nvidia-reports.html",
+        "category": "Technology",
+        "id": "kjxorfgxegl",
+        "fetchedAt": "2026-02-17T02:00:14.331Z"
+      },
+      {
+        "headline": "Microsoft Unveils 'Copilot+ PCs,' Signaling New Era for AI-Powered Windows Computing",
+        "detail": "Microsoft introduced a new category of Windows PCs called 'Copilot+ PCs,' featuring dedicated AI chips (NPUs) and designed to run advanced AI features locally, including new recall capabilities and enhanced creative tools, aiming to redefine the personal computing experience.",
+        "source": "The Verge",
+        "url": "https://www.theverge.com/2024/5/20/24160351/microsoft-copilot-plus-pcs-new-ai-windows-experience",
+        "category": "Technology",
+        "id": "cxogfizoh1o",
+        "fetchedAt": "2026-02-17T02:00:14.331Z"
+      },
+      {
+        "headline": "Global Leaders Pledge to Develop International Network for AI Safety at Seoul Summit",
+        "detail": "Following the UK's Bletchley Park summit, the Seoul AI Safety Summit saw leaders from various nations and and tech companies commit to developing an international network for AI safety research and regulation, focusing on safe innovation and responsible deployment.",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/technology/ai-safety-summit-korea-kicks-off-virtual-plenary-2024-05-21/",
+        "category": "Technology",
+        "id": "xwn3ho40pk",
+        "fetchedAt": "2026-02-17T02:00:14.331Z"
+      },
+      {
+        "headline": "Apple Reportedly Nears Deal with OpenAI to Integrate Generative AI into iOS 18",
+        "detail": "Reports suggest Apple is finalizing a deal with OpenAI to integrate some of its generative AI technology into iOS 18, expected to be unveiled at the upcoming Worldwide Developers Conference (WWDC), marking a significant push into AI for the iPhone maker.",
+        "source": "Bloomberg",
+        "url": "https://www.bloomberg.com/news/articles/2024-05-10/apple-aapl-nears-deal-with-openai-for-ios-18-ai-features",
+        "category": "Technology",
+        "id": "9ut6f6k5qwj",
+        "fetchedAt": "2026-02-17T02:00:14.331Z"
+      },
+      {
+        "headline": "EU Regulators Increase Scrutiny of Big Tech's Compliance with Digital Markets Act",
+        "detail": "European Union competition authorities are intensifying their oversight of major technology companies, including Apple, Google, and Meta, to ensure full compliance with the landmark Digital Markets Act (DMA), which aims to prevent anti-competitive practices by digital 'gatekeepers'.",
+        "source": "Politico",
+        "url": "https://www.politico.eu/article/apple-google-meta-amazon-digital-markets-act-dma-eu-fines-competition-regulators/",
+        "category": "Technology",
+        "id": "o8hccp4y85b",
+        "fetchedAt": "2026-02-17T02:00:14.331Z"
+      }
+    ],
+    "Science": [
+      {
+        "headline": "Scientists Observe Elusive Dark Matter Effect on Ancient Galaxy",
+        "detail": "For the first time, researchers have directly observed the effect of dark matter on the internal motion of stars in an ancient galaxy, providing crucial evidence for its existence and distribution.",
+        "source": "University of Zurich / ScienceDaily",
+        "url": "https://www.media.uzh.ch/en/press-releases/2024/dark-matter-effects.html",
+        "category": "Science",
+        "id": "2vdf0a6q02z",
+        "fetchedAt": "2026-02-17T02:00:11.922Z"
+      },
+      {
+        "headline": "Antarctic Sea Ice Hits Historic Low for Third Year in a Row",
+        "detail": "Scientists have confirmed that Antarctic sea ice cover reached a new record low for the third consecutive year, raising concerns about the accelerating pace of climate change and its impact on polar ecosystems.",
+        "source": "The Guardian",
+        "url": "https://www.theguardian.com/environment/article/2024/may/22/antarctic-sea-ice-historic-low-third-year-in-a-row-scientists",
+        "category": "Science",
+        "id": "r954lvyj4a",
+        "fetchedAt": "2026-02-17T02:00:11.922Z"
+      },
+      {
+        "headline": "A New Theory of How Life Got Its Start on Earth",
+        "detail": "Researchers propose a new hypothesis suggesting that life on Earth may have originated in warm, wet land environments rather than deep-sea vents, challenging long-held theories about abiogenesis.",
+        "source": "The New York Times",
+        "url": "https://www.nytimes.com/2024/05/22/science/origin-of-life-on-earth-theory.html",
+        "category": "Science",
+        "id": "war89rxoc7",
+        "fetchedAt": "2026-02-17T02:00:11.922Z"
+      },
+      {
+        "headline": "CRISPR Breakthrough Paves Way for Gene Editing in the Brain",
+        "detail": "Scientists have developed a method using CRISPR-Cas9 to safely and effectively edit genes directly within the brain, offering new therapeutic avenues for neurological disorders like Huntington's disease.",
+        "source": "Nature",
+        "url": "https://www.nature.com/articles/d41586-024-01397-x",
+        "category": "Science",
+        "id": "pfpifhlth9",
+        "fetchedAt": "2026-02-17T02:00:11.922Z"
+      },
+      {
+        "headline": "New AI Tool Identifies Individuals Through Unique Writing Styles",
+        "detail": "Researchers have developed an artificial intelligence system capable of identifying individuals based solely on their distinct writing patterns, even across different languages, raising questions about privacy and digital forensics.",
+        "source": "University of Cambridge / ScienceDaily",
+        "url": "https://www.cam.ac.uk/stories/AI-system-can-identify-individuals-through-unique-fingerprint-in-writing-style",
+        "category": "Science",
+        "id": "ubobfs9j2m",
+        "fetchedAt": "2026-02-17T02:00:11.922Z"
+      }
+    ],
+    "Health": [
+      {
+        "headline": "WHO warns of growing global threat from avian influenza H5N1",
+        "detail": "The World Health Organization is urging countries to take immediate action as the H5N1 bird flu virus continues to spread and jump to more mammalian species, increasing concerns about potential human transmission.",
+        "source": "World Health Organization (WHO)",
+        "url": "https://www.who.int/news/item/07-06-2024-who-calls-for-urgent-action-to-contain-h5n1-avian-influenza-spread",
+        "category": "Health",
+        "id": "ynlav1hpnlg",
+        "fetchedAt": "2026-02-17T02:00:17.631Z"
+      },
+      {
+        "headline": "Health warnings issued across Europe as record heatwaves intensify",
+        "detail": "Public health agencies across Europe are issuing severe warnings and implementing emergency measures as the continent faces intensifying heatwaves, posing serious health risks, especially for the elderly and those with chronic conditions.",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/business/environment/southern-europe-faces-sweltering-heat-with-some-areas-reaching-40c-2024-06-13/",
+        "category": "Health",
+        "id": "6shg1wzxomb",
+        "fetchedAt": "2026-02-17T02:00:17.631Z"
+      },
+      {
+        "headline": "AI models show enhanced accuracy in detecting breast cancer from mammograms",
+        "detail": "Recent studies indicate that advanced artificial intelligence models are significantly improving the accuracy of breast cancer detection in mammography screenings, potentially leading to earlier diagnosis and better patient outcomes.",
+        "source": "The Guardian",
+        "url": "https://www.theguardian.com/society/article/2024/jun/05/ai-could-detect-breast-cancer-as-well-as-doctors-study-finds",
+        "category": "Health",
+        "id": "4st1rwdz1ul",
+        "fetchedAt": "2026-02-17T02:00:17.631Z"
+      },
+      {
+        "headline": "G7 Health Ministers pledge strengthened global health security and pandemic preparedness",
+        "detail": "Health ministers from the G7 nations met to commit to bolstering global health security frameworks, enhancing pandemic preparedness, and ensuring equitable access to medical countermeasures in future health crises.",
+        "source": "Associated Press (AP)",
+        "url": "https://apnews.com/article/g7-health-ministers-italy-pandemic-preparedness-111d4d1253a992569e29a998c252ef5a",
+        "category": "Health",
+        "id": "9lq7tt8i72l",
+        "fetchedAt": "2026-02-17T02:00:17.631Z"
+      },
+      {
+        "headline": "New research links long-term air pollution exposure to increased risk of cognitive decline",
+        "detail": "A recent international study has found a significant correlation between prolonged exposure to fine particulate matter in air pollution and an accelerated rate of cognitive decline, emphasizing the broad impact of environmental factors on brain health.",
+        "source": "CNN",
+        "url": "https://edition.cnn.com/2024/06/07/health/air-pollution-cognitive-decline-study-wellness/index.html",
+        "category": "Health",
+        "id": "7edz92temzh",
+        "fetchedAt": "2026-02-17T02:00:17.631Z"
+      }
+    ],
+    "Sports": [
+      {
+        "headline": "Celtics on verge of NBA title after taking 3-0 lead over Mavericks",
+        "detail": "The Boston Celtics are one win away from their 18th NBA championship after defeating the Dallas Mavericks in Game 3 to take a commanding 3-0 series lead in the NBA Finals.",
+        "source": "ESPN",
+        "url": "https://www.espn.com/nba/story/_/id/40342938/celtics-vs-mavericks-nba-finals-game-3-final-score-analysis-updates",
+        "category": "Sports",
+        "id": "r8pnmcr6z58",
+        "fetchedAt": "2026-02-17T02:00:11.755Z"
+      },
+      {
+        "headline": "Germany crush Scotland 5-1 in Euro 2024 opener",
+        "detail": "Hosts Germany kicked off their UEFA Euro 2024 campaign in spectacular fashion, securing a dominant 5-1 victory over Scotland in the opening match in Munich.",
+        "source": "BBC Sport",
+        "url": "https://www.bbc.com/sport/football/articles/crggy2w9n9zo",
+        "category": "Sports",
+        "id": "vm478q6ejsh",
+        "fetchedAt": "2026-02-17T02:00:11.755Z"
+      },
+      {
+        "headline": "Alcaraz defeats Zverev to win first French Open title",
+        "detail": "Carlos Alcaraz captured his first French Open men's singles title, defeating Alexander Zverev in a thrilling five-set final at Roland Garros.",
+        "source": "ESPN",
+        "url": "https://www.espn.com/tennis/story/_/id/40306173/carlos-alcaraz-wins-first-french-open-title-vs-alexander-zverev",
+        "category": "Sports",
+        "id": "fxap9mwemqe",
+        "fetchedAt": "2026-02-17T02:00:11.755Z"
+      },
+      {
+        "headline": "Pakistan eliminated from T20 World Cup after USA match washed out",
+        "detail": "Pakistan's T20 World Cup campaign ended prematurely as their crucial match against Ireland was washed out in Florida, securing USA's progression to the Super 8s.",
+        "source": "ICC Cricket",
+        "url": "https://www.icc-cricket.com/news/pakistan-out-of-t20-world-cup-after-washout",
+        "category": "Sports",
+        "id": "hvuibedihba",
+        "fetchedAt": "2026-02-17T02:00:11.755Z"
+      },
+      {
+        "headline": "U.S. Olympic Swimming Trials 2024 begin in Indianapolis",
+        "detail": "The United States Olympic Team Trials for swimming have commenced in Indianapolis, with athletes competing fiercely for spots on the Paris 2024 Olympic roster.",
+        "source": "NBC Sports",
+        "url": "https://www.nbcsports.com/olympics/news/u-s-olympic-swimming-trials-2024-begin-in-indianapolis",
+        "category": "Sports",
+        "id": "xd2jtemytx",
+        "fetchedAt": "2026-02-17T02:00:11.755Z"
+      }
+    ],
+    "Entertainment": [
+      {
+        "headline": "Anora wins Palme d'Or at Cannes Film Festival 2024",
+        "detail": "Sean Baker's 'Anora', a dark comedy about a sex worker from Brooklyn, took home the top prize at the 77th Cannes Film Festival, marking a significant win for the independent American film.",
+        "source": "BBC News",
+        "url": "https://www.bbc.com/news/articles/c4nn9z3yv8xo",
+        "category": "Entertainment",
+        "id": "lnde85411ke",
+        "fetchedAt": "2026-02-17T02:00:12.124Z"
+      },
+      {
+        "headline": "‘Bad Boys: Ride or Die’ Leads Box Office With $56M Debut",
+        "detail": "The latest installment in the Bad Boys franchise, starring Will Smith and Martin Lawrence, exceeded expectations with a strong opening weekend, revitalizing the summer box office.",
+        "source": "Variety",
+        "url": "https://variety.com/2024/film/news/bad-boys-ride-or-die-box-office-opening-weekend-1236029969/",
+        "category": "Entertainment",
+        "id": "hp373a0cbgs",
+        "fetchedAt": "2026-02-17T02:00:12.124Z"
+      },
+      {
+        "headline": "‘House of the Dragon’ Season 2 Looks to Avoid the Sophomore Slump — and Embrace Westeros’ Civil War",
+        "detail": "As the highly anticipated second season of the 'Game of Thrones' prequel approaches, critics and fans are discussing the show's potential to live up to its acclaimed predecessor and fully dive into the Targaryen civil war.",
+        "source": "The Hollywood Reporter",
+        "url": "https://www.hollywoodreporter.com/tv/tv-features/house-of-the-dragon-season-2-emma-d-arcy-olivia-cooke-1235914104/",
+        "category": "Entertainment",
+        "id": "7sbkx3iq45d",
+        "fetchedAt": "2026-02-17T02:00:12.124Z"
+      },
+      {
+        "headline": "BTS' Jin discharges from military, first member to complete service",
+        "detail": "Jin, the oldest member of K-pop sensation BTS, became the first in the group to complete his mandatory South Korean military service, marking a step towards the group's potential reunion.",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/lifestyle/bts-jin-discharges-military-first-member-complete-service-2024-06-11/",
+        "category": "Entertainment",
+        "id": "bdaaa9k6ixr",
+        "fetchedAt": "2026-02-17T02:00:12.124Z"
+      },
+      {
+        "headline": "Inside Out 2 Review: Pixar is back",
+        "detail": "Pixar's latest animated feature, a sequel to the beloved 'Inside Out', is garnering overwhelmingly positive reviews from critics, praising its emotional depth and vibrant animation as a return to form for the studio.",
+        "source": "IGN",
+        "url": "https://www.ign.com/articles/inside-out-2-review",
+        "category": "Entertainment",
+        "id": "7ctgrakkcl3",
+        "fetchedAt": "2026-02-17T02:00:12.124Z"
+      }
+    ],
+    "Crime & Justice": [
+      {
+        "headline": "Hunter Biden found guilty on all 3 counts in federal gun trial",
+        "detail": "President Joe Biden's son, Hunter Biden, has been convicted on all three felony gun charges in a historic trial, marking the first time a sitting president's child has been found guilty of a crime.",
+        "source": "CNN",
+        "url": "https://www.cnn.com/2024/06/11/politics/hunter-biden-trial-verdict/index.html",
+        "category": "Crime & Justice",
+        "id": "nz3isyatmxa",
+        "fetchedAt": "2026-02-17T02:00:09.446Z"
+      },
+      {
+        "headline": "South Africa's top court dismisses Zuma's bid to avoid jail for contempt",
+        "detail": "South Africa's highest court has rejected former President Jacob Zuma's attempt to overturn a ruling that found him in contempt of court, meaning he could return to jail for refusing to testify at an corruption inquiry.",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/world/africa/south-africas-top-court-dismisses-zumas-bid-avoid-jail-contempt-2024-06-10/",
+        "category": "Crime & Justice",
+        "id": "5ibwzyxzbiq",
+        "fetchedAt": "2026-02-17T02:00:09.446Z"
+      },
+      {
+        "headline": "Ontario to impose lifetime driving ban for repeat street racers, stunt drivers",
+        "detail": "The Ontario government is introducing new legislation that would allow for a lifetime driving ban for individuals convicted multiple times of street racing and stunt driving, alongside increased fines and longer license suspensions.",
+        "source": "CBC News",
+        "url": "https://www.cbc.ca/news/canada/toronto/ontario-street-racing-stunt-driving-bill-1.7225139",
+        "category": "Crime & Justice",
+        "id": "9bjqubxtnqc",
+        "fetchedAt": "2026-02-17T02:00:09.446Z"
+      },
+      {
+        "headline": "Dutch police bust major cocaine lab in Rotterdam, seize €17 million in drugs",
+        "detail": "Dutch authorities have dismantled a large-scale cocaine production facility in Rotterdam and seized approximately €17 million worth of drugs, leading to several arrests as part of a crackdown on organized crime.",
+        "source": "NL Times",
+        "url": "https://nltimes.nl/2024/06/07/police-bust-major-cocaine-lab-rotterdam-seize-eu17m-drugs",
+        "category": "Crime & Justice",
+        "id": "phurtevrfli",
+        "fetchedAt": "2026-02-17T02:00:09.446Z"
+      },
+      {
+        "headline": "Massive drug haul in Chennai: Over 100kg hashish seized, 5 arrested",
+        "detail": "Indian law enforcement in Chennai, Tamil Nadu, has made a significant drug bust, seizing over 100 kilograms of hashish valued at millions and arresting five individuals in connection with an international smuggling ring.",
+        "source": "The Hindu",
+        "url": "https://www.thehindu.com/news/national/tamil-nadu/mass-drug-haul-in-chennai-over-100kg-hashish-seized/article68265005.ece",
+        "category": "Crime & Justice",
+        "id": "0zhzofd7p5cc",
+        "fetchedAt": "2026-02-17T02:00:09.446Z"
+      }
+    ],
+    "Education": [
+      {
+        "headline": "UNESCO urges 'urgent' government regulation of generative AI in education",
+        "detail": "UNESCO published its first-ever global guidance on the use of generative AI in education and research, emphasizing the need for ethical integration, data privacy, and teacher training to harness its potential responsibly.",
+        "source": "UNESCO",
+        "url": "https://www.unesco.org/en/articles/unesco-urges-urgent-government-regulation-generative-ai-education",
+        "category": "Education",
+        "id": "l7p1vk80ps",
+        "fetchedAt": "2026-02-17T02:00:13.323Z"
+      },
+      {
+        "headline": "OECD report highlights global challenges for the teaching profession, including shortages and aging workforce",
+        "detail": "The 'Education at a Glance 2023' report from the OECD reveals persistent challenges in attracting and retaining qualified teachers across member countries, with an aging workforce and insufficient recruitment causing significant concern for educational quality.",
+        "source": "OECD",
+        "url": "https://www.oecd.org/education/education-at-a-glance/",
+        "category": "Education",
+        "id": "yejtxuoi5i",
+        "fetchedAt": "2026-02-17T02:00:13.323Z"
+      },
+      {
+        "headline": "Gaza conflict severely disrupts education for over 625,000 children, with schools destroyed and thousands displaced",
+        "detail": "The Education Cluster in Palestine reports widespread destruction of schools and displacement of students in Gaza, leaving over 625,000 children with no access to education due to the ongoing conflict and escalating humanitarian crisis.",
+        "source": "Education Cluster (ReliefWeb/OCHA)",
+        "url": "https://reliefweb.int/report/occupied-palestinian-territory/gaza-education-cluster-flash-update-no2-15-november-2023",
+        "category": "Education",
+        "id": "guer81oh9lr",
+        "fetchedAt": "2026-02-17T02:00:13.323Z"
+      },
+      {
+        "headline": "European University Association calls for urgent action on sustainable funding for higher education",
+        "detail": "The European University Association (EUA) urged European leaders to prioritize sustainable and adequate funding for universities, emphasizing their critical role in innovation, research, and addressing global challenges, warning against chronic underinvestment.",
+        "source": "European University Association (EUA)",
+        "url": "https://eua.eu/news-media/news/283-eua-calls-for-urgent-action-on-sustainable-university-funding.html",
+        "category": "Education",
+        "id": "khpmjrl9bnf",
+        "fetchedAt": "2026-02-17T02:00:13.323Z"
+      },
+      {
+        "headline": "World Bank report urges digital education for all to catch up on lost learning and prepare for the future",
+        "detail": "A new World Bank report stresses the necessity of integrating digital learning solutions to address learning losses from the pandemic and equip students worldwide with skills for the future, calling for accessible and equitable digital education infrastructure.",
+        "source": "World Bank",
+        "url": "https://www.worldbank.org/en/news/press-release/2023/10/24/digital-education-for-all-how-to-catch-up-on-lost-learning-and-prepare-for-the-future",
+        "category": "Education",
+        "id": "2knitp4c9a2",
+        "fetchedAt": "2026-02-17T02:00:13.323Z"
+      }
+    ],
+    "Lifestyle": [
+      {
+        "headline": "The surprising downsides of living in paradise",
+        "detail": "This article explores the unexpected challenges and realities faced by people who move to seemingly idyllic locations, revealing the less glamorous aspects of life in a 'paradise'.",
+        "source": "BBC Travel",
+        "url": "https://www.bbc.com/travel/article/20240429-the-surprising-downsides-of-living-in-paradise",
+        "category": "Lifestyle",
+        "id": "ir4x3xuifja",
+        "fetchedAt": "2026-02-17T02:00:09.688Z"
+      },
+      {
+        "headline": "The return of the low-rise jean: the divisive style makes a comeback",
+        "detail": "Fashion experts and enthusiasts weigh in on the resurgence of low-rise jeans, discussing the polarizing trend and its place in contemporary style.",
+        "source": "The Guardian",
+        "url": "https://www.theguardian.com/fashion/article/2024/may/02/low-rise-jeans-trend-comeback-fashion",
+        "category": "Lifestyle",
+        "id": "ialnp36q8hp",
+        "fetchedAt": "2026-02-17T02:00:09.688Z"
+      },
+      {
+        "headline": "How to make friends as an adult, according to experts",
+        "detail": "Experts share advice and practical strategies for adults navigating the challenges of forming new friendships and building social connections in their busy lives.",
+        "source": "CNN",
+        "url": "https://edition.cnn.com/2024/05/01/health/make-friends-adult-wellness/index.html",
+        "category": "Lifestyle",
+        "id": "2n84t7f9ezp",
+        "fetchedAt": "2026-02-17T02:00:09.688Z"
+      },
+      {
+        "headline": "The Best Way to Store Summer Tomatoes",
+        "detail": "A guide providing tips and techniques for properly storing summer tomatoes to preserve their freshness, flavor, and texture.",
+        "source": "The New York Times",
+        "url": "https://www.nytimes.com/2024/05/01/magazine/tomato-storage.html",
+        "category": "Lifestyle",
+        "id": "itidjwabg09",
+        "fetchedAt": "2026-02-17T02:00:09.688Z"
+      },
+      {
+        "headline": "The enduring appeal of Japan’s traditional art of kintsugi",
+        "detail": "An exploration of kintsugi, the Japanese art of repairing broken pottery with gold, highlighting its philosophy of embracing imperfection and its continued relevance today.",
+        "source": "Al Jazeera English",
+        "url": "https://www.aljazeera.com/gallery/2024/4/29/the-enduring-appeal-of-japans-traditional-art-of-kintsugi",
+        "category": "Lifestyle",
+        "id": "obznazg284",
+        "fetchedAt": "2026-02-17T02:00:09.688Z"
+      }
+    ],
+    "Opinion/Editorial": [
+      {
+        "headline": "Does India Really Want to Be a Global Leader?",
+        "detail": "An op-ed questioning India's commitment and approach to global leadership, considering its internal challenges and foreign policy actions.",
+        "source": "The New York Times",
+        "url": "https://www.nytimes.com/2024/05/23/opinion/india-global-leader-narendra-modi.html",
+        "category": "Opinion/Editorial",
+        "id": "eavyzwraprk",
+        "fetchedAt": "2026-02-17T02:00:08.628Z"
+      },
+      {
+        "headline": "The US election is forcing Republicans to abandon principles. It’s hard to watch",
+        "detail": "A former US labor secretary critiques the Republican party's shift in principles in the context of the upcoming US election.",
+        "source": "The Guardian",
+        "url": "https://www.theguardian.com/commentisfree/article/2024/may/23/us-election-republicans-trump-principles",
+        "category": "Opinion/Editorial",
+        "id": "n1i9cyz2j0r",
+        "fetchedAt": "2026-02-17T02:00:08.647Z"
+      },
+      {
+        "headline": "Why the ICC prosecutor’s move against Israeli leaders is historic",
+        "detail": "An analysis piece arguing for the historical significance of the International Criminal Court prosecutor's request for arrest warrants against Israeli officials.",
+        "source": "Al Jazeera",
+        "url": "https://www.aljazeera.com/opinions/2024/5/23/why-the-icc-prosecutors-move-against-israeli-leaders-is-historic",
+        "category": "Opinion/Editorial",
+        "id": "vzzuc19q448",
+        "fetchedAt": "2026-02-17T02:00:08.647Z"
+      },
+      {
+        "headline": "The economic consequences of Britain’s election",
+        "detail": "An opinion piece discussing the potential economic outcomes and challenges for the UK following the upcoming general election.",
+        "source": "Financial Times",
+        "url": "https://www.ft.com/content/e760cf0b-6a9c-4ec7-b501-52f275681144",
+        "category": "Opinion/Editorial",
+        "id": "mvqy9v79d",
+        "fetchedAt": "2026-02-17T02:00:08.647Z"
+      },
+      {
+        "headline": "China still hasn’t fully grasped why nations are wary of it",
+        "detail": "An op-ed suggesting that China's leadership misunderstands the root causes of international distrust and wariness towards its actions.",
+        "source": "The Japan Times",
+        "url": "https://www.japantimes.co.jp/opinion/2024/05/23/commentary/world/china-diplomacy-mistakes/",
+        "category": "Opinion/Editorial",
+        "id": "z835cg3d4a",
+        "fetchedAt": "2026-02-17T02:00:08.647Z"
+      }
+    ],
+    "World": [
+      {
+        "headline": "Macron's snap election call plunges France into political uncertainty",
+        "detail": "President Emmanuel Macron dissolved parliament and called a snap legislative election after his centrist party suffered a heavy defeat by the far-right National Rally in the European elections.",
+        "source": "The Guardian",
+        "url": "https://www.theguardian.com/world/article/2024/jun/09/macron-dissolves-french-parliament-and-calls-snap-election-after-eu-defeat",
+        "category": "World",
+        "id": "dha9ujj9ej",
+        "fetchedAt": "2026-02-17T02:00:10.707Z"
+      },
+      {
+        "headline": "Malawi Vice President Saulos Chilima and 9 others killed in plane crash",
+        "detail": "Malawi's Vice President Saulos Chilima and nine other passengers died after a military plane they were traveling in crashed in a forest. The plane had gone missing the previous day.",
+        "source": "BBC News",
+        "url": "https://www.bbc.com/news/articles/c4nn93d395eo",
+        "category": "World",
+        "id": "u3ss8z5cqfh",
+        "fetchedAt": "2026-02-17T02:00:10.707Z"
+      },
+      {
+        "headline": "Israel continues Rafah offensive despite international pressure for ceasefire",
+        "detail": "Israeli forces pressed ahead with their offensive in Rafah, southern Gaza, amidst ongoing international efforts to broker a ceasefire and hostage release deal with Hamas.",
+        "source": "Al Jazeera",
+        "url": "https://www.aljazeera.com/news/2024/6/11/gaza-israel-war-latest-updates",
+        "category": "World",
+        "id": "7io6sny9t2r",
+        "fetchedAt": "2026-02-17T02:00:10.707Z"
+      },
+      {
+        "headline": "Narendra Modi sworn in as India's Prime Minister for a third consecutive term",
+        "detail": "Narendra Modi took the oath of office for his third term as India's Prime Minister, leading a coalition government after his Bharatiya Janata Party (BJP) fell short of a majority in recent general elections.",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/world/india/narendra-modi-sworn-indias-prime-minister-third-term-2024-06-09/",
+        "category": "World",
+        "id": "klindwpdgkd",
+        "fetchedAt": "2026-02-17T02:00:10.707Z"
+      },
+      {
+        "headline": "G7 leaders gather in Italy with focus on Ukraine and global challenges",
+        "detail": "Leaders of the Group of Seven (G7) major democracies are meeting in southern Italy to discuss ongoing support for Ukraine, global economic stability, and other international challenges.",
+        "source": "Associated Press",
+        "url": "https://apnews.com/article/g7-summit-italy-ukraine-gaza-climate-ai-51152a5aa32a2ee72049e6f6ee50f78c",
+        "category": "World",
+        "id": "8spqgyh21ay",
+        "fetchedAt": "2026-02-17T02:00:10.707Z"
+      }
+    ]
+  }
+}
