@@ -1577,3 +1577,43 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ============================================
+   READER MODE / COMPACT STYLES
+   ============================================ */
+body.compact-mode {
+  line-height: 1.4;
+}
+
+body.compact-mode .premium-article-card {
+  padding: var(--spacing-sm);
+}
+
+body.compact-mode .article-headline {
+  margin-bottom: 0.25rem;
+}
+
+body.compact-mode .article-detail {
+  margin-bottom: 0.5rem;
+  -webkit-line-clamp: 2; /* Truncate faster */
+}
+
+body.compact-mode .hero-section {
+  margin-top: var(--spacing-lg);
+}
+
+body.compact-mode .hero-image {
+  height: 250px;
+}
+
+body.compact-mode .hero-headline {
+  font-size: 2rem;
+}
+
+body.compact-mode .header-main {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+body.compact-mode .premium-logo {
+  font-size: 1.75rem;
+}

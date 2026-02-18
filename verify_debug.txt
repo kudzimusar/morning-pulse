@@ -1,0 +1,68 @@
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Uses proxy env variable NO_PROXY == '*.azureedge.net'
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host us-central1-gen-lang-client-0999441419.cloudfunctions.net:443 was resolved.
+* IPv6: (none)
+* IPv4: 216.239.36.54
+*   Trying 216.239.36.54:443...
+* Connected to us-central1-gen-lang-client-0999441419.cloudfunctions.net (216.239.36.54) port 443
+* ALPN: curl offers h2,http/1.1
+* (304) (OUT), TLS handshake, Client hello (1):
+} [362 bytes data]
+*  CAfile: /etc/ssl/cert.pem
+*  CApath: none
+* (304) (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* (304) (IN), TLS handshake, Unknown (8):
+{ [15 bytes data]
+* (304) (IN), TLS handshake, Certificate (11):
+{ [11589 bytes data]
+* (304) (IN), TLS handshake, CERT verify (15):
+{ [78 bytes data]
+* (304) (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* (304) (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / AEAD-AES256-GCM-SHA384 / [blank] / UNDEF
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=misc.google.com
+*  start date: Jan 26 08:39:49 2026 GMT
+*  expire date: Apr 20 08:39:48 2026 GMT
+*  subjectAltName: host "us-central1-gen-lang-client-0999441419.cloudfunctions.net" matched cert's "*.cloudfunctions.net"
+*  issuer: C=US; O=Google Trust Services; CN=WR2
+*  SSL certificate verify ok.
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/askPulseAIProxy
+* [HTTP/2] [1] [:method: POST]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: us-central1-gen-lang-client-0999441419.cloudfunctions.net]
+* [HTTP/2] [1] [:path: /askPulseAIProxy]
+* [HTTP/2] [1] [user-agent: curl/8.7.1]
+* [HTTP/2] [1] [accept: */*]
+* [HTTP/2] [1] [content-type: application/json]
+* [HTTP/2] [1] [content-length: 52]
+> POST /askPulseAIProxy HTTP/2
+> Host: us-central1-gen-lang-client-0999441419.cloudfunctions.net
+> User-Agent: curl/8.7.1
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 52
+> 
+} [52 bytes data]
+* upload completely sent off: 52 bytes
+100    52    0     0  100    52      0    227 --:--:-- --:--:-- --:--:--   227100    52    0     0  100    52      0     41  0:00:01  0:00:01 --:--:--    41100    52    0     0  100    52      0     23  0:00:02  0:00:02 --:--:--    23100    52    0     0  100    52      0     15  0:00:03  0:00:03 --:--:--    15100    52    0     0  100    52      0     12  0:00:04  0:00:04 --:--:--    12100    52    0     0  100    52      0      9  0:00:05  0:00:05 --:--:--     0100    52    0     0  100    52      0      8  0:00:06  0:00:06 --:--:--     0100    52    0     0  100    52      0      7  0:00:07  0:00:07 --:--:--     0100    52    0     0  100    52      0      6  0:00:08  0:00:08 --:--:--     0100    52    0     0  100    52      0      5  0:00:10  0:00:09  0:00:01     0100    52    0     0  100    52      0      5  0:00:10  0:00:10 --:--:--     0100    52    0     0  100    52      0      4  0:00:13  0:00:11  0:00:02     0100    52    0     0  100    52      0      4  0:00:13  0:00:12  0:00:01     0100    52    0     0  100    52      0      3  0:00:17  0:00:13  0:00:04     0100    52    0     0  100    52      0      3  0:00:17  0:00:14  0:00:03     0100    52    0     0  100    52      0      3  0:00:17  0:00:15  0:00:02     0100    52    0     0  100    52      0      3  0:00:17  0:00:16  0:00:01     0100    52    0     0  100    52      0      2  0:00:26  0:00:17  0:00:09     0100    52    0     0  100    52      0      2  0:00:26  0:00:18  0:00:08     0100    52    0     0  100    52      0      2  0:00:26  0:00:19  0:00:07     0100    52    0     0  100    52      0      2  0:00:26  0:00:20  0:00:06     0100    52    0     0  100    52      0      2  0:00:26  0:00:21  0:00:05     0100    52    0     0  100    52      0      2  0:00:26  0:00:22  0:00:04     0100    52    0     0  100    52      0      2  0:00:26  0:00:23  0:00:03     0100    52    0     0  100    52      0      2  0:00:26  0:00:24  0:00:02     0100    52    0     0  100    52      0      2  0:00:26  0:00:25  0:00:01     0100    52    0     0  100    52      0      1  0:00:52  0:00:26  0:00:26     0100    52    0     0  100    52      0      1  0:00:52  0:00:27  0:00:25     0100    52    0     0  100    52      0      1  0:00:52  0:00:28  0:00:24     0100    52    0     0  100    52      0      1  0:00:52  0:00:29  0:00:23     0100    52    0     0  100    52      0      1  0:00:52  0:00:30  0:00:22     0100    52    0     0  100    52      0      1  0:00:52  0:00:31  0:00:21     0< HTTP/2 200 
+< vary: Origin
+< content-type: application/json; charset=utf-8
+< function-execution-id: 2w52lzygtx10
+< x-cloud-trace-context: dea08a39a522461912023f4f2cb723b4;o=1
+< date: Wed, 18 Feb 2026 06:51:30 GMT
+< server: Google Frontend
+< content-length: 79
+< alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+< 
+{ [79 bytes data]
+100   131  100    79  100    52      2      1  0:00:52  0:00:32  0:00:20    16100   131  100    79  100    52      2      1  0:00:52  0:00:32  0:00:20    20
+* Connection #0 to host us-central1-gen-lang-client-0999441419.cloudfunctions.net left intact
+{"text":"I'm sorry, I couldn't get a response from the newsroom.","sources":[]}

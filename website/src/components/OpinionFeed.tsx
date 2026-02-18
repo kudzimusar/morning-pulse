@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Opinion } from '../../types';
+import ArticleContextPanel from './ArticleContextPanel';
 import { subscribeToPublishedOpinions, getOpinionBySlug } from '../services/opinionsService';
 import SEOHeader from './SEOHeader';
 import ArticleFooter from './ArticleFooter';
@@ -7,17 +8,17 @@ import { trackArticleView, trackArticleEngagement } from '../services/analyticsS
 import { X, PenTool, Share2, Check, Heart, Lightbulb, ThumbsDown, MessageCircle } from 'lucide-react';
 import { ShareButtons } from './AskPulseAI/ShareButtons';
 import { getImageByTopic } from '../utils/imageGenerator';
-import { 
-  addReaction, 
-  getUserReaction, 
+import {
+  addReaction,
+  getUserReaction,
   subscribeToOpinionReactions,
-  getOpinionReactionCounts 
+  getOpinionReactionCounts
 } from '../services/reactionsService';
-import { 
-  addPublicComment, 
+import {
+  addPublicComment,
   addEditorialReply,
   subscribeToOpinionComments,
-  PublicComment 
+  PublicComment
 } from '../services/publicCommentsService';
 import { getCurrentEditor, getStaffRole, requireEditor } from '../services/authService';
 
@@ -56,7 +57,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
 
     setLoading(true);
     setSlugNotFound(false);
-    
+
     getOpinionBySlug(slug)
       .then((opinion) => {
         if (opinion) {
@@ -94,7 +95,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
 
   const getDisplayImage = (opinion: Opinion) => {
     const fromDoc = opinion.finalImageUrl || opinion.suggestedImageUrl || opinion.imageUrl;
-    
+
     // Filter out deprecated Unsplash URLs
     if (typeof fromDoc === 'string' && /^https?:\/\//i.test(fromDoc)) {
       // If it's an Unsplash URL (deprecated), use fallback
@@ -104,7 +105,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
       }
       return fromDoc;
     }
-    
+
     return getImageByTopic(opinion.headline || '', opinion.id);
   };
 
@@ -112,13 +113,13 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   // Universal for ALL stories - no conditions
   const handleShare = async (opinion: Opinion) => {
     // Generate slug from headline if not present (for older stories)
-    const slug = opinion.slug || (opinion.headline ? 
-      opinion.headline.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100) 
+    const slug = opinion.slug || (opinion.headline ?
+      opinion.headline.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100)
       : opinion.id);
-    
+
     // Use folder structure (works better for bots) - fallback to share.html if needed
     const shareUrl = `https://kudzimusar.github.io/morning-pulse/shares/${slug}/`;
-    
+
     // Try native share API first (mobile)
     if (navigator.share) {
       try {
@@ -135,7 +136,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
         }
       }
     }
-    
+
     // Fallback: Copy to clipboard
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -161,34 +162,34 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   };
 
   const categories = ['Latest', 'The Board', 'Guest Essays', 'Letters', 'Culture'];
-  
+
   // Enhanced category filtering with proper mapping
-  const filtered = activeCategory === 'Latest' 
-    ? opinions 
+  const filtered = activeCategory === 'Latest'
+    ? opinions
     : opinions.filter(o => {
-        const category = (o.category || '').toLowerCase();
-        const writerType = (o.writerType || '').toLowerCase();
-        
-        if (activeCategory === 'The Board') {
-          return category === 'the-board' || category === 'the board' || writerType === 'editorial';
-        }
-        if (activeCategory === 'Guest Essays') {
-          return category === 'guest-essays' || category === 'guest essays' || writerType === 'guest essay';
-        }
-        if (activeCategory === 'Letters') {
-          return category === 'letters' || category === 'letter';
-        }
-        if (activeCategory === 'Culture') {
-          return category === 'culture' || category === 'cultural';
-        }
-        return false;
-      });
+      const category = (o.category || '').toLowerCase();
+      const writerType = (o.writerType || '').toLowerCase();
+
+      if (activeCategory === 'The Board') {
+        return category === 'the-board' || category === 'the board' || writerType === 'editorial';
+      }
+      if (activeCategory === 'Guest Essays') {
+        return category === 'guest-essays' || category === 'guest essays' || writerType === 'guest essay';
+      }
+      if (activeCategory === 'Letters') {
+        return category === 'letters' || category === 'letter';
+      }
+      if (activeCategory === 'Culture') {
+        return category === 'culture' || category === 'cultural';
+      }
+      return false;
+    });
 
   // Helper to get category display name and kicker style
   const getCategoryKicker = (opinion: Opinion) => {
     const category = (opinion.category || '').toLowerCase();
     const writerType = (opinion.writerType || '').toLowerCase();
-    
+
     if (category === 'the-board' || category === 'the board' || writerType === 'editorial') {
       return { text: 'THE BOARD', style: { color: '#dc2626', fontWeight: '900' } };
     }
@@ -238,7 +239,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
 
     // Get initial reaction counts
     getOpinionReactionCounts(selectedOpinion.id).then(setReactionCounts);
-    
+
     // Get user's reaction
     getUserReaction(selectedOpinion.id).then(reaction => {
       if (reaction) {
@@ -251,7 +252,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
     // Subscribe to real-time updates
     const unsubscribe = subscribeToOpinionReactions(selectedOpinion.id, async (reactions, counts) => {
       setReactionCounts(counts);
-      
+
       // Update user reaction by checking current user
       const currentReaction = await getUserReaction(selectedOpinion.id);
       setUserReaction(currentReaction ? { type: currentReaction.type } : null);
@@ -314,17 +315,17 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
         console.warn('Could not check editor status:', error);
       }
     };
-    
+
     checkEditorStatus();
   }, [selectedOpinion]);
 
   // NEW: Handle reaction click
   const handleReaction = async (type: 'like' | 'love' | 'insightful' | 'disagree') => {
     if (!selectedOpinion) return;
-    
+
     try {
       await addReaction(selectedOpinion.id, type);
-      
+
       // Track engagement analytics
       try {
         trackArticleEngagement(selectedOpinion.id, 'reaction', {
@@ -335,7 +336,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
         // Silently fail analytics - don't block UI
         console.warn('Failed to track reaction analytics:', analyticsError);
       }
-      
+
       // The subscription will update the counts automatically
     } catch (error: any) {
       console.error('Failed to add reaction:', error);
@@ -351,7 +352,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   // NEW: Handle comment submission
   const handleSubmitComment = async () => {
     if (!selectedOpinion || !commentText.trim()) return;
-    
+
     setIsSubmittingComment(true);
     try {
       if (replyingTo && isEditor) {
@@ -394,7 +395,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   const organizeComments = (allComments: PublicComment[]): { root: PublicComment; replies: PublicComment[] }[] => {
     const rootComments = allComments.filter(c => !c.parentId);
     const repliesMap = new Map<string, PublicComment[]>();
-    
+
     allComments.forEach(comment => {
       if (comment.parentId) {
         if (!repliesMap.has(comment.parentId)) {
@@ -403,7 +404,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
         repliesMap.get(comment.parentId)!.push(comment);
       }
     });
-    
+
     return rootComments.map(root => ({
       root,
       replies: repliesMap.get(root.id) || []
@@ -447,23 +448,23 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
   return (
     <div style={{ fontFamily: 'Georgia, serif', backgroundColor: '#fffdfa', minHeight: '100vh', color: '#1a1a1a' }}>
       {selectedOpinion && (
-        <SEOHeader 
+        <SEOHeader
           story={{
             id: selectedOpinion.id,
             title: selectedOpinion.headline,
             summary: selectedOpinion.subHeadline,
             coverImage: getDisplayImage(selectedOpinion)
-          }} 
+          }}
         />
       )}
-      
+
       {/* RESTORED NAVIGATION BAR */}
       <nav style={{ position: 'sticky', top: '56px', zIndex: 30, backgroundColor: '#fff', borderBottom: '1px solid #e7e5e4' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', gap: '24px', overflowX: 'auto', scrollbarWidth: 'none' }}>
             {categories.map(cat => (
-              <button 
-                key={cat} 
+              <button
+                key={cat}
                 onClick={() => setActiveCategory(cat)}
                 style={{
                   fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em',
@@ -474,11 +475,11 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
               </button>
             ))}
           </div>
-          <button 
+          <button
             onClick={onNavigateToSubmit}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#000', color: '#fff', 
-              fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', padding: '6px 12px', border: 'none', cursor: 'pointer' 
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#000', color: '#fff',
+              fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', padding: '6px 12px', border: 'none', cursor: 'pointer'
             }}
           >
             <PenTool size={12} /> <span className="hidden-mobile">Submit Essay</span>
@@ -502,14 +503,14 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
         <div className="mag-grid">
           <div className="main-col">
             {filtered[0] && (
-              <article 
+              <article
                 onClick={() => {
                   setSelectedOpinion(filtered[0]);
                   // NEW: Update URL with slug
                   if (filtered[0].slug) {
                     window.history.pushState(null, '', `#opinion/${filtered[0].slug}`);
                   }
-                }} 
+                }}
                 style={{ cursor: 'pointer', marginBottom: '60px' }}
               >
                 <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '24px' }}>
@@ -531,10 +532,10 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                     {getCategoryKicker(filtered[0])!.text}
                   </div>
                 )}
-                <h1 style={{ 
-                  fontSize: 'clamp(2.5rem, 6vw, 4rem)', 
-                  fontWeight: '900', 
-                  lineHeight: '0.95', 
+                <h1 style={{
+                  fontSize: 'clamp(2.5rem, 6vw, 4rem)',
+                  fontWeight: '900',
+                  lineHeight: '0.95',
                   letterSpacing: '-0.04em',
                   // Editorial styling for "The Board"
                   ...(getCategoryKicker(filtered[0])?.text === 'THE BOARD' ? {
@@ -544,8 +545,8 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                 }}>{filtered[0].headline}</h1>
                 <p style={{ fontSize: '1.4rem', color: '#57534e', fontStyle: 'italic', margin: '16px 0' }}>{filtered[0].subHeadline}</p>
                 {/* NEW: Enhanced byline with date for E-E-A-T */}
-                <div style={{ 
-                  fontWeight: '600', 
+                <div style={{
+                  fontWeight: '600',
                   fontSize: '13px',
                   color: '#44403c',
                   display: 'flex',
@@ -558,10 +559,10 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                     <>
                       <span style={{ color: '#a8a29e' }}>•</span>
                       <span style={{ color: '#78716c' }}>
-                        {filtered[0].publishedAt.toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric', 
-                          year: 'numeric' 
+                        {filtered[0].publishedAt.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
                         })}
                       </span>
                     </>
@@ -572,15 +573,15 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', borderTop: '4px solid #000', paddingTop: '32px' }}>
               {filtered.slice(1, 5).map((op, i) => (
-                <article 
-                  key={op.id} 
+                <article
+                  key={op.id}
                   onClick={() => {
                     setSelectedOpinion(op);
                     // NEW: Update URL with slug
                     if (op.slug) {
                       window.history.pushState(null, '', `#opinion/${op.slug}`);
                     }
-                  }} 
+                  }}
                   style={{ cursor: 'pointer' }}
                 >
                   <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '12px' }}>
@@ -602,9 +603,9 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                       {getCategoryKicker(op)!.text}
                     </div>
                   )}
-                  <h3 style={{ 
-                    fontSize: '1.4rem', 
-                    fontWeight: '900', 
+                  <h3 style={{
+                    fontSize: '1.4rem',
+                    fontWeight: '900',
                     lineHeight: '1.2',
                     // Editorial styling for "The Board"
                     ...(getCategoryKicker(op)?.text === 'THE BOARD' ? {
@@ -613,9 +614,9 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                     } : {})
                   }}>{op.headline}</h3>
                   {/* NEW: Enhanced metadata with author and date */}
-                  <div style={{ 
-                    fontSize: '11px', 
-                    color: '#78716c', 
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#78716c',
                     marginTop: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -626,9 +627,9 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                       <>
                         <span style={{ color: '#d6d3d1' }}>•</span>
                         <span>
-                          {op.publishedAt.toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
+                          {op.publishedAt.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
                           })}
                         </span>
                       </>
@@ -642,21 +643,21 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
           <aside className="side-col">
             <h2 style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '24px' }}>The Board</h2>
             {filtered.slice(5).map(op => (
-              <div 
-                key={op.id} 
+              <div
+                key={op.id}
                 onClick={() => {
                   setSelectedOpinion(op);
                   // NEW: Update URL with slug
                   if (op.slug) {
                     window.history.pushState(null, '', `#opinion/${op.slug}`);
                   }
-                }} 
+                }}
                 style={{ cursor: 'pointer', borderBottom: '1px solid #f5f5f4', paddingBottom: '16px', marginBottom: '16px' }}
               >
                 <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '6px' }}>{op.headline}</h4>
                 {/* NEW: Enhanced metadata */}
-                <div style={{ 
-                  fontSize: '10px', 
+                <div style={{
+                  fontSize: '10px',
                   color: '#78716c',
                   display: 'flex',
                   alignItems: 'center',
@@ -667,9 +668,9 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                     <>
                       <span style={{ color: '#d6d3d1' }}>•</span>
                       <span>
-                        {op.publishedAt.toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric' 
+                        {op.publishedAt.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
                         })}
                       </span>
                     </>
@@ -685,12 +686,12 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
       {selectedOpinion && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, backgroundColor: '#fffdfa', overflowY: 'auto' }}>
           <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-            <button 
+            <button
               onClick={() => {
                 setSelectedOpinion(null);
                 // NEW: Clear slug from URL when closing
                 window.history.pushState(null, '', '#opinion');
-              }} 
+              }}
               style={{ position: 'fixed', top: '20px', right: '20px', background: '#000', color: '#fff', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer', zIndex: 1001 }}
             >
               <X size={24} />
@@ -699,7 +700,7 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
               <div style={{ color: '#991b1b', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', marginBottom: '20px' }}>{selectedOpinion.category}</div>
               <h1 style={{ fontSize: 'clamp(2.5rem, 7vw, 4rem)', fontWeight: '900', lineHeight: '0.95', marginBottom: '24px' }}>{selectedOpinion.headline}</h1>
               {/* NEW: Enhanced byline with date and title for E-E-A-T */}
-              <div style={{ 
+              <div style={{
                 fontSize: '14px',
                 color: '#44403c',
                 display: 'flex',
@@ -713,10 +714,10 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                   <>
                     <span style={{ color: '#d6d3d1' }}>•</span>
                     <span style={{ color: '#78716c' }}>
-                      {selectedOpinion.publishedAt.toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        day: 'numeric', 
-                        year: 'numeric' 
+                      {selectedOpinion.publishedAt.toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
                       })}
                     </span>
                   </>
@@ -734,440 +735,441 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
                 </div>
               )}
             </header>
-            <div style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', backgroundColor: '#f5f5f4', marginBottom: '40px' }}>
-              <img
-                src={getDisplayImage(selectedOpinion)}
-                loading="lazy"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            </div>
-            <div className="drop-cap mobile-article-body" style={{ fontSize: '1.3rem', lineHeight: '1.8', whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
-            
-            {/* Article Footer with Related Links */}
-            <ArticleFooter
-              article={{
-                id: selectedOpinion.id,
-                headline: selectedOpinion.headline,
-                detail: selectedOpinion.subHeadline || '',
-                category: selectedOpinion.category || 'Opinion',
-                source: selectedOpinion.authorName || 'Editorial Team',
-                timestamp: selectedOpinion.publishedAt?.getTime() || selectedOpinion.submittedAt.getTime() || Date.now(),
-                imageUrl: selectedOpinion.finalImageUrl || selectedOpinion.suggestedImageUrl || selectedOpinion.imageUrl,
-                url: selectedOpinion.slug ? `#opinion/${selectedOpinion.slug}` : undefined,
-              }}
-              relatedArticles={opinions
-                .filter(op => op.id !== selectedOpinion.id && op.category === selectedOpinion.category)
-                .slice(0, 3)
-                .map(op => ({
-                  id: op.id,
-                  headline: op.headline,
-                  detail: op.subHeadline || '',
-                  category: op.category || 'Opinion',
-                  source: op.authorName || 'Editorial Team',
-                  timestamp: op.publishedAt?.getTime() || op.submittedAt.getTime() || Date.now(),
-                  imageUrl: op.finalImageUrl || op.suggestedImageUrl || op.imageUrl,
-                  url: op.slug ? `#opinion/${op.slug}` : undefined,
-                }))}
-              authorBio={`${selectedOpinion.authorName} is a contributor to Morning Pulse.`}
+            <img
+              src={getDisplayImage(selectedOpinion)}
+              loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
-            
-            {/* NEW: Reactions Section */}
-            <div style={{ 
-              marginTop: '60px', 
-              paddingTop: '30px', 
-              borderTop: '1px solid #e7e5e4',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '20px'
-            }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                What do you think?
-              </p>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button
-                  onClick={() => handleReaction('like')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '10px 20px',
-                    backgroundColor: userReaction?.type === 'like' ? '#2563eb' : '#f3f4f6',
-                    color: userReaction?.type === 'like' ? '#fff' : '#374151',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <Heart size={16} fill={userReaction?.type === 'like' ? '#fff' : 'none'} />
-                  Like {reactionCounts.like > 0 && `(${reactionCounts.like})`}
-                </button>
-                <button
-                  onClick={() => handleReaction('love')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '10px 20px',
-                    backgroundColor: userReaction?.type === 'love' ? '#dc2626' : '#f3f4f6',
-                    color: userReaction?.type === 'love' ? '#fff' : '#374151',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <Heart size={16} fill={userReaction?.type === 'love' ? '#fff' : 'none'} />
-                  Love {reactionCounts.love > 0 && `(${reactionCounts.love})`}
-                </button>
-                <button
-                  onClick={() => handleReaction('insightful')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '10px 20px',
-                    backgroundColor: userReaction?.type === 'insightful' ? '#f59e0b' : '#f3f4f6',
-                    color: userReaction?.type === 'insightful' ? '#fff' : '#374151',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <Lightbulb size={16} />
-                  Insightful {reactionCounts.insightful > 0 && `(${reactionCounts.insightful})`}
-                </button>
-                <button
-                  onClick={() => handleReaction('disagree')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '10px 20px',
-                    backgroundColor: userReaction?.type === 'disagree' ? '#6b7280' : '#f3f4f6',
-                    color: userReaction?.type === 'disagree' ? '#fff' : '#374151',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <ThumbsDown size={16} />
-                  Disagree {reactionCounts.disagree > 0 && `(${reactionCounts.disagree})`}
-                </button>
-              </div>
+          </div>
+
+          {/* NEW: Context Stack Panel */}
+          <ArticleContextPanel context={selectedOpinion.context} />
+
+          <div className="drop-cap mobile-article-body" style={{ fontSize: '1.3rem', lineHeight: '1.8', whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: selectedOpinion.body }} />
+
+          {/* Article Footer with Related Links */}
+          <ArticleFooter
+            article={{
+              id: selectedOpinion.id,
+              headline: selectedOpinion.headline,
+              detail: selectedOpinion.subHeadline || '',
+              category: selectedOpinion.category || 'Opinion',
+              source: selectedOpinion.authorName || 'Editorial Team',
+              timestamp: selectedOpinion.publishedAt?.getTime() || selectedOpinion.submittedAt.getTime() || Date.now(),
+              imageUrl: selectedOpinion.finalImageUrl || selectedOpinion.suggestedImageUrl || selectedOpinion.imageUrl,
+              url: selectedOpinion.slug ? `#opinion/${selectedOpinion.slug}` : undefined,
+            }}
+            relatedArticles={opinions
+              .filter(op => op.id !== selectedOpinion.id && op.category === selectedOpinion.category)
+              .slice(0, 3)
+              .map(op => ({
+                id: op.id,
+                headline: op.headline,
+                detail: op.subHeadline || '',
+                category: op.category || 'Opinion',
+                source: op.authorName || 'Editorial Team',
+                timestamp: op.publishedAt?.getTime() || op.submittedAt.getTime() || Date.now(),
+                imageUrl: op.finalImageUrl || op.suggestedImageUrl || op.imageUrl,
+                url: op.slug ? `#opinion/${op.slug}` : undefined,
+              }))}
+            authorBio={`${selectedOpinion.authorName} is a contributor to Morning Pulse.`}
+          />
+
+          {/* NEW: Reactions Section */}
+          <div style={{
+            marginTop: '60px',
+            paddingTop: '30px',
+            borderTop: '1px solid #e7e5e4',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px'
+          }}>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              What do you think?
+            </p>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={() => handleReaction('like')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 20px',
+                  backgroundColor: userReaction?.type === 'like' ? '#2563eb' : '#f3f4f6',
+                  color: userReaction?.type === 'like' ? '#fff' : '#374151',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Heart size={16} fill={userReaction?.type === 'like' ? '#fff' : 'none'} />
+                Like {reactionCounts.like > 0 && `(${reactionCounts.like})`}
+              </button>
+              <button
+                onClick={() => handleReaction('love')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 20px',
+                  backgroundColor: userReaction?.type === 'love' ? '#dc2626' : '#f3f4f6',
+                  color: userReaction?.type === 'love' ? '#fff' : '#374151',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Heart size={16} fill={userReaction?.type === 'love' ? '#fff' : 'none'} />
+                Love {reactionCounts.love > 0 && `(${reactionCounts.love})`}
+              </button>
+              <button
+                onClick={() => handleReaction('insightful')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 20px',
+                  backgroundColor: userReaction?.type === 'insightful' ? '#f59e0b' : '#f3f4f6',
+                  color: userReaction?.type === 'insightful' ? '#fff' : '#374151',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Lightbulb size={16} />
+                Insightful {reactionCounts.insightful > 0 && `(${reactionCounts.insightful})`}
+              </button>
+              <button
+                onClick={() => handleReaction('disagree')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 20px',
+                  backgroundColor: userReaction?.type === 'disagree' ? '#6b7280' : '#f3f4f6',
+                  color: userReaction?.type === 'disagree' ? '#fff' : '#374151',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <ThumbsDown size={16} />
+                Disagree {reactionCounts.disagree > 0 && `(${reactionCounts.disagree})`}
+              </button>
+            </div>
+          </div>
+
+          {/* NEW: Comments Section */}
+          <div style={{
+            marginTop: '40px',
+            paddingTop: '30px',
+            borderTop: '1px solid #e7e5e4'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a1a' }}>
+                Comments ({comments.length})
+              </h3>
+              <button
+                onClick={() => setShowComments(!showComments)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  color: '#78716c',
+                  border: '1px solid #e7e5e4',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                <MessageCircle size={16} />
+                {showComments ? 'Hide' : 'Show'} Comments
+              </button>
             </div>
 
-            {/* NEW: Comments Section */}
-            <div style={{ 
-              marginTop: '40px', 
-              paddingTop: '30px', 
-              borderTop: '1px solid #e7e5e4'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a1a' }}>
-                  Comments ({comments.length})
-                </h3>
-                <button
-                  onClick={() => setShowComments(!showComments)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 16px',
-                    backgroundColor: 'transparent',
-                    color: '#78716c',
-                    border: '1px solid #e7e5e4',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <MessageCircle size={16} />
-                  {showComments ? 'Hide' : 'Show'} Comments
-                </button>
-              </div>
-
-              {showComments && (
-                <>
-                  {/* Comment Form */}
-                  {!replyingTo && (
-                    <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
-                      {!isEditor && (
-                        <input
-                          type="text"
-                          placeholder="Your name (optional)"
-                          value={commentAuthorName}
-                          onChange={(e) => setCommentAuthorName(e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '10px',
-                            marginBottom: '10px',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '4px',
-                            fontSize: '14px'
-                          }}
-                        />
-                      )}
-                      <textarea
-                        placeholder={isEditor ? "Write a response as editorial team..." : "Write a comment..."}
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        rows={4}
+            {showComments && (
+              <>
+                {/* Comment Form */}
+                {!replyingTo && (
+                  <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                    {!isEditor && (
+                      <input
+                        type="text"
+                        placeholder="Your name (optional)"
+                        value={commentAuthorName}
+                        onChange={(e) => setCommentAuthorName(e.target.value)}
                         style={{
                           width: '100%',
                           padding: '10px',
                           marginBottom: '10px',
                           border: '1px solid #e5e7eb',
                           borderRadius: '4px',
-                          fontSize: '14px',
-                          fontFamily: 'inherit',
-                          resize: 'vertical'
+                          fontSize: '14px'
                         }}
                       />
+                    )}
+                    <textarea
+                      placeholder={isEditor ? "Write a response as editorial team..." : "Write a comment..."}
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        marginBottom: '10px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        fontFamily: 'inherit',
+                        resize: 'vertical'
+                      }}
+                    />
+                    <button
+                      onClick={handleSubmitComment}
+                      disabled={!commentText.trim() || isSubmittingComment}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: commentText.trim() ? '#000' : '#9ca3af',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: commentText.trim() ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      {isSubmittingComment ? 'Posting...' : isEditor ? 'Post Editorial Response' : 'Post Comment'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Reply Form */}
+                {replyingTo && (
+                  <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fbbf24' }}>
+                    <div style={{ marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#92400e' }}>
+                      {isEditor ? 'Replying as Editorial Team' : 'Replying to comment'}
+                    </div>
+                    <textarea
+                      placeholder={isEditor ? "Write your response..." : "Write a reply..."}
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        marginBottom: '10px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        fontFamily: 'inherit',
+                        resize: 'vertical'
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={handleSubmitComment}
-                        disabled={!commentText.trim() || isSubmittingComment}
+                        disabled={!replyText.trim() || isSubmittingComment}
                         style={{
-                          padding: '10px 20px',
-                          backgroundColor: commentText.trim() ? '#000' : '#9ca3af',
+                          padding: '8px 16px',
+                          backgroundColor: replyText.trim() ? '#000' : '#9ca3af',
                           color: '#fff',
                           border: 'none',
                           borderRadius: '4px',
                           fontSize: '14px',
                           fontWeight: '600',
-                          cursor: commentText.trim() ? 'pointer' : 'not-allowed'
+                          cursor: replyText.trim() ? 'pointer' : 'not-allowed'
                         }}
                       >
-                        {isSubmittingComment ? 'Posting...' : isEditor ? 'Post Editorial Response' : 'Post Comment'}
+                        {isSubmittingComment ? 'Posting...' : 'Post Reply'}
                       </button>
-                    </div>
-                  )}
-
-                  {/* Reply Form */}
-                  {replyingTo && (
-                    <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fbbf24' }}>
-                      <div style={{ marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#92400e' }}>
-                        {isEditor ? 'Replying as Editorial Team' : 'Replying to comment'}
-                      </div>
-                      <textarea
-                        placeholder={isEditor ? "Write your response..." : "Write a reply..."}
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        rows={3}
+                      <button
+                        onClick={() => {
+                          setReplyingTo(null);
+                          setReplyText('');
+                        }}
                         style={{
-                          width: '100%',
-                          padding: '10px',
-                          marginBottom: '10px',
+                          padding: '8px 16px',
+                          backgroundColor: 'transparent',
+                          color: '#78716c',
                           border: '1px solid #e5e7eb',
                           borderRadius: '4px',
                           fontSize: '14px',
-                          fontFamily: 'inherit',
-                          resize: 'vertical'
+                          fontWeight: '600',
+                          cursor: 'pointer'
                         }}
-                      />
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={handleSubmitComment}
-                          disabled={!replyText.trim() || isSubmittingComment}
-                          style={{
-                            padding: '8px 16px',
-                            backgroundColor: replyText.trim() ? '#000' : '#9ca3af',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            cursor: replyText.trim() ? 'pointer' : 'not-allowed'
-                          }}
-                        >
-                          {isSubmittingComment ? 'Posting...' : 'Post Reply'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setReplyingTo(null);
-                            setReplyText('');
-                          }}
-                          style={{
-                            padding: '8px 16px',
-                            backgroundColor: 'transparent',
-                            color: '#78716c',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  )}
-
-                  {/* Comments List with Threading */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {comments.length === 0 ? (
-                      <p style={{ color: '#78716c', fontStyle: 'italic', textAlign: 'center', padding: '40px' }}>
-                        No comments yet. Be the first to share your thoughts!
-                      </p>
-                    ) : (
-                      organizeComments(comments).map(({ root, replies }) => (
-                        <div key={root.id}>
-                          {/* Root Comment */}
-                          <div style={{ 
-                            padding: '16px', 
-                            backgroundColor: root.isEditorialReply ? '#fef3c7' : '#f9fafb', 
-                            borderRadius: '8px',
-                            borderLeft: root.isEditorialReply ? '4px solid #f59e0b' : 'none'
-                          }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                              <div>
-                                <strong style={{ 
-                                  fontSize: '14px', 
-                                  color: root.isEditorialReply ? '#92400e' : '#1a1a1a' 
-                                }}>
-                                  {root.authorName}
-                                  {root.isEditorialReply && (
-                                    <span style={{ 
-                                      marginLeft: '8px', 
-                                      fontSize: '11px', 
-                                      backgroundColor: '#fbbf24', 
-                                      color: '#78350f',
-                                      padding: '2px 6px',
-                                      borderRadius: '4px',
-                                      fontWeight: '600'
-                                    }}>
-                                      EDITORIAL
-                                    </span>
-                                  )}
-                                </strong>
-                                <span style={{ fontSize: '12px', color: '#78716c', marginLeft: '8px' }}>
-                                  {root.createdAt.toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric', 
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
-                              {root.content}
-                            </p>
-                            <button
-                              onClick={() => {
-                                setReplyingTo(root.id);
-                                setReplyText('');
-                              }}
-                              style={{
-                                padding: '6px 12px',
-                                backgroundColor: 'transparent',
-                                color: '#78716c',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {isEditor ? 'Reply as Editorial Team' : 'Reply'}
-                            </button>
-                          </div>
-                          
-                          {/* Replies */}
-                          {replies.length > 0 && (
-                            <div style={{ marginLeft: '32px', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                              {replies.map((reply) => (
-                                <div key={reply.id} style={{ 
-                                  padding: '12px', 
-                                  backgroundColor: reply.isEditorialReply ? '#fef3c7' : '#ffffff', 
-                                  borderRadius: '6px',
-                                  borderLeft: reply.isEditorialReply ? '3px solid #f59e0b' : '3px solid #e5e7eb'
-                                }}>
-                                  <div style={{ marginBottom: '6px' }}>
-                                    <strong style={{ 
-                                      fontSize: '13px', 
-                                      color: reply.isEditorialReply ? '#92400e' : '#1a1a1a' 
-                                    }}>
-                                      {reply.authorName}
-                                      {reply.isEditorialReply && (
-                                        <span style={{ 
-                                          marginLeft: '6px', 
-                                          fontSize: '10px', 
-                                          backgroundColor: '#fbbf24', 
-                                          color: '#78350f',
-                                          padding: '1px 4px',
-                                          borderRadius: '3px',
-                                          fontWeight: '600'
-                                        }}>
-                                          EDITORIAL
-                                        </span>
-                                      )}
-                                    </strong>
-                                    <span style={{ fontSize: '11px', color: '#78716c', marginLeft: '6px' }}>
-                                      {reply.createdAt.toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </span>
-                                  </div>
-                                  <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#374151', whiteSpace: 'pre-wrap' }}>
-                                    {reply.content}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
                   </div>
-                </>
-              )}
-            </div>
+                )}
 
-            {/* NEW: Share Section at bottom of article */}
-            <div style={{ 
-              marginTop: '40px', 
-              paddingTop: '30px', 
-              borderTop: '1px solid #e7e5e4',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px'
-            }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Share this perspective
-              </p>
-              <ShareButtons
-                article={{
-                  id: selectedOpinion.id,
-                  title: selectedOpinion.headline,
-                  url: selectedOpinion.slug ? `/opinion/${selectedOpinion.slug}` : `#opinion/${selectedOpinion.id}`,
-                  excerpt: selectedOpinion.subHeadline,
-                }}
-                compact={false}
-              />
-            </div>
+                {/* Comments List with Threading */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {comments.length === 0 ? (
+                    <p style={{ color: '#78716c', fontStyle: 'italic', textAlign: 'center', padding: '40px' }}>
+                      No comments yet. Be the first to share your thoughts!
+                    </p>
+                  ) : (
+                    organizeComments(comments).map(({ root, replies }) => (
+                      <div key={root.id}>
+                        {/* Root Comment */}
+                        <div style={{
+                          padding: '16px',
+                          backgroundColor: root.isEditorialReply ? '#fef3c7' : '#f9fafb',
+                          borderRadius: '8px',
+                          borderLeft: root.isEditorialReply ? '4px solid #f59e0b' : 'none'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                            <div>
+                              <strong style={{
+                                fontSize: '14px',
+                                color: root.isEditorialReply ? '#92400e' : '#1a1a1a'
+                              }}>
+                                {root.authorName}
+                                {root.isEditorialReply && (
+                                  <span style={{
+                                    marginLeft: '8px',
+                                    fontSize: '11px',
+                                    backgroundColor: '#fbbf24',
+                                    color: '#78350f',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    fontWeight: '600'
+                                  }}>
+                                    EDITORIAL
+                                  </span>
+                                )}
+                              </strong>
+                              <span style={{ fontSize: '12px', color: '#78716c', marginLeft: '8px' }}>
+                                {root.createdAt.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                          <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
+                            {root.content}
+                          </p>
+                          <button
+                            onClick={() => {
+                              setReplyingTo(root.id);
+                              setReplyText('');
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: 'transparent',
+                              color: '#78716c',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {isEditor ? 'Reply as Editorial Team' : 'Reply'}
+                          </button>
+                        </div>
+
+                        {/* Replies */}
+                        {replies.length > 0 && (
+                          <div style={{ marginLeft: '32px', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {replies.map((reply) => (
+                              <div key={reply.id} style={{
+                                padding: '12px',
+                                backgroundColor: reply.isEditorialReply ? '#fef3c7' : '#ffffff',
+                                borderRadius: '6px',
+                                borderLeft: reply.isEditorialReply ? '3px solid #f59e0b' : '3px solid #e5e7eb'
+                              }}>
+                                <div style={{ marginBottom: '6px' }}>
+                                  <strong style={{
+                                    fontSize: '13px',
+                                    color: reply.isEditorialReply ? '#92400e' : '#1a1a1a'
+                                  }}>
+                                    {reply.authorName}
+                                    {reply.isEditorialReply && (
+                                      <span style={{
+                                        marginLeft: '6px',
+                                        fontSize: '10px',
+                                        backgroundColor: '#fbbf24',
+                                        color: '#78350f',
+                                        padding: '1px 4px',
+                                        borderRadius: '3px',
+                                        fontWeight: '600'
+                                      }}>
+                                        EDITORIAL
+                                      </span>
+                                    )}
+                                  </strong>
+                                  <span style={{ fontSize: '11px', color: '#78716c', marginLeft: '6px' }}>
+                                    {reply.createdAt.toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#374151', whiteSpace: 'pre-wrap' }}>
+                                  {reply.content}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* NEW: Share Section at bottom of article */}
+          <div style={{
+            marginTop: '40px',
+            paddingTop: '30px',
+            borderTop: '1px solid #e7e5e4',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: '#78716c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Share this perspective
+            </p>
+            <ShareButtons
+              article={{
+                id: selectedOpinion.id,
+                title: selectedOpinion.headline,
+                url: selectedOpinion.slug ? `/opinion/${selectedOpinion.slug}` : `#opinion/${selectedOpinion.id}`,
+                excerpt: selectedOpinion.subHeadline,
+              }}
+              compact={false}
+            />
           </div>
         </div>
-      )}
-    </div>
+        </div>
   );
 };
 

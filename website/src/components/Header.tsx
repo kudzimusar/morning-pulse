@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import WeatherBar from './WeatherBar';
 import CountrySwitcher from './CountrySwitcher';
 import AdSlot from './AdSlot';
+import AppearanceMenu from './AppearanceMenu';
+import { Type } from 'lucide-react';
 import { CountryInfo, getCountryTimezone } from '../services/locationService';
 import { getOrderedCategories, trackCategoryInteraction } from '../services/userPreferences';
 
@@ -29,11 +31,11 @@ interface HeaderProps {
   onDashboardClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  topHeadlines = [], 
-  onCategorySelect, 
-  onSubscribeClick, 
-  currentCountry, 
+const Header: React.FC<HeaderProps> = ({
+  topHeadlines = [],
+  onCategorySelect,
+  onSubscribeClick,
+  currentCountry,
   onCountryChange,
   userRole,
   onDashboardClick
@@ -42,12 +44,13 @@ const Header: React.FC<HeaderProps> = ({
   const [harareDate, setHarareDate] = useState('');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isAppearanceMenuOpen, setIsAppearanceMenuOpen] = useState(false);
 
   // Get ordered categories based on user preferences
   const categories = useMemo(() => {
     // Dynamically adjust "Local" category name based on current country
-    const adjustedCategories = DEFAULT_CATEGORIES.map(cat => 
-      cat === 'Local (Zim)' && currentCountry?.code !== 'ZW' 
+    const adjustedCategories = DEFAULT_CATEGORIES.map(cat =>
+      cat === 'Local (Zim)' && currentCountry?.code !== 'ZW'
         ? `Local (${currentCountry?.name || 'Zimbabwe'})`
         : cat
     );
@@ -59,23 +62,23 @@ const Header: React.FC<HeaderProps> = ({
     const updateTime = () => {
       const now = new Date();
       const timezone = currentCountry?.timezone || getCountryTimezone(currentCountry?.code || 'ZW') || 'UTC';
-      
+
       // Use selected country's timezone
-      setHarareTime(now.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
+      setHarareTime(now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
         second: '2-digit',
         hour12: true,
         timeZone: timezone
       }));
-      setHarareDate(now.toLocaleDateString('en-US', { 
-        month: 'short', 
+      setHarareDate(now.toLocaleDateString('en-US', {
+        month: 'short',
         day: 'numeric',
         year: 'numeric',
         timeZone: timezone
       }));
     };
-    
+
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
@@ -84,12 +87,12 @@ const Header: React.FC<HeaderProps> = ({
   const handleCategoryClick = (category: string | null) => {
     setSelectedCategory(category);
     setIsCategoryDropdownOpen(false);
-    
+
     // Track category interaction for personalization
     if (category) {
       trackCategoryInteraction(category);
     }
-    
+
     if (onCategorySelect) {
       onCategorySelect(category);
     }
@@ -110,23 +113,23 @@ const Header: React.FC<HeaderProps> = ({
             <span>LIVE GLOBAL</span>
             <span className="time-indicator">{harareTime} | {harareDate}</span>
           </div>
-          
+
           {/* Center: Weather */}
           <WeatherBar />
-          
+
           {/* Right side: Dropdowns */}
           <div className="header-actions-right">
             {/* Country Chooser - Top Dropdown */}
             {currentCountry && onCountryChange && (
-              <CountrySwitcher 
+              <CountrySwitcher
                 currentCountry={currentCountry}
                 onCountryChange={onCountryChange}
               />
             )}
-            
+
             {/* Category Chooser - Bottom Dropdown */}
             <div className="category-dropdown-container">
-              <button 
+              <button
                 className="category-dropdown-btn"
                 onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
                 aria-expanded={isCategoryDropdownOpen}
@@ -134,10 +137,10 @@ const Header: React.FC<HeaderProps> = ({
                 <span className="category-dropdown-text">Categories</span>
                 <span className={`dropdown-arrow ${isCategoryDropdownOpen ? 'open' : ''}`}>▼</span>
               </button>
-              
+
               {isCategoryDropdownOpen && (
                 <div className="category-dropdown-menu">
-                  <button 
+                  <button
                     className="category-dropdown-option"
                     onClick={() => handleCategoryClick(null)}
                   >
@@ -165,10 +168,36 @@ const Header: React.FC<HeaderProps> = ({
           <h1 className="premium-logo" onClick={() => handleCategoryClick(null)}>
             Morning Pulse
           </h1>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', position: 'relative' }}>
+
+            {/* Appearance Button */}
+            <button
+              onClick={() => setIsAppearanceMenuOpen(!isAppearanceMenuOpen)}
+              className="appearance-btn"
+              aria-label="Display settings"
+              aria-expanded={isAppearanceMenuOpen}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#374151',
+                transition: 'background-color 0.2s',
+                backgroundColor: isAppearanceMenuOpen ? '#f3f4f6' : 'transparent'
+              }}
+            >
+              <Type size={20} />
+            </button>
+
+            {isAppearanceMenuOpen && <AppearanceMenu />}
+
             {/* Dashboard button for editors */}
             {userRole && Array.isArray(userRole) && (userRole.includes('editor') || userRole.includes('admin') || userRole.includes('super_admin')) && onDashboardClick && (
-              <button 
+              <button
                 onClick={onDashboardClick}
                 style={{
                   padding: '8px 16px',
@@ -186,7 +215,7 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             )}
             {onSubscribeClick && (
-              <button 
+              <button
                 className="subscribe-button"
                 onClick={onSubscribeClick}
               >
@@ -197,7 +226,7 @@ const Header: React.FC<HeaderProps> = ({
           {selectedCategory && (
             <div className="selected-category-badge">
               {selectedCategory}
-              <button 
+              <button
                 className="clear-filter"
                 onClick={() => handleCategoryClick(null)}
                 aria-label="Clear filter"
@@ -235,26 +264,26 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       )}
 
-      {/* ✅ FIX: Header Banner Ad Slot - Responsive with constrained height */}
+      {/* Header Banner Ad Slot - Responsive with constrained height */}
       <div style={{
         width: '100%',
         maxWidth: '100%',
         marginTop: '8px',
         padding: '0 16px',
         boxSizing: 'border-box',
-        maxHeight: '120px', // ✅ FIX: Constrain header ad height
+        maxHeight: '120px',
         overflow: 'hidden',
         position: 'relative'
       }}>
-        <AdSlot 
-          slotId="header_banner" 
+        <AdSlot
+          slotId="header_banner"
           userCountry={currentCountry}
           style={{
             width: '100%',
             maxWidth: '100%',
             margin: '0 auto',
-            maxHeight: '120px', // ✅ FIX: Constrain ad image height
-            objectFit: 'contain' // ✅ FIX: Maintain aspect ratio
+            maxHeight: '120px',
+            objectFit: 'contain'
           }}
         />
       </div>

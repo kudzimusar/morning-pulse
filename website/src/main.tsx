@@ -1,13 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './styles/premium.css';
-import './styles/institutional.css';
-import './styles/mobile.css';
+import { ReaderProvider } from './context/ReaderContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ReaderProvider>
+      <App />
+    </ReaderProvider>
   </React.StrictMode>
 );
 

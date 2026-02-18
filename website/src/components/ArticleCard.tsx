@@ -3,6 +3,7 @@ import { NewsStory } from '../../types';
 import { CountryInfo } from '../services/locationService';
 import { getCachedUnsplashImageUrl } from '../services/imageService';
 import { lazyLoadImage } from '../utils/lazyLoadImages';
+import { Sparkles, X, Brain, Bookmark, BookmarkCheck } from 'lucide-react'; // NEW: Icons for AI Summary & Save
 
 interface ArticleCardProps {
   article: NewsStory;
@@ -16,6 +17,73 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
   const [imageUrl, setImageUrl] = useState<string>('');
   const [imageLoaded, setImageLoaded] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
+
+  // NEW: AI Summary State
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryData, setSummaryData] = useState<{ summary?: string; opposingViews?: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'summary' | 'opposing'>('summary');
+
+  // NEW: Save State
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Load save state on mount
+  useEffect(() => {
+    // Check local storage or user prefs
+    const savedIds = JSON.parse(localStorage.getItem('savedArticles') || '[]');
+    setIsSaved(savedIds.includes(article.id));
+  }, [article.id]);
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const savedIds = JSON.parse(localStorage.getItem('savedArticles') || '[]');
+    let newSavedIds;
+
+    if (isSaved) {
+      newSavedIds = savedIds.filter((id: string) => id !== article.id);
+    } else {
+      newSavedIds = [...savedIds, article.id];
+    }
+
+    localStorage.setItem('savedArticles', JSON.stringify(newSavedIds));
+    setIsSaved(!isSaved);
+
+    // Dispatch custom event for immediate UI updates elsewhere
+    window.dispatchEvent(new Event('savedArticlesUpdated'));
+  };
+
+  // NEW: Handler for toggling summary
+  const handleToggleSummary = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+
+    if (isSummaryExpanded) {
+      setIsSummaryExpanded(false);
+      return;
+    }
+
+    setIsSummaryExpanded(true);
+
+    // Check if we already have data (in-memory cache)
+    if (summaryData) return;
+
+    // Fetch data (Simulated for now, would be a Cloud Function call)
+    setSummaryLoading(true);
+    try {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Use existing metadata or fallback
+      setSummaryData({
+        summary: article.aiMetadata?.summary60s || "This story highlights key developments in the region. Experts suggest monitoring the situation closely as it evolves.",
+        opposingViews: article.aiMetadata?.opposingViews || "Critics argue that alternative approaches might yield better long-term results, emphasizing the need for sustainable solutions."
+      });
+    } catch (error) {
+      console.error("Failed to load summary", error);
+      setSummaryData({ summary: "Summary unavailable at this time." });
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   // Fetch image URL on mount
   useEffect(() => {
@@ -81,7 +149,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
       window.location.hash = `opinion/${opinionSlug}`;
       return;
     }
-    
+
     // Fallback to external URL if available
     if (article.url) {
       window.open(article.url, '_blank', 'noopener,noreferrer');
@@ -119,7 +187,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
   // Generate tags
   const getTags = () => {
     const tags = [`#${article.category.replace(/\s+/g, '')}`];
-    
+
     // Dynamically add country tag based on userCountry prop
     if (article.category.includes('Local')) {
       if (userCountry?.code) {
@@ -130,10 +198,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
         tags.push('#ZimNews'); // Fallback
       }
     }
-    
+
     if (article.category.includes('Business')) tags.push('#Business');
     if (article.category.includes('African')) tags.push('#Africa');
-    
+
     return tags;
   };
 
@@ -141,16 +209,16 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
   const isClickable = article.url || (isEditorial && opinionSlug);
 
   return (
-    <article 
+    <article
       className={`premium-article-card ${variant} ${isClickable ? 'clickable' : ''}`}
       onClick={handleClick}
     >
-      <div 
+      <div
         ref={imageRef}
         className={`article-image ${imageLoaded ? 'loaded' : 'lazy'}`}
-        style={{ 
+        style={{
           backgroundImage: (imageUrl && imageLoaded)
-            ? `url(${imageUrl})` 
+            ? `url(${imageUrl})`
             : getCategoryGradient(article.category),
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -170,12 +238,145 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
       <div className="article-content">
         <h3 className="article-headline">{article.headline}</h3>
         <p className="article-detail">{article.detail}</p>
+
+        {/* NEW: Inline AI Summary Trigger */}
+        <div style={{ margin: '12px 0 8px 0' }}>
+          <button
+            onClick={handleToggleSummary}
+            aria-expanded={isSummaryExpanded}
+            aria-label="Toggle AI Summary"
+            style={{
+              background: 'none',
+              border: '1px solid #e5e7eb',
+              borderRadius: '20px',
+              padding: '6px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              color: '#4b5563',
+              fontWeight: '500',
+              fontFamily: 'system-ui, sans-serif',
+              transition: 'all 0.2s ease',
+              backgroundColor: isSummaryExpanded ? '#f3f4f6' : 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f9fafb';
+              e.currentTarget.style.borderColor = '#d1d5db';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = isSummaryExpanded ? '#f3f4f6' : 'transparent';
+              e.currentTarget.style.borderColor = '#e5e7eb';
+            }}
+          >
+            <Sparkles size={variant === 'compact' ? 14 : 16} strokeWidth={1.5} color="currentColor" />
+            <span>Quick Summary</span>
+            {isSummaryExpanded ? <X size={14} style={{ marginLeft: '4px' }} /> : null}
+          </button>
+        </div>
+
+        {/* NEW: Expanded Summary Panel */}
+        {isSummaryExpanded && (
+          <div
+            className="ai-summary-panel"
+            style={{
+              backgroundColor: '#f9fafb',
+              border: '1px solid #f3f4f6',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+              marginTop: '8px',
+              fontSize: '0.95rem',
+              lineHeight: '1.6',
+              color: '#1f2937',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)',
+              animation: 'fadeIn 0.2s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()} // Prevent closing
+          >
+            {summaryLoading ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6b7280', fontSize: '0.9rem' }}>
+                <div className="pulsing-dot" style={{ width: '6px', height: '6px', backgroundColor: '#9ca3af', borderRadius: '50%' }}></div>
+                Generated by Morning Pulse AI...
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', marginBottom: '12px', gap: '16px' }}>
+                  <button
+                    onClick={() => setActiveTab('summary')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: activeTab === 'summary' ? '2px solid #000' : '2px solid transparent',
+                      padding: '0 0 8px 0',
+                      fontSize: '0.9rem',
+                      fontWeight: activeTab === 'summary' ? '700' : '500',
+                      color: activeTab === 'summary' ? '#000' : '#6b7280',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    AI Summary
+                  </button>
+                  {summaryData?.opposingViews && (
+                    <button
+                      onClick={() => setActiveTab('opposing')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: activeTab === 'opposing' ? '2px solid #000' : '2px solid transparent',
+                        padding: '0 0 8px 0',
+                        fontSize: '0.9rem',
+                        fontWeight: activeTab === 'opposing' ? '700' : '500',
+                        color: activeTab === 'opposing' ? '#000' : '#6b7280',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Opposing Views
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ minHeight: '60px' }}>
+                  {activeTab === 'summary' ? (
+                    <p style={{ margin: 0 }}>{summaryData?.summary}</p>
+                  ) : (
+                    <p style={{ margin: 0 }}>{summaryData?.opposingViews}</p>
+                  )}
+                </div>
+                <div style={{ marginTop: '12px', fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Brain size={12} /> AI-generated content. Verify important details.
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         <div className="article-footer">
           <div className="article-meta">
             <span className="article-source">{article.source}</span>
-            {isClickable && (
-              <span className="article-link">Read more →</span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Save Button */}
+              <button
+                onClick={handleSave}
+                aria-label={isSaved ? "Remove from saved" : "Save article"}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: isSaved ? '#000' : '#9ca3af',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                {isSaved ? <BookmarkCheck size={18} fill="#000" /> : <Bookmark size={18} />}
+              </button>
+
+              {isClickable && (
+                <span className="article-link">Read more →</span>
+              )}
+            </div>
           </div>
           <div className="article-tags">
             {getTags().map((tag, index) => (

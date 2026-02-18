@@ -62,6 +62,9 @@ import NewsGrid from './components/NewsGrid';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import FirebaseConnector from './components/FirebaseConnector';
 import OpinionPage from './components/OpinionPage';
+import TopicPage from './components/TopicPage';
+import LiveCoveragePage from './components/LiveCoveragePage';
+import SavedArticlesPage from './components/SavedArticlesPage'; // NEW: Saved Articles Page
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
 // ✅ FIX: Lazy load AdminDashboard to break circular dependencies
 import AdminLogin from './components/AdminLogin';
@@ -224,6 +227,7 @@ const App: React.FC = () => {
   });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [opinionSlug, setOpinionSlug] = useState<string | null>(null); // NEW: Current opinion slug for routing
+  const [topicSlug, setTopicSlug] = useState<string | null>(null); // NEW: Topic Hub slug
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileActiveTab, setMobileActiveTab] = useState<'latest' | 'foryou' | 'askai'>('latest');
@@ -380,6 +384,22 @@ const App: React.FC = () => {
           setOpinionSlug(null);
           setCurrentPage('opinion');
         }
+        setCurrentPage('opinion');
+      } else if (path === 'topic' || hash.startsWith('topic/')) {
+        // NEW: Topic Hub Routing
+        const slug = hash.startsWith('topic/') ? hash.substring('topic/'.length) : null;
+        if (slug) {
+          setTopicSlug(slug);
+        }
+        setCurrentPage('topic');
+        setMobileActiveTab('latest');
+      } else if (path === 'live') {
+        setCurrentPage('live');
+        setMobileActiveTab('latest');
+      } else if (path === 'saved') {
+        setCurrentPage('saved');
+        setMobileActiveTab('latest');
+      } else if (path === 'privacy') {
       } else if (path === 'privacy') {
         setCurrentPage('privacy');
       } else if (path === 'terms') {
@@ -1102,6 +1122,35 @@ const App: React.FC = () => {
               isAuthenticated={(userRole && Array.isArray(userRole) && userRole.length > 0) || isReaderAuthenticated}
               userRole={userRole}
             />
+          )}
+
+          {currentPage === 'opinion-submit' && view === 'public' && (
+            <OpinionSubmissionForm
+              onCancel={() => {
+                window.location.hash = 'opinion';
+              }}
+              onSubmitSuccess={() => {
+                // Optionally show success message or redirect
+                window.location.hash = 'opinion';
+              }}
+            />
+          )}
+
+          {currentPage === 'topic' && view === 'public' && topicSlug && (
+            <TopicPage slug={topicSlug} />
+          )}
+
+          {currentPage === 'saved' && (
+            <SavedArticlesPage
+              allNews={newsData}
+              onBack={() => {
+                window.location.hash = '';
+              }}
+            />
+          )}
+
+          {currentPage === 'live' && view === 'public' && (
+            <LiveCoveragePage />
           )}
 
           {currentPage === 'askai' && view === 'public' && !requireEditor(userRole) && (
