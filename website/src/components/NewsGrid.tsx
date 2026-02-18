@@ -47,24 +47,27 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
   }, []);
 
   // Define preferred category order for display
+  // Define preferred category order for display
   const preferredOrder = [
-    'Local (Zim)',
-    'Zimbabwe',
+    'Zimbabwe', // Local news first
     'Politics',
-    'Business (Zim)',
     'Finance & Economy',
-    'African Focus',
-    'World',
-    'Global',
-    'Sports',
-    'Technology',
-    'Tech',
+    'Technology', // "Technology" matches the new desk name
     'Science',
     'Health',
+    'Sports',
     'Entertainment',
-    'Lifestyle',
     'Crime & Justice',
     'Education',
+    'Lifestyle',
+    'Opinion/Editorial',
+    'World',
+    // Fallback/Legacy mappings
+    'Local (Zim)',
+    'Business (Zim)',
+    'African Focus',
+    'Global',
+    'Tech',
     'General News'
   ];
 

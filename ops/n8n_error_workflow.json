@@ -1,0 +1,50 @@
+{
+    "name": "Error Notification Workflow",
+    "nodes": [
+        {
+            "parameters": {},
+            "id": "18c7ea1b-9f9f-4f2a-8d0a-1b2c3d4e5f6g",
+            "name": "Error Trigger",
+            "type": "n8n-nodes-base.errorTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "subject": "🚨 n8n Workflow Error: {{$node[\"Error Trigger\"].json[\"workflow\"][\"name\"]}}",
+                "text": "An error occurred in workflow: {{$node[\"Error Trigger\"].json[\"workflow\"][\"name\"]}}\n\nError Message: {{$node[\"Error Trigger\"].json[\"execution\"][\"error\"][\"message\"]}}\n\nExecution ID: {{$node[\"Error Trigger\"].json[\"execution\"][\"id\"]}}\n\nLink: {{$node[\"Error Trigger\"].json[\"execution\"][\"url\"]}}",
+                "toEmail": "admin@morningpulse.co.zw"
+            },
+            "id": "29d8fb2c-0e0e-5g3b-9a1b-2c3d4e5f6g7h",
+            "name": "Send Email",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "credentials": {
+                "smtp": {
+                    "id": "YOUR_SMTP_CREDENTIAL_ID",
+                    "name": "SMTP Account"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Error Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Send Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

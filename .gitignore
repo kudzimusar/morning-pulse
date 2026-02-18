@@ -23,3 +23,6 @@ serviceAccountKey.json
 *.njsproj
 *.sln
 *.sw?
+
+# Firebase cache
+.firebase/
