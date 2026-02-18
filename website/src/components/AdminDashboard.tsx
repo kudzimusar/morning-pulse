@@ -36,6 +36,7 @@ const AdManagementTab = React.lazy(() => import('./admin/AdManagementTab'));
 const IntegrationSettings = React.lazy(() => import('./admin/IntegrationSettings'));
 const WriterHub = React.lazy(() => import('./admin/WriterHub'));
 const TopicManagementTab = React.lazy(() => import('./admin/TopicManagementTab'));
+const LiveCoverageTab = React.lazy(() => import('./admin/LiveCoverageTab'));
 const DashboardOverviewTab = React.lazy(() => import('./admin/DashboardOverviewTab'));
 const RevenueTab = React.lazy(() => import('./admin/RevenueTab'));
 const SystemTab = React.lazy(() => import('./admin/SystemTab'));
@@ -59,7 +60,8 @@ import {
   Image as ImageIcon,
   Plug,
   Settings,
-  Bell
+  Bell,
+  Radio
 } from 'lucide-react';
 
 // Constants
@@ -80,7 +82,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'topic-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'revenue' | 'system-health' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'topic-management' | 'live-coverage' | 'subscriber-management' | 'ad-management' | 'analytics' | 'revenue' | 'system-health' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
 
 const ICON_SIZE = 16;
 
@@ -91,6 +93,7 @@ const ALL_TABS = [
   { id: 'staff-management' as TabId, label: 'Staff Management', icon: <Users size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
   { id: 'writer-hub' as TabId, label: 'Writer Management', icon: <PenLine size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
   { id: 'topic-management' as TabId, label: 'Topic Hubs', icon: <Grid size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'live-coverage' as TabId, label: 'Live Coverage', icon: <Radio size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: false },
   { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: <UserIcon size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
   { id: 'ad-management' as TabId, label: 'Ad Management', icon: <Megaphone size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
   { id: 'revenue' as TabId, label: 'Revenue Dashboard', icon: <DollarSign size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
@@ -599,6 +602,10 @@ const AdminDashboard: React.FC = () => {
 
               {activeTab === 'topic-management' && isAdmin && (
                 <TopicManagementTab userRoles={userRoles} showToast={showToast} />
+              )}
+
+              {activeTab === 'live-coverage' && (
+                <LiveCoverageTab userRoles={userRoles} showToast={showToast} currentUserEmail={user?.email || undefined} />
               )}
 
               {activeTab === 'subscriber-management' && isAdmin && (
