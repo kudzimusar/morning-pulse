@@ -9,7 +9,7 @@ import {
     getDocs,
     Unsubscribe
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from './firebase';
 import { LiveEvent } from '../types';
 
 const LIVE_EVENTS_COLLECTION = 'liveEvents';

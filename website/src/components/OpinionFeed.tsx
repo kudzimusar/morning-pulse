@@ -1169,8 +1169,9 @@ const OpinionFeed: React.FC<OpinionFeedProps> = ({ onNavigateToSubmit, slug }) =
             />
           </div>
         </div>
-
-      );
+      )}
+    </div>
+  );
 };
 
-      export default OpinionFeed;
+export default OpinionFeed;
