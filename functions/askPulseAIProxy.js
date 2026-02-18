@@ -7,7 +7,8 @@
  * POST /askPulseAIProxy
  * Body (from frontend): {
  *   question: string, // Mapped to "chatInput" for n8n
- *   ...other params
+ *   type: string, // 'summarize', 'explain', 'opposing_views'
+ *   context: string // Article content
  * }
  * 
  * Upstream (n8n):
@@ -33,17 +34,28 @@ exports.askPulseAIProxy = functions
       }
 
       try {
-        const { question } = req.body;
+        const { question, type, context } = req.body;
 
-        if (!question) {
-          return res.status(400).json({ error: 'Missing "question" in request body' });
+        let prompt = question;
+
+        // Construct prompt based on action type
+        if (type === 'summarize' && context) {
+          prompt = `Please provide a concise, 60-second summary of the following article text. Focus on the main points and why it matters:\n\n${context}`;
+        } else if (type === 'opposing_views' && context) {
+          prompt = `Please provide 2-3 strong opposing views or alternative perspectives to the arguments presented in this article text. Be balanced and objective:\n\n${context}`;
+        } else if (type === 'explain' && context) {
+          prompt = `Please explain the key concepts and background context of this article in simple, easy-to-understand terms (ELI5 style):\n\n${context}`;
         }
 
-        console.log(`🤖 Proxying to n8n: "${question.substring(0, 50)}..."`);
+        if (!prompt) {
+          return res.status(400).json({ error: 'Missing "question" or valid "type/context" in request body' });
+        }
+
+        console.log(`🤖 Proxying to n8n (Type: ${type || 'chat'}): "${prompt.substring(0, 50)}..."`);
 
         // Call n8n Webhook
         const n8nResponse = await axios.post(N8N_WEBHOOK_URL, {
-          chatInput: question
+          chatInput: prompt
         }, {
           headers: {
             'Content-Type': 'application/json'

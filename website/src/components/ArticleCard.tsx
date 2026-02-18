@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NewsStory } from '../../types';
 import { CountryInfo } from '../services/locationService';
 import { getCachedUnsplashImageUrl } from '../services/imageService';
+import { generateArticleAIAction } from '../services/askPulseAIService'; // NEW
 import { lazyLoadImage } from '../utils/lazyLoadImages';
 import { Sparkles, X, Brain, Bookmark, BookmarkCheck } from 'lucide-react'; // NEW: Icons for AI Summary & Save
 
@@ -66,16 +67,28 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
     // Check if we already have data (in-memory cache)
     if (summaryData) return;
 
-    // Fetch data (Simulated for now, would be a Cloud Function call)
+    // Fetch data via Cloud Function
     setSummaryLoading(true);
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // 1. Fetch Summary
+      const summaryText = await generateArticleAIAction(
+        article.detail || article.headline, // Use detail if available, else headline
+        'summarize'
+      );
 
-      // Use existing metadata or fallback
+      // 2. Fetch Opposing Views (Parallel or sequential - sequential for now to save tokens if first fails)
+      // Only fetch if summary succeeded
+      let opposingText = "";
+      if (summaryText && !summaryText.includes("unavailable")) {
+        opposingText = await generateArticleAIAction(
+          article.detail || article.headline,
+          'opposing_views'
+        );
+      }
+
       setSummaryData({
-        summary: article.aiMetadata?.summary60s || "This story highlights key developments in the region. Experts suggest monitoring the situation closely as it evolves.",
-        opposingViews: article.aiMetadata?.opposingViews || "Critics argue that alternative approaches might yield better long-term results, emphasizing the need for sustainable solutions."
+        summary: summaryText,
+        opposingViews: opposingText
       });
     } catch (error) {
       console.error("Failed to load summary", error);

@@ -11,7 +11,7 @@ import {
     Firestore,
     Unsubscribe
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from './firebase';
 import { TopicHub, NewsStory, Opinion } from '../types';
 
 // Constants

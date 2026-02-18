@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TopicHub, Opinion, NewsStory } from '../../types';
+import { TopicHub, Opinion, NewsStory } from '../types';
 import { getTopicBySlug, getTopicContent } from '../services/topicsService';
 import ArticleCard from './ArticleCard';
 import LoadingSkeleton from './LoadingSkeleton';

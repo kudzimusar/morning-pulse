@@ -131,6 +131,37 @@ export const generateAskPulseAIResponse = async (
   return finalResponse;
 };
 
+// NEW: Generate specific AI action for an article
+export const generateArticleAIAction = async (
+  articleContent: string,
+  actionType: 'summarize' | 'explain' | 'opposing_views'
+): Promise<string> => {
+  try {
+    const proxyUrl = getProxyUrl();
+
+    const response = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: actionType,
+        context: articleContent
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Proxy error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.text || "I'm sorry, I couldn't generate a response.";
+  } catch (error) {
+    console.error('AI Action Error:', error);
+    return "Service temporarily unavailable. Please try again later.";
+  }
+};
+
 export const resetConversation = () => conversationManager.reset();
 export const convertToChatHistory = (messages: any) => []; // No longer needed
 export const formatResponseWithCitations = (text: string, sources: any[]) => ({ formattedText: text, citations: new Map() }); // Simple pass-through
