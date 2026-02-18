@@ -287,3 +287,32 @@ export const sendScheduledNewsletter = async (
     throw new Error(error.message || 'Failed to send scheduled newsletter');
   }
 };
+
+/**
+ * Generate AI Introduction for Newsletter
+ */
+export const generateNewsletterIntro = async (
+  articles: any[]
+): Promise<{ success: boolean; intro: string }> => {
+  try {
+    const url = 'https://us-central1-gen-lang-client-0999441419.cloudfunctions.net/generateNewsletterIntro';
+    console.log(`✨ Requesting AI Intro from ${url}`);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articles })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to generate AI intro');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('AI Intro generation error:', error);
+    throw new Error(error.message || 'Failed to generate AI intro');
+  }
+};

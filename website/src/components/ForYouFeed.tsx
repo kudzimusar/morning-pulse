@@ -17,8 +17,8 @@ interface ForYouFeedProps {
   userRole?: string[] | null;
 }
 
-const ForYouFeed: React.FC<ForYouFeedProps> = ({ 
-  newsData, 
+const ForYouFeed: React.FC<ForYouFeedProps> = ({
+  newsData,
   userCountry,
   userId = null,
   isAuthenticated = false,
@@ -38,10 +38,10 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
         // Check Firebase Auth
         const auth = getAuth();
         const currentUser = auth.currentUser;
-        
+
         // Also check editor auth (for staff)
         const editor = getCurrentEditor();
-        
+
         if (currentUser || editor) {
           const uid = currentUser?.uid || editor?.uid || null;
           setAuthState({
@@ -75,7 +75,7 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
 
   // Get user's preferred categories (Firestore for readers, localStorage for others)
   const [firestorePreferences, setFirestorePreferences] = useState<{ categories: string[] } | null>(null);
-  
+
   // Load Firestore preferences for readers
   useEffect(() => {
     if (authState.isAuthenticated && authState.userId && userRole?.includes('reader')) {
@@ -117,7 +117,7 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
           .sort(([, a]: any, [, b]: any) => b - a)
           .slice(0, 3)
           .map(([category]) => category);
-        
+
         if (categories.length > 0) {
           return categories;
         }
@@ -125,17 +125,17 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
     } catch (e) {
       console.error('Error reading category preferences:', e);
     }
-    
+
     // Fallback to default categories if no preferences found
     return ['Local (Zim)', 'Business (Zim)', 'World News'];
   }, [authState.isAuthenticated, authState.userId, userRole, firestorePreferences]);
 
   useEffect(() => {
     setLoading(true);
-    
+
     const generateFeed = () => {
       const articles: NewsStory[] = [];
-      
+
       if (authState.isAuthenticated && authState.userId) {
         // SIGNED-IN USER: Personalized feed based on preferences
         // Get articles from preferred categories first
@@ -143,7 +143,7 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
           const categoryArticles = newsData[category] || [];
           articles.push(...categoryArticles.slice(0, 5)); // Top 5 from each preferred category
         });
-        
+
         // Fill remaining with other categories
         Object.keys(newsData).forEach(category => {
           if (!preferredCategories.includes(category)) {
@@ -160,14 +160,14 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
           articles.push(...categoryArticles.slice(0, 4)); // Top 4 from each trending category
         });
       }
-      
+
       // Sort by timestamp (most recent first)
       const sorted = articles.sort((a, b) => {
         const timeA = a.timestamp || 0;
         const timeB = b.timestamp || 0;
         return timeB - timeA;
       });
-      
+
       setPersonalizedArticles(sorted.slice(0, 20)); // Limit to 20 articles
       setLoading(false);
     };
@@ -190,7 +190,7 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
           {authState.isAuthenticated ? 'Your Personalized Feed' : 'Trending Stories'}
         </h2>
         <p style={{ color: 'var(--light-text)', marginBottom: '24px' }}>
-          {authState.isAuthenticated 
+          {authState.isAuthenticated
             ? "We're building your personalized feed based on your reading preferences."
             : "Discover the stories that matter most."}
         </p>
@@ -224,13 +224,13 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
   }
 
   return (
-    <main className="premium-news-grid mobile-content-with-nav">
+    <main className="news-grid mobile-content-with-nav">
       <div style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>
         <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-color)' }}>
           {authState.isAuthenticated ? 'For You' : 'Trending'}
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--light-text)', marginTop: '4px' }}>
-          {authState.isAuthenticated 
+          {authState.isAuthenticated
             ? 'Personalized stories based on your interests'
             : 'Top stories from around the world'}
         </p>
@@ -255,7 +255,7 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
           </button>
         )}
       </div>
-      
+
       <div className="mobile-card-stack mobile-only">
         {personalizedArticles.map((article, index) => (
           <ArticleCard

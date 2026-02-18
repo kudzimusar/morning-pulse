@@ -10,6 +10,7 @@ import MobileNotifications from './components/MobileNotifications';
 import ForYouFeed from './components/ForYouFeed';
 import AskPulseAI from './components/AskPulseAI';
 import BookmarksPage from './components/BookmarksPage';
+import './styles/newspaper.css';
 
 // ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
 const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {

@@ -95,6 +95,12 @@ exports.manageSubscription = manageSubscription;
 exports.sendScheduledNewsletter = sendScheduledNewsletter;
 
 // ============================================
+// AI NEWSLETTER ENHANCEMENTS (Google AI Pro)
+// ============================================
+const { generateNewsletterIntro } = require('./aiNewsletter');
+exports.generateNewsletterIntro = generateNewsletterIntro;
+
+// ============================================
 // WRITER MANAGEMENT FUNCTIONS (HTTP Functions)
 // ============================================
 const {

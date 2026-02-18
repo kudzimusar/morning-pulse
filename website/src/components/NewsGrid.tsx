@@ -178,7 +178,7 @@ const NewsGrid: React.FC<NewsGridProps> = ({ newsData, selectedCategory, userCou
   }
 
   return (
-    <main className="premium-news-grid mobile-content-with-nav">
+    <main className="news-grid mobile-content-with-nav">
       {/* Hero Section */}
       {heroArticle && (
         <section className="hero-section mobile-hero-story">

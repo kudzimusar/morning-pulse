@@ -223,7 +223,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
 
   return (
     <article
-      className={`premium-article-card ${variant} ${isClickable ? 'clickable' : ''}`}
+      className={`article-card ${variant} ${isClickable ? 'clickable' : ''}`}
       onClick={handleClick}
     >
       <div

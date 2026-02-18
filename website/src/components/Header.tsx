@@ -103,7 +103,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="premium-header">
+    <header className="newspaper-header">
       {/* Top Bar with Live indicator, time, date, and dropdowns */}
       <div className="header-top-bar">
         <div className="header-top-content">
@@ -165,7 +165,7 @@ const Header: React.FC<HeaderProps> = ({
       {/* Main Header with Logo and Subscribe */}
       <div className="header-main">
         <div className="header-main-content">
-          <h1 className="premium-logo" onClick={() => handleCategoryClick(null)}>
+          <h1 className="masthead" onClick={() => handleCategoryClick(null)}>
             Morning Pulse
           </h1>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', position: 'relative' }}>

@@ -5,10 +5,12 @@
 
 import React, { useState } from 'react';
 import { Zap, Mail, Loader2, Sparkles, Check, XCircle, Eye, Download, ListOrdered, BookOpen, Clock, Calendar, BarChart3, Lightbulb, Info } from 'lucide-react';
-import { generateNewsletter, downloadNewsletter, previewNewsletter, sendNewsletter, sendScheduledNewsletter, NewsletterOptions } from '../../services/newsletterService';
+import { generateNewsletter, downloadNewsletter, previewNewsletter, sendNewsletter, sendScheduledNewsletter, generateNewsletterIntro, NewsletterOptions } from '../../services/newsletterService';
 
 const NewsletterTab: React.FC = () => {
   const [generating, setGenerating] = useState(false);
+  const [generatingIntro, setGeneratingIntro] = useState(false);
+  const [introText, setIntroText] = useState('');
   const [sending, setSending] = useState(false);
   const [generatedHTML, setGeneratedHTML] = useState<string | null>(null);
   const [sendResult, setSendResult] = useState<{ success: boolean; message: string; stats?: any } | null>(null);
@@ -22,16 +24,16 @@ const NewsletterTab: React.FC = () => {
     setGenerating(true);
     setGeneratedHTML(null);
     setSendResult(null);
-    
+
     try {
       // Import the opinions service to fetch articles
       const { getPublishedOpinions } = await import('../../services/opinionsService');
       const allPublished = await getPublishedOpinions();
-      
+
       // Filter by date range
       const now = new Date();
       let filtered = allPublished;
-      
+
       if (options.dateRange === 'today') {
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= today.getTime());
@@ -42,9 +44,9 @@ const NewsletterTab: React.FC = () => {
         const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= monthAgo.getTime());
       }
-      
+
       const articlesToSend = filtered.slice(0, options.maxArticles);
-      
+
       if (articlesToSend.length === 0) {
         alert('No published articles found for the selected time period.');
         return;
@@ -57,6 +59,49 @@ const NewsletterTab: React.FC = () => {
       alert(`Failed to generate newsletter: ${error.message}`);
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleGenerateIntro = async () => {
+    setGeneratingIntro(true);
+    setIntroText('');
+
+    try {
+      // Import the opinions service to fetch articles (reuse logic)
+      const { getPublishedOpinions } = await import('../../services/opinionsService');
+      const allPublished = await getPublishedOpinions();
+
+      // Filter by date range (reuse logic)
+      const now = new Date();
+      let filtered = allPublished;
+
+      if (options.dateRange === 'today') {
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= today.getTime());
+      } else if (options.dateRange === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= weekAgo.getTime());
+      } else if (options.dateRange === 'month') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filtered = allPublished.filter(a => (a.publishedAt?.getTime() || 0) >= monthAgo.getTime());
+      }
+
+      const articlesToSend = filtered.slice(0, options.maxArticles);
+
+      if (articlesToSend.length === 0) {
+        alert('No published articles found to summarize.');
+        return;
+      }
+
+      const result = await generateNewsletterIntro(articlesToSend);
+      if (result.success && result.intro) {
+        setIntroText(result.intro);
+      }
+    } catch (error: any) {
+      console.error('AI Intro error:', error);
+      alert(`Failed to generate AI intro: ${error.message}`);
+    } finally {
+      setGeneratingIntro(false);
     }
   };
 
@@ -248,6 +293,58 @@ const NewsletterTab: React.FC = () => {
             />
             Include article images
           </label>
+        </div>
+
+        {/* AI Intro Generation */}
+        <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f0fdfa', borderRadius: '6px', border: '1px solid #ccfbf1' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#0f766e' }}>
+            <Sparkles size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden />
+            AI Introduction (Google Gemini Pro)
+          </label>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <button
+              onClick={handleGenerateIntro}
+              disabled={generatingIntro || generating}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#0d9488',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: (generatingIntro || generating) ? 'not-allowed' : 'pointer',
+                fontSize: '13px',
+                fontWeight: '500',
+                opacity: (generatingIntro || generating) ? 0.6 : 1
+              }}
+            >
+              {generatingIntro ? <><Loader2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Generating...</> : 'Generate Intro'}
+            </button>
+          </div>
+
+          {introText && (
+            <div>
+              <textarea
+                value={introText}
+                readOnly
+                style={{
+                  width: '100%',
+                  minHeight: '80px',
+                  padding: '10px',
+                  border: '1px solid #99f6e4',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  lineHeight: '1.5',
+                  color: '#134e4a',
+                  backgroundColor: '#fff',
+                  resize: 'vertical'
+                }}
+              />
+              <div style={{ fontSize: '11px', color: '#115e59', marginTop: '4px' }}>
+                * Copy this text to use as your newsletter introduction
+              </div>
+            </div>
+          )}
         </div>
 
 

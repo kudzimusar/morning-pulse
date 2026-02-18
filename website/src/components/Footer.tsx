@@ -130,7 +130,7 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="premium-footer">
+    <footer className="newspaper-footer">
       {/* Layer 1: Brand Strip */}
       <div className="footer-brand-strip">
         <div className="footer-brand-content">
