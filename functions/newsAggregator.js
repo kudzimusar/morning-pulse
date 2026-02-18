@@ -44,17 +44,59 @@ async function fetchNewsForCategory(genAI, category, country = "Global", retries
     // ✅ USE GOOGLE SEARCH GROUNDING for real, current news
     // This forces Gemini to search the web for TODAY'S actual news
     const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
+        model: "gemini-1.5-flash-001",
         tools: [{ googleSearch: {} }],  // 🔑 KEY FIX: Enable Google Search!
     });
 
     const today = new Date().toISOString().split('T')[0]; // e.g. 2026-02-17
+
+    // ✅ ZIMBABWE SOURCES
+    const zimbabweSources = `
+    FOR ZIMBABWE NEWS, YOU MUST PRIORITIZE THESE SPECIFIC SOURCES:
+
+    State-Controlled (Zimpapers Group):
+    - The Herald (Harare)
+    - The Chronicle (Bulawayo)
+    - The Sunday Mail
+    - H-Metro
+    - The Manica Post
+    - Sunday News
+    - Kwayedza
+    - uMthunywa
+    - Business Weekly
+    - B-Metro
+
+    Independent Media Houses:
+    - NewsDay (AMH)
+    - The Zimbabwe Independent
+    - The Standard
+    - Daily News (ANZ)
+    - The Financial Gazette
+
+    Digital-Only & Diaspora News Sites:
+    - New Zimbabwe
+    - ZimLive
+    - Nehanda Radio
+    - Bulawayo24
+    - iHarare
+    - ZimEye
+    - The Zimbabwe Mail
+    - The Zimbabwean
+    - Zimbabwe Situation
+    `;
+
+    let sourceInstruction = "";
+    if (category.toLowerCase().includes("zimbabwe") || country.toLowerCase() === "zimbabwe") {
+        sourceInstruction = zimbabweSources;
+    }
 
     // ✅ IMPROVED PROMPT: Explicitly ask for TODAY's news with date
     const prompt = `Today is ${today}. Search the web and find 5 REAL news stories 
     published TODAY or in the last 24 hours for the "${category}" category
     ${country !== 'Global' ? `with focus on ${country}` : 'from around the world'}.
     
+    ${sourceInstruction}
+
     IMPORTANT: 
     - Use Google Search to find ACTUAL current news from today
     - Do NOT make up or hallucinate news stories
