@@ -4,19 +4,19 @@
  */
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { 
-  collection, 
-  query, 
-  doc, 
-  updateDoc, 
+import {
+  collection,
+  query,
+  doc,
+  updateDoc,
   addDoc,
   getDoc,
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
+import {
+  ref,
+  uploadBytes,
   getDownloadURL,
   deleteObject
 } from 'firebase/storage';
@@ -26,8 +26,8 @@ import { Opinion, OpinionVersion } from '../../../types';
 import { getUIStatusLabel, getDbStatus, UIStatusLabel, getStatusColor } from '../../utils/opinionStatus';
 import RichTextEditor from '../RichTextEditor';
 import ImagePreview from './ImagePreview';
-import { 
-  createEditorialArticle, 
+import {
+  createEditorialArticle,
   replaceArticleImage,
   createShortLink,
   claimStory,
@@ -72,12 +72,12 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [draftOpinions, setDraftOpinions] = useState<Opinion[]>([]);
   const [pendingOpinions, setPendingOpinions] = useState<Opinion[]>([]);
   const [inReviewOpinions, setInReviewOpinions] = useState<Opinion[]>([]);
-  
+
   const [selectedOpinionId, setSelectedOpinionId] = useState<string | null>(null);
   const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null); // NEW: Full opinion object
   const [isNewArticle, setIsNewArticle] = useState(false);
   const [showOriginalText, setShowOriginalText] = useState(false); // NEW: Toggle for split-pane view
-  
+
   const [editedTitle, setEditedTitle] = useState('');
   const [editedSubHeadline, setEditedSubHeadline] = useState('');
   const [editedBody, setEditedBody] = useState('');
@@ -105,7 +105,15 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [storyPriority, setStoryPriorityState] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal'); // Sprint 2: Priority state
   const [savingPriority, setSavingPriority] = useState(false); // Sprint 2: Saving priority indicator
   const [triggeringAutoPublish, setTriggeringAutoPublish] = useState(false); // Sprint 5: Manual auto-publish trigger
-  
+
+  // NEW: Product Upgrade - Context & AI Metadata
+  const [activeTab, setActiveTab] = useState<'content' | 'context' | 'ai'>('content');
+  const [contextWhyItMatters, setContextWhyItMatters] = useState('');
+  const [contextKeyFacts, setContextKeyFacts] = useState<string[]>(['']);
+  const [contextTimeline, setContextTimeline] = useState<{ date: string; title: string; summary: string }[]>([{ date: '', title: '', summary: '' }]);
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiOpposingViews, setAiOpposingViews] = useState('');
+  const [aiSimpleExplanation, setAiSimpleExplanation] = useState('');
   // ✅ FIX: Move getCurrentEditor() call to useMemo to prevent top-level execution
   // This prevents "Cannot access 'E' before initialization" errors
   const currentEditor = useMemo(() => {
@@ -116,10 +124,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       return null;
     }
   }, []); // Only run once on mount
-  
+
   const currentEditorId = currentEditor?.uid || '';
   const currentEditorName = currentEditor?.email?.split('@')[0] || 'Editor';
-  
+
   // ✅ FIX: Check if user is admin/editor to force render image section
   const isAdmin = userRoles.includes('admin') || userRoles.includes('super_admin');
   const isEditor = userRoles.includes('editor') || isAdmin;
@@ -131,7 +139,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     const diffMs = now.getTime() - startDate.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`;
     if (diffHours > 0) return `${diffHours}h`;
     const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -178,20 +186,20 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const handleManualAutoPublish = async () => {
     setTriggeringAutoPublish(true);
     try {
-      const functionUrl = process.env.REACT_APP_FUNCTIONS_URL || 
+      const functionUrl = process.env.REACT_APP_FUNCTIONS_URL ||
         'https://us-central1-morning-pulse-f1f1b.cloudfunctions.net';
-      
+
       const response = await fetch(`${functionUrl}/autoPublishScheduledStories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.publishedCount > 0) {
         showToast(`Auto-published ${data.publishedCount} scheduled stor${data.publishedCount === 1 ? 'y' : 'ies'}`, 'success');
       } else {
@@ -219,12 +227,12 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           // hashMatch[2] is the query string including '?'
           const params = new URLSearchParams(hashMatch[2].substring(1)); // Remove '?'
           const articleParam = params.get('article');
-          
+
           if (articleParam && articleParam !== selectedOpinionId) {
             console.log('📝 URL parameter detected - selecting article:', articleParam);
             setSelectedOpinionId(articleParam);
             setIsNewArticle(false);
-            
+
             // ✅ FIX: Ensure hash is preserved with query params
             if (!hash.includes(`article=${articleParam}`)) {
               const newHash = `#dashboard?tab=editorial-queue&article=${articleParam}`;
@@ -239,17 +247,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         return false;
       }
     };
-    
+
     // ✅ FIX: Delay parsing to ensure component is fully mounted
     const timeoutId = setTimeout(() => {
       parseHashParams();
     }, 100);
-    
+
     // Also listen for hash changes
     const handleHashChange = () => {
       parseHashParams();
     };
-    
+
     window.addEventListener('hashchange', handleHashChange);
     return () => {
       clearTimeout(timeoutId);
@@ -280,21 +288,21 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     if (!firebaseInstances || !firestoreService) return;
 
     const { db } = firebaseInstances;
-    
+
     const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
     const q = query(opinionsRef);
-    
+
     setLoadingQueue(true);
-    
-    const unsubscribe = firestoreService.subscribeWithRetry<Array<{ id: string; [key: string]: any }>>(
+
+    const unsubscribe = firestoreService.subscribeWithRetry<Array<{ id: string;[key: string]: any }>>(
       q,
       (data) => {
         setLoadingQueue(false);
-        
+
         const drafts: Opinion[] = [];
         const pending: Opinion[] = [];
         const inReview: Opinion[] = [];
-        
+
         data.forEach((doc: any) => {
           const opinion = {
             id: doc.id,
@@ -304,7 +312,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             claimedAt: doc.claimedAt?.toDate?.() || null,
             scheduledFor: doc.scheduledFor?.toDate?.() || null,
           } as Opinion;
-          
+
           // NEW: Separate into three queues based on status (include scheduled in inReview)
           // ✅ FIX: Include published articles in drafts queue so they can be edited
           if (opinion.status === 'draft' || opinion.status === 'published') {
@@ -315,18 +323,18 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             inReview.push(opinion);
           }
         });
-        
+
         // Sort each list by submission time (newest first)
         const sortByTime = (a: Opinion, b: Opinion) => {
           const timeA = a.submittedAt?.getTime() || 0;
           const timeB = b.submittedAt?.getTime() || 0;
           return timeB - timeA;
         };
-        
+
         drafts.sort(sortByTime);
         pending.sort(sortByTime);
         inReview.sort(sortByTime);
-        
+
         setDraftOpinions(drafts);
         setPendingOpinions(pending);
         setInReviewOpinions(inReview);
@@ -394,7 +402,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     // NEW: Search across all three lists
     const allOpinions = [...draftOpinions, ...pendingOpinions, ...inReviewOpinions];
     const opinion = allOpinions.find(op => op.id === selectedOpinionId);
-    
+
     if (opinion) {
       setSelectedOpinion(opinion);
       setEditedTitle(opinion.headline || '');
@@ -447,17 +455,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
     setCompressing(true);
     setUploadingImage(true);
-    
+
     try {
       // Compress image to max 2000px width
       const compressed = await compressImage(file, 2000, 0.9);
       console.log(`📦 Compressed: ${(compressed.originalSize / 1024 / 1024).toFixed(2)}MB → ${(compressed.compressedSize / 1024 / 1024).toFixed(2)}MB`);
-      
+
       // Create preview URL
       const previewUrl = URL.createObjectURL(compressed.file);
       setNewImagePreviewUrl(previewUrl);
       setNewImageFile(compressed.file);
-      
+
       // For new articles, just show preview (will upload on publish)
       if (isNewArticle) {
         setFinalImageUrl(previewUrl);
@@ -485,7 +493,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
       const app = getApp();
       const storage = getStorage(app);
-      
+
       // Delete old final.jpg if it exists
       const oldImageRef = ref(storage, `published_images/${selectedOpinionId}/final.jpg`);
       try {
@@ -499,19 +507,19 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           console.log('ℹ️ Skipping old image deletion:', error.code);
         }
       }
-      
+
       // Upload new compressed image to final.jpg (overwrites)
       const newImageRef = ref(storage, `published_images/${selectedOpinionId}/final.jpg`);
       await uploadBytes(newImageRef, compressed.file, {
         contentType: compressed.file.type || 'image/jpeg',
       });
-      
+
       const downloadURL = await getDownloadURL(newImageRef);
-      
+
       // ✅ NEW: Immediately update Firestore document with new image URL
       const { db } = firebaseInstances;
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
-      
+
       try {
         await updateDoc(opinionRef, {
           finalImageUrl: downloadURL,
@@ -524,7 +532,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         // Don't fail the entire operation - image is uploaded, just Firestore update failed
         showToast('Image uploaded but Firestore update failed. Please save the article.', 'error');
       }
-      
+
       // Update React state
       setFinalImageUrl(downloadURL);
       setNewImagePreviewUrl(null); // Clear preview after upload
@@ -543,7 +551,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
   const handleSaveDraft = async () => {
     if (!firebaseInstances) return;
-    
+
     if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
       showToast('Unauthorized: Editor role required', 'error');
       return;
@@ -557,11 +565,11 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       }
 
       setSaving(true);
-      
+
       try {
         const { db } = firebaseInstances;
         const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-        
+
         const docData = {
           writerType: 'Editorial',
           authorName: editedAuthorName || 'Editorial Team',
@@ -581,11 +589,22 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           editorNotes: editorNotes,
           submittedAt: serverTimestamp(),
           createdAt: serverTimestamp(),
+          // NEW: Context & AI Metadata
+          context: {
+            whyItMatters: contextWhyItMatters,
+            keyFacts: contextKeyFacts.filter(f => f.trim() !== ''),
+            timeline: contextTimeline.filter(t => t.date.trim() !== '' || t.title.trim() !== ''),
+          },
+          aiMetadata: {
+            summary60s: aiSummary,
+            opposingViews: aiOpposingViews,
+            simpleExplanation: aiSimpleExplanation,
+          },
         };
 
         const docRef = await addDoc(opinionsRef, docData);
         const articleId = docRef.id;
-        
+
         // Upload image if there's one
         if (newImageFile) {
           await replaceArticleImage(newImageFile, articleId);
@@ -598,7 +617,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             imageUrl: finalUrl,
           });
         }
-        
+
         showToast('Draft saved successfully', 'success');
         setIsNewArticle(false);
         setSelectedOpinionId(articleId);
@@ -620,25 +639,25 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
 
     setSaving(true);
-    
+
     try {
       const { db } = firebaseInstances;
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
-      
+
       // ✅ FIX: Get current status to preserve it if published
       const currentSnap = await getDoc(opinionRef);
       const currentStatus = currentSnap.data()?.status || 'draft';
-      
+
       // ✅ FIX: Preserve published status when updating published articles
       const dbStatus = currentStatus === 'published' ? 'published' : getDbStatus(status);
-      
+
       // NEW: Generate slug if empty
       let finalSlug = editedSlug;
       if (!finalSlug && editedTitle.trim()) {
         finalSlug = await generateUniqueSlug(db, editedTitle, selectedOpinionId);
         setEditedSlug(finalSlug);
       }
-      
+
       await updateDoc(opinionRef, {
         headline: editedTitle,
         subHeadline: editedSubHeadline,
@@ -651,7 +670,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         imageUrl: finalImageUrl || suggestedImageUrl, // ✅ Also update imageUrl for backward compatibility
         updatedAt: serverTimestamp(),
       });
-      
+
       // NEW: Create version snapshot after successful save
       await createVersionSnapshot(
         selectedOpinionId,
@@ -661,7 +680,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         currentEditorId,
         currentEditorName
       );
-      
+
       showToast('Draft saved', 'success');
     } catch (error: any) {
       console.error('Save draft error:', error);
@@ -674,7 +693,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   // NEW: Handle direct publishing (for new articles)
   const handlePublishDirectly = async () => {
     if (!firebaseInstances) return;
-    
+
     if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
       showToast('Unauthorized: Editor role required', 'error');
       return;
@@ -705,17 +724,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
 
     setSaving(true);
-    
+
     try {
       const { db } = firebaseInstances;
       const opinionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'opinions');
-      
+
       // NEW: Generate slug if not provided
       let finalSlug = editedSlug;
       if (!finalSlug) {
         finalSlug = await generateUniqueSlug(db, editedTitle);
       }
-      
+
       // Create article first to get ID
       const docData = {
         writerType: 'Editorial',
@@ -737,11 +756,22 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         submittedAt: serverTimestamp(),
         publishedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
+        // NEW: Context & AI Metadata
+        context: {
+          whyItMatters: contextWhyItMatters,
+          keyFacts: contextKeyFacts.filter(f => f.trim() !== ''),
+          timeline: contextTimeline.filter(t => t.date.trim() !== '' || t.title.trim() !== ''),
+        },
+        aiMetadata: {
+          summary60s: aiSummary,
+          opposingViews: aiOpposingViews,
+          simpleExplanation: aiSimpleExplanation,
+        },
       };
 
       const docRef = await addDoc(opinionsRef, docData);
       const articleId = docRef.id;
-      
+
       // Upload image if there's one
       let finalImageUrlToUse = null;
       if (newImageFile) {
@@ -750,14 +780,14 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         const storage = getStorage(app);
         const imageRef = ref(storage, `published_images/${articleId}/final.jpg`);
         finalImageUrlToUse = await getDownloadURL(imageRef);
-        
+
         // Update article with image URL
         await updateDoc(docRef, {
           finalImageUrl: finalImageUrlToUse,
           imageUrl: finalImageUrlToUse,
         });
       }
-      
+
       // Part D: CMS Integration - Generate short link for the new article
       try {
         const shortId = await createShortLink(
@@ -786,7 +816,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
   const handleApproveAndPublish = async () => {
     if (!selectedOpinionId || !firebaseInstances) return;
-    
+
     if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
       showToast('Unauthorized: Editor role required', 'error');
       return;
@@ -794,18 +824,18 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
     // ✅ NEW: Fetch latest finalImageUrl from Firestore to avoid stale state
     let imageToUse = finalImageUrl || suggestedImageUrl;
-    
+
     // If no image in state, try fetching from database
     if (!imageToUse && selectedOpinionId) {
       try {
         const { db } = firebaseInstances;
         const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
         const opinionSnap = await getDoc(opinionRef);
-        
+
         if (opinionSnap.exists()) {
           const opinionData = opinionSnap.data();
           imageToUse = opinionData.finalImageUrl || opinionData.imageUrl || suggestedImageUrl;
-          
+
           if (imageToUse && imageToUse !== finalImageUrl) {
             // Update state with latest from database
             setFinalImageUrl(imageToUse);
@@ -817,7 +847,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         // Continue with state value
       }
     }
-    
+
     if (!imageToUse) {
       showToast('Please upload or select an image before publishing', 'error');
       return;
@@ -830,17 +860,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
 
     setSaving(true);
-    
+
     try {
       const { db } = firebaseInstances;
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
-      
+
       // NEW: Generate slug if empty
       let finalSlug = editedSlug;
       if (!finalSlug) {
         finalSlug = await generateUniqueSlug(db, editedTitle, selectedOpinionId);
       }
-      
+
       await updateDoc(opinionRef, {
         headline: editedTitle,
         subHeadline: editedSubHeadline,
@@ -855,7 +885,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         publishedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      
+
       // NEW: Send notification to writer
       if (selectedOpinion?.authorId) {
         notifyWriterArticlePublished(
@@ -866,7 +896,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           console.warn('Failed to send notification:', err);
         });
       }
-      
+
       // Part D: CMS Integration - Generate short link for the approved article
       try {
         const shortId = await createShortLink(
@@ -895,7 +925,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
   const handleReject = async () => {
     if (!selectedOpinionId || !firebaseInstances) return;
-    
+
     if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
       showToast('Unauthorized: Editor role required', 'error');
       return;
@@ -906,17 +936,17 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
 
     setSaving(true);
-    
+
     try {
       const { db } = firebaseInstances;
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
-      
+
       await updateDoc(opinionRef, {
         status: 'rejected',
         editorNotes: editorNotes,
         updatedAt: serverTimestamp(),
       });
-      
+
       showToast('Article rejected', 'success');
       setTimeout(() => {
         setSelectedOpinionId(null);
@@ -943,16 +973,16 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
 
     setClaiming(true);
-    
+
     try {
       // Find the story to get author info
       const allOpinions = [...draftOpinions, ...pendingOpinions, ...inReviewOpinions];
       const story = allOpinions.find(op => op.id === storyId);
-      
+
       await claimStory(storyId, currentEditorId, currentEditorName);
       showToast('Story claimed successfully', 'success');
       setSelectedOpinionId(storyId);
-      
+
       // NEW: Send notification to writer
       if (story?.authorId) {
         notifyWriterArticleClaimed(story.authorId, story.headline, currentEditorName).catch(err => {
@@ -970,13 +1000,13 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   // NEW: Release story back to pending queue
   const handleReleaseStory = async () => {
     if (!selectedOpinionId) return;
-    
+
     if (!window.confirm('Release this story back to the pending queue?')) {
       return;
     }
 
     setSaving(true);
-    
+
     try {
       await releaseStory(selectedOpinionId, currentEditorId);
       showToast('Story released to pending queue', 'success');
@@ -992,7 +1022,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   // NEW: Return story to writer with feedback
   const handleReturnToWriter = async () => {
     if (!selectedOpinionId) return;
-    
+
     if (!editorNotes.trim()) {
       showToast('Please add feedback notes before returning to writer', 'error');
       return;
@@ -1003,11 +1033,11 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
 
     setSaving(true);
-    
+
     try {
       await returnToWriter(selectedOpinionId, editorNotes, currentEditorId);
       showToast('Story returned to writer with feedback', 'success');
-      
+
       // NEW: Send notification to writer
       if (selectedOpinion?.authorId) {
         notifyWriterArticleReturned(
@@ -1018,7 +1048,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           console.warn('Failed to send notification:', err);
         });
       }
-      
+
       setTimeout(() => {
         setSelectedOpinionId(null);
       }, 1000);
@@ -1033,7 +1063,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   // NEW: Handle scheduling publication
   const handleSchedulePublication = async () => {
     if (!selectedOpinionId || !firebaseInstances) return;
-    
+
     if (!userRoles.includes('editor') && !userRoles.includes('admin') && !userRoles.includes('super_admin')) {
       showToast('Unauthorized: Editor role required', 'error');
       return;
@@ -1046,7 +1076,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
 
     // Combine date and time
     const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
-    
+
     // Validate future date
     if (scheduledDateTime <= new Date()) {
       showToast('Scheduled time must be in the future', 'error');
@@ -1054,12 +1084,12 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
     }
 
     setScheduling(true);
-    
+
     try {
       // First save any changes
       const { db } = firebaseInstances;
       const opinionRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'opinions', selectedOpinionId);
-      
+
       await updateDoc(opinionRef, {
         headline: editedTitle,
         subHeadline: editedSubHeadline,
@@ -1070,7 +1100,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         finalImageUrl: finalImageUrl || suggestedImageUrl,
         updatedAt: serverTimestamp(),
       });
-      
+
       // NEW: Create version snapshot before scheduling
       await createVersionSnapshot(
         selectedOpinionId,
@@ -1080,10 +1110,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         currentEditorId,
         currentEditorName
       );
-      
+
       // Then schedule
       await schedulePublication(selectedOpinionId, scheduledDateTime);
-      
+
       showToast(`Story scheduled for ${scheduledDateTime.toLocaleString()}`, 'success');
       setShowSchedulePicker(false);
       setTimeout(() => {
@@ -1100,10 +1130,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   // NEW: Load version history
   const handleLoadHistory = async () => {
     if (!selectedOpinionId) return;
-    
+
     setLoadingHistory(true);
     setShowHistoryModal(true);
-    
+
     try {
       const versions = await getVersionHistory(selectedOpinionId);
       setVersionHistory(versions);
@@ -1121,24 +1151,24 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   // NEW: Restore to previous version
   const handleRestoreVersion = async (version: OpinionVersion) => {
     if (!selectedOpinionId) return;
-    
+
     if (!window.confirm(`Restore to version ${version.versionNumber} (${version.savedAt.toLocaleString()})?\n\nCurrent content will be saved as a new version before restoring.`)) {
       return;
     }
 
     setRestoringVersion(version.id);
-    
+
     try {
       await restoreVersion(selectedOpinionId, version, currentEditorId, currentEditorName);
-      
+
       // Update editor state with restored content
       setEditedTitle(version.headline);
       setEditedSubHeadline(version.subHeadline);
       setEditedBody(version.body);
-      
+
       showToast(`Restored to version ${version.versionNumber}`, 'success');
       setShowHistoryModal(false);
-      
+
       // Reload history to show the new snapshot
       setTimeout(() => {
         handleLoadHistory();
@@ -1230,7 +1260,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
               {draftOpinions.length + pendingOpinions.length + inReviewOpinions.length} total stories
             </div>
           </div>
-          
+
           <div style={{
             flex: 1,
             overflowY: 'auto',
@@ -1260,7 +1290,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   {draftOpinions.length}
                 </span>
               </div>
-              
+
               {draftOpinions.length === 0 ? (
                 <div style={{
                   padding: '16px',
@@ -1341,7 +1371,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   {pendingOpinions.length}
                 </span>
               </div>
-              
+
               {pendingOpinions.length === 0 ? (
                 <div style={{
                   padding: '16px',
@@ -1357,81 +1387,81 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   const priorityColors = getPriorityColor(priority);
                   const returnCount = (opinion as any).editorialMeta?.returnCount || 0;
                   const elapsedTime = getElapsedTime(opinion.submittedAt);
-                  
+
                   return (
-                  <div
-                    key={opinion.id}
-                    onClick={() => {
-                      setSelectedOpinionId(opinion.id);
-                      setIsNewArticle(false);
-                    }}
-                    style={{
-                      padding: '12px',
-                      marginBottom: '8px',
-                      border: selectedOpinionId === opinion.id ? '2px solid #000' : priority === 'urgent' ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : priority === 'urgent' ? '#fef2f2' : 'white',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {/* Sprint 2: Priority badge */}
-                    {priority && priority !== 'normal' && (
+                    <div
+                      key={opinion.id}
+                      onClick={() => {
+                        setSelectedOpinionId(opinion.id);
+                        setIsNewArticle(false);
+                      }}
+                      style={{
+                        padding: '12px',
+                        marginBottom: '8px',
+                        border: selectedOpinionId === opinion.id ? '2px solid #000' : priority === 'urgent' ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        backgroundColor: selectedOpinionId === opinion.id ? '#f0f0f0' : priority === 'urgent' ? '#fef2f2' : 'white',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {/* Sprint 2: Priority badge */}
+                      {priority && priority !== 'normal' && (
+                        <div style={{
+                          fontSize: '9px',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          padding: '2px 6px',
+                          borderRadius: '2px',
+                          backgroundColor: priorityColors.bg,
+                          color: priorityColors.text,
+                          display: 'inline-block',
+                          marginBottom: '6px'
+                        }}>
+                          {priority === 'urgent' ? <><Flame size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></> : priority === 'high' ? <><ArrowUp size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></> : <><ArrowDown size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></>}{priority}
+                        </div>
+                      )}
                       <div style={{
-                        fontSize: '9px',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        padding: '2px 6px',
-                        borderRadius: '2px',
-                        backgroundColor: priorityColors.bg,
-                        color: priorityColors.text,
-                        display: 'inline-block',
-                        marginBottom: '6px'
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        marginBottom: '4px',
+                        color: '#000'
                       }}>
-                        {priority === 'urgent' ? <><Flame size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></> : priority === 'high' ? <><ArrowUp size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></> : <><ArrowDown size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /></>}{priority}
+                        {opinion.headline || 'Untitled'}
                       </div>
-                    )}
-                    <div style={{
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      marginBottom: '4px',
-                      color: '#000'
-                    }}>
-                      {opinion.headline || 'Untitled'}
-                    </div>
-                    <div style={{
-                      fontSize: '11px',
-                      color: '#666',
-                      marginBottom: '4px'
-                    }}>
-                      {opinion.authorName}
-                    </div>
-                    {/* Sprint 2: Show elapsed time and return count */}
-                    <div style={{
-                      fontSize: '10px',
-                      color: '#999',
-                      display: 'flex',
-                      gap: '8px',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={10} aria-hidden /> {elapsedTime} waiting</span>
-                      {returnCount > 0 && (
-                        <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><RotateCcw size={10} aria-hidden /> {returnCount}x returned</span>
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#666',
+                        marginBottom: '4px'
+                      }}>
+                        {opinion.authorName}
+                      </div>
+                      {/* Sprint 2: Show elapsed time and return count */}
+                      <div style={{
+                        fontSize: '10px',
+                        color: '#999',
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={10} aria-hidden /> {elapsedTime} waiting</span>
+                        {returnCount > 0 && (
+                          <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><RotateCcw size={10} aria-hidden /> {returnCount}x returned</span>
+                        )}
+                      </div>
+                      {opinion.editorNotes && (
+                        <div style={{
+                          marginTop: '6px',
+                          padding: '4px 6px',
+                          backgroundColor: '#fef3c7',
+                          borderRadius: '2px',
+                          fontSize: '10px',
+                          color: '#92400e'
+                        }}>
+                          <MessageCircle size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /> Has feedback
+                        </div>
                       )}
                     </div>
-                    {opinion.editorNotes && (
-                      <div style={{
-                        marginTop: '6px',
-                        padding: '4px 6px',
-                        backgroundColor: '#fef3c7',
-                        borderRadius: '2px',
-                        fontSize: '10px',
-                        color: '#92400e'
-                      }}>
-                        <MessageCircle size={10} style={{ verticalAlign: 'middle', marginRight: '4px' }} aria-hidden /> Has feedback
-                      </div>
-                    )}
-                  </div>
                   );
                 })
               )}
@@ -1483,7 +1513,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   </span>
                 </div>
               </div>
-              
+
               {inReviewOpinions.length === 0 ? (
                 <div style={{
                   padding: '16px',
@@ -1701,7 +1731,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         )}
                       </div>
                     </div>
-                    
+
                     <div style={{ display: 'flex', gap: '8px' }}>
                       {/* NEW: History button */}
                       <button
@@ -1721,7 +1751,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       >
                         {loadingHistory ? 'Loading...' : '📜 History'}
                       </button>
-                      
+
                       {/* NEW: Claim button for pending stories */}
                       {selectedOpinion.status === 'pending' && (
                         <button
@@ -1744,7 +1774,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       )}
                     </div>
                   </div>
-                  
+
                   {/* NEW: Toggle for split-pane view (if original text exists) */}
                   {selectedOpinion.originalBody && (
                     <div style={{ marginTop: '12px' }}>
@@ -1811,9 +1841,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   }}>
                     Priority
                     {selectedOpinion.editorialMeta?.firstResponseAt && (
-                      <span style={{ 
-                        marginLeft: '8px', 
-                        fontSize: '11px', 
+                      <span style={{
+                        marginLeft: '8px',
+                        fontSize: '11px',
                         color: '#6b7280',
                         fontWeight: '400'
                       }}>
@@ -2013,7 +2043,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                   }}>
                     Images will be automatically compressed to max 2000px width. Max 5MB. Replaces existing image.
                   </div>
-                  
+
                   {/* ImagePreview Component - Shows current vs new */}
                   {(finalImageUrl || suggestedImageUrl || newImagePreviewUrl) && (
                     <ImagePreview
@@ -2023,7 +2053,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                       newImageLabel="New Image (Preview)"
                     />
                   )}
-                  
+
                   <label style={{
                     display: 'inline-block',
                     padding: '8px 16px',
@@ -2051,83 +2081,325 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                 </div>
               )}
 
-              {/* ENHANCED: Rich Text Editor for Body with Split-Pane Option */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}>
-                  Body <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                
-                {/* NEW: Split-pane view showing original text */}
-                {showOriginalText && selectedOpinion?.originalBody ? (
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '16px',
-                    marginBottom: '16px'
-                  }}>
-                    {/* Left pane: Original text (read-only) */}
-                    <div style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '4px',
-                      padding: '12px',
-                      backgroundColor: '#f9fafb'
-                    }}>
-                      <div style={{
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        color: '#6b7280',
-                        marginBottom: '8px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
-                        📄 Original Text (Reference)
-                      </div>
-                      <div style={{
-                        fontSize: '14px',
-                        lineHeight: '1.6',
-                        color: '#374151',
-                        maxHeight: '400px',
-                        overflowY: 'auto',
-                        fontFamily: 'monospace',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word'
-                      }}
-                      dangerouslySetInnerHTML={{ __html: selectedOpinion.originalBody }}
-                      />
-                    </div>
-                    
-                    {/* Right pane: Editor's version (editable) */}
-                    <div>
-                      <div style={{
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        color: '#1e40af',
-                        marginBottom: '8px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
-                        <PenLine size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} aria-hidden /> Your Edit
-                      </div>
-                      <RichTextEditor
-                        value={editedBody}
-                        onChange={setEditedBody}
-                        placeholder="Edit the article content here..."
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <RichTextEditor
-                    value={editedBody}
-                    onChange={setEditedBody}
-                    placeholder="Write your article content here. Use the toolbar to format text, add headings (H1, H2), blockquotes for pull-quotes, and links."
-                  />
-                )}
+              {/* NEW: Editor Tabs */}
+              <div style={{ marginBottom: '16px', borderBottom: '1px solid #e5e5e5', display: 'flex', gap: '2px' }}>
+                <button
+                  onClick={() => setActiveTab('content')}
+                  style={{
+                    padding: '8px 16px',
+                    border: '1px solid #e5e5e5',
+                    borderBottom: activeTab === 'content' ? '1px solid #fff' : '1px solid #e5e5e5',
+                    marginBottom: '-1px',
+                    backgroundColor: activeTab === 'content' ? '#fff' : '#f9fafb',
+                    borderRadius: '4px 4px 0 0',
+                    fontWeight: activeTab === 'content' ? '600' : '500',
+                    color: activeTab === 'content' ? '#000' : '#666',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Content
+                </button>
+                <button
+                  onClick={() => setActiveTab('context')}
+                  style={{
+                    padding: '8px 16px',
+                    border: '1px solid #e5e5e5',
+                    borderBottom: activeTab === 'context' ? '1px solid #fff' : '1px solid #e5e5e5',
+                    marginBottom: '-1px',
+                    backgroundColor: activeTab === 'context' ? '#fff' : '#f9fafb',
+                    borderRadius: '4px 4px 0 0',
+                    fontWeight: activeTab === 'context' ? '600' : '500',
+                    color: activeTab === 'context' ? '#000' : '#666',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Context Stack
+                </button>
+                <button
+                  onClick={() => setActiveTab('ai')}
+                  style={{
+                    padding: '8px 16px',
+                    border: '1px solid #e5e5e5',
+                    borderBottom: activeTab === 'ai' ? '1px solid #fff' : '1px solid #e5e5e5',
+                    marginBottom: '-1px',
+                    backgroundColor: activeTab === 'ai' ? '#fff' : '#f9fafb',
+                    borderRadius: '4px 4px 0 0',
+                    fontWeight: activeTab === 'ai' ? '600' : '500',
+                    color: activeTab === 'ai' ? '#000' : '#666',
+                    cursor: 'pointer'
+                  }}
+                >
+                  AI Metadata
+                </button>
               </div>
+
+              {/* CONTENT TAB */}
+              {activeTab === 'content' && (
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    Body <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+
+                  {/* NEW: Split-pane view showing original text */}
+                  {showOriginalText && selectedOpinion?.originalBody ? (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '16px',
+                      marginBottom: '16px'
+                    }}>
+                      {/* Left pane: Original text (read-only) */}
+                      <div style={{
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '4px',
+                        padding: '12px',
+                        backgroundColor: '#f9fafb'
+                      }}>
+                        <div style={{
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: '#6b7280',
+                          marginBottom: '8px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          📄 Original Text (Reference)
+                        </div>
+                        <div style={{
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          color: '#374151',
+                          maxHeight: '400px',
+                          overflowY: 'auto',
+                          fontFamily: 'monospace',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word'
+                        }}
+                          dangerouslySetInnerHTML={{ __html: selectedOpinion.originalBody }}
+                        />
+                      </div>
+
+                      {/* Right pane: Editor's version (editable) */}
+                      <div>
+                        <div style={{
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: '#1e40af',
+                          marginBottom: '8px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          <PenLine size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} aria-hidden /> Your Edit
+                        </div>
+                        <RichTextEditor
+                          value={editedBody}
+                          onChange={setEditedBody}
+                          placeholder="Edit the article content here..."
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <RichTextEditor
+                      value={editedBody}
+                      onChange={setEditedBody}
+                      placeholder="Write your article content here. Use the toolbar to format text, add headings (H1, H2), blockquotes for pull-quotes, and links."
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* CONTEXT TAB */}
+              {activeTab === 'context' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
+                  {/* Why It Matters */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+                      Why It Matters
+                      <span style={{ marginLeft: '8px', fontSize: '12px', fontWeight: '400', color: '#6b7280' }}>
+                        (Briefly explain the significance of this story)
+                      </span>
+                    </label>
+                    <textarea
+                      value={contextWhyItMatters}
+                      onChange={(e) => setContextWhyItMatters(e.target.value)}
+                      placeholder="This event is significant because..."
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        minHeight: '80px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        lineHeight: '1.5'
+                      }}
+                    />
+                  </div>
+
+                  {/* Key Facts */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+                      Key Facts
+                      <span style={{ marginLeft: '8px', fontSize: '12px', fontWeight: '400', color: '#6b7280' }}>
+                        (Bullet points)
+                      </span>
+                    </label>
+                    {contextKeyFacts.map((fact, index) => (
+                      <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', color: '#6b7280' }}>•</span>
+                        <input
+                          type="text"
+                          value={fact}
+                          onChange={(e) => {
+                            const newFacts = [...contextKeyFacts];
+                            newFacts[index] = e.target.value;
+                            setContextKeyFacts(newFacts);
+                          }}
+                          placeholder="Add a key fact..."
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '14px'
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            const newFacts = contextKeyFacts.filter((_, i) => i !== index);
+                            setContextKeyFacts(newFacts.length ? newFacts : ['']);
+                          }}
+                          style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setContextKeyFacts([...contextKeyFacts, ''])}
+                      style={{ fontSize: '13px', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+                    >
+                      + Add Fact
+                    </button>
+                  </div>
+
+                  {/* Timeline */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+                      Timeline
+                      <span style={{ marginLeft: '8px', fontSize: '12px', fontWeight: '400', color: '#6b7280' }}>
+                        (Key events leading up to this story)
+                      </span>
+                    </label>
+                    {contextTimeline.map((item, index) => (
+                      <div key={index} style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'flex-start', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                        <input
+                          type="text"
+                          value={item.date}
+                          onChange={(e) => {
+                            const newTimeline = [...contextTimeline];
+                            newTimeline[index].date = e.target.value;
+                            setContextTimeline(newTimeline);
+                          }}
+                          placeholder="Date (e.g. Jan 2024)"
+                          style={{ width: '120px', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                        />
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <input
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => {
+                              const newTimeline = [...contextTimeline];
+                              newTimeline[index].title = e.target.value;
+                              setContextTimeline(newTimeline);
+                            }}
+                            placeholder="Event Title"
+                            style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', fontWeight: '600' }}
+                          />
+                          <input
+                            type="text"
+                            value={item.summary}
+                            onChange={(e) => {
+                              const newTimeline = [...contextTimeline];
+                              newTimeline[index].summary = e.target.value;
+                              setContextTimeline(newTimeline);
+                            }}
+                            placeholder="Brief summary..."
+                            style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                          />
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newTimeline = contextTimeline.filter((_, i) => i !== index);
+                            setContextTimeline(newTimeline.length ? newTimeline : [{ date: '', title: '', summary: '' }]);
+                          }}
+                          style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', marginTop: '6px' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setContextTimeline([...contextTimeline, { date: '', title: '', summary: '' }])}
+                      style={{ fontSize: '13px', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+                    >
+                      + Add Event
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* AI METADATA TAB */}
+              {activeTab === 'ai' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
+                  <div style={{ padding: '12px', backgroundColor: '#eff6ff', borderRadius: '6px', border: '1px solid #dbeafe', fontSize: '14px', color: '#1e40af' }}>
+                    ℹ️ This data drives the "Inline AI" features on the frontend (Summarize, Explain, Opposing Views).
+                  </div>
+
+                  {/* Summary */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+                      60-Second Summary
+                    </label>
+                    <textarea
+                      value={aiSummary}
+                      onChange={(e) => setAiSummary(e.target.value)}
+                      placeholder="Concise summary..."
+                      style={{ width: '100%', padding: '12px', minHeight: '100px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                    />
+                  </div>
+
+                  {/* Opposing Views */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+                      Opposing Views / Counter-Arguments
+                    </label>
+                    <textarea
+                      value={aiOpposingViews}
+                      onChange={(e) => setAiOpposingViews(e.target.value)}
+                      placeholder="Alternative perspectives..."
+                      style={{ width: '100%', padding: '12px', minHeight: '100px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                    />
+                  </div>
+
+                  {/* Simple Explanation */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
+                      Simple Explanation (ELI5)
+                    </label>
+                    <textarea
+                      value={aiSimpleExplanation}
+                      onChange={(e) => setAiSimpleExplanation(e.target.value)}
+                      placeholder="Simplified explanation..."
+                      style={{ width: '100%', padding: '12px', minHeight: '100px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Editor Notes (hidden for new articles) */}
               {!isNewArticle && (
@@ -2241,7 +2513,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     >
                       Reject
                     </button>
-                    
+
                     <button
                       onClick={() => selectedOpinion && handleClaimStory(selectedOpinion.id)}
                       disabled={claiming}
@@ -2283,7 +2555,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         >
                           Release
                         </button>
-                        
+
                         <button
                           onClick={handleReturnToWriter}
                           disabled={saving || !editorNotes.trim()}
@@ -2302,7 +2574,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         >
                           Return to Writer
                         </button>
-                        
+
                         <button
                           onClick={handleSaveDraft}
                           disabled={saving}
@@ -2320,7 +2592,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         >
                           {saving ? 'Saving...' : 'Save Progress'}
                         </button>
-                        
+
                         {/* NEW: Schedule Button */}
                         <button
                           onClick={() => {
@@ -2347,7 +2619,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                         >
                           <Calendar size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> Schedule
                         </button>
-                        
+
                         <button
                           onClick={handleApproveAndPublish}
                           disabled={saving}
@@ -2462,7 +2734,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     >
                       Reject
                     </button>
-                    
+
                     <button
                       onClick={handleSaveDraft}
                       disabled={saving}
@@ -2480,7 +2752,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     >
                       {saving ? 'Saving...' : 'Save Draft'}
                     </button>
-                    
+
                     <button
                       onClick={handleApproveAndPublish}
                       disabled={saving}
@@ -2520,7 +2792,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     >
                       Reject
                     </button>
-                    
+
                     <button
                       onClick={handleSaveDraft}
                       disabled={saving}
@@ -2538,7 +2810,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     >
                       {saving ? 'Saving...' : 'Save'}
                     </button>
-                    
+
                     <button
                       onClick={handleApproveAndPublish}
                       disabled={saving}
@@ -2682,7 +2954,7 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                           </button>
                         )}
                       </div>
-                      
+
                       <div style={{
                         fontSize: '13px',
                         color: '#374151',

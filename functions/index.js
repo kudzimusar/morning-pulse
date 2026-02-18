@@ -84,10 +84,10 @@ exports.unsplashImage = unsplashImage;
 // ============================================
 // NEWSLETTER FUNCTIONS (HTTP Functions)
 // ============================================
-const { 
-  sendNewsletter, 
-  manageSubscription, 
-  sendScheduledNewsletter 
+const {
+  sendNewsletter,
+  manageSubscription,
+  sendScheduledNewsletter
 } = require('./newsletter');
 
 exports.sendNewsletter = sendNewsletter;
@@ -97,9 +97,9 @@ exports.sendScheduledNewsletter = sendScheduledNewsletter;
 // ============================================
 // WRITER MANAGEMENT FUNCTIONS (HTTP Functions)
 // ============================================
-const { 
-  computeWriterMetrics, 
-  generateWriterStatements 
+const {
+  computeWriterMetrics,
+  generateWriterStatements
 } = require('./writer');
 
 exports.computeWriterMetrics = computeWriterMetrics;
@@ -110,5 +110,11 @@ exports.generateWriterStatements = generateWriterStatements;
 // ============================================
 const { autoPublishScheduledStories } = require('./autoPublish');
 exports.autoPublishScheduledStories = autoPublishScheduledStories;
+
+// ============================================
+// PERSONALIZED BRIEFINGS (HTTP Callable)
+// ============================================
+const { generateDailyBrief } = require('./generateDailyBrief');
+exports.generateDailyBrief = generateDailyBrief;
 
 console.log('✅ All Cloud Functions exported successfully');

@@ -57,5 +57,11 @@ export const app = firebaseApp;
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
+// Initialize Firebase Functions
+import { getFunctions } from 'firebase/functions';
+// Region 'us-central1' is default, but good to be explicit if needed. 
+// For now, let's use default to match deployment.
+export const functions = getFunctions(app);
+
 // Also export common helpers
 export const APP_ID = (window as any).__app_id || 'morning-pulse-app';

@@ -35,6 +35,7 @@ const SubscriberManagementTab = React.lazy(() => import('./admin/SubscriberManag
 const AdManagementTab = React.lazy(() => import('./admin/AdManagementTab'));
 const IntegrationSettings = React.lazy(() => import('./admin/IntegrationSettings'));
 const WriterHub = React.lazy(() => import('./admin/WriterHub'));
+const TopicManagementTab = React.lazy(() => import('./admin/TopicManagementTab'));
 const DashboardOverviewTab = React.lazy(() => import('./admin/DashboardOverviewTab'));
 const RevenueTab = React.lazy(() => import('./admin/RevenueTab'));
 const SystemTab = React.lazy(() => import('./admin/SystemTab'));
@@ -47,8 +48,9 @@ import {
   FileEdit,
   CheckCircle,
   Users,
+  Grid,
   PenLine,
-  User,
+  User as UserIcon,
   Megaphone,
   DollarSign,
   TrendingUp,
@@ -59,6 +61,7 @@ import {
   Settings,
   Bell
 } from 'lucide-react';
+
 // Constants
 const APP_ID = "morning-pulse-app";
 
@@ -77,7 +80,7 @@ interface ToastMessage {
   type: 'success' | 'error';
 }
 
-type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'subscriber-management' | 'ad-management' | 'analytics' | 'revenue' | 'system-health' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
+type TabId = 'dashboard' | 'editorial-queue' | 'published-content' | 'staff-management' | 'writer-hub' | 'topic-management' | 'subscriber-management' | 'ad-management' | 'analytics' | 'revenue' | 'system-health' | 'newsletter-hub' | 'image-compliance' | 'settings' | 'integrations';
 
 const ICON_SIZE = 16;
 
@@ -87,7 +90,8 @@ const ALL_TABS = [
   { id: 'published-content' as TabId, label: 'Published Content', icon: <CheckCircle size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: false },
   { id: 'staff-management' as TabId, label: 'Staff Management', icon: <Users size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
   { id: 'writer-hub' as TabId, label: 'Writer Management', icon: <PenLine size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
-  { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: <User size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'topic-management' as TabId, label: 'Topic Hubs', icon: <Grid size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
+  { id: 'subscriber-management' as TabId, label: 'Subscriber Management', icon: <UserIcon size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
   { id: 'ad-management' as TabId, label: 'Ad Management', icon: <Megaphone size={ICON_SIZE} aria-hidden />, adminOnly: true, superAdminOnly: false },
   { id: 'revenue' as TabId, label: 'Revenue Dashboard', icon: <DollarSign size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
   { id: 'analytics' as TabId, label: 'Analytics Hub', icon: <TrendingUp size={ICON_SIZE} aria-hidden />, adminOnly: false, superAdminOnly: true },
@@ -568,70 +572,74 @@ const AdminDashboard: React.FC = () => {
 
           {/* Content Area */}
           <main className="admin-content">
-          <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Processing...</div>}>
-            {activeTab === 'dashboard' && (
-              <DashboardOverviewTab
-                onNavigate={(tab) => setActiveTab(tab as any)}
-                pendingCount={pendingOpinions.length}
-                publishedCount={publishedOpinions.length}
-              />
-            )}
+            <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Processing...</div>}>
+              {activeTab === 'dashboard' && (
+                <DashboardOverviewTab
+                  onNavigate={(tab) => setActiveTab(tab as any)}
+                  pendingCount={pendingOpinions.length}
+                  publishedCount={publishedOpinions.length}
+                />
+              )}
 
-            {activeTab === 'editorial-queue' && (
-              <EditorialQueueTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-            )}
+              {activeTab === 'editorial-queue' && (
+                <EditorialQueueTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+              )}
 
-            {activeTab === 'published-content' && (
-              <PublishedContentTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-            )}
+              {activeTab === 'published-content' && (
+                <PublishedContentTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+              )}
 
-            {activeTab === 'staff-management' && isAdmin && (
-              <StaffManagementTab />
-            )}
+              {activeTab === 'staff-management' && isAdmin && (
+                <StaffManagementTab />
+              )}
 
-            {activeTab === 'writer-hub' && isAdmin && (
-              <WriterHub userRoles={userRoles} />
-            )}
+              {activeTab === 'writer-hub' && isAdmin && (
+                <WriterHub userRoles={userRoles} />
+              )}
 
-            {activeTab === 'subscriber-management' && isAdmin && (
-              <SubscriberManagementTab userRoles={userRoles} />
-            )}
+              {activeTab === 'topic-management' && isAdmin && (
+                <TopicManagementTab userRoles={userRoles} showToast={showToast} />
+              )}
 
-            {activeTab === 'ad-management' && isAdmin && (
-              <AdManagementTab userRoles={userRoles} />
-            )}
+              {activeTab === 'subscriber-management' && isAdmin && (
+                <SubscriberManagementTab userRoles={userRoles} />
+              )}
 
-            {activeTab === 'analytics' && isAuthorized && (
-              <AnalyticsTab firebaseInstances={firebaseInstances} isAuthorized={isAuthorized} userRoles={userRoles} />
-            )}
+              {activeTab === 'ad-management' && isAdmin && (
+                <AdManagementTab userRoles={userRoles} />
+              )}
 
-            {activeTab === 'revenue' && isSuperAdmin && (
-              <RevenueTab />
-            )}
+              {activeTab === 'analytics' && isAuthorized && (
+                <AnalyticsTab firebaseInstances={firebaseInstances} isAuthorized={isAuthorized} userRoles={userRoles} />
+              )}
 
-            {activeTab === 'system-health' && isSuperAdmin && (
-              <SystemTab firebaseInstances={firebaseInstances} onNavigateToTab={(tab) => setActiveTab(tab as TabId)} />
-            )}
+              {activeTab === 'revenue' && isSuperAdmin && (
+                <RevenueTab />
+              )}
 
-            {activeTab === 'newsletter-hub' && isSuperAdmin && (
-              <NewsletterHub />
-            )}
+              {activeTab === 'system-health' && isSuperAdmin && (
+                <SystemTab firebaseInstances={firebaseInstances} onNavigateToTab={(tab) => setActiveTab(tab as TabId)} />
+              )}
 
-            {activeTab === 'image-compliance' && (
-              <ImageComplianceTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-            )}
+              {activeTab === 'newsletter-hub' && isSuperAdmin && (
+                <NewsletterHub />
+              )}
 
-            {activeTab === 'integrations' && isAdmin && (
-              <IntegrationSettings userRoles={userRoles} showToast={showToast} />
-            )}
+              {activeTab === 'image-compliance' && (
+                <ImageComplianceTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+              )}
 
-            {activeTab === 'settings' && (
-              <SettingsTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
-            )}
-          </Suspense>
-        </main>
+              {activeTab === 'integrations' && isAdmin && (
+                <IntegrationSettings userRoles={userRoles} showToast={showToast} />
+              )}
+
+              {activeTab === 'settings' && (
+                <SettingsTab firebaseInstances={firebaseInstances} userRoles={userRoles} showToast={showToast} />
+              )}
+            </Suspense>
+          </main>
+        </div>
       </div>
-    </div>
 
       {/* Quick Actions FAB */}
       <Suspense fallback={null}>

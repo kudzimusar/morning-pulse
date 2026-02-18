@@ -77,40 +77,10 @@ const TopicPage: React.FC<TopicPageProps> = ({ slug }) => {
             </div>
 
             <div className="topic-content container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-                {/* Featured Story */}
+                {/* Featured Story - Always shown if available */}
                 {content.featured.length > 0 && (
                     <section className="featured-section" style={{ marginBottom: '60px' }}>
-                        {/* We cast to fit ArticleCard props - standardizing might be needed */}
-                        {/* For now, we assume standard NewsStory shape or map it */}
                         {content.featured.map((item: any) => (
-                            <ArticleCard
-                                key={item.id}
-                                article={{
-                                    ...item,
-                                    category: topic.title, // Override category for visuals
-                                    source: item.authorName || item.source || 'Morning Pulse'
-                                }}
-                                variant="grid"
-                                isEditorial={true} // Assuming predominantly internal content for Hubs
-                                opinionSlug={item.slug}
-                            />
-                        ))}
-                    </section>
-                )}
-
-                {/* Latest Stories Grid */}
-                <section className="latest-section">
-                    <h3 style={{
-                        fontSize: '1.5rem',
-                        fontWeight: '800',
-                        borderBottom: '2px solid #000',
-                        paddingBottom: '12px',
-                        marginBottom: '24px'
-                    }}>
-                        Latest in {topic.title}
-                    </h3>
-                    <div className="news-grid-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '32px' }}>
-                        {content.latest.map((item: any) => (
                             <ArticleCard
                                 key={item.id}
                                 article={{
@@ -123,7 +93,54 @@ const TopicPage: React.FC<TopicPageProps> = ({ slug }) => {
                                 opinionSlug={item.slug}
                             />
                         ))}
-                    </div>
+                    </section>
+                )}
+
+                {/* Latest Stories - Layout depends on config */}
+                <section className="latest-section">
+                    <h3 style={{
+                        fontSize: '1.5rem',
+                        fontWeight: '800',
+                        borderBottom: '2px solid #000',
+                        paddingBottom: '12px',
+                        marginBottom: '24px'
+                    }}>
+                        Latest in {topic.title}
+                    </h3>
+
+                    {topic.layoutConfig === 'timeline' ? (
+                        <div className="news-timeline-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '800px', margin: '0 auto' }}>
+                            {content.latest.map((item: any) => (
+                                <ArticleCard
+                                    key={item.id}
+                                    article={{
+                                        ...item,
+                                        category: topic.title,
+                                        source: item.authorName || item.source || 'Morning Pulse'
+                                    }}
+                                    variant="compact"
+                                    isEditorial={true}
+                                    opinionSlug={item.slug}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="news-grid-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '32px' }}>
+                            {content.latest.map((item: any) => (
+                                <ArticleCard
+                                    key={item.id}
+                                    article={{
+                                        ...item,
+                                        category: topic.title,
+                                        source: item.authorName || item.source || 'Morning Pulse'
+                                    }}
+                                    variant="grid"
+                                    isEditorial={true}
+                                    opinionSlug={item.slug}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </section>
             </div>
         </div>

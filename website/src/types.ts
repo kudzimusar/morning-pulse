@@ -212,6 +212,7 @@ export interface TopicHub {
   featuredArticleIds: string[]; // Curated list of IDs
   order: number;
   isActive: boolean;
+  layoutConfig?: 'grid' | 'timeline' | 'feature';
 }
 
 // Live Coverage

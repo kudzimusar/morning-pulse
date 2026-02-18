@@ -65,6 +65,7 @@ import OpinionPage from './components/OpinionPage';
 import TopicPage from './components/TopicPage';
 import LiveCoveragePage from './components/LiveCoveragePage';
 import SavedArticlesPage from './components/SavedArticlesPage'; // NEW: Saved Articles Page
+import MorningBriefCard from './components/MorningBriefCard'; // NEW: Morning Brief
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
 // ✅ FIX: Lazy load AdminDashboard to break circular dependencies
 import AdminLogin from './components/AdminLogin';
@@ -1374,6 +1375,12 @@ const App: React.FC = () => {
                       </p>
                     </div>
                   )}
+
+                  {/* NEW: Personalized Morning Brief (Authenticated Readers) */}
+                  {((userRole && Array.isArray(userRole) && userRole.length > 0) || isReaderAuthenticated) && !loading && (
+                    <MorningBriefCard />
+                  )}
+
                   <NewsGrid
                     newsData={newsData}
                     selectedCategory={selectedCategory}
