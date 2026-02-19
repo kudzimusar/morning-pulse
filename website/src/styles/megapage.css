@@ -81,13 +81,92 @@
     border: var(--border-hairline);
 }
 
+.sticky-rail {
+    position: sticky;
+    top: 20px;
+    /* Stick 20px from top of viewport */
+    align-self: start;
+    /* Required for sticky to work in grid */
+    height: fit-content;
+}
+
+.vertical-divider {
+    border-right: 1px solid var(--mp-light-gray);
+    margin-right: -12px;
+    /* Pull back to center in gutter if needed, or just use on container */
+    padding-right: 24px;
+}
+
 .mp-card-hover {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .mp-card-hover:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+/* PREMIUM CARD STYLES */
+.mp-card-standard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--mp-white);
+    padding-bottom: 16px;
+}
+
+.mp-image-container {
+    width: 100%;
+    aspect-ratio: 3/2;
+    /* Standardize aspect ratio */
+    overflow: hidden;
+    border-radius: 4px;
+    background-color: var(--mp-faint-gray);
+    position: relative;
+}
+
+.mp-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.mp-card-hover:hover .mp-image-container img {
+    transform: scale(1.03);
+    /* Subtle zoom */
+}
+
+.mp-headline-serif {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--mp-ink);
+    margin: 0;
+}
+
+.mp-headline-large {
+    font-size: 1.25rem;
+}
+
+.mp-headline-medium {
+    font-size: 1.1rem;
+}
+
+.mp-headline-small {
+    font-size: 1rem;
+}
+
+.mp-excerpt {
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    color: var(--mp-slate);
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 /* =========================================
