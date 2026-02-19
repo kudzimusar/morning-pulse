@@ -8,7 +8,7 @@ import { Sparkles, X, Brain, Bookmark, BookmarkCheck } from 'lucide-react'; // N
 
 interface ArticleCardProps {
   article: NewsStory;
-  variant?: 'grid' | 'compact';
+  variant?: 'grid' | 'compact' | 'text' | 'feature';
   userCountry?: CountryInfo;
   opinionSlug?: string; // NEW: Slug for editorials/opinions to route to detail page
   isEditorial?: boolean; // NEW: Flag to indicate if this is an editorial/opinion
@@ -283,7 +283,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
               e.currentTarget.style.borderColor = '#e5e7eb';
             }}
           >
-            <Sparkles size={variant === 'compact' ? 14 : 16} strokeWidth={1.5} color="currentColor" />
+            <Sparkles size={variant === 'compact' || variant === 'text' ? 14 : 16} strokeWidth={1.5} color="currentColor" />
             <span>Quick Summary</span>
             {isSummaryExpanded ? <X size={14} style={{ marginLeft: '4px' }} /> : null}
           </button>

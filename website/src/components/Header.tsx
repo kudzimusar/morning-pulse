@@ -109,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="newspaper-header" style={{ borderBottom: '1px solid var(--mp-light-gray)' }}>
       {/* 1. TOP UTILITY BAR (Dark, Premium) */}
-      <div className="header-top-bar" style={{ backgroundColor: 'var(--mp-ink)', color: 'var(--mp-white)', padding: '8px 0' }}>
+      <div className="header-top-bar" style={{ backgroundColor: 'var(--mp-ink)', color: 'var(--mp-white)', padding: '10px 0' }}>
         <div className="header-top-content" style={{ maxWidth: 'var(--page-max-width)', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {/* Left side: Live indicator */}
           <div className="live-indicator" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11px', letterSpacing: '0.05em' }}>
@@ -136,7 +136,7 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 2. MAIN MASTHEAD (Clean, Serif) */}
-      <div className="header-main" style={{ padding: '32px 0 24px', textAlign: 'center', borderBottom: '1px solid var(--mp-light-gray)' }}>
+      <div className="header-main" style={{ padding: '40px 0 28px', textAlign: 'center', borderBottom: '1px solid var(--mp-light-gray)' }}>
         <div className="header-main-content" style={{ maxWidth: 'var(--page-max-width)', margin: '0 auto', padding: '0 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
 
           <h1 className="masthead" onClick={() => handleCategoryClick(null)} style={{
@@ -246,7 +246,7 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* 3. TICKER STRIP (Subtle) */}
       {topHeadlines.length > 0 && (
-        <div style={{ backgroundColor: 'var(--mp-faint-gray)', borderBottom: '1px solid var(--mp-light-gray)', padding: '10px 0' }}>
+        <div style={{ backgroundColor: 'var(--mp-faint-gray)', borderBottom: '1px solid var(--mp-light-gray)', padding: '12px 0' }}>
           <div className="mega-page-container" style={{ display: 'flex', alignItems: 'center', fontSize: '13px' }}>
             <span style={{ color: 'var(--mp-brand-red)', fontWeight: '800', marginRight: '16px' }}>BREAKING:</span>
             <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', flex: 1 }}>
