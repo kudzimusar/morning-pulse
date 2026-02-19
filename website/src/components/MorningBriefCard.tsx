@@ -83,26 +83,28 @@ const MorningBriefCard: React.FC<MorningBriefCardProps> = ({ variant = 'default'
         return null;
     }
 
-    // COLUMN LAYOUT (Left Rail)
+    // COLUMN LAYOUT (Left Rail) - Premium Style
     if (variant === 'column') {
         if (brief) {
             return (
-                <div style={{ backgroundColor: '#FDFBF7', padding: '16px', borderRadius: '8px', border: '1px solid #E7E5E4' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#D97706' }}>
-                        <Sun size={18} />
-                        <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#B45309' }}>
+                <div className="brief-card-styled mp-card-hover" style={{ height: 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
+                        <div style={{ width: '24px', height: '24px', backgroundColor: 'var(--mp-brand-gold)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: 'white', fontSize: '14px' }}>⚡</span>
+                        </div>
+                        <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--mp-ink)', margin: 0 }}>
                             Your Briefing
                         </h3>
                     </div>
-                    <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#4B5563', marginBottom: '12px' }}>
-                        {brief.content.greeting}
-                        <div style={{ marginTop: '8px', fontWeight: '500', color: '#1F2937' }}>
-                            {brief.content.summary}
-                        </div>
+
+                    <div style={{ fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--mp-slate)', marginBottom: '16px' }}>
+                        <p style={{ marginBottom: '8px', fontWeight: '500' }}>{brief.content.greeting}</p>
+                        <p>{brief.content.summary}</p>
                     </div>
+
                     <button style={{
-                        fontSize: '12px',
-                        color: '#B45309',
+                        fontSize: '13px',
+                        color: 'var(--mp-brand-blue)',
                         fontWeight: '600',
                         background: 'none',
                         border: 'none',
@@ -117,36 +119,37 @@ const MorningBriefCard: React.FC<MorningBriefCardProps> = ({ variant = 'default'
             );
         }
 
-        // Column teaser
+        // Column teaser - Premium Style
         return (
-            <div style={{ backgroundColor: '#FDFBF7', padding: '16px', borderRadius: '8px', border: '1px solid #E7E5E4', textAlign: 'center' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                    <Sun size={24} color="#D97706" />
+            <div className="brief-card-styled mp-card-hover" style={{ height: 'auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ marginBottom: '12px' }}>
+                    <Sun size={28} color="var(--mp-brand-gold)" />
                 </div>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 8px 0', color: '#B45309' }}>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--mp-ink)', marginBottom: '8px' }}>
                     Your Morning Brief
                 </h3>
-                <p style={{ fontSize: '12px', color: '#78716C', marginBottom: '12px', lineHeight: '1.4' }}>
-                    Generate a personalized summary based on your interests.
+                <p style={{ fontSize: '0.9rem', color: 'var(--mp-gray)', marginBottom: '16px', lineHeight: '1.4' }}>
+                    Get a personalized AI summary of today's top stories.
                 </p>
                 <button
                     onClick={handleGenerateBrief}
                     disabled={loading}
                     style={{
                         width: '100%',
-                        backgroundColor: '#FFF',
-                        border: '1px solid #D6D3D1',
-                        color: '#44403C',
-                        padding: '6px 12px',
-                        borderRadius: '16px',
-                        fontSize: '12px',
+                        backgroundColor: 'var(--mp-ink)',
+                        color: 'var(--mp-white)',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '13px',
                         fontWeight: '600',
                         cursor: loading ? 'wait' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        boxShadow: 'var(--shadow-sm)'
                     }}
                 >
-                    {loading ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                    {loading ? 'Creating...' : 'Create'}
+                    {loading ? <RefreshCw size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                    {loading ? 'Creating...' : 'Create Brief'}
                 </button>
             </div>
         );

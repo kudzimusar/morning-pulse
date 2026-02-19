@@ -1,47 +1,69 @@
 /* 
- * Mega-Page Stylesheet (Morning Pulse 2.0)
- * Strict Editorial Grid System
+ * Mega-Page Stylesheet (Morning Pulse 2.0 - Premium Edition)
+ * Striving for "Vibrant, Clean, and Authoritative"
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&display=swap');
+
 :root {
-    /* Dimensions */
-    --page-max-width: 1240px;
-    /* Expanded for 300px sidebar */
-    --col-gap: 20px;
-    --row-gap: 24px;
+    /* --- DIMENSIONS --- */
+    --page-max-width: 1280px;
+    /* Slightly wider for modern screens */
+    --col-gap: 24px;
+    --row-gap: 32px;
+    --header-height: 70px;
 
-    /* Colors (Strict Palette) */
+    /* --- PALETTE: "Modern Authority" --- */
     --mp-white: #FFFFFF;
-    --mp-off-white: #F9FAFB;
-    --mp-ink: #111827;
-    --mp-gray: #6B7280;
-    --mp-light-gray: #E5E7EB;
-    --mp-red: #B91C1C;
-    --mp-blue: #2563EB;
-    --mp-gold: #F59E0B;
-    --mp-cream: #FDFBF7;
-    /* For "For You" Zone */
+    --mp-off-white: #F8F9FA;
+    /* Softer background */
+    --mp-cream: #FFFBF5;
+    /* Editorial warmth */
 
+    --mp-ink: #111827;
+    /* Deepest structural black */
+    --mp-slate: #374151;
+    /* Primary text */
+    --mp-gray: #6B7280;
+    /* Secondary text */
+    --mp-light-gray: #E5E7EB;
     /* Borders */
-    --border-hairline: 1px solid var(--mp-light-gray);
-    --border-heavy: 3px double var(--mp-ink);
+    --mp-faint-gray: #F3F4F6;
+    /* Backgrounds */
+
+    --mp-brand-red: #D93025;
+    /* "Breaking" Red */
+    --mp-brand-blue: #1A73E8;
+    /* Interactive Blue */
+    --mp-brand-gold: #FBBC04;
+    /* Accents/Premium */
+
+    /* --- SHADOWS & GLASS --- */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-float: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+    --blur-amt: 12px;
+
+    /* --- TYPOGRAPHY --- */
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-serif: 'Merriweather', 'Georgia', serif;
 }
 
-/* Base Container */
+/* Base Reset & Container */
 .mega-page-container {
     max-width: var(--page-max-width);
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 24px;
     background-color: var(--mp-white);
-    color: var(--mp-ink);
-    font-family: 'Inter', sans-serif;
-    /* Default UI font */
+    color: var(--mp-slate);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
 }
 
-/* 
- * 12-Column Grid Utility 
- * CSS Grid wrapper for creating sub-layouts
- */
+/* 12-Column Grid */
 .mega-grid-12 {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
@@ -50,109 +72,145 @@
 }
 
 /* =========================================
-   ZONE A: MORNING PRIME (Active Hero)
-   Structure: [2 Col Left] [6 Col Center] [4 Col Right]
-   ========================================= */
+    UTILITIES
+    ========================================= */
+.mp-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-amt));
+    -webkit-backdrop-filter: blur(var(--blur-amt));
+    border: var(--border-hairline);
+}
+
+.mp-card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mp-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* =========================================
+    ZONE A: MORNING PRIME (Active Hero)
+    ========================================= */
 .zone-a {
-    border-bottom: var(--border-heavy);
-    padding-bottom: 32px;
-    margin-bottom: 32px;
+    padding-bottom: 40px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--mp-light-gray);
 }
 
+/* LEFT RAIL: Briefing */
 .zone-a-left-rail {
-    grid-column: span 2;
-    background-color: var(--mp-cream);
-    border-right: var(--border-hairline);
-    padding: 16px;
+    grid-column: span 3;
+    /* Increased slightly */
+    position: relative;
 }
 
+.brief-card-styled {
+    background: var(--mp-cream);
+    border: 1px solid #E6DCC8;
+    border-radius: 12px;
+    padding: 20px;
+    height: 100%;
+}
+
+/* CENTER STAGE: Hero */
 .zone-a-center-stage {
     grid-column: span 6;
-    padding: 0 16px;
+    /* Balanced */
+    padding: 0 12px;
 }
 
+.hero-container {
+    position: relative;
+}
+
+.hero-headline {
+    font-family: var(--font-serif);
+    font-size: 3rem;
+    /* Huge impact */
+    font-weight: 900;
+    color: var(--mp-ink);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+    transition: color 0.2s;
+}
+
+.hero-headline:hover {
+    color: var(--mp-brand-blue);
+}
+
+.hero-subheadline {
+    font-family: var(--font-ui);
+    font-size: 1.25rem;
+    color: var(--mp-gray);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    font-weight: 400;
+}
+
+.hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 24px;
+    color: var(--mp-slate);
+}
+
+.hero-image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/2;
+    /* Classic photojournalism ratio */
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+/* RIGHT RAIL: Interactive */
 .zone-a-right-rail {
-    grid-column: span 4;
-    border-left: var(--border-hairline);
-    padding-left: 16px;
+    grid-column: span 3;
     display: flex;
     flex-direction: column;
     gap: 24px;
 }
 
-/* Zone A Component Styles */
-.hero-headline {
-    font-family: 'Georgia', serif;
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin-bottom: 12px;
-}
-
-.hero-subheadline {
-    font-family: 'Inter', sans-serif;
-    font-size: 1.1rem;
-    color: var(--mp-gray);
-    line-height: 1.5;
-    margin-bottom: 16px;
-}
-
 /* =========================================
-   ZONE B: MULTIMEDIA STRIP
-   Structure: Full Width Flex Bar
-   ========================================= */
+    ZONE B: TICKER STRIP
+    ========================================= */
 .zone-b {
-    background-color: var(--mp-ink);
+    background: linear-gradient(90deg, #111827 0%, #374151 100%);
     color: var(--mp-white);
-    padding: 12px 24px;
+    padding: 14px 24px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 32px;
-    border-radius: 4px;
-    /* Slight modern touch */
+    margin-bottom: 40px;
+    box-shadow: var(--shadow-md);
 }
 
 .ticker-label {
-    color: var(--mp-red);
+    background-color: var(--mp-brand-red);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
     font-weight: 800;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-right: 16px;
+    white-space: nowrap;
 }
 
 /* =========================================
-   ZONE C: DEEP DIVE (Context)
-   Structure: [3 Col List] [6 Col Visual] [3 Col Ads/List]
-   ========================================= */
-.zone-c {
-    padding-bottom: 40px;
-    border-bottom: var(--border-hairline);
-    margin-bottom: 40px;
-}
-
-.zone-c-left {
-    grid-column: span 3;
-    border-right: var(--border-hairline);
-    padding-right: 16px;
-}
-
-.zone-c-center {
-    grid-column: span 6;
-    padding: 0 16px;
-}
-
-.zone-c-right {
-    grid-column: span 3;
-    border-left: var(--border-hairline);
-    padding-left: 16px;
-}
-
-/* =========================================
-   MOBILE ADAPTATIONS
-   Stack everything linearly
-   ========================================= */
+    RESPONSIVE
+    ========================================= */
 @media (max-width: 1024px) {
     .mega-grid-12 {
         display: flex;
@@ -162,33 +220,25 @@
 
     .zone-a-left-rail,
     .zone-a-center-stage,
-    .zone-a-right-rail,
-    .zone-c-left,
-    .zone-c-center,
-    .zone-c-right {
+    .zone-a-right-rail {
         grid-column: span 12;
-        border: none;
         padding: 0;
     }
 
-    /* Reorder for Mobile: Hero first, then Brief, then Widgets */
-    .zone-a {
-        display: flex;
-        flex-direction: column;
-    }
-
+    /* Reorder: Hero first on Mobile */
     .zone-a-center-stage {
         order: 1;
-        margin-bottom: 24px;
     }
 
     .zone-a-left-rail {
         order: 2;
-        /* "Your Brief" comes second */
-        margin-bottom: 24px;
     }
 
     .zone-a-right-rail {
         order: 3;
+    }
+
+    .hero-headline {
+        font-size: 2.25rem;
     }
 }

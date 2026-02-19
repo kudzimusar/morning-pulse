@@ -19,11 +19,26 @@ export const ZoneB: React.FC<ZoneBProps> = ({ breakingNews = [], liveEventActive
 
     return (
         <div className="mega-page-container">
-            <section className="zone-b">
+            <section className="zone-b" style={{
+                background: 'linear-gradient(90deg, #111827 0%, #1F2937 100%)',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '40px',
+                boxShadow: 'var(--shadow-md)'
+            }}>
                 {/* Left: Ticker */}
                 <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', flex: 1, whiteSpace: 'nowrap', marginRight: '24px' }}>
-                    <span className="ticker-label">BREAKING</span>
-                    <div style={{ fontSize: '14px', fontWeight: '500' }}>
+                    <span className="ticker-label" style={{
+                        backgroundColor: 'var(--mp-brand-red)', color: 'white', padding: '4px 8px', borderRadius: '4px',
+                        fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '16px'
+                    }}>
+                        BREAKING
+                    </span>
+                    <div style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'var(--font-ui)' }}>
                         {tickerText}
                     </div>
                 </div>
@@ -45,17 +60,19 @@ export const ZoneB: React.FC<ZoneBProps> = ({ breakingNews = [], liveEventActive
                         </span>
                     )}
 
-                    <button style={{
+                    <button className="mp-card-hover" style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        padding: '6px 12px',
+                        padding: '6px 14px',
                         backgroundColor: 'rgba(255,255,255,0.1)',
                         border: '1px solid rgba(255,255,255,0.2)',
                         borderRadius: '20px',
                         color: '#fff',
                         fontSize: '12px',
-                        cursor: 'pointer'
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(4px)'
                     }}>
                         <Radio size={14} /> Listen to Briefing
                     </button>

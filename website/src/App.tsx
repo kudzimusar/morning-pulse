@@ -962,6 +962,12 @@ const App: React.FC = () => {
                   onSubscribeClick={handleSubscribeClick}
                   userRole={userRole}
                   onDashboardClick={() => handleViewSwitch('admin')}
+                  activePage={currentPage}
+                  onNavSelect={(page) => {
+                    setCurrentPage(page);
+                    setMobileActiveTab(page === 'news' ? 'latest' : page === 'foryou' ? 'foryou' : 'latest');
+                    window.location.hash = page === 'news' ? 'news' : page;
+                  }}
                 />
               </div>
               {/* Mobile Header - Shown on Mobile Only */}

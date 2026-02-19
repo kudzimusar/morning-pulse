@@ -29,6 +29,8 @@ interface HeaderProps {
   onCountryChange?: (country: CountryInfo) => void;
   userRole?: string[] | null;
   onDashboardClick?: () => void;
+  activePage?: string;
+  onNavSelect?: (page: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -38,7 +40,9 @@ const Header: React.FC<HeaderProps> = ({
   currentCountry,
   onCountryChange,
   userRole,
-  onDashboardClick
+  onDashboardClick,
+  activePage, // New prop
+  onNavSelect // New prop
 }) => {
   const [harareTime, setHarareTime] = useState('');
   const [harareDate, setHarareDate] = useState('');
@@ -103,190 +107,156 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="newspaper-header">
-      {/* Top Bar with Live indicator, time, date, and dropdowns */}
-      <div className="header-top-bar">
-        <div className="header-top-content">
+    <header className="newspaper-header" style={{ borderBottom: '1px solid var(--mp-light-gray)' }}>
+      {/* 1. TOP UTILITY BAR (Dark, Premium) */}
+      <div className="header-top-bar" style={{ backgroundColor: 'var(--mp-ink)', color: 'var(--mp-white)', padding: '8px 0' }}>
+        <div className="header-top-content" style={{ maxWidth: 'var(--page-max-width)', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {/* Left side: Live indicator */}
-          <div className="live-indicator">
-            <span className="live-dot"></span>
-            <span>LIVE GLOBAL</span>
-            <span className="time-indicator">{harareTime} | {harareDate}</span>
+          <div className="live-indicator" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11px', letterSpacing: '0.05em' }}>
+            <span style={{ height: '8px', width: '8px', backgroundColor: 'var(--mp-brand-red)', borderRadius: '50%', display: 'inline-block' }}></span>
+            <span style={{ fontWeight: '700' }}>LIVE GLOBAL</span>
+            <span style={{ opacity: 0.7 }}>{harareTime} | {harareDate}</span>
           </div>
 
-          {/* Center: Weather */}
-          <WeatherBar />
-
-          {/* Right side: Dropdowns */}
-          <div className="header-actions-right">
-            {/* Country Chooser - Top Dropdown */}
+          {/* Right side: Country & Settings */}
+          <div className="header-actions-right" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            {/* Country Chooser - Styled */}
             {currentCountry && onCountryChange && (
               <CountrySwitcher
                 currentCountry={currentCountry}
                 onCountryChange={onCountryChange}
               />
             )}
-
-            {/* Category Chooser - Bottom Dropdown */}
-            <div className="category-dropdown-container">
-              <button
-                className="category-dropdown-btn"
-                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                aria-expanded={isCategoryDropdownOpen}
-              >
-                <span className="category-dropdown-text">Categories</span>
-                <span className={`dropdown-arrow ${isCategoryDropdownOpen ? 'open' : ''}`}>▼</span>
-              </button>
-
-              {isCategoryDropdownOpen && (
-                <div className="category-dropdown-menu">
-                  <button
-                    className="category-dropdown-option"
-                    onClick={() => handleCategoryClick(null)}
-                  >
-                    All News
-                  </button>
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      className="category-dropdown-option"
-                      onClick={() => handleCategoryClick(category)}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Simple Weather Placeholder if needed, or stick to current WeatherBar */}
+            <div style={{ opacity: 0.8, fontSize: '12px' }}>
+              Harare 24°C ☀️
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Header with Logo and Subscribe */}
-      <div className="header-main">
-        <div className="header-main-content">
-          <h1 className="masthead" onClick={() => handleCategoryClick(null)}>
+      {/* 2. MAIN MASTHEAD (Clean, Serif) */}
+      <div className="header-main" style={{ padding: '32px 0 24px', textAlign: 'center', borderBottom: '1px solid var(--mp-light-gray)' }}>
+        <div className="header-main-content" style={{ maxWidth: 'var(--page-max-width)', margin: '0 auto', padding: '0 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+
+          <h1 className="masthead" onClick={() => handleCategoryClick(null)} style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '3.5rem',
+            fontWeight: '900',
+            letterSpacing: '-0.04em',
+            margin: '0 0 16px',
+            cursor: 'pointer',
+            color: 'var(--mp-ink)'
+          }}>
             Morning Pulse
           </h1>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', position: 'relative' }}>
 
-            {/* Appearance Button */}
+          {/* NAV TABS (The Premium Touch) */}
+          <nav style={{ display: 'flex', gap: '32px', fontSize: '14px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <button
-              onClick={() => setIsAppearanceMenuOpen(!isAppearanceMenuOpen)}
-              className="appearance-btn"
-              aria-label="Display settings"
-              aria-expanded={isAppearanceMenuOpen}
+              onClick={() => onNavSelect && onNavSelect('new-home')}
               style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '8px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#374151',
-                transition: 'background-color 0.2s',
-                backgroundColor: isAppearanceMenuOpen ? '#f3f4f6' : 'transparent'
-              }}
-            >
-              <Type size={20} />
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: activePage === 'new-home' ? 'var(--mp-brand-red)' : 'var(--mp-slate)',
+                borderBottom: activePage === 'new-home' ? '2px solid var(--mp-brand-red)' : '2px solid transparent',
+                paddingBottom: '4px'
+              }}>
+              Mega Pulse
             </button>
+            <button
+              onClick={() => onNavSelect && onNavSelect('news')}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: activePage === 'news' ? 'var(--mp-brand-red)' : 'var(--mp-slate)',
+                borderBottom: activePage === 'news' ? '2px solid var(--mp-brand-red)' : '2px solid transparent',
+                paddingBottom: '4px'
+              }}>
+              Latest News
+            </button>
+            <button
+              onClick={() => onNavSelect && onNavSelect('foryou')}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: activePage === 'foryou' ? 'var(--mp-brand-red)' : 'var(--mp-slate)',
+                borderBottom: activePage === 'foryou' ? '2px solid var(--mp-brand-red)' : '2px solid transparent',
+                paddingBottom: '4px'
+              }}>
+              For You
+            </button>
+            <button
+              onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--mp-slate)', display: 'flex', alignItems: 'center', gap: '4px'
+              }}>
+              Sections ▼
+            </button>
+          </nav>
 
-            {isAppearanceMenuOpen && <AppearanceMenu />}
-
-            {/* Dashboard button for editors */}
-            {userRole && Array.isArray(userRole) && (userRole.includes('editor') || userRole.includes('admin') || userRole.includes('super_admin')) && onDashboardClick && (
+          {/* Category Dropdown (Absolute) */}
+          {isCategoryDropdownOpen && (
+            <div className="mp-glass" style={{
+              position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+              zIndex: 50, padding: '16px', borderRadius: '8px',
+              boxShadow: 'var(--shadow-float)', marginTop: '8px',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', minWidth: '300px'
+            }}>
               <button
-                onClick={onDashboardClick}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap'
-                }}
+                onClick={() => handleCategoryClick(null)}
+                style={{ textAlign: 'left', padding: '8px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '600' }}
               >
-                Go to Dashboard
+                All News
               </button>
-            )}
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => handleCategoryClick(category)}
+                  style={{ textAlign: 'left', padding: '8px', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--mp-slate)' }}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Action Buttons (Subscribe, etc) - Absolute Right */}
+          <div style={{ position: 'absolute', right: '24px', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '12px' }}>
             {onSubscribeClick && (
               <button
-                className="subscribe-button"
                 onClick={onSubscribeClick}
+                style={{
+                  backgroundColor: 'var(--mp-brand-red)', color: 'white',
+                  border: 'none', padding: '8px 16px', borderRadius: '4px',
+                  fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer'
+                }}
               >
                 Subscribe
               </button>
             )}
-          </div>
-          {selectedCategory && (
-            <div className="selected-category-badge">
-              {selectedCategory}
-              <button
-                className="clear-filter"
-                onClick={() => handleCategoryClick(null)}
-                aria-label="Clear filter"
-              >
-                ×
+            {/* Dashboard button for editors */}
+            {userRole && Array.isArray(userRole) && (userRole.includes('editor') || userRole.includes('admin') || userRole.includes('super_admin')) && onDashboardClick && (
+              <button onClick={onDashboardClick} style={{ backgroundColor: 'black', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+                Dashboard
               </button>
-            </div>
-          )}
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* Scrolling Ticker */}
+      {/* 3. TICKER STRIP (Subtle) */}
       {topHeadlines.length > 0 && (
-        <div className="header-ticker">
-          <div className="ticker-content">
-            <span className="ticker-label">BREAKING:</span>
-            <div className="ticker-wrapper">
-              <div className="ticker-scroll">
-                {topHeadlines.map((headline, index) => (
-                  <span key={index} className="ticker-item">
-                    {headline}
-                    {index < topHeadlines.length - 1 && <span className="ticker-separator"> • </span>}
-                  </span>
-                ))}
-                {/* Duplicate for seamless loop */}
-                {topHeadlines.map((headline, index) => (
-                  <span key={`dup-${index}`} className="ticker-item">
-                    {headline}
-                    {index < topHeadlines.length - 1 && <span className="ticker-separator"> • </span>}
-                  </span>
-                ))}
-              </div>
+        <div style={{ backgroundColor: 'var(--mp-faint-gray)', borderBottom: '1px solid var(--mp-light-gray)', padding: '10px 0' }}>
+          <div className="mega-page-container" style={{ display: 'flex', alignItems: 'center', fontSize: '13px' }}>
+            <span style={{ color: 'var(--mp-brand-red)', fontWeight: '800', marginRight: '16px' }}>BREAKING:</span>
+            <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', flex: 1 }}>
+              {topHeadlines.map((headline, index) => (
+                <span key={index} style={{ marginRight: '24px', color: 'var(--mp-ink)' }}>{headline}</span>
+              ))}
             </div>
           </div>
         </div>
       )}
-
-      {/* Header Banner Ad Slot - Responsive with constrained height */}
-      <div style={{
-        width: '100%',
-        maxWidth: '100%',
-        marginTop: '8px',
-        padding: '0 16px',
-        boxSizing: 'border-box',
-        maxHeight: '120px',
-        overflow: 'hidden',
-        position: 'relative'
-      }}>
-        <AdSlot
-          slotId="header_banner"
-          userCountry={currentCountry}
-          style={{
-            width: '100%',
-            maxWidth: '100%',
-            margin: '0 auto',
-            maxHeight: '120px',
-            objectFit: 'contain'
-          }}
-        />
-      </div>
     </header>
   );
 };

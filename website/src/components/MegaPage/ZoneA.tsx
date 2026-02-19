@@ -32,19 +32,31 @@ export const ZoneA: React.FC<ZoneAProps> = ({ heroStory, briefingData, onArticle
             <MegaGrid>
                 {/* LEFT RAIL: The Personal Brief */}
                 <div className="zone-a-left-rail">
-                    {/* Needs 'variant="column"' prop eventually */}
-                    <div style={{ padding: '10px' }}>
-                        <h3 style={{ fontFamily: 'Georgia', fontSize: '18px', marginBottom: '12px', color: '#B45309' }}>
-                            Your Briefing
-                        </h3>
-                        {/* Temporary placeholder for the adapted card */}
-                        <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#4B5563' }}>
-                            Good morning. Here is your personalized summary for today. Markets are up, and there is breaking news in Tech.
+                    <div className="brief-card-styled mp-card-hover">
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
+                            <div style={{ width: '24px', height: '24px', backgroundColor: 'var(--mp-brand-gold)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <span style={{ color: 'white', fontSize: '14px' }}>⚡</span>
+                            </div>
+                            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--mp-ink)', margin: 0 }}>
+                                Your Briefing
+                            </h3>
                         </div>
+
+                        {/* Brief Content */}
+                        <div style={{ fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--mp-slate)' }}>
+                            <p style={{ marginBottom: '12px' }}>
+                                <strong>Good morning.</strong> Markets are rallying on tech earnings, while global climate talks reach a pivotal moment.
+                            </p>
+                            <ul style={{ paddingLeft: '20px', margin: 0, fontSize: '0.9rem', color: 'var(--mp-gray)' }}>
+                                <li style={{ marginBottom: '8px' }}>S&P 500 hits record high</li>
+                                <li style={{ marginBottom: '8px' }}>New AI chip unveiled</li>
+                            </ul>
+                        </div>
+
                         <button style={{
-                            marginTop: '16px',
+                            marginTop: '20px',
                             fontSize: '13px',
-                            color: '#B45309',
+                            color: 'var(--mp-brand-blue)',
                             fontWeight: '600',
                             background: 'none',
                             border: 'none',
@@ -60,22 +72,6 @@ export const ZoneA: React.FC<ZoneAProps> = ({ heroStory, briefingData, onArticle
 
                 {/* CENTER STAGE: The Hero Story */}
                 <div className="zone-a-center-stage">
-                    {/* Ad Placeholder (Above Fold) */}
-                    <div style={{
-                        width: '100%',
-                        height: '90px',
-                        backgroundColor: '#F3F4F6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#9CA3AF',
-                        fontSize: '11px',
-                        marginBottom: '24px',
-                        border: '1px dashed #E5E7EB'
-                    }}>
-                        ADVERTISEMENT (970x90)
-                    </div>
-
                     <div
                         className="hero-container"
                         style={{ cursor: 'pointer' }}
@@ -84,59 +80,57 @@ export const ZoneA: React.FC<ZoneAProps> = ({ heroStory, briefingData, onArticle
                         <h1 className="hero-headline">{title}</h1>
                         <p className="hero-subheadline">{subtitle}</p>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', fontSize: '12px', color: '#6B7280' }}>
-                            <span style={{ fontWeight: '600', color: '#111827' }}>{author.toUpperCase()}</span>
-                            <span>•</span>
+                        <div className="hero-meta">
+                            <span style={{ color: 'var(--mp-brand-red)' }}>{author}</span>
+                            <span style={{ color: 'var(--mp-light-gray)' }}>|</span>
                             <span>{timestamp}</span>
-                            <span>•</span>
+                            <span style={{ color: 'var(--mp-light-gray)' }}>|</span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Clock size={12} /> 4 min read
+                                <Clock size={14} /> 4 min read
                             </span>
                         </div>
 
-                        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', borderRadius: '4px' }}>
+                        <div className="hero-image-wrapper">
                             <img
                                 src={image}
                                 alt={title}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
-                            {/* Active Layer Buttons */}
+                            {/* Glass Overlay Buttons */}
                             <div style={{
                                 position: 'absolute',
-                                bottom: '16px',
-                                left: '16px',
+                                bottom: '20px',
+                                left: '20px',
                                 display: 'flex',
-                                gap: '8px'
+                                gap: '10px'
                             }}>
-                                <button style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: 'rgba(255,255,255,0.9)',
-                                    border: 'none',
-                                    borderRadius: '20px',
+                                <button className="mp-glass" style={{
+                                    padding: '8px 16px',
+                                    color: 'var(--mp-ink)',
+                                    borderRadius: '24px',
                                     fontSize: '12px',
-                                    fontWeight: '600',
+                                    fontWeight: '700',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '4px',
+                                    gap: '6px',
                                     cursor: 'pointer',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    boxShadow: 'var(--shadow-md)'
                                 }}>
                                     ✨ Summarize
                                 </button>
-                                <button style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: 'rgba(255,255,255,0.9)',
-                                    border: 'none',
-                                    borderRadius: '20px',
+                                <button className="mp-glass" style={{
+                                    padding: '8px 16px',
+                                    color: 'var(--mp-ink)',
+                                    borderRadius: '24px',
                                     fontSize: '12px',
-                                    fontWeight: '600',
+                                    fontWeight: '700',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '4px',
+                                    gap: '6px',
                                     cursor: 'pointer',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    boxShadow: 'var(--shadow-md)'
                                 }}>
-                                    💬 Explain
+                                    💬 Discuss
                                 </button>
                             </div>
                         </div>

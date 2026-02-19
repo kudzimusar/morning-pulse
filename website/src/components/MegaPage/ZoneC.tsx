@@ -23,65 +23,68 @@ export const ZoneC: React.FC<ZoneCProps> = ({ articles, onArticleClick }) => {
     return (
         <section className="zone-c">
             <MegaGrid>
-                {/* LEFT: Text List */}
+                {/* LEFT: Text List - "THE WIRE" */}
                 <div className="zone-c-left">
                     <h4 style={{
-                        fontFamily: 'Inter',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        color: '#B91C1C',
+                        fontFamily: 'var(--font-ui)',
+                        fontSize: '13px',
+                        fontWeight: '800',
+                        color: 'var(--mp-brand-red)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
-                        marginBottom: '16px',
-                        borderBottom: '1px solid #E5E7EB',
-                        paddingBottom: '8px'
+                        marginBottom: '20px',
+                        borderBottom: '2px solid var(--mp-brand-red)',
+                        paddingBottom: '8px',
+                        display: 'inline-block'
                     }}>
-                        World News
+                        The Wire
                     </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {leftArticles.map(article => (
-                            <div key={article.id} style={{ paddingBottom: '16px', borderBottom: '1px solid #F3F4F6' }}>
+                            <div key={article.id} className="mp-card-hover" style={{ paddingBottom: '16px', borderBottom: '1px solid var(--mp-light-gray)', cursor: 'pointer' }} onClick={() => onArticleClick(article.id, article.slug)}>
                                 <div
-                                    style={{ fontSize: '15px', fontWeight: '600', lineHeight: '1.4', marginBottom: '4px', cursor: 'pointer' }}
-                                    onClick={() => onArticleClick(article.id, article.slug)}
+                                    style={{ fontSize: '16px', fontWeight: '600', lineHeight: '1.4', marginBottom: '6px', color: 'var(--mp-ink)' }}
                                 >
                                     {article.headline}
                                 </div>
-                                <div style={{ fontSize: '11px', color: '#6B7280' }}>
-                                    {article.author || article.authorName} • 2h ago
+                                <div style={{ fontSize: '12px', color: 'var(--mp-gray)', display: 'flex', gap: '8px' }}>
+                                    <span style={{ fontWeight: '600', color: 'var(--mp-brand-blue)' }}>{article.category || 'Global'}</span>
+                                    <span>•</span>
+                                    <span>{article.author || article.authorName || 'Staff'}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* CENTER: Visual Grid */}
+                {/* CENTER: Visual Grid - "ANALYSIS & OPINION" */}
                 <div className="zone-c-center">
                     <h4 style={{
-                        fontFamily: 'Inter',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        color: '#111827',
+                        fontFamily: 'var(--font-ui)',
+                        fontSize: '13px',
+                        fontWeight: '800',
+                        color: 'var(--mp-ink)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
-                        marginBottom: '16px',
-                        borderBottom: '1px solid #E5E7EB',
-                        paddingBottom: '8px'
+                        marginBottom: '20px',
+                        borderBottom: '2px solid var(--mp-ink)',
+                        paddingBottom: '8px',
+                        display: 'inline-block'
                     }}>
-                        Analysis & Opinion
+                        Analysis & Perspectives
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                         {centerArticles.map(article => (
-                            <div key={article.id} onClick={() => onArticleClick(article.id, article.slug)} style={{ cursor: 'pointer' }}>
-                                <div style={{ width: '100%', aspectRatio: '3/2', backgroundColor: '#E5E7EB', marginBottom: '12px', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div key={article.id} onClick={() => onArticleClick(article.id, article.slug)} className="mp-card-hover" style={{ cursor: 'pointer' }}>
+                                <div style={{ width: '100%', aspectRatio: '3/2', backgroundColor: 'var(--mp-light-gray)', marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
                                     {(article.finalImageUrl || article.imageUrl) && (
-                                        <img src={article.finalImageUrl || article.imageUrl} alt={article.headline} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <img src={article.finalImageUrl || article.imageUrl} alt={article.headline} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
                                     )}
                                 </div>
-                                <h3 style={{ fontSize: '16px', fontWeight: '700', fontFamily: 'Georgia', lineHeight: '1.3', marginBottom: '8px' }}>
+                                <h3 style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'var(--font-serif)', lineHeight: '1.3', marginBottom: '8px', color: 'var(--mp-ink)' }}>
                                     {article.headline}
                                 </h3>
-                                <p style={{ fontSize: '13px', color: '#4B5563', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                <p style={{ fontSize: '14px', color: 'var(--mp-slate)', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                     {article.body ? article.body.substring(0, 100).replace(/<[^>]*>/g, '') : article.summary || article.subHeadline}
                                 </p>
                             </div>
@@ -89,24 +92,34 @@ export const ZoneC: React.FC<ZoneCProps> = ({ articles, onArticleClick }) => {
                     </div>
                 </div>
 
-                {/* RIGHT: Ads + Trending */}
+                {/* RIGHT: Ads + Trending - "MARKETPLACE" */}
                 <div className="zone-c-right">
                     {/* Sticky Ad */}
                     <div style={{
-                        width: '100%',
-                        height: '600px',
-                        backgroundColor: '#F3F4F6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#9CA3AF',
-                        fontSize: '11px',
-                        marginBottom: '24px',
-                        border: '1px dashed #E5E7EB',
                         position: 'sticky',
                         top: '20px'
                     }}>
-                        ADVERTISEMENT (300x600)
+                        <div style={{
+                            width: '100%',
+                            height: '600px',
+                            backgroundColor: 'var(--mp-faint-gray)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--mp-gray)',
+                            fontSize: '11px',
+                            marginBottom: '24px',
+                            border: '1px solid var(--mp-light-gray)',
+                            borderRadius: '8px',
+                            position: 'relative'
+                        }}>
+                            <span style={{ position: 'absolute', top: '8px', left: '50%', transform: 'translateX(-50%)', opacity: 0.6, letterSpacing: '0.1em' }}>ADVERTISEMENT</span>
+                            <div style={{ textAlign: 'center' }}>
+                                <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Premium Partner</p>
+                                <button style={{ padding: '8px 16px', backgroundColor: 'white', border: '1px solid var(--mp-light-gray)', borderRadius: '20px', cursor: 'pointer' }}>Learn More</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </MegaGrid>
