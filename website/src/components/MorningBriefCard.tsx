@@ -24,7 +24,11 @@ interface BriefData {
     content: BriefContent;
 }
 
-const MorningBriefCard: React.FC = () => {
+interface MorningBriefCardProps {
+    variant?: 'default' | 'column'; // NEW: Support for column (sidebar) layout
+}
+
+const MorningBriefCard: React.FC<MorningBriefCardProps> = ({ variant = 'default' }) => {
     const [user, loadingAuth] = useAuthState(auth);
     const [brief, setBrief] = useState<BriefData | null>(null);
     const [loading, setLoading] = useState(false);
@@ -68,7 +72,7 @@ const MorningBriefCard: React.FC = () => {
             }
         } catch (err: any) {
             console.error("Error generating brief:", err);
-            setError("Failed to generate your brief. Our AI editors are busy. Please try again.");
+            setError("Failed to generate your brief. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -77,6 +81,75 @@ const MorningBriefCard: React.FC = () => {
     if (loadingAuth || !user) {
         // Optional: Show a teaser for non-logged-in users?
         return null;
+    }
+
+    // COLUMN LAYOUT (Left Rail)
+    if (variant === 'column') {
+        if (brief) {
+            return (
+                <div style={{ backgroundColor: '#FDFBF7', padding: '16px', borderRadius: '8px', border: '1px solid #E7E5E4' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#D97706' }}>
+                        <Sun size={18} />
+                        <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#B45309' }}>
+                            Your Briefing
+                        </h3>
+                    </div>
+                    <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#4B5563', marginBottom: '12px' }}>
+                        {brief.content.greeting}
+                        <div style={{ marginTop: '8px', fontWeight: '500', color: '#1F2937' }}>
+                            {brief.content.summary}
+                        </div>
+                    </div>
+                    <button style={{
+                        fontSize: '12px',
+                        color: '#B45309',
+                        fontWeight: '600',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: 0
+                    }}>
+                        Read Full Brief <ChevronRight size={14} style={{ marginLeft: '4px' }} />
+                    </button>
+                </div>
+            );
+        }
+
+        // Column teaser
+        return (
+            <div style={{ backgroundColor: '#FDFBF7', padding: '16px', borderRadius: '8px', border: '1px solid #E7E5E4', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                    <Sun size={24} color="#D97706" />
+                </div>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 8px 0', color: '#B45309' }}>
+                    Your Morning Brief
+                </h3>
+                <p style={{ fontSize: '12px', color: '#78716C', marginBottom: '12px', lineHeight: '1.4' }}>
+                    Generate a personalized summary based on your interests.
+                </p>
+                <button
+                    onClick={handleGenerateBrief}
+                    disabled={loading}
+                    style={{
+                        width: '100%',
+                        backgroundColor: '#FFF',
+                        border: '1px solid #D6D3D1',
+                        color: '#44403C',
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: loading ? 'wait' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
+                    }}
+                >
+                    {loading ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {loading ? 'Creating...' : 'Create'}
+                </button>
+            </div>
+        );
     }
 
     if (brief) {

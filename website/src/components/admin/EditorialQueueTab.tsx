@@ -106,6 +106,10 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
   const [savingPriority, setSavingPriority] = useState(false); // Sprint 2: Saving priority indicator
   const [triggeringAutoPublish, setTriggeringAutoPublish] = useState(false); // Sprint 5: Manual auto-publish trigger
 
+  // NEW: Mega-Page Layout State
+  const [zoneAssignment, setZoneAssignment] = useState<'A_Hero' | 'A_Brief' | 'B_Multimedia' | 'C_DeepDive' | 'D_Feature' | 'None'>('None');
+  const [layoutType, setLayoutType] = useState<'standard' | 'visual' | 'architectural' | 'opinion-circle'>('standard');
+
   // NEW: Product Upgrade - Context & AI Metadata
   const [activeTab, setActiveTab] = useState<'content' | 'context' | 'ai'>('content');
   const [contextWhyItMatters, setContextWhyItMatters] = useState('');
@@ -376,6 +380,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setShowSchedulePicker(false); // NEW: Reset schedule picker
       setScheduleDate('');
       setScheduleTime('');
+      // Reset Mega-Page state
+      setZoneAssignment('None');
+      setLayoutType('standard');
       return;
     }
 
@@ -396,6 +403,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setShowSchedulePicker(false); // NEW: Reset schedule picker
       setScheduleDate('');
       setScheduleTime('');
+      // Reset Mega-Page state
+      setZoneAssignment('None');
+      setLayoutType('standard');
       return;
     }
 
@@ -418,6 +428,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
       setNewImageFile(null);
       setShowOriginalText(!!opinion.originalBody);
       setShowSchedulePicker(false);
+      // Load Mega-Page state
+      setZoneAssignment(opinion.zoneAssignment || 'None');
+      setLayoutType(opinion.layoutType || 'standard');
       setScheduleDate('');
       setScheduleTime('');
       // Sprint 2: Load priority from editorialMeta
@@ -600,6 +613,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
             opposingViews: aiOpposingViews,
             simpleExplanation: aiSimpleExplanation,
           },
+          // Mega-Page Fields
+          zoneAssignment: zoneAssignment,
+          layoutType: layoutType,
         };
 
         const docRef = await addDoc(opinionsRef, docData);
@@ -669,6 +685,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
         finalImageUrl: finalImageUrl || suggestedImageUrl,
         imageUrl: finalImageUrl || suggestedImageUrl, // ✅ Also update imageUrl for backward compatibility
         updatedAt: serverTimestamp(),
+        // Mega-Page Fields
+        zoneAssignment: zoneAssignment,
+        layoutType: layoutType,
       });
 
       // NEW: Create version snapshot after successful save
@@ -767,6 +786,9 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
           opposingViews: aiOpposingViews,
           simpleExplanation: aiSimpleExplanation,
         },
+        // Mega-Page Fields
+        zoneAssignment: zoneAssignment,
+        layoutType: layoutType,
       };
 
       const docRef = await addDoc(opinionsRef, docData);
@@ -1827,6 +1849,58 @@ const EditorialQueueTab: React.FC<EditorialQueueTabProps> = ({
                     <option value="Published">Published</option>
                     <option value="Rejected">Rejected</option>
                   </select>
+                </div>
+              )}
+
+              {/* NEW: Mega-Page Zone Selector (Admin Only) */}
+              {(isAdmin || isEditor) && !isNewArticle && (
+                <div style={{ marginBottom: '16px', display: 'flex', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                      Homepage Zone
+                    </label>
+                    <select
+                      value={zoneAssignment}
+                      onChange={(e) => setZoneAssignment(e.target.value as any)}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        fontSize: '14px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        backgroundColor: zoneAssignment !== 'None' ? '#f0fdf4' : '#fff',
+                        borderColor: zoneAssignment !== 'None' ? '#16a34a' : '#ddd'
+                      }}
+                    >
+                      <option value="None">None (Archive/List)</option>
+                      <option value="A_Hero">Zone A: Hero (Top Story)</option>
+                      <option value="A_Brief">Zone A: Left Rail (Brief)</option>
+                      <option value="B_Multimedia">Zone B: Multimedia</option>
+                      <option value="C_DeepDive">Zone C: Deep Dive (Grid)</option>
+                      <option value="D_Feature">Zone D: Feature (Magazine)</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                      Layout Style
+                    </label>
+                    <select
+                      value={layoutType}
+                      onChange={(e) => setLayoutType(e.target.value as any)}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        fontSize: '14px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      <option value="standard">Standard Card</option>
+                      <option value="visual">Visual (Image First)</option>
+                      <option value="architectural">Architectural (Tech)</option>
+                      <option value="opinion-circle">Opinion (Circle)</option>
+                    </select>
+                  </div>
                 </div>
               )}
 

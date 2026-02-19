@@ -69,6 +69,9 @@ export interface Opinion {
   headline?: string;
   subHeadline?: string;
   body?: string;
+  // Mega-Page fields
+  zoneAssignment?: 'A_Hero' | 'A_Brief' | 'B_Multimedia' | 'C_DeepDive' | 'D_Feature' | 'None';
+  layoutType?: 'standard' | 'visual' | 'architectural' | 'opinion-circle';
   // Generic
   [key: string]: any;
 }
@@ -106,6 +109,9 @@ export interface NewsStory {
   context?: ArticleContext;
   aiMetadata?: AIMetadata;
   slug?: string; // For consistency
+  // Mega-Page fields
+  zoneAssignment?: 'A_Hero' | 'A_Brief' | 'B_Multimedia' | 'C_DeepDive' | 'D_Feature' | 'None';
+  layoutType?: 'standard' | 'visual' | 'architectural' | 'opinion-circle';
   // Optional fields for extensibility
   [key: string]: any;
 }

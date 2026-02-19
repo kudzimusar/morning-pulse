@@ -10,8 +10,8 @@ import MobileNotifications from './components/MobileNotifications';
 import ForYouFeed from './components/ForYouFeed';
 import AskPulseAI from './components/AskPulseAI';
 import BookmarksPage from './components/BookmarksPage';
-import './styles/premium.css';
-import './styles/mobile.css';
+import './styles/newspaper.css';
+import './styles/megapage.css'; // Global Mega-Page Styles
 
 // ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
 const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {
@@ -68,6 +68,7 @@ import TopicPage from './components/TopicPage';
 import LiveCoveragePage from './components/LiveCoveragePage';
 import SavedArticlesPage from './components/SavedArticlesPage'; // NEW: Saved Articles Page
 import MorningBriefCard from './components/MorningBriefCard'; // NEW: Morning Brief
+import { MegaPage } from './components/MegaPage/MegaPage'; // NEW: Mega-Page v2
 import OpinionSubmissionForm from './components/OpinionSubmissionForm';
 // ✅ FIX: Lazy load AdminDashboard to break circular dependencies
 import AdminLogin from './components/AdminLogin';
@@ -401,6 +402,10 @@ const App: React.FC = () => {
         setMobileActiveTab('latest');
       } else if (path === 'saved') {
         setCurrentPage('saved');
+        setMobileActiveTab('latest');
+      } else if (path === 'new-home') {
+        // NEW: Mega-Page Test Route
+        setCurrentPage('new-home');
         setMobileActiveTab('latest');
       } else if (path === 'privacy') {
       } else if (path === 'privacy') {
@@ -1151,6 +1156,20 @@ const App: React.FC = () => {
               }}
             />
           )}
+
+
+          {/* NEW: Mega-Page v2 (Test Route) */}
+          {currentPage === 'new-home' && (
+            <MegaPage
+              onArticleClick={(articleId, slug) => {
+                window.location.hash = slug ? `opinion/${slug}` : `opinion?id=${articleId}`;
+              }}
+              user={readerInfo}
+            />
+          )}
+
+
+
 
           {currentPage === 'live' && view === 'public' && (
             <LiveCoveragePage />

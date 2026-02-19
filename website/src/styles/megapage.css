@@ -1,0 +1,194 @@
+/* 
+ * Mega-Page Stylesheet (Morning Pulse 2.0)
+ * Strict Editorial Grid System
+ */
+
+:root {
+    /* Dimensions */
+    --page-max-width: 1240px;
+    /* Expanded for 300px sidebar */
+    --col-gap: 20px;
+    --row-gap: 24px;
+
+    /* Colors (Strict Palette) */
+    --mp-white: #FFFFFF;
+    --mp-off-white: #F9FAFB;
+    --mp-ink: #111827;
+    --mp-gray: #6B7280;
+    --mp-light-gray: #E5E7EB;
+    --mp-red: #B91C1C;
+    --mp-blue: #2563EB;
+    --mp-gold: #F59E0B;
+    --mp-cream: #FDFBF7;
+    /* For "For You" Zone */
+
+    /* Borders */
+    --border-hairline: 1px solid var(--mp-light-gray);
+    --border-heavy: 3px double var(--mp-ink);
+}
+
+/* Base Container */
+.mega-page-container {
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+    padding: 0 16px;
+    background-color: var(--mp-white);
+    color: var(--mp-ink);
+    font-family: 'Inter', sans-serif;
+    /* Default UI font */
+}
+
+/* 
+ * 12-Column Grid Utility 
+ * CSS Grid wrapper for creating sub-layouts
+ */
+.mega-grid-12 {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--col-gap);
+    width: 100%;
+}
+
+/* =========================================
+   ZONE A: MORNING PRIME (Active Hero)
+   Structure: [2 Col Left] [6 Col Center] [4 Col Right]
+   ========================================= */
+.zone-a {
+    border-bottom: var(--border-heavy);
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+}
+
+.zone-a-left-rail {
+    grid-column: span 2;
+    background-color: var(--mp-cream);
+    border-right: var(--border-hairline);
+    padding: 16px;
+}
+
+.zone-a-center-stage {
+    grid-column: span 6;
+    padding: 0 16px;
+}
+
+.zone-a-right-rail {
+    grid-column: span 4;
+    border-left: var(--border-hairline);
+    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Zone A Component Styles */
+.hero-headline {
+    font-family: 'Georgia', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+}
+
+.hero-subheadline {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    color: var(--mp-gray);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+/* =========================================
+   ZONE B: MULTIMEDIA STRIP
+   Structure: Full Width Flex Bar
+   ========================================= */
+.zone-b {
+    background-color: var(--mp-ink);
+    color: var(--mp-white);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    border-radius: 4px;
+    /* Slight modern touch */
+}
+
+.ticker-label {
+    color: var(--mp-red);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 16px;
+}
+
+/* =========================================
+   ZONE C: DEEP DIVE (Context)
+   Structure: [3 Col List] [6 Col Visual] [3 Col Ads/List]
+   ========================================= */
+.zone-c {
+    padding-bottom: 40px;
+    border-bottom: var(--border-hairline);
+    margin-bottom: 40px;
+}
+
+.zone-c-left {
+    grid-column: span 3;
+    border-right: var(--border-hairline);
+    padding-right: 16px;
+}
+
+.zone-c-center {
+    grid-column: span 6;
+    padding: 0 16px;
+}
+
+.zone-c-right {
+    grid-column: span 3;
+    border-left: var(--border-hairline);
+    padding-left: 16px;
+}
+
+/* =========================================
+   MOBILE ADAPTATIONS
+   Stack everything linearly
+   ========================================= */
+@media (max-width: 1024px) {
+    .mega-grid-12 {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .zone-a-left-rail,
+    .zone-a-center-stage,
+    .zone-a-right-rail,
+    .zone-c-left,
+    .zone-c-center,
+    .zone-c-right {
+        grid-column: span 12;
+        border: none;
+        padding: 0;
+    }
+
+    /* Reorder for Mobile: Hero first, then Brief, then Widgets */
+    .zone-a {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .zone-a-center-stage {
+        order: 1;
+        margin-bottom: 24px;
+    }
+
+    .zone-a-left-rail {
+        order: 2;
+        /* "Your Brief" comes second */
+        margin-bottom: 24px;
+    }
+
+    .zone-a-right-rail {
+        order: 3;
+    }
+}
