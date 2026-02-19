@@ -2,32 +2,54 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
+    // --- 👑 BOSS MODE (Global Bypass) ---
+    function isBoss() {
+      return request.auth != null && (
+        request.auth.uid == '2jnMK761RcMvag3Agj5Wx3HjwpJ2' || 
+        request.auth.uid == 'VaGwarisa'
+      );
+    }
+
     // Helper function: Check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Helper function: Check if user is editor, admin, or super_admin
-    function isEditor() {
-      return isAuthenticated() && 
-             firestore.exists(/databases/(default)/documents/staff/$(request.auth.uid)) &&
-             firestore.get(/databases/(default)/documents/staff/$(request.auth.uid)).data.roles.hasAny(['editor', 'admin', 'super_admin']);
+    // Helper: Check for custom claims (faster/cheaper than Firestore lookup)
+    function hasClaim(claim) {
+      return isAuthenticated() && request.auth.token[claim] == true;
+    }
+
+    // Helper: Check if user has any staff role (Writer, Editor, Bureau Chief, Admin)
+    function isStaff() {
+      return isBoss() || 
+             hasClaim('writer') ||
+             hasClaim('editor') ||
+             hasClaim('bureau_chief') ||
+             hasClaim('admin') ||
+             hasClaim('super_admin') ||
+             // Fallback to Firestore lookup if claims are missing/stale
+             (isAuthenticated() && 
+              firestore.exists(/databases/(default)/documents/staff/$(request.auth.uid)) &&
+              firestore.get(/databases/(default)/documents/staff/$(request.auth.uid)).data.roles.hasAny(['writer', 'editor', 'bureau_chief', 'admin', 'super_admin']));
     }
     
-    // Helper function: Check if user is admin or super_admin
     function isAdmin() {
-      return isAuthenticated() && 
-             firestore.exists(/databases/(default)/documents/staff/$(request.auth.uid)) &&
-             firestore.get(/databases/(default)/documents/staff/$(request.auth.uid)).data.roles.hasAny(['admin', 'super_admin']);
+      return isBoss() || 
+             hasClaim('admin') || 
+             hasClaim('super_admin') ||
+             (isAuthenticated() && 
+              firestore.exists(/databases/(default)/documents/staff/$(request.auth.uid)) &&
+              firestore.get(/databases/(default)/documents/staff/$(request.auth.uid)).data.roles.hasAny(['admin', 'super_admin']));
     }
     
-    // Published images - accessible to editors for upload, public for read
+    // Published images - accessible to ALL STAFF for upload, public for read
     match /published_images/{imageId}/{fileName} {
       // Public can read published images (for website display)
       allow read: if true;
       
-      // Only editors can upload/update published images
-      allow create, update: if isEditor() && 
+      // Staff (Writers, Editors, etc.) can upload/update
+      allow create, update: if isStaff() && 
                                request.resource.size < 10 * 1024 * 1024 &&  // 10MB limit
                                request.resource.contentType.matches('image/.*');  // Only images
       
@@ -50,8 +72,8 @@ service firebase.storage {
       allow create: if request.resource.size < 10 * 1024 * 1024 &&  // 10MB limit
                        request.resource.contentType.matches('image/.*');  // Only images
       
-      // Only editors can update/delete guest submissions
-      allow update, delete: if isEditor();
+      // Staff can update/delete guest submissions
+      allow update, delete: if isStaff();
     }
     
     // Ad images
@@ -59,8 +81,8 @@ service firebase.storage {
       // Public can read ad images
       allow read: if true;
       
-      // Only editors/admins can upload/update ad images
-      allow create, update: if isEditor() && 
+      // Staff can upload/update ad images
+      allow create, update: if isStaff() && 
                                request.resource.size < 10 * 1024 * 1024 &&  // 10MB limit
                                request.resource.contentType.matches('image/.*');  // Only images
       
