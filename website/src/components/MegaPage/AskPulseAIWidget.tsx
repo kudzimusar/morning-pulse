@@ -20,16 +20,19 @@ export const AskPulseAIWidget: React.FC = () => {
 
     return (
         <div style={{
-            padding: '20px',
-            backgroundColor: '#EFF6FF',
-            border: '1px solid #DBEAFE',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.05)'
+            padding: '24px 20px',
+            backgroundColor: '#ffffff',
+            borderTop: '2px solid #000',
+            borderLeft: '1px solid #e5e7eb',
+            borderRight: '1px solid #e5e7eb',
+            borderBottom: '1px solid #000',
+            width: '100%',
+            maxWidth: '300px'
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#1E40AF', fontWeight: 'bold', fontSize: '15px' }}>
-                <Sparkles size={16} fill="#1E40AF" /> AskPulse AI
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#000', fontWeight: '900', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'sans-serif' }}>
+                <Sparkles size={14} fill="#000" /> AskPulse AI
             </div>
-            <div style={{ fontSize: '13px', color: '#60A5FA', marginBottom: '16px', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '14px', color: '#4b5563', marginBottom: '16px', lineHeight: '1.4', fontFamily: 'Georgia, serif' }}>
                 Get instant answers, summaries, and context about any story.
             </div>
             <form onSubmit={handleSearch} style={{ position: 'relative' }}>
@@ -40,13 +43,13 @@ export const AskPulseAIWidget: React.FC = () => {
                     placeholder="Ask about this story..."
                     style={{
                         width: '100%',
-                        padding: '10px 12px',
-                        paddingRight: '36px',
-                        borderRadius: '6px',
-                        border: '1px solid #BFDBFE',
+                        padding: '12px',
+                        paddingRight: '40px',
+                        border: '1px solid #d1d5db',
                         fontSize: '13px',
+                        fontFamily: 'sans-serif',
                         backgroundColor: '#FFFFFF',
-                        color: '#1E3A8A'
+                        color: '#000'
                     }}
                 />
                 <button
@@ -56,16 +59,17 @@ export const AskPulseAIWidget: React.FC = () => {
                         right: '8px',
                         top: '50%',
                         transform: 'translateY(-50%)',
-                        background: 'none',
+                        background: '#000',
                         border: 'none',
                         cursor: 'pointer',
-                        color: '#2563EB',
+                        color: '#fff',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        padding: '6px'
                     }}
                 >
-                    <Send size={14} />
+                    <Send size={12} />
                 </button>
             </form>
         </div>

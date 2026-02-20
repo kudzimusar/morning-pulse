@@ -87,33 +87,35 @@ const MorningBriefCard: React.FC<MorningBriefCardProps> = ({ variant = 'default'
     if (variant === 'column') {
         if (brief) {
             return (
-                <div className="brief-card-styled mp-card-hover" style={{ height: 'auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
-                        <div style={{ width: '24px', height: '24px', backgroundColor: 'var(--mp-brand-gold)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ color: 'white', fontSize: '14px' }}>⚡</span>
-                        </div>
-                        <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--mp-ink)', margin: 0 }}>
+                <div className="border border-black p-6 bg-white text-center w-full max-w-[300px] mb-8" style={{ height: 'auto' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
+                        <span className="text-2xl block mb-2">✉️</span>
+                        <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'bold', color: '#000', margin: '0 0 4px 0' }}>
                             Your Briefing
                         </h3>
                     </div>
 
-                    <div style={{ fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--mp-slate)', marginBottom: '16px' }}>
-                        <p style={{ marginBottom: '8px', fontWeight: '500' }}>{brief.content.greeting}</p>
+                    <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#4b5563', marginBottom: '16px', fontFamily: 'Georgia, serif' }}>
+                        <p style={{ marginBottom: '8px', fontWeight: 'bold' }}>{brief.content.greeting}</p>
                         <p>{brief.content.summary}</p>
                     </div>
 
                     <button style={{
-                        fontSize: '13px',
-                        color: 'var(--mp-brand-blue)',
-                        fontWeight: '600',
+                        fontSize: '10px',
+                        color: '#000',
+                        fontWeight: 'bold',
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        padding: 0
+                        justifyContent: 'center',
+                        padding: 0,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        width: '100%'
                     }}>
-                        Read Full Brief <ChevronRight size={14} style={{ marginLeft: '4px' }} />
+                        Read Full Brief <ChevronRight size={12} style={{ marginLeft: '4px' }} />
                     </button>
                 </div>
             );
@@ -121,34 +123,34 @@ const MorningBriefCard: React.FC<MorningBriefCardProps> = ({ variant = 'default'
 
         // Column teaser - Premium Style
         return (
-            <div className="brief-card-styled mp-card-hover" style={{ height: 'auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="border border-black p-6 bg-white text-center w-full max-w-[300px] mb-8" style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ marginBottom: '12px' }}>
-                    <Sun size={28} color="var(--mp-brand-gold)" />
+                    <span className="block text-2xl mb-2 text-[#b91c1c]">✨</span>
                 </div>
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--mp-ink)', marginBottom: '8px' }}>
-                    Your Morning Brief
+                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 'bold', color: '#000', marginBottom: '4px' }}>
+                    Morning Brief
                 </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--mp-gray)', marginBottom: '16px', lineHeight: '1.4' }}>
-                    Get a personalized AI summary of today's top stories.
+                <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '16px', lineHeight: '1.4', fontFamily: 'Georgia, serif' }}>
+                    Get a personalized AI summary of today's top stories into your inbox.
                 </p>
                 <button
                     onClick={handleGenerateBrief}
                     disabled={loading}
                     style={{
                         width: '100%',
-                        backgroundColor: 'var(--mp-ink)',
-                        color: 'var(--mp-white)',
+                        backgroundColor: '#000',
+                        color: '#fff',
                         border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        fontSize: '13px',
-                        fontWeight: '600',
+                        padding: '12px 0',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
                         cursor: loading ? 'wait' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                        boxShadow: 'var(--shadow-sm)'
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                     }}
                 >
-                    {loading ? <RefreshCw size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                    {loading ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}
                     {loading ? 'Creating...' : 'Create Brief'}
                 </button>
             </div>

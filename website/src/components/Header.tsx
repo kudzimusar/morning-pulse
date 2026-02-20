@@ -118,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({
             <span style={{ opacity: 0.7 }}>{harareTime} | {harareDate}</span>
           </div>
 
-          {/* Right side: Country & Settings */}
+          {/* Right side: Country & Weather */}
           <div className="header-actions-right" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             {/* Country Chooser - Styled */}
             {currentCountry && onCountryChange && (
@@ -127,9 +127,11 @@ const Header: React.FC<HeaderProps> = ({
                 onCountryChange={onCountryChange}
               />
             )}
-            {/* Simple Weather Placeholder if needed, or stick to current WeatherBar */}
-            <div style={{ opacity: 0.8, fontSize: '12px' }}>
-              Harare 24°C ☀️
+
+            {/* Inline Weather */}
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', gap: '8px' }}>
+              <span className="font-bold uppercase tracking-widest text-[#9CA3AF]">WEATHER</span>
+              <span className="opacity-90"><WeatherBar /></span>
             </div>
           </div>
         </div>

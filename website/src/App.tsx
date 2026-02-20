@@ -1169,7 +1169,7 @@ const App: React.FC = () => {
 
           {/* NEW: Home Page v2 */}
           {currentPage === 'new-home' && (
-            <MegaHomePage />
+            <MegaHomePage newsData={newsData} />
           )}
 
 
@@ -1407,7 +1407,7 @@ const App: React.FC = () => {
                   )}
 
                   {!selectedCategory ? (
-                    <MegaHomePage />
+                    <MegaHomePage newsData={newsData} />
                   ) : (
                     <NewsGrid
                       newsData={newsData}

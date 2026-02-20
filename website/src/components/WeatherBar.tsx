@@ -30,14 +30,14 @@ const WeatherBar: React.FC = () => {
             // Open-Meteo API endpoint for current weather
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code&timezone=Africa/Harare`;
             const response = await fetch(url);
-            
+
             if (!response.ok) {
               throw new Error(`Failed to fetch weather for ${city.code}`);
             }
-            
+
             const data = await response.json();
             const temp = Math.round(data.current?.temperature_2m || 0);
-            
+
             return {
               city: city.code,
               code: city.code,
@@ -63,23 +63,23 @@ const WeatherBar: React.FC = () => {
     };
 
     fetchWeather();
-    
+
     // Refresh weather every 10 minutes
     const interval = setInterval(fetchWeather, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="weather-bar">
+    <div style={{ display: 'flex', gap: '12px' }}>
       {weather.map((w) => (
-        <span key={w.code} className="weather-item">
-          <span className="weather-code">{w.code}:</span>
+        <span key={w.code} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontWeight: 600 }}>{w.code}</span>
           {w.loading ? (
-            <span className="weather-temp">—</span>
+            <span style={{ opacity: 0.8 }}>—</span>
           ) : w.temp !== null ? (
-            <span className="weather-temp">{w.temp}°C</span>
+            <span style={{ opacity: 0.8 }}>{w.temp}°C</span>
           ) : (
-            <span className="weather-temp">—</span>
+            <span style={{ opacity: 0.8 }}>—</span>
           )}
         </span>
       ))}

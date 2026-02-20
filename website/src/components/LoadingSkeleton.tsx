@@ -15,74 +15,51 @@ const LoadingSkeleton: React.FC = () => {
         <MobileSkeleton variant="hero" count={1} />
         <MobileSkeleton variant="list" count={5} />
       </div>
-      
-      {/* Desktop Skeleton - Shown on Desktop */}
-      <div className="desktop-only loading-skeleton">
-      {/* Hero skeleton */}
-      <div className="skeleton-hero">
-        <div className="skeleton-image" style={{
-          width: '100%',
-          height: '400px',
-          backgroundColor: '#e0e0e0',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          animation: 'pulse 1.5s ease-in-out infinite'
-        }} />
-        <div className="skeleton-text" style={{
-          width: '80%',
-          height: '32px',
-          backgroundColor: '#e0e0e0',
-          borderRadius: '4px',
-          marginBottom: '12px',
-          animation: 'pulse 1.5s ease-in-out infinite'
-        }} />
-        <div className="skeleton-text" style={{
-          width: '60%',
-          height: '20px',
-          backgroundColor: '#e0e0e0',
-          borderRadius: '4px',
-          marginBottom: '8px',
-          animation: 'pulse 1.5s ease-in-out infinite'
-        }} />
-      </div>
 
-      {/* Grid skeletons */}
-      <div className="skeleton-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '24px',
-        marginTop: '32px'
-      }}>
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="skeleton-card">
-            <div className="skeleton-image" style={{
-              width: '100%',
-              height: '200px',
-              backgroundColor: '#e0e0e0',
-              borderRadius: '8px',
-              marginBottom: '12px',
-              animation: 'pulse 1.5s ease-in-out infinite',
-              animationDelay: `${i * 0.1}s`
-            }} />
-            <div className="skeleton-text" style={{
-              width: '90%',
-              height: '24px',
-              backgroundColor: '#e0e0e0',
-              borderRadius: '4px',
-              marginBottom: '8px',
-              animation: 'pulse 1.5s ease-in-out infinite',
-              animationDelay: `${i * 0.1}s`
-            }} />
-            <div className="skeleton-text" style={{
-              width: '70%',
-              height: '16px',
-              backgroundColor: '#e0e0e0',
-              borderRadius: '4px',
-              animation: 'pulse 1.5s ease-in-out infinite',
-              animationDelay: `${i * 0.1}s`
-            }} />
+      {/* Desktop Skeleton - Shown on Desktop */}
+      <div className="hidden lg:block max-w-[1200px] mx-auto px-4 mt-8 mb-16">
+        <div className="grid grid-cols-[220px_640px_300px] gap-6 items-start">
+
+          {/* Left Rail Skeleton (4 items) */}
+          <div className="flex flex-col gap-4 pr-6 border-r border-gray-200">
+            {[1, 2, 3, 4].map(i => (
+              <div key={`left-${i}`} className="border-b border-gray-200 pb-4 last:border-0">
+                <div className="w-12 h-2 bg-gray-200 mb-3 animate-pulse"></div>
+                <div className="w-full h-4 bg-gray-200 mb-2 animate-pulse"></div>
+                <div className="w-4/5 h-4 bg-gray-200 mb-3 animate-pulse"></div>
+                <div className="w-full h-2 bg-gray-200 mb-1 animate-pulse delay-75"></div>
+                <div className="w-5/6 h-2 bg-gray-200 mb-1 animate-pulse delay-75"></div>
+                <div className="w-2/3 h-2 bg-gray-200 animate-pulse delay-75"></div>
+              </div>
+            ))}
           </div>
-        ))}
+
+          {/* Center Stage Skeleton (Hero) */}
+          <div className="px-6 border-r border-gray-200 flex flex-col">
+            <div className="w-full aspect-video bg-gray-200 mb-4 animate-pulse"></div>
+            <div className="w-full h-8 bg-gray-200 mb-3 animate-pulse delay-75"></div>
+            <div className="w-3/4 h-8 bg-gray-200 mb-4 animate-pulse delay-75"></div>
+            <div className="w-full h-4 bg-gray-200 mb-2 animate-pulse delay-100"></div>
+            <div className="w-full h-4 bg-gray-200 mb-2 animate-pulse delay-100"></div>
+            <div className="w-5/6 h-4 bg-gray-200 animate-pulse delay-100"></div>
+          </div>
+
+          {/* Right Rail Skeleton (Opinions) */}
+          <div className="pl-6 flex flex-col gap-6">
+            <div className="w-32 h-2 bg-gray-200 mb-2 animate-pulse"></div>
+            {[1, 2, 3].map(i => (
+              <div key={`right-${i}`} className="flex gap-4 items-start border-b border-gray-200 pb-5 last:border-0">
+                <div className="flex-1">
+                  <div className="w-16 h-2 bg-gray-200 mb-2 animate-pulse"></div>
+                  <div className="w-full h-4 bg-gray-200 mb-1 animate-pulse delay-75"></div>
+                  <div className="w-4/5 h-4 bg-gray-200 animate-pulse delay-75"></div>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 animate-pulse delay-100"></div>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </div>
 
       <style>{`
@@ -95,7 +72,6 @@ const LoadingSkeleton: React.FC = () => {
           }
         }
       `}</style>
-      </div>
     </>
   );
 };

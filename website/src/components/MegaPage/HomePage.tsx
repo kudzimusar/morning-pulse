@@ -9,12 +9,52 @@ import ZoneD from './ZoneD';
 import LoadingSkeleton from '../LoadingSkeleton';
 import '../../styles/megapage.css';
 
-const MegaHomePage: React.FC = () => {
+interface MegaHomePageProps {
+    newsData?: { [category: string]: NewsStory[] } | null;
+}
+
+const MegaHomePage: React.FC<MegaHomePageProps> = ({ newsData }) => {
     const [news, setNews] = useState<NewsStory[]>([]);
     const [opinions, setOpinions] = useState<Opinion[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // If static newsData is provided, use it directly — no Firestore fetch needed
+        if (newsData && Object.keys(newsData).length > 0) {
+            // Flatten all non-opinion categories into a news array
+            const allNews: NewsStory[] = [];
+            const allOpinions: Opinion[] = [];
+
+            Object.entries(newsData).forEach(([category, stories]) => {
+                if (category === 'Opinion/Editorial') {
+                    // Map NewsStory to Opinion-compatible shape
+                    stories.forEach(story => {
+                        allOpinions.push({
+                            id: story.id,
+                            title: story.headline,
+                            author: story.source || 'Morning Pulse',
+                            authorUid: '',
+                            content: story.detail || '',
+                            category: story.category,
+                            status: 'published',
+                            createdAt: story.fetchedAt,
+                            headline: story.headline,
+                            summary: story.detail,
+                            slug: story.slug,
+                        } as Opinion);
+                    });
+                } else {
+                    stories.forEach(story => allNews.push(story));
+                }
+            });
+
+            setNews(allNews);
+            setOpinions(allOpinions);
+            setLoading(false);
+            return;
+        }
+
+        // Fallback: fetch from Firestore if no static data is available
         const fetchEditorialData = async () => {
             try {
                 // 1. Fetch Latest News
@@ -36,7 +76,7 @@ const MegaHomePage: React.FC = () => {
             }
         };
         fetchEditorialData();
-    }, []);
+    }, [newsData]);
 
     if (loading) return <LoadingSkeleton />;
     if (!news.length) return <div className="p-8 text-center">No news available.</div>;
