@@ -1,4 +1,4 @@
-name: Deploy WhatsApp Bot to Google Cloud Functions
+name: Deploy Cloud Functions
 
 on:
   push:
@@ -11,8 +11,8 @@ permissions:
   id-token: 'write'
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-central1
+  PROJECT_ID: gen-lang-client-0999441419
 
 jobs:
   deploy:
@@ -34,16 +34,7 @@ jobs:
         run: npm ci
         working-directory: functions
 
-      # Write service account key to a temp file for Firebase CLI auth
-      - name: Write Service Account Key
-        run: echo '${{ secrets.GCP_SA_KEY }}' > /tmp/sa_key.json
-
-      - name: Deploy All Cloud Functions
-        run: firebase deploy --only functions --project gen-lang-client-0999441419
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa_key.json
-
-      # Set public IAM access for HTTP functions that need it
+      # Authenticate FIRST using service account — sets up ADC for Firebase CLI
       - name: Authenticate Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -54,6 +45,11 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
+      # Firebase CLI picks up ADC automatically once google-github-actions/auth runs
+      - name: Deploy All Cloud Functions
+        run: firebase deploy --only functions --project ${{ env.PROJECT_ID }}
+
+      # Set public access for all HTTP functions
       - name: Set Public Access for Public Functions
         run: |
           PUBLIC_FUNCTIONS=(
@@ -75,12 +71,7 @@ jobs:
               --member="allUsers" \
               --role="roles/cloudfunctions.invoker" || true
           done
-          echo "✅ Public access configured for all public functions"
+          echo "✅ Public access configured"
 
       - name: Deployment Complete
-        run: |
-          echo "=========================================="
-          echo "✅ All Cloud Functions deployed successfully"
-          echo "Project: ${{ env.PROJECT_ID }}"
-          echo "Region: ${{ env.REGION }}"
-          echo "=========================================="
+        run: echo "✅ All Cloud Functions deployed to ${{ env.PROJECT_ID }}"
