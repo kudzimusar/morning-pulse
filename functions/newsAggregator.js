@@ -42,10 +42,10 @@ async function fetchNewsForCategory(genAI, category, country = "Global", retries
     console.log(`🌀 Fetching news for category: ${category} (${country})...`);
 
     // ✅ USE GOOGLE SEARCH GROUNDING for real, current news
-    // This forces Gemini to search the web for TODAY'S actual news
+    // gemini-2.0-flash is the stable GA model that supports googleSearch tool
     const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash-001",
-        tools: [{ googleSearch: {} }],  // 🔑 KEY FIX: Enable Google Search!
+        model: "gemini-2.0-flash",
+        tools: [{ googleSearch: {} }],  // 🔑 Google Search Grounding (requires 2.0+)
     });
 
     const today = new Date().toISOString().split('T')[0]; // e.g. 2026-02-17
