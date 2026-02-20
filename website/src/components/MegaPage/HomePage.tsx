@@ -3,9 +3,7 @@ import { collection, query, where, orderBy, limit, getDocs } from 'firebase/fire
 import { db } from '../../services/firebase';
 import '../../styles/homepage.css';
 
-// ─────────────────────────────────────────────
-// Types (inline to avoid import issues)
-// ─────────────────────────────────────────────
+/* ─── Types ──────────────────────────────────────────── */
 interface Article {
     id: string;
     headline: string;
@@ -15,7 +13,7 @@ interface Article {
     author?: string;
     authorName?: string;
     category?: string;
-    type?: string;                // 'editorial' | 'opinion' | 'news' | etc.
+    type?: string;
     finalImageUrl?: string;
     imageUrl?: string;
     publishedAt?: any;
@@ -23,31 +21,21 @@ interface Article {
     source?: string;
 }
 
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-function isOpinion(article: Article): boolean {
-    const t = (article.type || '').toLowerCase();
+/* ─── Helpers ────────────────────────────────────────── */
+const isOpinion = (a: Article) => {
+    const t = (a.type || '').toLowerCase();
     return t === 'editorial' || t === 'opinion' || t === 'column';
-}
+};
 
-function hasImage(article: Article): boolean {
-    return !!(article.finalImageUrl || article.imageUrl);
-}
+const img = (a: Article) => a.finalImageUrl || a.imageUrl || '';
 
-function getImage(article: Article): string {
-    return article.finalImageUrl || article.imageUrl || '';
-}
+const excerpt = (a: Article, len = 160) => {
+    if (a.summary) return a.summary.substring(0, len);
+    if (a.body) return a.body.replace(/<[^>]*>/g, '').substring(0, len) + '…';
+    return a.subHeadline || '';
+};
 
-function getExcerpt(article: Article): string {
-    if (article.summary) return article.summary;
-    if (article.body) {
-        return article.body.replace(/<[^>]*>/g, '').substring(0, 180) + '…';
-    }
-    return article.subHeadline || '';
-}
-
-function formatDate(ts: any): string {
+const timeAgo = (ts: any): string => {
     if (!ts) return '';
     try {
         const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -55,25 +43,28 @@ function formatDate(ts: any): string {
         if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
         return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    } catch {
-        return '';
-    }
-}
+    } catch { return ''; }
+};
 
-// ─────────────────────────────────────────────
-// Breaking Bar
-// ─────────────────────────────────────────────
-const BreakingBar: React.FC<{ headlines: string[] }> = ({ headlines }) => {
-    if (!headlines.length) return null;
+const byAuthor = (a: Article) => a.author || a.authorName || 'Morning Pulse';
+
+/* ─── Breaking Bar ───────────────────────────────────── */
+const BreakingBar: React.FC<{ items: string[] }> = ({ items }) => {
+    if (!items.length) return null;
+    // Double the list so the animation loops seamlessly
+    const doubled = [...items, ...items];
     return (
         <div className="hp-breaking-bar">
-            <span className="hp-breaking-label">Breaking</span>
-            <div className="hp-breaking-ticker">
-                <span className="hp-breaking-ticker-inner">
-                    {headlines.map((h, i) => (
+            <span className="hp-breaking-label">
+                <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" /></svg>
+                Live
+            </span>
+            <div className="hp-breaking-ticker-wrap">
+                <span className="hp-breaking-ticker">
+                    {doubled.map((h, i) => (
                         <span key={i}>
                             {h}
-                            {i < headlines.length - 1 && <span style={{ margin: '0 32px', opacity: 0.4 }}>•</span>}
+                            <span className="hp-breaking-sep">●</span>
                         </span>
                     ))}
                 </span>
@@ -82,156 +73,155 @@ const BreakingBar: React.FC<{ headlines: string[] }> = ({ headlines }) => {
     );
 };
 
-// ─────────────────────────────────────────────
-// Opinion Card  (with editorial image)
-// ─────────────────────────────────────────────
-const OpinionCard: React.FC<{ article: Article; onClick: () => void }> = ({ article, onClick }) => (
-    <div className="hp-opinion-card" onClick={onClick}>
-        {hasImage(article) && (
-            <div className="hp-card-img">
-                <img src={getImage(article)} alt={article.headline} loading="lazy" />
+/* ─── Section Header (BBC red-bar style) ─────────────── */
+const SectionHeader: React.FC<{ label: string; href?: string }> = ({ label, href }) => (
+    <div className="hp-sec-header">
+        <span className="hp-sec-label">{label}</span>
+        <span className="hp-sec-rule" />
+        {href && <a className="hp-sec-link" href={href}>View all →</a>}
+    </div>
+);
+
+/* ─── Hero Section ───────────────────────────────────── */
+const HeroSection: React.FC<{
+    hero: Article | null;
+    sidebar: Article[];
+    onArticleClick: (id: string, slug?: string) => void;
+}> = ({ hero, sidebar, onArticleClick }) => {
+    const title = hero?.headline || 'Global Markets Rally as Tech Sector Rebounds';
+    const deck = hero?.subHeadline || hero?.summary || 'Major indices hit record highs following positive earnings from key semiconductor manufacturers.';
+    const heroImg = hero ? img(hero) : '';
+    const cat = hero?.type || hero?.category || 'Editorial';
+
+    return (
+        <>
+            <SectionHeader label="Top Story" />
+            <div className="hp-hero-grid">
+                {/* LEFT: Hero */}
+                <div
+                    className="hp-hero-story"
+                    onClick={() => hero && onArticleClick(hero.id, hero.slug)}
+                    role="article"
+                >
+                    <div className="hp-hero-img-wrap">
+                        {heroImg
+                            ? <img src={heroImg} alt={title} />
+                            : <div style={{ width: '100%', height: '100%', background: '#222' }} />
+                        }
+                        <span className="hp-img-category">{cat}</span>
+                    </div>
+                    <div className="hp-hero-body">
+                        <h1 className="hp-hero-hed">{title}</h1>
+                        <p className="hp-hero-dek">{deck}</p>
+                        <div className="hp-byline">
+                            <strong>{byAuthor(hero || {} as Article)}</strong>
+                            <span className="hp-byline-sep">|</span>
+                            <span>{timeAgo(hero?.publishedAt) || 'Today'}</span>
+                            <span className="hp-byline-sep">|</span>
+                            <span>4 min read</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* RIGHT: Sidebar */}
+                <aside className="hp-sidebar">
+                    <div className="hp-sidebar-top">
+                        <div className="hp-sidebar-top-label">
+                            <svg width="12" height="12" viewBox="0 0 12 12">
+                                <path d="M6 0L7.5 4.5H12L8.25 7.5L9.75 12L6 9L2.25 12L3.75 7.5L0 4.5H4.5Z" fill="#B8860B" />
+                            </svg>
+                            Your briefing
+                        </div>
+                        <div className="hp-sidebar-top-body">
+                            <strong>Good morning.</strong> Markets are rallying on tech earnings,
+                            while global climate talks enter a critical phase.
+                            Zimbabwe's cricket side advance to the Super Eight.
+                        </div>
+                    </div>
+
+                    <p className="hp-trending-label">Also in the news</p>
+                    {sidebar.map((a, i) => (
+                        <div
+                            key={a.id}
+                            className="hp-trending-item"
+                            onClick={() => onArticleClick(a.id, a.slug)}
+                            role="button"
+                            tabIndex={0}
+                        >
+                            <span className="hp-trending-rank">{i + 1}</span>
+                            <div>
+                                <div className="hp-trending-hed">{a.headline}</div>
+                                <div className="hp-trending-cat">{a.category || a.type || 'News'}</div>
+                            </div>
+                        </div>
+                    ))}
+
+                    <div className="hp-sidebar-ad">
+                        <span style={{ fontSize: 9, letterSpacing: '0.12em', opacity: 0.6 }}>ADVERTISEMENT</span>
+                        <span>Partner Promotion</span>
+                    </div>
+                </aside>
             </div>
-        )}
-        <div className="hp-card-kicker">{article.type || 'Editorial'}</div>
-        <h3 className="hp-card-headline">{article.headline}</h3>
-        <p className="hp-card-excerpt">{getExcerpt(article)}</p>
-        <div className="hp-card-meta">
-            {article.author || article.authorName || 'Editorial Team'}
-            {article.publishedAt && <span style={{ marginLeft: 8 }}>· {formatDate(article.publishedAt)}</span>}
+        </>
+    );
+};
+
+/* ─── Opinion Card (editorial image) ─────────────────── */
+const OpinionCard: React.FC<{ a: Article; onClick: () => void }> = ({ a, onClick }) => (
+    <div className="hp-opinion-card" onClick={onClick}>
+        <div className="hp-card-img-wrap">
+            {img(a)
+                ? <img src={img(a)} alt={a.headline} loading="lazy" />
+                : <div style={{ width: '100%', height: '100%', background: '#2a2a2a' }} />
+            }
+            <div className="hp-card-img-scrim" />
+            <span className="hp-card-img-cat">{a.type || a.category || 'Editorial'}</span>
+        </div>
+        <div className="hp-card-body">
+            <h2 className="hp-card-hed">{a.headline}</h2>
+            <p className="hp-card-dek">{excerpt(a)}</p>
+            <div className="hp-card-foot">
+                <span>{byAuthor(a)}</span>
+                <span className="hp-read-more">Read →</span>
+            </div>
         </div>
     </div>
 );
 
-// ─────────────────────────────────────────────
-// News Card  (no image — category badge instead)
-// ─────────────────────────────────────────────
-const NewsCard: React.FC<{ article: Article; onClick: () => void }> = ({ article, onClick }) => {
-    const cat = article.category || 'World';
+/* ─── News Card (Bloomberg left-stripe, no image) ─────── */
+const NewsCard: React.FC<{ a: Article; onClick: () => void }> = ({ a, onClick }) => {
+    const cat = a.category || 'World';
     return (
-        <div className="hp-news-card" onClick={onClick}>
-            <span className="hp-cat-badge" data-cat={cat}>
-                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                    <circle cx="3" cy="3" r="3" />
-                </svg>
-                {cat}
-            </span>
-            <h3 className="hp-card-headline">{article.headline}</h3>
-            <p className="hp-card-excerpt">{getExcerpt(article)}</p>
-            <div className="hp-news-footer">
-                <span>{article.source || article.author || article.authorName || 'Wire'}</span>
-                <span>{formatDate(article.publishedAt)}</span>
+        <div className="hp-news-card" data-cat={cat} onClick={onClick}>
+            <div className="hp-news-card-inner">
+                <div className="hp-news-cat">{cat}</div>
+                <h2 className="hp-news-hed">{a.headline}</h2>
+                <p className="hp-news-dek">{excerpt(a, 130)}</p>
+                <div className="hp-news-foot">
+                    <span>{a.source || byAuthor(a)}</span>
+                    <span>{timeAgo(a.publishedAt)}</span>
+                </div>
             </div>
         </div>
     );
 };
 
-// ─────────────────────────────────────────────
-// Hero Section
-// ─────────────────────────────────────────────
-const HeroSection: React.FC<{
-    hero: Article | null;
-    sidebarArticles: Article[];
-    onArticleClick: (id: string, slug?: string) => void;
-}> = ({ hero, sidebarArticles, onArticleClick }) => {
-    const title = hero?.headline || 'Global Markets Rally as Tech Sector Rebounds';
-    const sub = hero?.subHeadline || hero?.summary || 'Major indices hit record highs following positive earnings reports.';
-    const author = hero?.author || hero?.authorName || 'Editorial Team';
-    const img = hero ? getImage(hero) : '';
-    const date = hero ? formatDate(hero.publishedAt) : 'Today';
-
-    return (
-        <div className="hp-hero-grid">
-            {/* LEFT: Big hero story */}
-            <div
-                className="hp-hero-story"
-                onClick={() => hero && onArticleClick(hero.id, hero.slug)}
-                role="article"
-                aria-label={`Hero story: ${title}`}
-            >
-                {img && (
-                    <div className="hp-hero-img">
-                        <img src={img} alt={title} />
-                    </div>
-                )}
-                <div className="hp-hero-kicker">{hero?.type || 'Editorial'}</div>
-                <h1 className="hp-hero-headline">{title}</h1>
-                <p className="hp-hero-subheadline">{sub}</p>
-                <div className="hp-hero-meta">
-                    <strong>{author}</strong>
-                    <span className="hp-dot">|</span>
-                    <span>{date}</span>
-                    <span className="hp-dot">|</span>
-                    <span>4 min read</span>
-                </div>
-            </div>
-
-            {/* RIGHT: Sidebar */}
-            <aside className="hp-sidebar">
-                <div className="hp-brief-card">
-                    <div className="hp-brief-card-title">
-                        <span>⚡</span> Your Briefing
-                    </div>
-                    <div className="hp-brief-card-body">
-                        <strong>Good morning.</strong> Markets are rallying on tech earnings,
-                        while global climate talks reach a pivotal moment.
-                    </div>
-                </div>
-
-                <p className="hp-sidebar-title">Also in the news</p>
-                {sidebarArticles.map(a => (
-                    <div
-                        key={a.id}
-                        className="hp-trending-item"
-                        onClick={() => onArticleClick(a.id, a.slug)}
-                        role="button"
-                        tabIndex={0}
-                    >
-                        <div>
-                            <div className="hp-trending-headline">{a.headline}</div>
-                            <div className="hp-trending-cat">{a.category || a.type || 'News'}</div>
-                        </div>
-                    </div>
-                ))}
-
-                <div className="hp-ad-slot">
-                    <span className="hp-ad-label">Advertisement</span>
-                    <span>Premium Partner</span>
-                </div>
-            </aside>
-        </div>
-    );
-};
-
-// ─────────────────────────────────────────────
-// Story Grid
-// ─────────────────────────────────────────────
+/* ─── Story Grid ─────────────────────────────────────── */
 const StoryGrid: React.FC<{
     articles: Article[];
     onArticleClick: (id: string, slug?: string) => void;
 }> = ({ articles, onArticleClick }) => (
-    <div className="hp-card-grid">
+    <div className="hp-grid">
         {articles.map(a =>
-            isOpinion(a) ? (
-                <OpinionCard
-                    key={a.id}
-                    article={a}
-                    onClick={() => onArticleClick(a.id, a.slug)}
-                />
-            ) : (
-                <NewsCard
-                    key={a.id}
-                    article={a}
-                    onClick={() => onArticleClick(a.id, a.slug)}
-                />
-            )
+            isOpinion(a)
+                ? <OpinionCard key={a.id} a={a} onClick={() => onArticleClick(a.id, a.slug)} />
+                : <NewsCard key={a.id} a={a} onClick={() => onArticleClick(a.id, a.slug)} />
         )}
     </div>
 );
 
-// ─────────────────────────────────────────────
-// HomePage (main export)
-// ─────────────────────────────────────────────
-interface HomePageProps {
+/* ─── HomePage (main export) ─────────────────────────── */
+export interface HomePageProps {
     onArticleClick: (id: string, slug?: string) => void;
     user?: any;
 }
@@ -244,82 +234,60 @@ export const HomePage: React.FC<HomePageProps> = ({ onArticleClick }) => {
     const [breaking, setBreaking] = useState<string[]>([]);
 
     useEffect(() => {
-        const run = async () => {
+        (async () => {
             try {
-                setLoading(true);
                 const ref = collection(db, 'artifacts', 'morning-pulse-app', 'public', 'data', 'opinions');
 
-                // 1. Hero — prefer zone-assigned, fallback to latest
+                // Hero
+                let heroDoc: Article | null = null;
                 const heroQ = query(ref, where('zoneAssignment', '==', 'A_Hero'), where('status', '==', 'published'), limit(1));
                 const heroSnap = await getDocs(heroQ);
-
-                let heroDoc: Article | null = null;
-                let heroId = '';
-
                 if (!heroSnap.empty) {
                     heroDoc = { id: heroSnap.docs[0].id, ...heroSnap.docs[0].data() } as Article;
-                    heroId = heroDoc.id;
                 } else {
-                    const fallQ = query(ref, where('status', '==', 'published'), orderBy('publishedAt', 'desc'), limit(1));
-                    const fallSnap = await getDocs(fallQ);
-                    if (!fallSnap.empty) {
-                        heroDoc = { id: fallSnap.docs[0].id, ...fallSnap.docs[0].data() } as Article;
-                        heroId = heroDoc.id;
-                    }
+                    const fallSnap = await getDocs(query(ref, where('status', '==', 'published'), orderBy('publishedAt', 'desc'), limit(1)));
+                    if (!fallSnap.empty) heroDoc = { id: fallSnap.docs[0].id, ...fallSnap.docs[0].data() } as Article;
                 }
                 setHero(heroDoc);
 
-                // 2. Feed articles (exclude hero)
-                const feedQ = query(ref, where('status', '==', 'published'), orderBy('publishedAt', 'desc'), limit(24));
-                const feedSnap = await getDocs(feedQ);
-                const feed = feedSnap.docs
-                    .map(d => ({ id: d.id, ...d.data() } as Article))
-                    .filter(a => a.id !== heroId);
+                // Feed
+                const feedSnap = await getDocs(query(ref, where('status', '==', 'published'), orderBy('publishedAt', 'desc'), limit(24)));
+                const feed = feedSnap.docs.map(d => ({ id: d.id, ...d.data() } as Article)).filter(a => a.id !== heroDoc?.id);
 
                 setSidebar(feed.slice(0, 4));
-                setGrid(feed.slice(4, 22));
+                setGrid(feed.slice(4));
 
-                // Breaking news ticker
                 setBreaking([
-                    'Global climate summit reaches tentative deal on emissions',
+                    'Zimbabwe tames inflation below 10% — first time since 1997',
+                    'ICC T20 World Cup: Zimbabwe advance to the Super Eight stage',
+                    'Global climate summit reaches tentative emissions deal',
                     'Tech sector rally continues as AI chip demand surges',
-                    'Zimbabwe inflation falls below 10% — first time since 1997',
-                    'ICC Men\'s T20 World Cup: Zimbabwe advance to Super Eight',
+                    'U.S. and Iran signal progress in third round of nuclear talks',
                 ]);
-            } catch (err) {
-                console.error('HomePage fetch error:', err);
+            } catch (e) {
+                console.error('HomePage fetch error:', e);
             } finally {
                 setLoading(false);
             }
-        };
-        run();
+        })();
     }, []);
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <div style={{ width: 32, height: 32, border: '3px solid #E5E7EB', borderTopColor: '#111', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                <div className="hp-spinner" />
             </div>
         );
     }
 
     return (
         <div className="hp-page">
-            <BreakingBar headlines={breaking} />
-
-            <HeroSection
-                hero={hero}
-                sidebarArticles={sidebar}
-                onArticleClick={onArticleClick}
-            />
-
-            <div className="hp-section-header">
-                <h2>Today&rsquo;s Stories</h2>
-                <span />
+            <BreakingBar items={breaking} />
+            <div className="hp-content">
+                <HeroSection hero={hero} sidebar={sidebar} onArticleClick={onArticleClick} />
+                <SectionHeader label="Today's Stories" />
+                <StoryGrid articles={grid} onArticleClick={onArticleClick} />
             </div>
-
-            <StoryGrid articles={grid} onArticleClick={onArticleClick} />
         </div>
     );
 };
