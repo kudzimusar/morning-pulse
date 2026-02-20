@@ -69,7 +69,7 @@ export const ZoneC: React.FC<ZoneCProps> = ({ articles, onArticleClick }) => {
                 </div>
 
                 {/* CENTER: Visual Grid - "ANALYSIS & OPINION" (Not Sticky, Main feed) */}
-                <div className="zone-c-center" style={{ borderLeft: '1px solid var(--mp-light-gray)', borderRight: '1px solid var(--mp-light-gray)', padding: '0 24px' }}>
+                <div className="zone-c-center">
                     <h4 style={{
                         fontFamily: 'var(--font-ui)',
                         fontSize: '13px',

@@ -260,6 +260,34 @@
 }
 
 /* =========================================
+    ZONE C: THE DEEP DIVE
+    ========================================= */
+.zone-c {
+    padding: 40px 0;
+    border-top: 1px solid var(--mp-light-gray);
+}
+
+/* LEFT RAIL: The Wire (3 of 12 columns) */
+.zone-c-left {
+    grid-column: span 3;
+    border-right: 1px solid var(--mp-light-gray);
+    padding-right: 24px;
+}
+
+/* CENTER FEED: Analysis (6 of 12 columns) */
+.zone-c-center {
+    grid-column: span 6;
+    padding: 0 24px;
+    border-right: 1px solid var(--mp-light-gray);
+}
+
+/* RIGHT RAIL: Ads/Trending (3 of 12 columns) */
+.zone-c-right {
+    grid-column: span 3;
+    padding-left: 0;
+}
+
+/* =========================================
     ZONE B: TICKER STRIP
     ========================================= */
 .zone-b {
@@ -300,12 +328,22 @@
 
     .zone-a-left-rail,
     .zone-a-center-stage,
-    .zone-a-right-rail {
+    .zone-a-right-rail,
+    .zone-c-left,
+    .zone-c-center,
+    .zone-c-right {
         grid-column: span 12;
         padding: 0;
+        border: none;
+        /* Remove column dividers on mobile */
     }
 
-    /* Reorder: Hero first on Mobile */
+    .sticky-rail {
+        position: static;
+        /* Disable sticky on mobile */
+    }
+
+    /* Reorder zones on mobile */
     .zone-a-center-stage {
         order: 1;
     }
@@ -318,7 +356,19 @@
         order: 3;
     }
 
+    .zone-c-center {
+        order: 1;
+    }
+
+    .zone-c-left {
+        order: 2;
+    }
+
+    .zone-c-right {
+        order: 3;
+    }
+
     .hero-headline {
-        font-size: 2.25rem;
+        font-size: 2rem;
     }
 }
