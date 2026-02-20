@@ -36,10 +36,7 @@ jobs:
 
       # Deploy ALL functions at once using Firebase CLI
       - name: Deploy All Cloud Functions
-        run: |
-          firebase deploy --only functions \
-            --project ${{ secrets.FIREBASE_PROJECT_ID }} \
-            --force
+        run: firebase deploy --only functions --project ${{ secrets.FIREBASE_PROJECT_ID }} --force
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
