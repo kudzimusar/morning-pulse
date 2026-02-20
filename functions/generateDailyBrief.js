@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { MODELS } = require("./modelConfig");
 
 // Utils
 function getGeminiApiKey() {
@@ -117,7 +118,7 @@ exports.generateDailyBrief = functions
 
             // 6. Generate Brief with Gemini
             const genAI = new GoogleGenerativeAI(getGeminiApiKey());
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: MODELS.DEFAULT });
 
             const storiesText = topStories.map((s, i) =>
                 `${i + 1}. ${s.headline}: ${s.detail} (Source: ${s.source})`

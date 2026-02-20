@@ -5,10 +5,11 @@
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors')({ origin: true });
+const { MODELS } = require('./modelConfig');
 
 // Configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const MODEL_NAME = 'gemini-1.5-pro'; // Upgrade to Pro model
+const MODEL_NAME = MODELS.NEWSLETTER; // From central config
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
