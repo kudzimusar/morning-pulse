@@ -163,6 +163,27 @@ const MobileMenuDrawer: React.FC<MobileMenuDrawerProps> = ({
               <Bookmark size={20} />
               <span>Saved Articles</span>
             </button>
+
+            <button
+              onClick={() => handleNavClick('#profile')}
+              className="mobile-menu-item"
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: 'none',
+                border: 'none',
+                textAlign: 'left',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                fontSize: '1rem',
+                color: '#1a1a1a',
+              }}
+            >
+              <User size={20} />
+              <span>Profile & Preferences</span>
+            </button>
           </div>
 
           {/* Divider */}

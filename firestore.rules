@@ -70,6 +70,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if hasAnyStaffRole();
     }
+
+    // Readers can read/write their own document (AuthPage, profile, preferences)
+    match /artifacts/{appId}/public/data/readers/{readerId} {
+      allow read, write: if isSignedIn() && request.auth.uid == readerId;
+    }
     
     // --- STAFF COLLECTION ---
     match /staff/{staffId} {
