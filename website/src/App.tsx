@@ -10,7 +10,7 @@ import MobileNotifications from './components/MobileNotifications';
 import ForYouFeed from './components/ForYouFeed';
 import AskPulseAI from './components/AskPulseAI';
 import BookmarksPage from './components/BookmarksPage';
-import { HomePage as HomePageComponent } from './components/MegaPage/HomePage';
+import MegaHomePage from './components/MegaPage/HomePage';
 import './styles/newspaper.css';
 import './styles/homepage.css'; // Fresh Homepage Styles
 import './styles/home-layout.css'; // 3-Zone Home Layout
@@ -1169,12 +1169,7 @@ const App: React.FC = () => {
 
           {/* NEW: Home Page v2 */}
           {currentPage === 'new-home' && (
-            <HomePageComponent
-              onArticleClick={(articleId, slug) => {
-                window.location.hash = slug ? `opinion/${slug}` : `opinion?id=${articleId}`;
-              }}
-              user={readerInfo}
-            />
+            <MegaHomePage />
           )}
 
 
@@ -1411,11 +1406,15 @@ const App: React.FC = () => {
                     <MorningBriefCard />
                   )}
 
-                  <NewsGrid
-                    newsData={newsData}
-                    selectedCategory={selectedCategory}
-                    userCountry={currentCountry}
-                  />
+                  {!selectedCategory ? (
+                    <MegaHomePage />
+                  ) : (
+                    <NewsGrid
+                      newsData={newsData}
+                      selectedCategory={selectedCategory}
+                      userCountry={currentCountry}
+                    />
+                  )}
                 </>
               )}
             </>

@@ -1,190 +1,105 @@
 import React from 'react';
 import { NewsStory, Opinion } from '../../types';
-import { MegaGrid } from './MegaGrid';
-import { Clock, MessageCircle, ArrowRight } from 'lucide-react';
-// Placeholders for now - will integrate real components later
-import MorningBriefCard from '../MorningBriefCard'; // We need to adapt this
-import AskPulseAI from '../AskPulseAI'; // We need a widget version of this
 
 interface ZoneAProps {
-    heroStory?: Opinion | NewsStory;
-    briefingData?: any; // To be typed properly
-    onArticleClick: (id: string, slug?: string) => void;
+    hero: NewsStory;
+    leftRail: NewsStory[];
+    rightRail: Opinion[];
 }
 
-/**
- * ZONE A: The "Morning Prime" (Active Hero)
- * - Left: Personal Briefing
- * - Center: Hero Story
- * - Right: AI & Widgets
- */
-export const ZoneA: React.FC<ZoneAProps> = ({ heroStory, briefingData, onArticleClick }) => {
+// Helper to get initials for the missing authorImageUrl
+const getInitial = (name?: string) => (name ? name.charAt(0).toUpperCase() : 'P');
 
-    // Fallback if no hero assigned
-    const title = heroStory?.headline || "Global Markets Rally as Tech Sector Rebounds";
-    const subtitle = heroStory?.subHeadline || "Major indices hit record highs following positive earnings reports from key semiconductor manufacturers.";
-    const author = heroStory?.author || heroStory?.authorName || "Editorial Team";
-    const image = heroStory?.finalImageUrl || heroStory?.imageUrl || "https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&q=80&w=1600";
-    const timestamp = heroStory?.publishedAt ? new Date(heroStory.publishedAt).toLocaleDateString() : "Today";
-
+const ZoneA: React.FC<ZoneAProps> = ({ hero, leftRail, rightRail }) => {
     return (
-        <section className="zone-a">
-            <MegaGrid>
-                {/* LEFT RAIL: The Personal Brief */}
-                <div className="zone-a-left-rail">
-                    <div className="brief-card-styled mp-card-hover">
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
-                            <div style={{ width: '24px', height: '24px', backgroundColor: 'var(--mp-brand-gold)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <span style={{ color: 'white', fontSize: '14px' }}>⚡</span>
-                            </div>
-                            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--mp-ink)', margin: 0 }}>
-                                Your Briefing
-                            </h3>
+        <section className="grid grid-cols-1 lg:grid-cols-[220px_640px_300px] gap-6 mb-16 items-start">
+
+            {/* === LEFT RAIL: High density, text only (News items 2-5) === */}
+            <div className="flex flex-col gap-4 lg:pr-6 lg:border-r border-gray-200">
+                {leftRail.map((article) => (
+                    <article key={article.id} className="border-b border-gray-200 pb-4 last:border-0 group cursor-pointer">
+                        <span className="text-[10px] font-bold uppercase text-red-700 tracking-wider mb-2 block font-sans">
+                            {article.category || 'News'}
+                        </span>
+                        <h3 className="text-[17px] font-bold leading-snug mb-2 group-hover:underline text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
+                            {article.headline || article.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
+                            {article.summary || article.detail}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 text-[10px] text-gray-400 uppercase font-sans font-bold">
+                            <span>{article.source || 'Morning Pulse'}</span>
+                            <span>•</span>
+                            <span>3 Min Read</span>
                         </div>
+                    </article>
+                ))}
+            </div>
 
-                        {/* Brief Content */}
-                        <div style={{ fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--mp-slate)' }}>
-                            <p style={{ marginBottom: '12px' }}>
-                                <strong>Good morning.</strong> Markets are rallying on tech earnings, while global climate talks reach a pivotal moment.
-                            </p>
-                            <ul style={{ paddingLeft: '20px', margin: 0, fontSize: '0.9rem', color: 'var(--mp-gray)' }}>
-                                <li style={{ marginBottom: '8px' }}>S&P 500 hits record high</li>
-                                <li style={{ marginBottom: '8px' }}>New AI chip unveiled</li>
-                            </ul>
-                        </div>
-
-                        <button style={{
-                            marginTop: '20px',
-                            fontSize: '13px',
-                            color: 'var(--mp-brand-blue)',
-                            fontWeight: '600',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: 0
-                        }}>
-                            Read Full Brief <ArrowRight size={14} style={{ marginLeft: '4px' }} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* CENTER STAGE: The Hero Story */}
-                <div className="zone-a-center-stage">
-                    <div
-                        className="hero-container"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => heroStory && onArticleClick(heroStory.id, heroStory.slug)}
-                    >
-                        <h1 className="hero-headline">{title}</h1>
-                        <p className="hero-subheadline">{subtitle}</p>
-
-                        <div className="hero-meta">
-                            <span style={{ color: 'var(--mp-brand-red)' }}>{author}</span>
-                            <span style={{ color: 'var(--mp-light-gray)' }}>|</span>
-                            <span>{timestamp}</span>
-                            <span style={{ color: 'var(--mp-light-gray)' }}>|</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Clock size={14} /> 4 min read
-                            </span>
-                        </div>
-
-                        <div className="hero-image-wrapper">
-                            <img
-                                src={image}
-                                alt={title}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                            {/* Glass Overlay Buttons */}
-                            <div style={{
-                                position: 'absolute',
-                                bottom: '20px',
-                                left: '20px',
-                                display: 'flex',
-                                gap: '10px'
-                            }}>
-                                <button className="mp-glass" style={{
-                                    padding: '8px 16px',
-                                    color: 'var(--mp-ink)',
-                                    borderRadius: '24px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    cursor: 'pointer',
-                                    boxShadow: 'var(--shadow-md)'
-                                }}>
-                                    ✨ Summarize
-                                </button>
-                                <button className="mp-glass" style={{
-                                    padding: '8px 16px',
-                                    color: 'var(--mp-ink)',
-                                    borderRadius: '24px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    cursor: 'pointer',
-                                    boxShadow: 'var(--shadow-md)'
-                                }}>
-                                    💬 Discuss
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* RIGHT RAIL: Engagement */}
-                <div className="zone-a-right-rail">
-                    {/* AskPulseAI Widget */}
-                    <div style={{
-                        padding: '16px',
-                        backgroundColor: '#EFF6FF',
-                        border: '1px solid #DBEAFE',
-                        borderRadius: '8px'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#1E40AF', fontWeight: 'bold', fontSize: '14px' }}>
-                            <MessageCircle size={16} /> AskPulse AI
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Ask about this story..."
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                borderRadius: '4px',
-                                border: '1px solid #BFDBFE',
-                                fontSize: '13px'
-                            }}
+            {/* === CENTER STAGE: Massive visual impact (Hero) === */}
+            <div className="lg:px-6 lg:border-r border-gray-200 flex flex-col group cursor-pointer">
+                {/* Force the 3:2 image into a cinematic 16:9 crop using Tailwind */}
+                <div className="relative w-full aspect-video mb-4 bg-gray-100 overflow-hidden">
+                    {hero.imageUrl || hero.image || hero.urlToImage ? (
+                        <img
+                            src={hero.imageUrl || hero.image || hero.urlToImage}
+                            alt={hero.headline}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                    </div>
-
-                    {/* MPU Ad */}
-                    <div style={{
-                        width: '100%',
-                        height: '250px',
-                        backgroundColor: '#F3F4F6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#9CA3AF',
-                        fontSize: '11px',
-                        border: '1px dashed #E5E7EB'
-                    }}>
-                        ADVERTISEMENT (300x250)
-                    </div>
-
-                    {/* Market Data / Weather Chips */}
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: '#ECFDF5', color: '#065F46', borderRadius: '4px' }}>S&P 500 +1.2%</span>
-                        <span style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: '#FEF2F2', color: '#991B1B', borderRadius: '4px' }}>NASDAQ -0.4%</span>
-                        <span style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: '#F9FAFB', color: '#374151', borderRadius: '4px' }}>Tokyo ☀️ 24°C</span>
-                    </div>
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 font-sans text-xs uppercase tracking-widest">
+                            Visual Context
+                        </div>
+                    )}
                 </div>
-            </MegaGrid>
+
+                <h2 className="text-3xl lg:text-[40px] font-bold leading-tight mb-3 text-black group-hover:text-gray-700 transition-colors" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>
+                    {hero.headline || hero.title}
+                </h2>
+                <p className="text-lg text-gray-700 leading-relaxed max-w-2xl" style={{ fontFamily: 'Georgia, serif' }}>
+                    {hero.summary || hero.detail}
+                </p>
+                <div className="text-xs font-bold uppercase text-gray-500 mt-4 font-sans tracking-wide">
+                    By {hero.source || 'Morning Pulse Staff'}
+                </div>
+            </div>
+
+            {/* === RIGHT RAIL: Sticky Opinions === */}
+            <div className="lg:pl-6 sticky top-24 self-start flex flex-col gap-6">
+
+                {/* Section Header */}
+                <div className="border-t-2 border-black pt-2 mb-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest block font-sans text-black">Opinion & Editorial</span>
+                </div>
+
+                {/* Right Rail Opinions */}
+                {rightRail.map((opinion) => (
+                    <article key={opinion.id} className="border-b border-gray-200 pb-5 last:border-0 flex gap-4 items-start group cursor-pointer">
+                        <div className="flex-1">
+                            <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1 font-sans tracking-wide">
+                                {opinion.author}
+                            </span>
+                            <h4 className="text-[16px] font-bold leading-tight group-hover:text-gray-500 transition-colors text-black" style={{ fontFamily: 'Georgia, serif' }}>
+                                {opinion.title}
+                            </h4>
+                        </div>
+
+                        {/* Fake Author Avatar - Circular UI solves missing image */}
+                        <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                            {opinion.image ? (
+                                <img src={opinion.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" alt={opinion.author} />
+                            ) : (
+                                <span className="font-sans font-bold text-gray-400 text-lg">
+                                    {getInitial(opinion.author)}
+                                </span>
+                            )}
+                        </div>
+                    </article>
+                ))}
+            </div>
+
         </section>
     );
 };
+
+export default ZoneA;
