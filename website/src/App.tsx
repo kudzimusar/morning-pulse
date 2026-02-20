@@ -10,8 +10,9 @@ import MobileNotifications from './components/MobileNotifications';
 import ForYouFeed from './components/ForYouFeed';
 import AskPulseAI from './components/AskPulseAI';
 import BookmarksPage from './components/BookmarksPage';
+import { HomePage as HomePageComponent } from './components/MegaPage/HomePage';
 import './styles/newspaper.css';
-import './styles/megapage.css'; // Global Mega-Page Styles
+import './styles/homepage.css'; // Fresh Homepage Styles
 import './styles/home-layout.css'; // 3-Zone Home Layout
 import './styles/mobile.css'; // Mobile layout, header, bottom nav, utilities
 
@@ -1166,9 +1167,9 @@ const App: React.FC = () => {
           )}
 
 
-          {/* NEW: Mega-Page v2 (Test Route) */}
+          {/* NEW: Home Page v2 */}
           {currentPage === 'new-home' && (
-            <MegaPage
+            <HomePageComponent
               onArticleClick={(articleId, slug) => {
                 window.location.hash = slug ? `opinion/${slug}` : `opinion?id=${articleId}`;
               }}
