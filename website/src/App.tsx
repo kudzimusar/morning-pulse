@@ -13,6 +13,7 @@ import BookmarksPage from './components/BookmarksPage';
 import './styles/newspaper.css';
 import './styles/megapage.css'; // Global Mega-Page Styles
 import './styles/home-layout.css'; // 3-Zone Home Layout
+import './styles/mobile.css'; // Mobile layout, header, bottom nav, utilities
 
 // ✅ FIX: AdminDashboard wrapper component to add delay for AuthContext completion
 const AdminDashboardWrapper: React.FC<{ userRole: any }> = ({ userRole }) => {

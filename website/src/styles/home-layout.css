@@ -185,7 +185,8 @@
 }
 
 /* --- RESPONSIVE --- */
-@media (max-width: 1024px) {
+/* Keep 3-column layout on desktop; collapse only at tablet/mobile */
+@media (max-width: 900px) {
   .home-zone-1,
   .home-zone-2 {
     grid-template-columns: 1fr;
