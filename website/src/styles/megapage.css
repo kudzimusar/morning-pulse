@@ -418,3 +418,27 @@
 .editorial-border-right {
     border-right: 1px solid #E2E2E2;
 }
+
+/* Zone D Magazine Merge Layout */
+.zone-grid-merge-left {
+    display: grid;
+    grid-template-columns: 100%;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (min-width: 1024px) {
+    .zone-grid-merge-left {
+        grid-template-columns: 884px 300px;
+    }
+}
+
+/* Hide scrollbar for Zone C Subnav */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

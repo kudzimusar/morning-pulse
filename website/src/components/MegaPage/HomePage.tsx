@@ -3,6 +3,9 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { NewsStory, Opinion } from '../../types';
 import ZoneA from './ZoneA';
+import ZoneB from './ZoneB';
+import ZoneC from './ZoneC';
+import ZoneD from './ZoneD';
 import LoadingSkeleton from '../LoadingSkeleton';
 import '../../styles/megapage.css';
 
@@ -15,12 +18,12 @@ const MegaHomePage: React.FC = () => {
         const fetchEditorialData = async () => {
             try {
                 // 1. Fetch Latest News
-                const newsQuery = query(collection(db, 'articles'), orderBy('createdAt', 'desc'), limit(10));
+                const newsQuery = query(collection(db, 'articles'), orderBy('createdAt', 'desc'), limit(15));
                 const newsSnap = await getDocs(newsQuery);
                 const fetchedNews = newsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as NewsStory));
 
                 // 2. Fetch Latest Opinions
-                const opinionsQuery = query(collection(db, 'opinions'), orderBy('createdAt', 'desc'), limit(4));
+                const opinionsQuery = query(collection(db, 'opinions'), orderBy('createdAt', 'desc'), limit(7));
                 const opinionsSnap = await getDocs(opinionsQuery);
                 const fetchedOpinions = opinionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Opinion));
 
@@ -43,6 +46,17 @@ const MegaHomePage: React.FC = () => {
     const heroArticle = news[0];
     const leftRailArticles = news.slice(1, 5); // Items 2-5 for Left Rail
 
+    // Zone C Deep Dive slices
+    const zoneCCenter = news[5];
+    const zoneCLeft = news.slice(6, 9);
+
+    // Zone D Feature slice
+    const zoneDFeature = news[9];
+
+    // Opinion slices for Right Rails
+    const zoneARight = opinions.slice(0, 3);
+    const zoneCRight = opinions.slice(3, 6);
+
     return (
         <div className="max-w-[1200px] mx-auto px-4 mt-8">
 
@@ -50,10 +64,25 @@ const MegaHomePage: React.FC = () => {
             <ZoneA
                 hero={heroArticle}
                 leftRail={leftRailArticles}
-                rightRail={opinions}
+                rightRail={zoneARight}
             />
 
-            {/* Future Zones (Multimedia, Deep Dive) go here */}
+            {/* ZONE B: Multimedia / Audio Banner */}
+            <ZoneB />
+
+            {/* ZONE C: Deep Dive (Architectural / Longform) */}
+            {zoneCCenter && zoneCLeft.length > 0 && (
+                <ZoneC
+                    centerArticle={zoneCCenter}
+                    leftArticles={zoneCLeft}
+                    rightOpinions={zoneCRight}
+                />
+            )}
+
+            {/* ZONE D: Top Feature Story Merge */}
+            {zoneDFeature && (
+                <ZoneD featureArticle={zoneDFeature} />
+            )}
 
         </div>
     );

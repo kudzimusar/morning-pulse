@@ -1,155 +1,104 @@
 import React from 'react';
 import { NewsStory, Opinion } from '../../types';
-import { MegaGrid } from './MegaGrid';
-import { ArrowRight } from 'lucide-react';
 
 interface ZoneCProps {
-    articles: (Opinion | NewsStory)[];
-    onArticleClick: (id: string, slug?: string) => void;
+    centerArticle: NewsStory;
+    leftArticles: NewsStory[];
+    rightOpinions: Opinion[];
 }
 
-/**
- * ZONE C: The "Deep Dive"
- * - Left: List View
- * - Center: Visual Grid
- * - Right: Ads / Trending
- */
-export const ZoneC: React.FC<ZoneCProps> = ({ articles, onArticleClick }) => {
-    // Simple distribution logic for now
-    const leftArticles = articles.slice(0, 5);
-    const centerArticles = articles.slice(5, 9); // 4 cards in 2x2 grid
-    const rightArticles = articles.slice(9, 14);
+const getInitial = (name?: string) => (name ? name.charAt(0).toUpperCase() : 'P');
 
-    return (
-        <section className="zone-c">
-            <MegaGrid>
-                {/* LEFT: Text List - "THE WIRE" (Sticky) */}
-                <div className="zone-c-left sticky-rail">
-                    <h4 style={{
-                        fontFamily: 'var(--font-ui)',
-                        fontSize: '13px',
-                        fontWeight: '800',
-                        color: 'var(--mp-brand-red)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        marginBottom: '20px',
-                        borderBottom: '2px solid var(--mp-brand-red)',
-                        paddingBottom: '8px',
-                        display: 'inline-block'
-                    }}>
-                        The Wire
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {leftArticles.map(article => (
-                            <div key={article.id} className="mp-card-hover" style={{ paddingBottom: '16px', borderBottom: '1px solid var(--mp-light-gray)', cursor: 'pointer' }} onClick={() => onArticleClick(article.id, article.slug)}>
-                                <div
-                                    style={{ fontSize: '15px', fontWeight: '600', lineHeight: '1.4', marginBottom: '6px', color: 'var(--mp-ink)', fontFamily: 'var(--font-ui)' }}
-                                >
-                                    {article.headline}
-                                </div>
-                                <div style={{ fontSize: '12px', color: 'var(--mp-gray)', display: 'flex', gap: '8px' }}>
-                                    <span style={{ fontWeight: '600', color: 'var(--mp-brand-blue)' }}>{article.category || 'Global'}</span>
-                                    <span>•</span>
-                                    <span>{article.author || article.authorName || 'Staff'}</span>
-                                    <span>•</span>
-                                    <span style={{ color: 'var(--mp-gray)' }}>2h ago</span>
-                                </div>
-                            </div>
-                        ))}
-                        {/* Add dummy items to lengthen list if short */}
-                        <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--mp-light-gray)', opacity: 0.6 }}>
-                            <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>Tech stocks rally on AI news</div>
-                            <div style={{ fontSize: '12px' }}>Markets • 3h ago</div>
+export const ZoneC: React.FC<ZoneCProps> = ({ centerArticle, leftArticles, rightOpinions }) => (
+    <section className="mb-16">
+        {/* Horizontal Sub Nav */}
+        <div className="border-t-2 border-black border-b border-gray-200 py-3 mb-8 overflow-x-auto no-scrollbar">
+            <div className="flex gap-6 font-sans text-xs whitespace-nowrap px-4 lg:px-0">
+                <span className="font-bold cursor-pointer text-black uppercase tracking-widest">In-Depth Analysis</span>
+                <span className="text-gray-500 cursor-pointer hover:text-black uppercase tracking-widest">Politics</span>
+                <span className="text-gray-500 cursor-pointer hover:text-black uppercase tracking-widest">Markets</span>
+                <span className="text-gray-500 cursor-pointer hover:text-black uppercase tracking-widest">Technology</span>
+            </div>
+        </div>
+
+        {/* Apply strict grid */}
+        <div className="zone-grid-1-2-1">
+            {/* Left Rail: 3 text-only stories */}
+            <div className="flex flex-col gap-4 lg:pr-6 lg:editorial-border-right">
+                {leftArticles.map((article) => (
+                    <article key={article.id} className="border-b border-gray-200 pb-4 last:border-0 group cursor-pointer">
+                        <span className="text-[10px] font-bold uppercase text-red-700 tracking-wider mb-2 block font-sans">
+                            {article.category || 'News'}
+                        </span>
+                        <h3 className="text-[17px] font-bold leading-snug mb-2 group-hover:underline text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
+                            {article.headline || article.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
+                            {article.summary || article.detail}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 text-[10px] text-gray-400 uppercase font-sans font-bold">
+                            <span>{article.source || 'Morning Pulse'}</span>
+                            <span>•</span>
+                            <span>3 Min Read</span>
                         </div>
-                        <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--mp-light-gray)', opacity: 0.6 }}>
-                            <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>Climate summit reaches deal</div>
-                            <div style={{ fontSize: '12px' }}>World • 4h ago</div>
-                        </div>
-                    </div>
-                </div>
+                    </article>
+                ))}
+            </div>
 
-                {/* CENTER: Visual Grid - "ANALYSIS & OPINION" (Not Sticky, Main feed) */}
-                <div className="zone-c-center">
-                    <h4 style={{
-                        fontFamily: 'var(--font-ui)',
-                        fontSize: '13px',
-                        fontWeight: '800',
-                        color: 'var(--mp-ink)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        marginBottom: '20px',
-                        borderBottom: '2px solid var(--mp-ink)',
-                        paddingBottom: '8px',
-                        display: 'inline-block'
-                    }}>
-                        Analysis & Perspectives
-                    </h4>
-
-                    {/* Featured Top Story (Full Width) */}
-                    {centerArticles.length > 0 && (
-                        <div className="mp-card-standard mp-card-hover" style={{ marginBottom: '32px', cursor: 'pointer' }} onClick={() => onArticleClick(centerArticles[0].id, centerArticles[0].slug)}>
-                            <div className="mp-image-container" style={{ aspectRatio: '16/9' }}>
-                                {(centerArticles[0].finalImageUrl || centerArticles[0].imageUrl) && (
-                                    <img src={centerArticles[0].finalImageUrl || centerArticles[0].imageUrl} alt={centerArticles[0].headline} />
-                                )}
-                            </div>
-                            <h3 className="mp-headline-serif mp-headline-large" style={{ marginTop: '12px', fontSize: '1.75rem' }}>
-                                {centerArticles[0].headline}
-                            </h3>
-                            <p className="mp-excerpt" style={{ fontSize: '1.05rem' }}>
-                                {centerArticles[0].body ? centerArticles[0].body.substring(0, 150).replace(/<[^>]*>/g, '') + '...' : centerArticles[0].summary || centerArticles[0].subHeadline}
-                            </p>
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--mp-brand-red)', textTransform: 'uppercase', marginTop: '8px' }}>
-                                Read Analysis <ArrowRight size={12} style={{ display: 'inline', marginLeft: '4px' }} />
-                            </div>
+            {/* Center Stage: 1 visual story */}
+            <div className="lg:px-6 lg:editorial-border-right flex flex-col group cursor-pointer">
+                <div className="relative w-full aspect-video mb-4 bg-gray-100 overflow-hidden">
+                    {centerArticle.imageUrl || centerArticle.image || centerArticle.urlToImage ? (
+                        <img
+                            src={centerArticle.imageUrl || centerArticle.image || centerArticle.urlToImage}
+                            alt={centerArticle.headline}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 font-sans text-xs uppercase tracking-widest">
+                            Visual Context
                         </div>
                     )}
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-                        {centerArticles.slice(1).map(article => (
-                            <div key={article.id} onClick={() => onArticleClick(article.id, article.slug)} className="mp-card-standard mp-card-hover" style={{ cursor: 'pointer' }}>
-                                <div className="mp-image-container">
-                                    {(article.finalImageUrl || article.imageUrl) && (
-                                        <img src={article.finalImageUrl || article.imageUrl} alt={article.headline} />
-                                    )}
-                                </div>
-                                <h3 className="mp-headline-serif mp-headline-medium">
-                                    {article.headline}
-                                </h3>
-                                <p className="mp-excerpt">
-                                    {article.body ? article.body.substring(0, 100).replace(/<[^>]*>/g, '') : article.summary || article.subHeadline}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
                 </div>
 
-                {/* RIGHT: Ads + Trending - "MARKETPLACE" (Sticky) */}
-                <div className="zone-c-right sticky-rail">
-                    {/* Sticky Ad */}
-                    <div style={{
-                        width: '100%',
-                        height: '600px',
-                        backgroundColor: 'var(--mp-faint-gray)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--mp-gray)',
-                        fontSize: '11px',
-                        marginBottom: '24px',
-                        border: '1px solid var(--mp-light-gray)',
-                        borderRadius: '8px',
-                        position: 'relative'
-                    }}>
-                        <span style={{ position: 'absolute', top: '8px', left: '50%', transform: 'translateX(-50%)', opacity: 0.6, letterSpacing: '0.1em' }}>ADVERTISEMENT</span>
-                        <div style={{ textAlign: 'center' }}>
-                            <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Premium Partner</p>
-                            <button style={{ padding: '8px 16px', backgroundColor: 'white', border: '1px solid var(--mp-light-gray)', borderRadius: '20px', cursor: 'pointer' }}>Learn More</button>
+                <h2 className="text-3xl lg:text-[40px] font-bold leading-tight mb-3 text-black group-hover:text-gray-700 transition-colors" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}>
+                    {centerArticle.headline || centerArticle.title}
+                </h2>
+                <p className="text-lg text-gray-700 leading-relaxed max-w-2xl" style={{ fontFamily: 'Georgia, serif' }}>
+                    {centerArticle.summary || centerArticle.detail}
+                </p>
+                <div className="text-xs font-bold uppercase text-gray-500 mt-4 font-sans tracking-wide">
+                    By {centerArticle.source || 'Morning Pulse Staff'}
+                </div>
+            </div>
+
+            {/* Right Rail: Opinions */}
+            <div className="lg:pl-6 sticky top-24 self-start flex flex-col gap-6">
+                {rightOpinions.map((opinion) => (
+                    <article key={opinion.id} className="border-b border-gray-200 pb-5 last:border-0 flex gap-4 items-start group cursor-pointer">
+                        <div className="flex-1">
+                            <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1 font-sans tracking-wide">
+                                {opinion.author}
+                            </span>
+                            <h4 className="text-[16px] font-bold leading-tight group-hover:text-gray-500 transition-colors text-black" style={{ fontFamily: 'Georgia, serif' }}>
+                                {opinion.title}
+                            </h4>
                         </div>
-                    </div>
-                </div>
-            </MegaGrid>
-        </section>
-    );
-};
+
+                        <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                            {opinion.image ? (
+                                <img src={opinion.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" alt={opinion.author} />
+                            ) : (
+                                <span className="font-sans font-bold text-gray-400 text-lg">
+                                    {getInitial(opinion.author)}
+                                </span>
+                            )}
+                        </div>
+                    </article>
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
+export default ZoneC;
