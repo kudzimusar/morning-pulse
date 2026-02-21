@@ -45,7 +45,7 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-            # Deploy newsAggregator directly via gcloud (bypasses firebase update failures)
+      # Deploy newsAggregator directly via gcloud (bypasses firebase update failures)
       - name: Deploy newsAggregator via gcloud
         run: |
           gcloud functions deploy newsAggregator \

@@ -1,16 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { MODELS } = require("./modelConfig");
-
-// Utils
-function getGeminiApiKey() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        throw new Error("GEMINI_API_KEY not configured.");
-    }
-    return apiKey;
-}
+const { VertexAI } = require("@google-cloud/vertexai");
+const { MODELS, VERTEX_CONFIG } = require("./modelConfig");
 
 exports.generateDailyBrief = functions
     .runWith({ timeoutSeconds: 60, memory: '512MB' })
@@ -116,9 +107,9 @@ exports.generateDailyBrief = functions
                 };
             }
 
-            // 6. Generate Brief with Gemini
-            const genAI = new GoogleGenerativeAI(getGeminiApiKey());
-            const model = genAI.getGenerativeModel({ model: MODELS.DEFAULT });
+            // 6. Generate Brief with Vertex AI
+            const vertexAI = new VertexAI(VERTEX_CONFIG);
+            const model = vertexAI.getGenerativeModel({ model: MODELS.DEFAULT });
 
             const storiesText = topStories.map((s, i) =>
                 `${i + 1}. ${s.headline}: ${s.detail} (Source: ${s.source})`
@@ -144,9 +135,11 @@ exports.generateDailyBrief = functions
             Keep it professional, concise, and engaging.
             `;
 
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            let text = response.text();
+            const result = await model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }]
+            });
+            const response = result.response;
+            let text = response.candidates[0].content.parts[0].text;
 
             // Cleanup
             text = text.replace(/```json/g, "").replace(/```/g, "").trim();

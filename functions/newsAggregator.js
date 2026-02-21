@@ -1,5 +1,5 @@
 const functions = require("firebase-functions");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { VertexAI } = require("@google-cloud/vertexai");
 const admin = require("firebase-admin");
 
 // --- UTILITIES ---
@@ -27,26 +27,14 @@ function initializeFirebase() {
     }
 }
 
-function getGeminiApiKey() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        console.error("❌ GEMINI_API_KEY environment variable not set.");
-        throw new functions.https.HttpsError('internal', 'GEMINI_API_KEY not configured.');
-    }
-    return apiKey;
-}
 
 // --- CORE NEWS AGGREGATION LOGIC ---
 
-async function fetchNewsForCategory(genAI, category, country = "Global", retries = 3) {
+async function fetchNewsForCategory(vertexAI, category, country = "Global", retries = 3) {
     console.log(`🌀 Fetching news for category: ${category} (${country})...`);
 
-    // ✅ USE GOOGLE SEARCH GROUNDING for real, current news
-    // gemini-2.0-flash is the stable GA model that supports googleSearch tool
-    const model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
-        tools: [{ googleSearch: {} }],  // 🔑 Google Search Grounding (requires 2.0+)
-    });
+    // ✅ USE GOOGLE SEARCH GROUNDING via Vertex AI (stable, no API key needed)
+    const model = vertexAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
 
     const today = new Date().toISOString().split('T')[0]; // e.g. 2026-02-17
 
@@ -113,9 +101,11 @@ async function fetchNewsForCategory(genAI, category, country = "Global", retries
 
     for (let i = 0; i < retries; i++) {
         try {
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = await response.text();
+            const result = await model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                tools: [{ googleSearch: {} }],  // 🔑 Google Search Grounding via Vertex AI
+            });
+            const text = result.response.candidates[0].content.parts[0].text;
 
             // Clean the text to ensure it's valid JSON
             const cleanedText = text
@@ -170,13 +160,13 @@ exports.newsAggregator = functions
         ];
 
         try {
-            const genAI = new GoogleGenerativeAI(getGeminiApiKey());
+            const vertexAI = new VertexAI({ project: 'gen-lang-client-0999441419', location: 'us-central1' });
             const allArticles = [];
 
             console.log(`📊 Fetching news for ${categories.length} categories...`);
 
             const categoryPromises = categories.map(category =>
-                fetchNewsForCategory(genAI, category, country)
+                fetchNewsForCategory(vertexAI, category, country)
             );
 
             const results = await Promise.all(categoryPromises);
