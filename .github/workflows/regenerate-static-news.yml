@@ -56,7 +56,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "✅ No changes to commit - files up to date"
           else
-            git commit -m "chore: regenerate static news files [skip ci]"
+            git commit -m "chore: regenerate static news files"
             git push origin main
             echo "✅ Static news files updated and pushed!"
           fi
