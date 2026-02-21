@@ -10,10 +10,6 @@ permissions:
   contents: 'read'
   id-token: 'write'
 
-env:
-  REGION: us-central1
-  PROJECT_ID: gen-lang-client-0999441419
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -34,7 +30,7 @@ jobs:
         run: npm ci
         working-directory: functions
 
-      # Authenticate FIRST using service account — sets up ADC for Firebase CLI
+      # Authenticate using service account — sets up ADC for both gcloud and Firebase CLI
       - name: Authenticate Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -43,10 +39,16 @@ jobs:
       - name: Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ env.PROJECT_ID }}
+          project_id: gen-lang-client-0999441419
 
-      # Deploy newsAggregator directly via gcloud (bypasses firebase update failures)
-      - name: Deploy newsAggregator via gcloud
+      # Deploy ALL functions via Firebase CLI (uses ADC from google-github-actions/auth)
+      - name: Deploy All Cloud Functions
+        run: |
+          firebase deploy --only functions --project gen-lang-client-0999441419
+        continue-on-error: true
+
+      # Deploy newsAggregator directly via gcloud as fallback (bypasses firebase update failures)
+      - name: Deploy newsAggregator via gcloud (fallback)
         run: |
           gcloud functions deploy newsAggregator \
             --runtime nodejs20 \
@@ -58,14 +60,9 @@ jobs:
             --memory 1024MB \
             --timeout 540s \
             --project gen-lang-client-0999441419 \
-            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},APP_ID=morning-pulse-app"
+            --set-env-vars "APP_ID=morning-pulse-app"
 
-      # Deploy remaining functions via Firebase CLI
-      - name: Deploy All Cloud Functions (firebase)
-        run: firebase deploy --only functions --project gen-lang-client-0999441419
-        continue-on-error: true
-
-      # Set public access for all HTTP functions
+      # Set public IAM access for HTTP functions
       - name: Set Public Access for Public Functions
         run: |
           PUBLIC_FUNCTIONS=(
@@ -82,12 +79,13 @@ jobs:
           for fn in "${PUBLIC_FUNCTIONS[@]}"; do
             echo "Setting allUsers invoker for $fn..."
             gcloud functions add-iam-policy-binding "$fn" \
-              --region=${{ env.REGION }} \
-              --project=${{ env.PROJECT_ID }} \
+              --region=us-central1 \
+              --project=gen-lang-client-0999441419 \
               --member="allUsers" \
               --role="roles/cloudfunctions.invoker" || true
           done
           echo "✅ Public access configured"
+        continue-on-error: true
 
       - name: Deployment Complete
-        run: echo "✅ All Cloud Functions deployed to ${{ env.PROJECT_ID }}"
+        run: echo "✅ All Cloud Functions deployed to gen-lang-client-0999441419"
