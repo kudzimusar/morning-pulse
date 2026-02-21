@@ -139,7 +139,7 @@ jobs:
         run: |
           echo "🚀 Generating share pages with OG tags..."
           cd website
-          node scripts/generate-shares.js
+          node scripts/generate-shares.cjs
           echo ""
           echo "📁 Checking generated share pages..."
           ls -lh dist/ || echo "⚠️  Dist directory check failed"

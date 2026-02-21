@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '0 7 * * *'
+    - cron: '0 6,12,18 * * *'  # 3x daily: 6am, 12pm, 6pm UTC
 
 # ✅ FIX: Grant write permissions to push files back to repo
 permissions:
