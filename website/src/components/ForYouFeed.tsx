@@ -16,8 +16,8 @@ interface ForYouFeedProps {
 }
 
 // ─── Category SVG Icon System ──────────────────────────────────────────────
-// Each returns a small inline SVG respecting the brand palette (#000033 navy,
-// accompanied by category-specific accent colours).
+// Specific Material-style 24×24 paths, scaled to `size`. Each renders cleanly
+// at 18–20 px.
 
 const CategoryIcon: React.FC<{ category: string; size?: number }> = ({
   category,
@@ -25,8 +25,8 @@ const CategoryIcon: React.FC<{ category: string; size?: number }> = ({
 }) => {
   const normalised = category.toLowerCase();
 
-  // Local / Zimbabwe
-  if (normalised.includes('local') || normalised.includes('zim')) {
+  // Local / Zimbabwe — map pin with filled centre dot
+  if (normalised.includes('local') || normalised.includes('zim') || normalised.includes('zimbabwe')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -37,19 +37,16 @@ const CategoryIcon: React.FC<{ category: string; size?: number }> = ({
     );
   }
 
-  // Business / Finance & Economy
+  // Business / Finance & Economy — ascending bar chart
   if (normalised.includes('business') || normalised.includes('finance') || normalised.includes('economy')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path
-          d="M20 7H4C2.9 7 2 7.9 2 9v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 12H4V9h16v10zm-8-1c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zM7 5h10V3H7v2z"
-          fill="#065f46"
-        />
+        <path d="M5 20h2v-8H5v8zm4 0h2V4H9v16zm4 0h2v-6h-2v6zm4 0h2v-10h-2v10z" fill="#065f46" />
       </svg>
     );
   }
 
-  // World News / Global
+  // World News / Global — globe with latitude lines
   if (normalised.includes('world') || normalised.includes('global')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -61,43 +58,43 @@ const CategoryIcon: React.FC<{ category: string; size?: number }> = ({
     );
   }
 
-  // Sports
+  // Sports — trophy cup with two handles
   if (normalised.includes('sport')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
-          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4.18 11h2.05c.1-1.58.61-3.04 1.43-4.28L6.2 5.36C4.96 6.75 4.2 8.54 4.18 11zm1.99 2H4.18c.02 2.46.78 4.25 2.02 5.64l1.45-1.36C6.79 16.04 6.28 14.58 6.17 13zm1.9-6.66A7.974 7.974 0 0 1 11 5.18V3.11C8.54 3.35 6.37 4.7 5 6.71l1.43 1.35c.41-.56.9-1.06 1.44-1.49C7.91 6.52 7.99 6.43 8.07 6.34zm7.2-1.26C13.99 3.36 12.53 3.07 11 3v2.16c1.22.1 2.38.51 3.36 1.17.57.5 1.08 1.01 1.52 1.61L17.35 6.6c-.63-.6-1.33-1.13-2.08-1.52zm2.91 5.92h-2.05c-.1 1.58-.61 3.04-1.43 4.28l1.46 1.36c1.24-1.39 2-3.18 2.02-5.64zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+          d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H9v2h6v-2h-2v-2.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM7 10.82C5.84 10.4 5 9.3 5 8V7h2v3.82zM19 8c0 1.3-.84 2.4-2 2.82V7h2v1z"
           fill="#1e40af"
         />
       </svg>
     );
   }
 
-  // Tech & AI
+  // Tech & AI — microchip / CPU with pins
   if (normalised.includes('tech') || normalised.includes('ai') || normalised.includes('technology')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
-          d="M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"
+          d="M9 2v2H7C5.9 4 5 4.9 5 6v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2v-2h-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2zm6 16H9V8h6v10zm-4-8h2v2h-2v-2zm0 4h2v2h-2v-2z"
           fill="#6b21a8"
         />
       </svg>
     );
   }
 
-  // African Focus
+  // African Focus — compass / directional star
   if (normalised.includes('african') || normalised.includes('africa')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
-          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-5h2v2h-2v-2zm1-10c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"
+          d="M12 2L14.09 8.26H21L15.47 12.14L17.56 18.4L12 14.53L6.44 18.4L8.53 12.14L3 8.26H9.91L12 2Z"
           fill="#b45309"
         />
       </svg>
     );
   }
 
-  // Politics
+  // Politics — columns / civic building
   if (normalised.includes('politic')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -109,43 +106,43 @@ const CategoryIcon: React.FC<{ category: string; size?: number }> = ({
     );
   }
 
-  // Health
+  // Health — medical cross inside a square badge
   if (normalised.includes('health')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
-          d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
+          d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"
           fill="#9f1239"
         />
       </svg>
     );
   }
 
-  // Opinion / Editorial
+  // Opinion / Editorial — speech bubble with three dots
   if (normalised.includes('opinion') || normalised.includes('editorial')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
-          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+          d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM7.5 13a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4.5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4.5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
           fill="#374151"
         />
       </svg>
     );
   }
 
-  // Culture
+  // Culture — music eighth-note
   if (normalised.includes('culture')) {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
-          d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"
+          d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"
           fill="#c2410c"
         />
       </svg>
     );
   }
 
-  // Default — newspaper icon
+  // Default — newspaper / article layout
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
@@ -155,6 +152,8 @@ const CategoryIcon: React.FC<{ category: string; size?: number }> = ({
     </svg>
   );
 };
+
+
 
 // ─── Category accent colour helper ─────────────────────────────────────────
 const getCategoryAccent = (category: string): string => {
