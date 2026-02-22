@@ -8,6 +8,7 @@ import ZoneC from './ZoneC';
 import ZoneD from './ZoneD';
 import LoadingSkeleton from '../LoadingSkeleton';
 import '../../styles/megapage.css';
+import MobileArticleCard from '../MobileArticleCard';
 
 interface MegaHomePageProps {
     newsData?: { [category: string]: NewsStory[] } | null;
@@ -98,31 +99,47 @@ const MegaHomePage: React.FC<MegaHomePageProps> = ({ newsData }) => {
     const zoneCRight = opinions.slice(3, 6);
 
     return (
-        <div className="max-w-[1200px] mx-auto px-4 mt-8">
+        <div className="max-w-[1200px] mx-auto mt-8">
 
-            {/* ZONE A: The NYT 1-2-1 Editorial Grid */}
-            <ZoneA
-                hero={heroArticle}
-                leftRail={leftRailArticles}
-                rightRail={zoneARight}
-            />
+            {/* Desktop View: Keep exact NYT Grid */}
+            <div className="desktop-only">
+                <div className="px-4">
+                    {/* ZONE A: The NYT 1-2-1 Editorial Grid */}
+                    <ZoneA
+                        hero={heroArticle}
+                        leftRail={leftRailArticles}
+                        rightRail={zoneARight}
+                    />
 
-            {/* ZONE B: Multimedia / Audio Banner */}
-            <ZoneB />
+                    {/* ZONE B: Multimedia / Audio Banner */}
+                    <ZoneB />
 
-            {/* ZONE C: Deep Dive (Architectural / Longform) */}
-            {zoneCCenter && zoneCLeft.length > 0 && (
-                <ZoneC
-                    centerArticle={zoneCCenter}
-                    leftArticles={zoneCLeft}
-                    rightOpinions={zoneCRight}
-                />
-            )}
+                    {/* ZONE C: Deep Dive (Architectural / Longform) */}
+                    {zoneCCenter && zoneCLeft.length > 0 && (
+                        <ZoneC
+                            centerArticle={zoneCCenter}
+                            leftArticles={zoneCLeft}
+                            rightOpinions={zoneCRight}
+                        />
+                    )}
 
-            {/* ZONE D: Top Feature Story Merge */}
-            {zoneDFeature && (
-                <ZoneD featureArticle={zoneDFeature} />
-            )}
+                    {/* ZONE D: Top Feature Story Merge */}
+                    {zoneDFeature && (
+                        <ZoneD featureArticle={zoneDFeature} />
+                    )}
+                </div>
+            </div>
+
+            {/* Mobile View: AskPulseAI Style Feed */}
+            <div className="mobile-only px-4">
+                {news.map((article, index) => (
+                    <MobileArticleCard
+                        key={article.id}
+                        story={article}
+                        isLast={index === news.length - 1}
+                    />
+                ))}
+            </div>
 
         </div>
     );

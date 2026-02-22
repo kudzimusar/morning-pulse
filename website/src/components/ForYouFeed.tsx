@@ -4,6 +4,7 @@ import LoadingSkeleton from './LoadingSkeleton';
 import { CountryInfo } from '../services/locationService';
 import { getAuth } from 'firebase/auth';
 import { getCurrentEditor } from '../services/authService';
+import MobileArticleCard from './MobileArticleCard';
 
 interface ForYouFeedProps {
   newsData: {
@@ -571,11 +572,20 @@ const ForYouFeed: React.FC<ForYouFeedProps> = ({
       {/* Article list — works on mobile and desktop */}
       <div>
         {personalizedArticles.map((article, idx) => (
-          <ArticleRow
-            key={`foryou-${article.id}-${idx}`}
-            article={article}
-            userCountry={userCountry}
-          />
+          <React.Fragment key={`foryou-${article.id}-${idx}`}>
+            <div className="desktop-only">
+              <ArticleRow
+                article={article}
+                userCountry={userCountry}
+              />
+            </div>
+            <div className="mobile-only px-4">
+              <MobileArticleCard
+                story={article}
+                isLast={idx === personalizedArticles.length - 1}
+              />
+            </div>
+          </React.Fragment>
         ))}
       </div>
     </main>
