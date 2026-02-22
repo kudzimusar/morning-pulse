@@ -62,8 +62,23 @@ function getImageByTopic(headline, id) {
     searchTerm = 'sports,competition,athlete';
   }
 
-  const sig = id ? `&sig=${encodeURIComponent(String(id))}` : '';
-  return `https://source.unsplash.com/1200x800/?${searchTerm}${sig}`;
+  // Create a seed from the ID or use a hash of the search term
+  let seed = 0;
+  if (id) {
+    for (let i = 0; i < String(id).length; i++) {
+      seed = ((seed << 5) - seed) + String(id).charCodeAt(i);
+      seed = seed & seed;
+    }
+    seed = Math.abs(seed) % 1000;
+  } else {
+    for (let i = 0; i < searchTerm.length; i++) {
+      seed = ((seed << 5) - seed) + searchTerm.charCodeAt(i);
+      seed = seed & seed;
+    }
+    seed = Math.abs(seed) % 1000;
+  }
+
+  return `https://picsum.photos/seed/${seed}/1200/800`;
 }
 
 async function backfillImages() {

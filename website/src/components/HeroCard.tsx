@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NewsStory } from '../../types';
+import { NewsStory } from '../types';
 import { CountryInfo } from '../services/locationService';
-import { getCachedUnsplashImageUrl } from '../services/imageService';
 import { lazyLoadImage } from '../utils/lazyLoadImages';
 
 interface HeroCardProps {
@@ -23,23 +22,7 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
         if (isMounted) {
           setImageUrl(article.urlToImage);
         }
-        return;
-      }
-
-      // Use Unsplash proxy with fallback
-      try {
-        const url = await getCachedUnsplashImageUrl(
-          article.id,
-          article.category,
-          article.headline,
-          800,
-          600
-        );
-        if (isMounted) {
-          setImageUrl(url);
-        }
-      } catch (error) {
-        // Silently fail - will use gradient placeholder
+      } else {
         if (isMounted) {
           setImageUrl('');
         }
@@ -109,7 +92,7 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
   // Generate tags for glassmorphism overlay
   const getTags = () => {
     const tags = [`#${article.category.replace(/\s+/g, '')}`];
-    
+
     // Dynamically add country tag based on userCountry prop
     if (article.category.includes('Local')) {
       if (userCountry?.code) {
@@ -120,24 +103,24 @@ const HeroCard: React.FC<HeroCardProps> = ({ article, userCountry }) => {
         tags.push('#ZimNews'); // Fallback
       }
     }
-    
+
     if (article.category.includes('Business')) tags.push('#Business');
     if (article.category.includes('African')) tags.push('#Africa');
-    
+
     return tags;
   };
 
   return (
-    <article 
+    <article
       className={`hero-card ${article.url ? 'clickable' : ''}`}
       onClick={handleClick}
     >
-      <div 
+      <div
         ref={imageRef}
         className={`hero-image ${imageLoaded ? 'loaded' : 'lazy'}`}
-        style={{ 
+        style={{
           backgroundImage: (imageUrl && imageLoaded)
-            ? `url(${imageUrl})` 
+            ? `url(${imageUrl})`
             : getCategoryGradient(article.category),
           backgroundSize: 'cover',
           backgroundPosition: 'center',

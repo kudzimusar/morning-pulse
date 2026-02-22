@@ -237,13 +237,6 @@ exports.newsAggregator = functions
     });
 
 // --- OTHER EXPORTS ---
-try {
-    const unsplashProxy = require('./unsplashProxy');
-    exports.unsplashImage = unsplashProxy.unsplashImage;
-    console.log("✅ unsplashImage function exported successfully.");
-} catch (e) {
-    console.log("ℹ️ unsplashImage not available");
-}
 
 try {
     const askPulseAIProxy = require('./askPulseAIProxy');

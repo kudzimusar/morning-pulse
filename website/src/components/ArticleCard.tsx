@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NewsStory } from '../../types';
 import { CountryInfo } from '../services/locationService';
-import { getCachedUnsplashImageUrl } from '../services/imageService';
 import { generateArticleAIAction } from '../services/askPulseAIService'; // NEW
 import { lazyLoadImage } from '../utils/lazyLoadImages';
 import { Sparkles, X, Brain, Bookmark, BookmarkCheck } from 'lucide-react'; // NEW: Icons for AI Summary & Save
@@ -107,23 +106,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'grid', us
         if (isMounted) {
           setImageUrl(article.urlToImage);
         }
-        return;
-      }
-
-      // Use Unsplash proxy with fallback
-      try {
-        const url = await getCachedUnsplashImageUrl(
-          article.id,
-          article.category,
-          article.headline,
-          800,
-          600
-        );
-        if (isMounted) {
-          setImageUrl(url);
-        }
-      } catch (error) {
-        // Silently fail - will use gradient placeholder
+      } else {
         if (isMounted) {
           setImageUrl('');
         }

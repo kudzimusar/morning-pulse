@@ -35,7 +35,7 @@ const ZoneD: React.FC<ZoneDProps> = ({ featureArticle }) => (
             {/* 16:9 Image filling the rest of the merged space */}
             <div className="md:w-2/3 w-full aspect-video bg-gray-200 overflow-hidden relative">
                 <img
-                    src={featureArticle.imageUrl || featureArticle.image || featureArticle.urlToImage || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200&h=800&fit=crop'}
+                    src={featureArticle.imageUrl || featureArticle.image || featureArticle.urlToImage || ''}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                     alt={featureArticle.headline}
                     loading="lazy"

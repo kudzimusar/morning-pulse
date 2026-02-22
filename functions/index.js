@@ -75,11 +75,6 @@ exports.newsAggregator = newsAggregator;
 const { askPulseAIProxy } = require('./askPulseAIProxy');
 exports.askPulseAIProxy = askPulseAIProxy;
 
-// ============================================
-// UNSPLASH IMAGE PROXY (HTTP Function)
-// ============================================
-const { unsplashImage } = require('./unsplashProxy');
-exports.unsplashImage = unsplashImage;
 
 // ============================================
 // NEWSLETTER FUNCTIONS (HTTP Functions)
