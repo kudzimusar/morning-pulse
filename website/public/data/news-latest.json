@@ -1,682 +1,682 @@
 {
   "date": "2026-05-23",
-  "generatedAt": "2026-05-23T13:54:47.954Z",
-  "timestamp": 1779544487954,
+  "generatedAt": "2026-05-23T19:22:27.628Z",
+  "timestamp": 1779564147628,
   "categories": {
-    "World": [
-      {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:37.780Z",
-        "id": "r2dtnhqce8o",
-        "category": "World",
-        "source": "TRT World",
-        "headline": "US tightens green card process, requires applicants to apply from abroad",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHp7fCC3KJl46GFzVsiTO5TYV7x-0Awe6BB0A6ypXUPxmGH0npPzGfJAbj338gRCDkGS_xgGbne0dUFMRJAEE5SaiZkXLkPFIn3VgnKDjsZnFOeQ6M=",
-        "detail": "The US government has announced a new rule requiring most green card applicants to return to their home countries to apply, potentially impacting many currently residing in the United States. This change could cause disruptions for individuals and families awaiting permanent residency."
-      },
-      {
-        "source": "TRT World",
-        "headline": "Israel kills 10 people in Lebanon, including rescuers and a child in a 'double tap' strike",
-        "id": "ggo2xjcogww",
-        "category": "World",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:37.780Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHp7fCC3KJl46GFzVsiTO5TYV7x-0Awe6BB0A6ypXUPxmGH0npPzGfJAbj338gRCDkGS_xgGbne0dUFMRJAEE5SaiZkXLkPFIn3VgnKDjsZnFOeQ6M=",
-        "detail": "An Israeli strike in Lebanon resulted in the deaths of 10 individuals, including rescue workers and a child, raising concerns about the targeting of civilians. The incident has sparked international condemnation and heightened tensions in the region."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBt5Hv-e6j52GjsHYjjOE8elbthafwUumuywlDYqh07JFyl_cJdOdIc1y_88-14orIXhilN3kyG2idErarbjSDer93OFnJ8V0YpfIUlGHOOY9YKvuGb60=",
-        "detail": "An Air France flight en route to Detroit was diverted to Montreal due to concerns about potential Ebola exposure. Health officials are taking precautions, including screening at airports, following recent Ebola outbreaks.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:37.780Z",
-        "id": "v6uylj74xe",
-        "category": "World",
-        "source": "Global News",
-        "headline": "Air France flight to Detroit diverted to Montreal over Ebola fears"
-      },
-      {
-        "source": "AP News",
-        "headline": "Rubio reports 'slight progress' in Iran talks as Pakistan renews efforts to mediate a peace deal",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:37.780Z",
-        "id": "fb9hc77svdr",
-        "category": "World",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGSQ_TVHR6hpzF-mO0W8KYbJ5qsjcoKVKDOVlKN4g0A8sR8QdsYlkuC2Q9emv8haqHZZJndXza7yAJLpscddJe29q57ATO35sjVX8gVOls4uWQZ1P3lYO2m",
-        "detail": "U.S. Secretary of State Marco Rubio indicated that \"slight progress\" has been made during talks with Iran, while Pakistan is increasing its efforts to mediate a peace agreement. The diplomatic activity aims to de-escalate tensions and find a resolution to the ongoing conflict."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2k8-FAvCqhUQ8sQR1xX5ODhTbTk61mE0GDT9WyZAwVCzl9cARgklU_r0EvwzJjYjfE9q0FwmyXVnJ5J9hgBcRc7vJBLJAsMgv2S2KBNCFg2msW0a-6A=",
-        "detail": "Tulsi Gabbard has resigned from her position as Director of US National Intelligence. Gabbard cited her husband's cancer diagnosis as a contributing factor, though reports suggest disagreements with the administration on Iran also played a role.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:37.780Z",
-        "id": "w9eh8huizt",
-        "category": "World",
-        "source": "SBS News",
-        "headline": "Tulsi Gabbard resigns as Director of US National Intelligence"
-      }
-    ],
     "Health": [
       {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3QHIrW1_Y_OwHeM3xLyyCB6PklXMPi5m8E8XwGL1bSkwQ7_woQ2yYlSzTd4PvwKKwX0siKLMZDt3JtAdTlWk0ixPxnt4ZSuIMrY-boSEV0TaXIw6yOtkBbW9oKjttwC5tb2eii7iMWEMFDFKjqk_cVlWYw3D4ylcJn1WGMmAw27LlfRUFgb489VI86QCqUFTeW-uJpMDxAra4",
         "source": "The Guardian",
-        "headline": "Suspected Ebola cases triple in a week as WHO warns of rapid spread in DRC",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.461Z",
-        "id": "c8qsfoqg6b",
-        "category": "Health",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlpaoeNik4Rn5rzfTDibLpMhHzhOt8NWrpsRbzUTcFGuxzrUXVDjnI9W2MCVFqKyOqJV81lWAjjnBtoDMXuQjQeST6bbIggKbQ_FfM78e0FJa97YXnEQTBz0T0TUXj9TpMQSVZn5nqb8GFFVLZy4Cyexs6DFMPTQ==",
-        "detail": "The World Health Organization (WHO) has issued a warning about the rapid spread of Ebola in the Democratic Republic of Congo (DRC), with suspected cases tripling in a week. The WHO is considering the use of experimental vaccines as cases and deaths rise."
-      },
-      {
-        "id": "rn3zhcigcfn",
+        "headline": "'Every health facility said they were full': alarm over rapid spread of Ebola in DRC",
         "category": "Health",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.461Z",
-        "source": "The Washington Post",
-        "headline": "U.S. bans green-card holders from returning from Ebola-stricken countries",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0S1TMDxS-QTEEW0rz-9-UnR2Ex3LWAeUFDUMBY_Lo1iK8E4-jYMdkfRhuF7v9pTJeZz63_QOJXQ5RdwZwXaAsht812o4g6V5qVAi2q9cAPInnVqPLz7WKLLdIjYzq2QLn",
-        "detail": "Citing public health and \"resource constraints,\" U.S. health officials have expanded travel restrictions, banning green-card holders from returning from countries affected by Ebola. DHS rules now require individuals who have recently visited certain African countries to enter the U.S. through Dulles International Airport."
+        "fetchedAt": "2026-05-23T14:00:29.440Z",
+        "id": "1ecqckvzecx",
+        "detail": "Health workers and aid groups are expressing deep concern over the rapid spread of the Ebola virus in the Democratic Republic of Congo, where the fragile healthcare system is struggling to cope with the outbreak and international support is urgently needed. Nearly 750 suspected cases and 177 suspected deaths have been recorded since the first known victim died on April 24."
       },
       {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHvL3IWhUmJ31Kkzcl9oHD95hFFjpbd-anABUAD9bXE63jRW0fGOpDds_GiTS9vUfJ0x-aE0VrYfIHPRBbkVJ8Eg8MquyoCdGxX9KQD_aUB9l8YG3p3QxHs6lwwO0xxdaG-oQ7_IberVjZipVW_",
-        "detail": "Researchers have identified cancer-causing chemicals present in common foods. This discovery highlights the need for greater awareness and potential regulation of these chemicals in the food supply.",
-        "source": "ScienceDaily",
-        "headline": "Scientists Uncover Cancer-causing Chemicals Hidden in Everyday Foods",
-        "id": "uk1z8n3ibj",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmr2jSlj1tN44y0XYqo-RL46EEzVuhfvAcsNJennU0ma_ZR229mwisPrr-K9ZOOhwu0zmDzMlIHEf5Bs777JUJQ-S-IAI-UQH3PEFr67gndeohT0gu2Hrmst6lKMOCBoC6x_3W8SkqbiBHpAbdDyNkeG0XTMoEDNnZPPP_mFjaotnlPXw4xXhFG8ZfhIDly4AuSOUgIEJXDF1sCqPLwUUtHujL2rDhu3MocGgVu80B",
+        "source": "Health Policy Watch",
+        "headline": "Attack On Ebola Hospital In Eastern Congo Echoes Past Violence Against Health Workers",
         "category": "Health",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.461Z"
+        "fetchedAt": "2026-05-23T14:00:29.440Z",
+        "id": "c9ikyx0q5g4",
+        "detail": "An angry crowd set fire to Ebola isolation tents outside a hospital in the Democratic Republic of Congo's (DRC) Ituri province after the family of a young man who died of the virus was refused permission to take his body to be buried. The World Health Organization (WHO) has raised its risk assessment of the DRC outbreak from “high” to “very high” for the country, citing the rapid spread of cases and growing insecurity."
       },
       {
-        "source": "Medscape Medical News",
-        "headline": "Higher Caffeine Intake Tied to Greater Depression Severity",
-        "id": "7heun1c0hmq",
-        "category": "Health",
+        "detail": "The World Health Organization has declared the Ebola outbreak in the Democratic Republic of Congo, caused by the rare Bundibugyo strain, a global health emergency. The outbreak has already killed dozens.",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.461Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG_SlsgYxa6u0p7BCH1l4kYKtrRCHqGvLvzi-vzqYI1VELtWvXpiL145gdY6heaUI8VjDci3pABqEdpxhFz6qOyldP2RdVXdBitWvRnCOkVGUFPaP4=",
-        "detail": "According to a recent study presented at APA 2026, increased caffeine consumption is linked to more severe symptoms of depression. The research suggests a potential correlation between caffeine intake and mental health."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFoSZ47S7HxIobwtA0fhLD1LheWB--CHGojnV-0UhFPhHpbmurKkspi1zR6CYg9gBXFd44tD6eZ8eIzKW9IwbCucmD5jeoPQLu6V18Zn5Je2s2PXciT3VBYNJXZnq0S7Ec=",
-        "detail": "The World Health Organization has declared the Ebola outbreak in the Democratic Republic of Congo a global health emergency. An Ebola outbreak caused by the rare Bundibugyo strain has killed dozens in Democratic Republic of the Congo.",
+        "fetchedAt": "2026-05-23T14:00:29.440Z",
+        "id": "bgjoudno0ps",
+        "category": "Health",
         "source": "Al Jazeera",
         "headline": "WHO declares Ebola outbreak in DRC a global health emergency",
-        "id": "5x5dbk9fubu",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6mPWEKGHhBttiu3MHmlGMNs6MyT2xhNSQYuyzanWLDYlusC-qDYgPTi6lidGnhcFyaOIC0LUvwFGFK1MlmaAD79oHXpXf9dAxH86zA6Jc_Q2BTyWAGXj4LMPeTaqF"
+      },
+      {
+        "detail": "Scientists have identified potentially cancer-causing chemicals, known as PAHs, hiding in many everyday foods, especially those exposed to high heat cooking methods like grilling, roasting, smoking, and frying. The compounds can form during cooking.",
         "category": "Health",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.461Z"
-      }
-    ],
-    "Politics": [
-      {
-        "id": "70p1v40u9kv",
-        "category": "Politics",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.989Z",
-        "source": "Reuters",
-        "headline": "Denmark's centre-right coalition talks break down, prolonging political deadlock",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzQ5AXmM8ZItZnpda_cXfeGSj7OJHKVA5LJNYrKJPbBY3kZ8rg3wKUX7Lf7RZ2ZKZlnoI6Zz-9kpjuAFPUoq-3px6RmuVCN7OgC8NVU3Pr319ATSh_4uuhFfAXp5m5UCRpd-0xdIjYN5G3fgwFOblekoXzY3ghKD8Xj859uQxgnTlua9W-qUApMOe3bsi4ZX35fCjeIniy9EleCwTfjsiAnNrK0bU-aof3296OAadGGpwEvVszQYAO8bk8vPcM",
-        "detail": "Denmark's acting Defence Minister Troels Lund Poulsen's attempt to form a centre-right government broke down, prolonging a post-election stalemate in the Nordic country's parliament after failing to secure support from the centrist Moderate Party. King Frederik will now hold fresh talks with party leaders to decide the next steps."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQERTnNfZpmwA_aDc4Pn3IyOpSAt3ERSKw9qO4l2JCKxlyFewMFtIIOXexBA4W9sBLel6UzHpyHm7Z00t2ZDa2mr5tyZndsaZnRAJW4S9jgipi7X5wEl",
-        "detail": "President Trump's recent decision to deploy 5,000 troops to Poland has created confusion among European NATO partners, leaving them uncertain about which areas they should prioritize. This erratic policy move has deepened uncertainty regarding US commitments in Europe.",
-        "source": "Foreign Policy",
-        "headline": "Trump's About-Face on U.S. Troops in Poland Mystifies Allies",
-        "id": "1op9lov3523",
-        "category": "Politics",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.989Z"
-      },
-      {
-        "id": "532dtego3eg",
-        "category": "Politics",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.989Z",
-        "source": "Tasnim",
-        "headline": "Talks Still Ongoing on Points of Disagreement, Source Says",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESAxSRo6Nx5JCKEPtj_2h7r2mcP5E6Qm626a5SJP_K3gx01L1GQARU2YQFzm-zdRyprE2AnkG9sAucAIxqdi1JVDvP2CkInFfQYITn88Y8xpLsIc5q7amqYxfH9RuJne04B1KRbgy1faqj-0l_F8Wz_MSbh_gxVqEE_t6iWMNB2Gr8RzNBLlTdLaYsOYMYtVo8kbdKXQ7gD_5rovgTQSAm-iJx2aaylWJn",
-        "detail": "A source close to the Iranian negotiating team told Tasnim that talks and consultations are still underway regarding disagreements on how to end the war against Iran. A Pakistani mediator is facilitating discussions between both sides, with the primary focus on finalizing the terms for ending the conflict."
-      },
-      {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.989Z",
-        "id": "18yfjlz6ipz",
-        "category": "Politics",
-        "source": "The Washington Post",
-        "headline": "Judge drops criminal case against Kilmar Abrego García, deeming it vindictive",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFE5ZjmsKxUCLiL9CFoknHE8dVMJVarfopGqzVVqz4gpx8mXu0leYVRbkWVg9LDf7MxhkP4IpCvpZkmx7ghtml0iUM5oU84nATQb-54Vxq_KmxK_Pwg_tiQ6uiRDH6VOFOfuWo",
-        "detail": "A judge dismissed the human smuggling charges against Kilmar Abrego Garcia, who was previously deported to El Salvador, citing the federal prosecution as vindictive. The case was dropped after a high-profile legal battle where courts ruled his deportation had been illegal."
-      },
-      {
-        "source": "YouTube - AC1G",
-        "headline": "NATO Chief Rutte Discusses Russia, Iran and Ukraine After FMs Meeting in Sweden",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.989Z",
-        "id": "4jismuj5d89",
-        "category": "Politics",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuOsbx7VqRfkqp6gL3G9klTl_n-fwknwtX1Ws34uipU6EctECTyXBh0YPNEaCdHqxNEh2v8NSEBsxCK5XKSEHZN4SNRW6maifBvEH-Uai7wvYxKX3ONZRy8pKiyRRTl1NSuP08G5I",
-        "detail": "NATO Secretary General Mark Rutte stated that the alliance is growing stronger after high-level discussions in Helsingborg, Sweden, addressing Russia, Ukraine, defense spending, Iran, and freedom of navigation in the Strait of Hormuz. Rutte emphasized the importance of countries ensuring the Strait of Hormuz remains open for transit, including by deploying essential assets to the region."
-      }
-    ],
-    "Finance & Economy": [
-      {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.664Z",
-        "id": "014sad41a6tqk",
-        "category": "Finance & Economy",
-        "source": "Global Banking & Finance Review",
-        "headline": "Falling drone debris triggers fire at oil terminal in Russia's Novorossiysk",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcppS6wcUlKCdLt3wGGFspZowLtibfPqE9gAJea8ihnQGxgrG8SIzcWbKijpmJ-7SSmw54zL0fpuGmVtAL5OSu4I2-NaR4rS-MAE9thqbeLkF4mCmGhYYTyfPDJGFYmEx6CDGJ0pGgjHQWmPGkOhw=",
-        "detail": "Reports indicate that falling drone debris caused a fire at an oil terminal in Novorossiysk, Russia."
-      },
-      {
-        "source": "The Star",
-        "headline": "Europe stocks lose sparkle",
-        "id": "pqosfy1i37k",
-        "category": "Finance & Economy",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.664Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGhw7SqLOAmhQLeNDAvAqsg5F2vQn4u85uxy6onKiTwD-UxcCPhQgAPreUgGIgWP4qM4MwwxZWs3BbsB-RzoZl0tSAZG5QTw39p7glrIN80J2vmxxpmfpyaMDjJAjeBtDAFBvzDJ-6vFXr1SJl7p6aS1FOwEtudSUv7TMZM7M7M8J59owL5XXagwFP9inpfQOk2",
-        "detail": "A market rotation from expensive US stocks into cheaper European names has been derailed by the global energy shock tied to the Middle East conflict and the obsession with artificial intelligence."
-      },
-      {
-        "source": "The Guardian",
-        "headline": "UK pitched single market for goods with EU",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.664Z",
-        "id": "1vbey0p2fyj",
-        "category": "Finance & Economy",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFXcgMRQRvXdKh3IYWCGMWkJhXIcbqd3ULY_akVRQl1noGpzw_0uQ8ycxNwOxLPVL_US_6wIjkYO5lJxnjbMUzgjgZXomFxQROgK_HuT2I_hWlOxIB1yV1TSK4KVUZKFSHH",
-        "detail": "The UK has proposed a single market for goods with the EU."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFYUms5_wS6ggVnCtvFw8DEpxMBKTcp2N9kNnBytr4YDPaKCoX4_D4EQ6aPSeM-bHeYH8bSWX7LCNlWwjSlyuXq3Fd-rm6CbSlLOCw-RzjDWAQDBfxp_SypD0SAEk2CWVtJMuuHmrYzUOliNka5WDkKzjdAyFkiXtvT5wqNWqAjSz21FRW5sErUFg9BHrJibQNbYh31VAc5-zaPt7L_-uXBbaYNucaBhX-DNSXtyVrSUhWQAVICp9DCFFjHTdH5glwW",
-        "detail": "The Malaysian Ringgit ended its three-day rally against the US dollar due to ongoing US-Iran negotiations and central banks adopting hawkish stances; Malaysia's trade performance in April 2026 saw a 28.6% year-on-year increase to RM336.73 billion, driven by strong E&E exports.",
-        "source": "The Star",
-        "headline": "Ringgit ends three-day rally against US dollar amid geopolitical concerns",
-        "id": "ph6vw9z2nd",
-        "category": "Finance & Economy",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.664Z"
-      },
-      {
-        "id": "i156bded0d",
-        "category": "Finance & Economy",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.664Z",
-        "source": "The Manila Times",
-        "headline": "NANOBIOTIX Announces Full Exercise of Underwriters' Over-Allotment Option, Bringing Gross Proceeds of Offering to Approximately $100 Million",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQElsvbTPvGG5CAUsCDeyBt4_TnexgaosL9f6dAE3_o0aAon3GgYeWSEOuF4Z2qQtlBUp9COGq0bdyPbc8X6lf4u1iVQ8s25a4c-qqIFb53uOmEWjxDYVD7Ja441s5gKnuM8xyLD7Ewz4gSzNIBUdTAueHjhOWwpUu4sU2hzXoQFV7_kZXTlkEd695_u3IQWn8kN97HBRcYxBUBnzpOkZRNlMtuunwXxfdfTIdumlIiceCEaESBLI2OU00OkTQ6hYSnRsfs45QC2VPAa7A09LjYFW8ErSMxp-zuvZucoq0NAqeTg0r6sHXEGWxJ0IkmaMi5ilPFw17makXrVyEsbYO-UhIMtnsOdC7xNUIr4Nk8=",
-        "detail": "NANOBIOTIX, a biotechnology company, announced that the underwriters of its global offering have fully exercised their option to purchase additional new ordinary shares, bringing the gross proceeds to approximately $100 million. The company believes these proceeds, along with existing cash, will cover working capital needs into 2029."
-      }
-    ],
-    "Zimbabwe": [
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlqWPQmUprMIP-Z-7cCvi6pN17h6APf1VYwI_lsvZQnLBu0JRkRpUNbEdBkZs_4OBpoOJjNLQrU5EElVw4vqUQGXe0FQhDJK4DRjt1hx6JNWGlkjXq",
-        "detail": "Police in Zimbabwe are conducting a crackdown on knife crime following a surge in violent attacks involving knives.",
-        "source": "NewsDay",
-        "headline": "Police crackdown on knife crime as violent attacks surge",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.072Z",
-        "id": "7eisx6hb5c3",
-        "category": "Zimbabwe"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlqWPQmUprMIP-Z-7cCvi6pN17h6APf1VYwI_lsvZQnLBu0JRkRpUNbEdBkZs_4OBpoOJjNLQrU5EElVw4vqUQGXe0FQhDJK4DRjt1hx6JNWGlkjXq",
-        "detail": "Harare is experiencing a wave of vandalism targeting prepaid water meters, disrupting water access for residents.",
-        "source": "NewsDay",
-        "headline": "Wave of vandalism hits Harare's prepaid water meters",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.072Z",
-        "id": "qcyq972hjpq",
-        "category": "Zimbabwe"
-      },
-      {
-        "source": "Zimbabwe Situation",
-        "headline": "Commercial milk production surges",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.072Z",
-        "id": "wllnrniza3m",
-        "category": "Zimbabwe",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1qhNHbhaFn1JysGOevpbIMVzLCzwbr2HQde3sPUnsxKa4Qho-59zF1Vd_riWns3rjt7pXFB1r2ppbWkdtO8VAts2Oil7RToFStK-GRP14gcDbvqVWr0b1iL525CE=",
-        "detail": "Zimbabwe has seen a surge in commercial milk production, potentially boosting the country's dairy industry."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1qhNHbhaFn1JysGOevpbIMVzLCzwbr2HQde3sPUnsxKa4Qho-59zF1Vd_riWns3rjt7pXFB1r2ppbWkdtO8VAts2Oil7RToFStK-GRP14gcDbvqVWr0b1iL525CE=",
-        "detail": "Namib is making progress in restarting the Redwing Mine, with dewatering efforts advancing.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.072Z",
-        "id": "o1y8ku2dtzq",
-        "category": "Zimbabwe",
-        "source": "Zimbabwe Situation",
-        "headline": "Namib advances Redwing Mine restart as dewatering progresses"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1qhNHbhaFn1JysGOevpbIMVzLCzwbr2HQde3sPUnsxKa4Qho-59zF1Vd_riWns3rjt7pXFB1r2ppbWkdtO8VAts2Oil7RToFStK-GRP14gcDbvqVWr0b1iL525CE=",
-        "detail": "Twenty schools in Harare have received Starlink connectivity kits, which aim to improve internet access for students and educators.",
-        "source": "Zimbabwe Situation",
-        "headline": "20 Harare schools receive Starlink connectivity kits",
-        "id": "2t8igd2iyqc",
-        "category": "Zimbabwe",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.073Z"
-      }
-    ],
-    "Opinion/Editorial": [
-      {
-        "source": "The Guardian",
-        "headline": "The Guardian view on Britain's coming energy shock: mini-measures won't suffice",
-        "id": "uxk6jk4l36",
-        "category": "Opinion/Editorial",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.458Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbDpAjP9zscw8hp84LeBv6sOwsPufDmqbDGd0adqA2lQ2pqpad5u42qhIZx1YOAxQL3yOrM1z74_VPJ2INt_IsgXo9O5wRs9MbUufwf2OMY9606apEm00zxOcz2bWqGC_b_XkVNdtO",
-        "detail": "An opinion piece discussing the insufficient measures being taken to address the impending energy crisis in Britain."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbDpAjP9zscw8hp84LeBv6sOwsPufDmqbDGd0adqA2lQ2pqpad5u42qhIZx1YOAxQL3yOrM1z74_VPJ2INt_IsgXo9O5wRs9MbUufwf2OMY9606apEm00zxOcz2bWqGC_b_XkVNdtO",
-        "detail": "This editorial celebrates the success and importance of gardens in galleries and museums.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.458Z",
-        "id": "ail1wfecncp",
-        "category": "Opinion/Editorial",
-        "source": "The Guardian",
-        "headline": "The Guardian view on gallery and museum gardens: a blooming triumph"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8jWZoRF88NxkOLQnLhNuXCVlrUQy1i4mQ-9cj8Qiup_CoCwBQqa3rFGngF0-yPOlrPizc99dWbXVfbT1OXqa6_GRCQrB00_PTu1OatRQdkkCJKMxQgOI-54uc1OdwpLnqDzBKuQ==",
-        "detail": "An opinion piece discussing the misalignment of interests between India and the US in the current global scenario and the need to address this divergence.",
-        "id": "xtpu8ypjir",
-        "category": "Opinion/Editorial",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.458Z",
-        "source": "The Indian Express",
-        "headline": "Pratap Bhanu Mehta. Today, India and US interests are not easily aligned. Let's confront this."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDK-R8iUekfaNFfm5jSJ2zkApgWG4mIy8Lg8MIHP6ICqHEBLWfN4etxwEreneDMmuSDDo_GVl3mxtiQ7zM_3JaLN91zZV6sG8cXHg_z7-oeRtJMkA7LdG_ip8Njc2bH7eU3NM",
-        "detail": "The Washington Post's editorial board discusses how China's tight control on rare earth elements is now causing market reactions.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.458Z",
-        "id": "enjdhcm9t46",
-        "category": "Opinion/Editorial",
-        "source": "The Washington Post",
-        "headline": "Editorial Board. China squeezed too tight on rare earths. Now the market is taking action."
-      },
-      {
-        "source": "The Washington Post",
-        "headline": "Editorial Board. A warning from New Zealand.",
-        "id": "kwh4bod9jl",
-        "category": "Opinion/Editorial",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.458Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDK-R8iUekfaNFfm5jSJ2zkApgWG4mIy8Lg8MIHP6ICqHEBLWfN4etxwEreneDMmuSDDo_GVl3mxtiQ7zM_3JaLN91zZV6sG8cXHg_z7-oeRtJMkA7LdG_ip8Njc2bH7eU3NM",
-        "detail": "The Washington Post's editorial board issues a warning based on events or policies in New Zealand."
-      }
-    ],
-    "Education": [
-      {
-        "source": "The Star",
-        "headline": "More than 160,000 SPM school leavers offered IPTA spots",
-        "id": "1nvuyogvfky",
-        "category": "Education",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.227Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH87GXw1dPmfcpUuW3MAyOqEIr3bfMg3gLs__RHMiow4ANqfqGP_iUe6LMDNv5SruPD5dHN5UZIR_BHNwWK7zwYdnhQCSeBSdXdr29Dz9jUTiDzYKOYEgTUbe-mo4SWcxHQYctl-yM0rtlx0IjsktnOCkIjIsUODty9X4xahizRsGAIolZatCeRSqdiDDfbC1rOexg1aJuaX4b8j6dTolG270I=",
-        "detail": "A total of 169,803 Sijil Pelajaran Malaysia (SPM) 2025 school leavers have been offered places at public higher learning institutions (IPTA), representing 72.11% of the total 235,480 applications received."
-      },
-      {
-        "id": "sw9wdob35a",
-        "category": "Education",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.227Z",
-        "source": "Seoul Economic Daily",
-        "headline": "Rural Schools Face Widening Education Gap Under Korea's High School Credit System",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFw9EPKsytxKSC5KG39fgK5u1uR4gou3eIAEo1jth3Ki79shnzT3bP5OId2TsSkUNg7V9FPDaNEM1YnbXilVPhNfOWB7arCr6eWgS-hslgaYifILnQjfOEBA-4poHIY4U25_TABgWSytl4swIM2GqkVd0NTqS1rMZjpaV4TUBXfiu0jeKS8-PPfH1lAMgIDxXA-UmNRnFuSVGcbyYCI-Qc=",
-        "detail": "Small rural high schools in Korea are facing limitations in course choices and teacher shortages due to low student enrollment, raising concerns about a widening education gap two years into the high school credit system rollout. Schools in North Gyeongsang (Gyeongbuk) and South Jeolla (Jeonnam) provinces are particularly affected, offering fewer courses and employing fewer teachers compared to regular high schools."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEJ92HPTOOcEpFR3PzWfl_Nzwr4MtY1zLMVrX1QxZgSfzVWjdzDqSPddqv16X74HR_IobY4_tEpgkKaqvTDj_tXhzvOkf3zmA64xceAus0DkgOrdr5GxGR4qqbVD1RwoQ==",
-        "detail": "British Council staff in Italy are planning a strike in response to a proposed 80% reduction in the workforce.",
-        "source": "The Guardian",
-        "headline": "British Council staff in Italy to strike over proposed 80% workforce cut.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.227Z",
-        "id": "dywk1eve2bp",
-        "category": "Education"
-      },
-      {
-        "source": "K-12 Dive",
-        "headline": "Miami-Dade County considers 9 school closures, consolidations.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.227Z",
-        "id": "zu0e3x0lhea",
-        "category": "Education",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFbuxTZ1_YBS8hCpBDdl5kGxROL0J2Nym7nEHBW6CLvtcrSbRVfE1hbejqloIXanbRAph9z2KvBXOvCtZDe-jYmjHSCqXxa9Cxn_TBzMT-8EESj",
-        "detail": "The Florida district saw a 4% decrease in enrollment between the 2024-25 and 2025-26 school years — driven largely by a decline in newcomer students and is considering closing schools as a result."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFn_HfsKQNdzorQudKkvwh_EBOty-TTkXxxg3Dr-ON-iyS_1ANELVpnVLj2D9e4JPW3BJwxd9raAPVCgBZ_fC_oZHlto4k6DE5rt2VtcmDn9u2BN-fv9fEruXlyuqoarsPhLjqVv9X51Y8uhAsRB0Qsv2-Ll9fRo1cpYE13oldBdzREOQ==",
-        "detail": "Teachers experience poor work-life balance compared to similar working adults, according to a RAND survey of teachers, released in October and funded in part by NEA. Three times as many teachers as similar working adults said it was difficult to change their work schedule or attend to personal or family matters while on the job.",
-        "id": "u48o4hnsuns",
-        "category": "Education",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:27.227Z",
-        "source": "NEA - National Education Association",
-        "headline": "Teachers Need More Work-Life Balance"
-      }
-    ],
-    "Entertainment": [
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFcz9u5-_3iK89mUcUzhrtaZwfOMb8J_XS-Ur5iDKfUyjHQ6m1DPRG8E3basiv9w9di00P0CUiR2IkqVY_QRZvPiEO_pYckank-1K3VB9Un6wfb1feCXWPsqWwl3grdDS6b5I4N7TX0XifNjaooJqVPDADGC5rpBw-rztG4vtSEch4r11F-Br_Us_wn4lcRe6_zLos4_j6ElCzpgUyTJLtVlV_nrzOb5jPQQiIzq17n297x",
-        "detail": "Tom Hardy has reportedly been fired from MobLand after season two due to tensions behind the scenes. The show will continue without him.",
-        "id": "dp0s4o8junw",
-        "category": "Entertainment",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.006Z",
-        "source": "Mint",
-        "headline": "Tom Hardy fired from MobLand as tensions emerge behind the scenes: Report"
-      },
-      {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.006Z",
-        "id": "vyb08ieixn8",
-        "category": "Entertainment",
-        "source": "Republic World",
-        "headline": "'Dragon' First Glimpse Out: NTR Unleashes Fury In KGF Maker Prashanth Neel's Pan-India Opium War Drama",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-V8RQLyy0nJgie3EpZDi1sEyOiU2FWyD0klz0a-7UgRAeoq6Qup3yTX47j2opwIrpItxkwEtCJj5_FmLklQoMiqqkCTSD51MVATV7MGEOswzqsNPMRnpN9VRRNUP0TLXlntmJIHbTOdK4vanDKh4KIhAKrVx6RSYA_AHqAxc6mBBOe1-tqBmArF_dIxEKfmmzr9qHlQk12zdbyejpMoldRJiLpE6ICGsNUfDySDwmaZW-OTCSau4QMf20UtPffotW7QPEGjaVNGUKMltCg9Ke8AJwwgK-quAR76gn",
-        "detail": "Jr NTR's 'Dragon', directed by Prashanth Neel, reveals a first look into a fierce opium war drama. The pan-India film is set to release on June 11 next year and features a huge ensemble cast."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAN23iMroSR95kYJn2g5lWlNGITZqTl68K5PXQBuJxokYKVIujgzT4hihSSeonlmVwV3WcokVwvjhGpLs9VtLCrNf5wm-BBG3RAw4LetzFnWdl-7oBTC1JubkqFLSdg9dIWMJdq_DWkfb7oD9X2OGG7NuHt4n6Rs6NJl5sc9OVhxohkeiVrIBU-L0gAS0qXRt-rhTM0RQaLvLODG-nNCCBMOtiqRnM8pXUIJ3i",
-        "detail": "Ricky Martin's concert in Montenegro was halted when someone released suspected tear gas or pepper spray into the crowd, causing fans to seek safety and medical attention. Martin resumed the show after the area was cleared and deemed safe.",
-        "id": "qmzw1j0ja5j",
-        "category": "Entertainment",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.006Z",
-        "source": "LA Times",
-        "headline": "Ricky Martin safe after 'tear gas' — or maybe pepper spray? — stops his concert in Montenegro"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGlQjmD0f4LxIcYtiSVPOi53oOte8uefL2Hkq7o3bROGQ5Br8gONYGNPTdlJMCN8E-iAZR1f5mOZY2akmPjOA6ihEpbf08Zs6mjvSWn7Hwxa5Y68sW90Ixaa6OeLanf_QQoVVRso9tDhzerw4TebI1D-9UTB0eVC26YkyDl5urqRk5sd3GOynsB0PU=",
-        "detail": "Anne Hathaway addressed rumors of plastic surgery, denying she's had any major procedures. She mentioned a hairstyling trick that mimics a facelift effect and stated she might consider a facelift in the future.",
-        "source": "Extra TV",
-        "headline": "Anne Hathaway Shuts Down Plastic Surgery Rumors",
-        "id": "ibfwhvnxh3p",
-        "category": "Entertainment",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.006Z"
-      },
-      {
-        "id": "sd9t7rkuqi",
-        "category": "Entertainment",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.006Z",
-        "source": "Entertainment news",
-        "headline": "Puig and The Estée Lauder end negotiations without a merger",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdciBgcRDp0FKjxeU9RGG4pcx4DOiyZeHXAQd2FEcs79iawAbCBXf5e6ODw2vC6Gwo4zbaNjjMHcn48o_Sp5psCzhgJEF4_VSiP0bTkY6JM2Oaw_YdLHCVq7D7M9zVtDrMMA44qlk4Ywr2g4D0rSkFpt75DmVfeEcDffSMHcFXNWvlMZTOg5xv9JAAFn0c",
-        "detail": "Puig Brands and The Estée Lauder Companies have ended merger negotiations. The merger would have created a cosmetics giant with a large market capitalization."
-      }
-    ],
-    "Crime & Justice": [
-      {
-        "source": "CBS News",
-        "headline": "Lawyers shot outside North Carolina courthouse",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.955Z",
-        "id": "7j7wa60zf7u",
-        "category": "Crime & Justice",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvkVYth4TNlypl1OxEVywYq_aRtFDR-iAMrnrjjHnCrxgf3Kj2Gokatl_7PrRt04QZgzmHpo7-UD3hgXVjmyRk1cEw-m1CN1QIwQViAc63sSZfGQulPBanQA==",
-        "detail": "In Raleigh, North Carolina, a woman's civil case turned into a criminal one after police said she shot two lawyers outside a courthouse, and both were hospitalized."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE67ZjrZFWA5ilo_Qt3PgZr8YwRkWN6Uzb4nPpGat_4jzO3_wdBqSSYaXfMQ4CFvdt0J6l-tx2Mr9u3Z4U3El0eSf7UBccu9QgdzEoa_dYB0yfbpw==",
-        "detail": "Aimee Bock has been sentenced to 500 months in prison for her lead role in a $250 million fraud scheme that exploited a federally funded child nutrition program.",
-        "source": "United States Department of Justice",
-        "headline": "Feeding Our Future Ringleader Sentenced to 500 Months",
-        "id": "cgytiur4lao",
-        "category": "Crime & Justice",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.955Z"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE67ZjrZFWA5ilo_Qt3PgZr8YwRkWN6Uzb4nPpGat_4jzO3_wdBqSSYaXfMQ4CFvdt0J6l-tx2Mr9u3Z4U3El0eSf7UBccu9QgdzEoa_dYB0yfbpw==",
-        "detail": "A Georgian citizen was sentenced to 37 months in prison for laundering more than $1.1 million in illicit health care fraud proceeds to his co-conspirators located abroad.",
-        "id": "7ajfmwcf1te",
-        "category": "Crime & Justice",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.955Z",
-        "source": "United States Department of Justice",
-        "headline": "Georgian Citizen Sentenced to Over Three Years in Prison for International Money Laundering Conspiracy"
-      },
-      {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.955Z",
-        "id": "50ic41ug9z6",
-        "category": "Crime & Justice",
-        "source": "The Guardian",
-        "headline": "One of shooters in deadly attack at San Diego mosque was previously flagged by FBI",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0aBhEC_dQf_aj2Gtv64t9q85nUb4kG5f6vmm3Gu2-Uiwq2An61Nb0NgBe1T-hYqvXoZJ6AE5wSMJKkB42BVcuoXj1Itehc68eHbftXm6BgtKRqQ7gckejlNXfDpNtIKUfeWtyqxC_",
-        "detail": "Officials seized guns from Caleb Vazquez's father last year amid alarm over teen's views on mass shooters and Nazism."
-      },
-      {
-        "source": "The Star",
-        "headline": "Jamal Yunos makes public apology to settle KJ's defamation suit",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:26.955Z",
-        "id": "ej7pw20u7e6",
-        "category": "Crime & Justice",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFO-AkpSsBhEieGojZDSKuuH_kW_BtykA_df3MUBnh2EURSsa9HvJ8sdv6hWeTH0rTsSIOevY6PLf-hRm0nU7DXN5Ih2tiTohgPupYKBnIkg71FKuaqFkTwxDzZOYSD8L228uiUTxiIksdvPTdSpScril9fNCzvzjabeu9yyYzoZQzOQaHVG7J2RTLQDNFcDiVk_LwoTpwCkkVMqVzCvudtWx7h2TB7Ob19W6JHUsg=",
-        "detail": "Sungai Besar Umno chief Datuk Seri Jamal Md Yunos made a public apology at the High Court to settle a defamation suit filed by former health minister Khairy Jamaluddin, admitting that his allegations were untrue and without sufficient proof."
-      }
-    ],
-    "Technology": [
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEC09t5h4UgkmZwwiByyUSoSb7UU8UAFPr11FFSX9VnSp6iTy9Zg5CCjm4vMolVwFDXCB8tpuV0Fla79XdqdOP7noxvs0tRgiXko2dMXrJwfooh-vSFBSfBQjjY8Jw3C2R2JWIDRxdiO6rdmbZG5Yl3lnLTwPjzieCWCTghJHJ9TjIMowJ3NbRfcjyLrCzeqXxUEmFOe0dE35Yjrqg7hyxVzZvml_zvsUD-ASZgkmVq23U7UYDpTilgxwIxg4C0Ca9wHDlDXmtVayWBV_Ez-Ue8iBCufCr9Vg==",
-        "detail": "The companies will jointly explore a new paradigm of livelihood services featuring “AI + Cloud + Computing Power Collaboration”, focusing on sectors like healthcare, employment, and government services. This collaboration aims to connect the full chain from computing infrastructure to scenario implementation, unlocking large-scale growth.",
-        "source": "Asia News Network",
-        "headline": "TECSUN SCIENCE & TECHNOLOGY CO.,LTD. Partners with QingCloud Technologies Corp. to Forge New Engine for AI-Powered Livelihood Services",
-        "id": "x14cp45ztd",
-        "category": "Technology",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.152Z"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzVdanVdQZd3lqi3qAyxVRcbACiCPTIjUUPwEiyMHzWCpS7ubaouO2ZlpQtJ60Bf-uQJ_RBrsv0-klsEv52_6GbSEE-NSOlhvphvaPlb7heV5EI3q1Z24BPyT_5KY7wwgkXmkQOmhWpToHQhY6SyvyeRYCwvdpA-zBNdYRzIF1uUrVrN1oNo9VQOtx-MTh_nGYndXIR3GqwROYxzjfQ6qzUtahqJ3F7w==",
-        "detail": "Cybersecurity company TrendLife reports that impersonation scams are dominating the threat landscape, with scammers posing as trusted entities to steal money and personal information. More than half a million scam attempts were detected across Australia and New Zealand in April alone.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.152Z",
-        "id": "ov95qfdzgrh",
-        "category": "Technology",
-        "source": "Waatea News",
-        "headline": "Cyber Scam Explosion Hits Aussies And Kiwis As Impersonation Fraud Surges"
-      },
-      {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.152Z",
-        "id": "rp97uamtl",
-        "category": "Technology",
-        "source": "The Guardian",
-        "headline": "Spotify and Universal Music agree deal to let subscribers create AI remixes",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2MDguIx81raL07RKtnferRQJ2eU1s5iYnKm5ShI-gQtpdkkaDV5etSntgVTc6INrEoI4t1hzmj4SwLTY_CX_V3aULS4bCipM87omLxYkXw7f4VZwvDTw8jhIHt_Eprq5DMvkE",
-        "detail": "Spotify and Universal Music have reached an agreement that will allow subscribers to create AI remixes. This deal signifies a step forward in the integration of AI in music creation and consumption."
-      },
-      {
-        "id": "tyri6p1b5g",
-        "category": "Technology",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.152Z",
-        "source": "Mirage News",
-        "headline": "Sodium Poised to Overtake Lithium in Battery Tech",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGXIwq6R_sOg6qH3u72qE-xs1XCXOoxbrAmQxfsd5qnkGEWiwIuwyw8g-RSiZVX0-XNSCdT3_dWhVID_9jKbiz18brZqC7quWB5yq1KntdgGnpuK5vzpGq-X5HodkjhnPqif7pqZHxhcXz4RBud8je4Uzcy8_Qtw6n_QyPkjRcgjowHlVpIci9uGhYI",
-        "detail": "Researchers at the University of Limerick's Bernal Institute have produced a battery combining the strengths of sodium and lithium, potentially leading to more sustainable batteries. The new battery design addresses the shortcomings of sodium-ion batteries, offering a promising alternative to lithium-ion batteries."
-      },
-      {
-        "id": "h0pni1qr8r",
-        "category": "Technology",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:28.152Z",
-        "source": "Taipei Times",
-        "headline": "AMD to promote packaging ecosystem",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFUcdlQ8Pj_9pr9Slef_9mtatzbrYOGfXvCjybrUOVdh7RQNw796-VSeCtn7121xH-37Hcx0aapQuxWpULqkQmjdD1mJrTyBa20NIADtTNMgOc7YMrO6gLgRQBmSFeaJaAW2ugOnz1X-VfyEQnSWDNX2m5OrcF7D4sFprw4DDo=",
-        "detail": "AMD is investing US$10 billion in Taiwan's microchip ecosystem to secure advanced packaging technology capacity over the next three years, driven by the growing demand for AI infrastructure. The investment aims to foster a new advanced packaging ecosystem in Taiwan using elevated fan-out bridge (EFB) technology."
-      }
-    ],
-    "Lifestyle": [
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFx4Z4WBsMYiQB2wdRYgEvDX93Y_9pP6fRhhpTG9B1jFxN0CgPRDEEcPWw9RnmBWHZJhPv1tIzTf1odMU-uyeJT9qdU8eH-P0g7OJ3KmGQcuGl7HNGkp_M-lguZYOBsE5cuR4WHU12KXrodX3lbqAkeOOUWve4wgwqM38a7mMuNOH7x74ijW2tdOBfAe18g1g7tJcrIPPVEQrV6rF_X3tt-98ZXrj5DEgoOfzxhb_lh45x-Kxg0lEEWn7RPPNGEmRiVUVYJMntizFsI",
-        "detail": "Everlane, known for its ethically sourced and sustainable clothing, is being acquired by Shein, the fast-fashion powerhouse, in a move confirmed by Everlane's CEO Alfred Chang.",
-        "source": "The Manila Times",
-        "headline": "Shein Moves to Buy Eco-Conscious Label Everlane",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.153Z",
-        "id": "luubnxrhf29",
-        "category": "Lifestyle"
-      },
-      {
-        "source": "Geelong Times",
-        "headline": "Outstanding country lifestyle in sought-after Buckley",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.153Z",
-        "id": "7x1r47uechp",
-        "category": "Lifestyle",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS_zPV9gJ7TStu0wOSpo5rNbF6K55eVyEY4IAv0qgS0DcIxh5i6Dh_cw23kn7QL9ie1xf7Nt0mkzelU0nprI8KoS_vz1CkZuSFmP2MURGniW6epUSnFHiDOFTNQgAxTRcZikD6Be2ahR9o6O8gC4A77karA1MMu24DLHijvX0RNKZYt1y9PEYrxB0konCgUwEz4kAsW3giO8reHDYIoFwupkvweL332-8",
-        "detail": "A lifestyle property in Buckley offers the very best of country living while keeping you close to the Surf Coast and Geelong, featuring a wide verandah and rural views."
-      },
-      {
-        "id": "yfmpo7igx9o",
-        "category": "Lifestyle",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.153Z",
-        "source": "AP News",
-        "headline": "Highlights and memorable moments from the red carpet fashion at Cannes 2026",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH57O6iZZwNwhMCXIFPW8nZunCAk2ssGNdq3fFxW8cHnUXgrq5ppBWoJBxadCUiTdFEyZ9UC-1wEpuln2AZIslVsKRDCTx5kB3-pE40fMT--H5lsGvfXn0=",
-        "detail": "The Cannes Film Festival is wrapping up its twelve days of premieres and high fashion, with the red carpet serving as a renowned fashion showcase."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEonQdr0TYcKL7Do2hEq70sTcqn8fDCHQhH2pUEI9TJdl6e-015o7TuqOOaXZa39nJmNU75NzZBhUBjMrRoissMzpwfFoQhlPt_-GNsVwcP_RHcAtUkCsE=",
-        "detail": "This article provides a list of activities and events to look forward to between May 22nd and May 28th.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.153Z",
-        "id": "rfx733lmvdh",
-        "category": "Lifestyle",
-        "source": "Bangkok Post",
-        "headline": "Guru’s Weekly Buzz: May 22-28"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNJmST9Fq7xJEBgoShdPaTp-cTU0bwzL03p731KshYSJ9kxP2T6UnMM9_giDKxyLk3k0C97VLGGLleSONroVbmex_te_XRneoHNssRLRSmEaR81LnrlUtvmLzei51JnIz-_T9K",
-        "detail": "Chemicals in everyday plastics can interfere with our hormones and while no direct link to fertility has been established, they have been associated with issues such as polycystic ovary syndrome and poorer egg quality.",
-        "id": "05jzd29x1x7w",
-        "category": "Lifestyle",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.153Z",
-        "source": "CNA Lifestyle",
-        "headline": "From takeaway containers to receipts – how everyday plastics may disrupt hormones and your fertility"
-      }
-    ],
-    "Science": [
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE4aBR0Jh0ELP5RJNblMejSWxP8vaK0elHVc6EZoo4wGJHy4UjuBRYZjOR9wp1F9i4dSa5G2r_VQWSIEP4Xz9mWKPWxxBAo1v-AhdS0g7VWQBR02GnqgUs9",
-        "detail": "Researchers have discovered the atomic structure of a protective surface layer on gold that prevents it from rusting or corroding, revealing why this precious metal remains lustrous.",
-        "source": "ScienceAlert",
-        "headline": "Scientists Find The Atomic Reason That Gold Refuses to Rust",
-        "id": "nx8jyo6frjm",
-        "category": "Science",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.632Z"
-      },
-      {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.632Z",
-        "id": "hi53jqav15w",
-        "category": "Science",
-        "source": "The Guardian",
-        "headline": "SpaceX launches its biggest rocket yet in test flight from Texas",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZyC40841-2aXd-NtSJj2clOED6L8nZSKtZXhhV9q00-GhR2w4zjeD5JDuVo7ikj__BSTTRk42WJ0PR3aPUttBl-Y-AlarQfgTC0rJ3G0hTIUBJfhwnmJkA-S7Fgea",
-        "detail": "SpaceX has launched its biggest, most powerful Starship yet from South Texas, carrying 20 mock Starlink satellites on a test flight extending halfway around the world."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG71WbhnL-vVXgD-ES5LXfzQvHTIQD_i8R5rk8a418EcEoJNwCNTGeSbBjte3scGk0KBhXuVtGTFYXhRClkcajR0HcXsV4TQJq7xAc7rPnnUGTGSTK9ic0I",
-        "detail": "Scientists have identified potentially cancer-causing chemicals hiding in many everyday foods, especially those exposed to high heat cooking methods like grilling, roasting, smoking, and frying. The compounds, known as PAHs, can form during cooking.",
-        "id": "ua69jevwhm",
-        "category": "Science",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.632Z",
+        "fetchedAt": "2026-05-23T14:00:29.440Z",
+        "id": "vf9wg22vfwo",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH84l3ulYOmmbi8aenM-05SipsWCABJuga0gGQqZEh3FdnN7JSSeonTwpBBZNmqHxMArMt_7zSX0feD5xbakftvet8oCkMJ1g1faht2-yIph45H-WcSSsV8sCcrZWF_B302w-iZdtI=",
         "source": "ScienceDaily",
         "headline": "Scientists Uncover Cancer-causing Chemicals Hidden in Everyday Foods"
       },
       {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEW_FjDhXrwWo8pUYTFj4-1W2neq_s9JSfp4bMIKfI5qygdgnCds9QGVDuhtYbj7aKvjl8rR4UR-uva7_VJKBdtgbACYH55q2AbOqQdAeZi1tUF1MhueCM=",
-        "detail": "A recent article explains the physics behind why gold remains pristine. The atomic structure of a protective surface layer on gold prevents it from rusting or corroding.",
+        "detail": "A recent study has found a correlation between higher caffeine intake and greater severity of depression. The study was presented at APA 2026.",
+        "source": "Medscape Medical News",
+        "headline": "Higher Caffeine Intake Tied to Greater Depression Severity",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH9u4heq0ii8R0Isw089yv5-pt1icEEeomSfHyIAOl3nBEL77-oqaMsrSQq7c9z1MRbf5zXpdpo2rwgJDFBuL2dg1XVHGTzg5uPe2LqLJ-KOvYz",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.632Z",
-        "id": "nmrs76smtyk",
-        "category": "Science",
-        "source": "Science News",
-        "headline": "Physics explains why gold stays pristine"
+        "fetchedAt": "2026-05-23T14:00:29.440Z",
+        "id": "zm7ts5zb7c",
+        "category": "Health"
+      }
+    ],
+    "Lifestyle": [
+      {
+        "detail": "Aishwarya Rai Bachchan appeared at Cannes 2026 in a stunning powder pink gown with a cape, making a grand statement.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDqvY1MJZgErH_sN0sTWBD1_XFHa96NSi955vlXmzNGlKLFEd-qqERuvUKYMXBHIemOudb5V_OWdWTp96B1ZsAl4NHT2Fr9DwTWVEyr6ozKAKk_RHHOA8RBS61xPVCAjLxWLvYjDg=",
+        "source": "The Indian Express",
+        "headline": "Cannes 2026: Aishwarya Rai Bachchan is a sight to behold in powder pink gown with cape",
+        "category": "Lifestyle",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.253Z",
+        "id": "um9mm5y97a"
       },
       {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEW_FjDhXrwWo8pUYTFj4-1W2neq_s9JSfp4bMIKfI5qygdgnCds9QGVDuhtYbj7aKvjl8rR4UR-uva7_VJKBdtgbACYH55q2AbOqQdAeZi1tUF1MhueCM=",
-        "detail": "Congo was prepared for Ebola, but now a rare strain is exposing gaps in readiness. The article discusses the challenges of containing the outbreak.",
-        "source": "Science News",
-        "headline": "Congo prepared for Ebola. Now a rare strain is exposing gaps in readiness",
-        "id": "6etmny62ucu",
+        "category": "Lifestyle",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.253Z",
+        "id": "i19tv3lx59g",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDqvY1MJZgErH_sN0sTWBD1_XFHa96NSi955vlXmzNGlKLFEd-qqERuvUKYMXBHIemOudb5V_OWdWTp96B1ZsAl4NHT2Fr9DwTWVEyr6ozKAKk_RHHOA8RBS61xPVCAjLxWLvYjDg=",
+        "source": "The Indian Express",
+        "headline": "Experts call moong dal the traditional Indian superfood: 'Desi ghee daalo isme'",
+        "detail": "Nutrition experts are highlighting moong dal as a traditional Indian superfood, emphasizing its health benefits when prepared with desi ghee."
+      },
+      {
+        "detail": "Airbnb is broadening its services to include boutique hotels, car rentals, and grocery delivery to become a comprehensive travel platform.",
+        "category": "Lifestyle",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.253Z",
+        "id": "eymwdohg1t8",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHi8lp2-L6ZZGfZWSFYr4iSX0X1DI6pU3k1yfibyjp_5D1hLZSXAGqYFxdlanSIqY3q11r7JvLjMsSmtWm0KHrE7lNt9cyKKb4i45xnKIWhxBxTfu6PkjE3bB8i",
+        "source": "CTV News",
+        "headline": "Airbnb expands into hotels, cars, groceries"
+      },
+      {
+        "detail": "Singaporean artist Amanda Heng's 'A Pause' installation at the Venice Biennale encourages visitors to slow down and experience stillness, reflecting on the idea of rest.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEy7B0FdT4yUX9pvWYn8--oF-fNt_iPE5A9mSIzShI9e8wGIJjy-fNJAH_SwpjrwkWCDY1UiJSguZd7312JiEBwDbQalnHEwnVrFCWZsMFuE9qJGJrmwCmqSH6g5ST_g1Ak-As=",
+        "source": "CNA Lifestyle",
+        "headline": "'Find a moment for yourself': Why Singaporean artist Amanda Heng is inviting people to just rest in Venice",
+        "category": "Lifestyle",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.253Z",
+        "id": "spr6p5yk2cs"
+      },
+      {
+        "category": "Lifestyle",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.253Z",
+        "id": "rzqr4f6oh4",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbHTNPK_n7MXobxgIakcfABOJdiBf8Ck5J92mlNQW6GH6n5c-nxI9j7mSVR_9N0yNqFVJYqlZ78FJ5lJEV-WZh3BZTzriqjTG14omTGz0dJUog8f4wjhjPA1gqXdan5bpQT6Z-qQ==",
+        "source": "The Guardian",
+        "headline": "Meera Sodha's vegetarian recipe for crispy one-pan spaghetti with gochujang and mozzarella",
+        "detail": "Meera Sodha shares a vegetarian recipe for a crispy one-pan spaghetti dish featuring gochujang and mozzarella."
+      }
+    ],
+    "Entertainment": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoWawr05MpafO-snfeBRSxuO2tJZgDI4LDODYhJPI-cf3oqB32TXMvav98b_VXjfgnlkULHB-SA0KytPcYxZfDOFRtmSzuKubILee9ymOE4yZUBUah4VW8a6mvydTRiuc=",
+        "source": "Fox News",
+        "headline": "Former Prince Andrew faces widening misconduct probe as police launch witness hunt",
+        "category": "Entertainment",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.836Z",
+        "id": "h7rf5uix4up",
+        "detail": "The investigation into Prince Andrew's alleged misconduct is expanding as police seek additional witnesses."
+      },
+      {
+        "source": "NewsNow/Daily Star",
+        "headline": "Netflix's Virgin River star found dead as police launch murder investigation",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-NqMqmOEqDvbTUi7JiJYxD75HNBY92-TFiJLc_qyxmUDWE3K2QBtVE_ZMmcjlUSavHe9DQK9l2Q2eFNRisaE1s5CKqrO4AFngDeEqT8PpQzR9At6uOVgrHQprqe3UdWYNPJ9450HIjmg2LA==",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.836Z",
+        "id": "v32ca0txkro",
+        "category": "Entertainment",
+        "detail": "A star from the Netflix series 'Virgin River' was found dead, and police have opened a murder investigation."
+      },
+      {
+        "detail": "Irish rock band The Script has announced a new album and a large-scale tour across the UK and Ireland.",
+        "source": "NewsNow/Rockshot Magazine",
+        "headline": "The Script announce new album 'The User's Guide To Being Human' and massive UK & Ireland arena tour",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG-NqMqmOEqDvbTUi7JiJYxD75HNBY92-TFiJLc_qyxmUDWE3K2QBtVE_ZMmcjlUSavHe9DQK9l2Q2eFNRisaE1s5CKqrO4AFngDeEqT8PpQzR9At6uOVgrHQprqe3UdWYNPJ9450HIjmg2LA==",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.836Z",
+        "id": "ie4c9prenn",
+        "category": "Entertainment"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE1Rdd9PmU5oX1D2J-EZhm5RjyKq1C97q2o7VieEejFN7I2wYGm73V9kWqQUSEyTZZ8EwAsfI05DDbgTYiJsHaf1LcppgZ0aYKGeMi6iGXxyzHWlA31cilTeMnMTBd87PJC",
+        "source": "CBS News",
+        "headline": "Britney Spears argument, DUI arrest on video",
+        "category": "Entertainment",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.836Z",
+        "id": "wzj16p5gaxi",
+        "detail": "Newly released video shows Britney Spears' DUI arrest in March 2026, where officers smelled alcohol and conducted a sobriety test."
+      },
+      {
+        "detail": "A Ricky Martin concert was temporarily halted due to a tear gas incident affecting the audience.",
+        "category": "Entertainment",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.836Z",
+        "id": "wabjphksujh",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESWIBkg31JqvX6PYsNA1THfCtaRASlF84GkXDGnRzFn8gKe8T7HB_kr_KM99opDqRY7FLqg0pcD8RkzMhh_1r7my9n5pCEmdfTs6zVTPuU5tc8VWw=",
+        "source": "Entertainment Tonight",
+        "headline": "Ricky Martin Concert Interrupted by Tear Gas Incident"
+      }
+    ],
+    "Crime & Justice": [
+      {
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:18.347Z",
+        "id": "b3hpl486u8",
+        "category": "Crime & Justice",
+        "source": "United States Department of Justice",
+        "headline": "Regions Bank to Pay $4.9 Million to Resolve Civil Liability in Connection with Ineligible Paycheck Protection Program Loan",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFykQ-LjGGyUC665Mn3wglJfU6-ovX1oNe_PHmeHRTK4AY3iYN0PyqEobAcGigSgDgiERUJv1jBpqU-u3Eiib8O2f4CZmC0ZMBrkmej8grny4vOT3V6iMY=",
+        "detail": "Regions Bank will pay $4.9 million to resolve civil liability related to an ineligible Paycheck Protection Program loan. The resolution demonstrates the Justice Department's commitment to ensuring the integrity of federal programs."
+      },
+      {
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:18.347Z",
+        "id": "72p3dauawom",
+        "category": "Crime & Justice",
+        "source": "United States Department of Justice",
+        "headline": "12 Members of Violent “Crown Hill Enterprise” in Indianapolis Indicted on Federal RICO Charges, Including Murder",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFykQ-LjGGyUC665Mn3wglJfU6-ovX1oNe_PHmeHRTK4AY3iYN0PyqEobAcGigSgDgiERUJv1jBpqU-u3Eiib8O2f4CZmC0ZMBrkmej8grny4vOT3V6iMY=",
+        "detail": "Twelve members of the violent “Crown Hill Enterprise” in Indianapolis have been indicted on federal RICO charges, including murder. This indictment is part of an effort to combat violent crime in the city."
+      },
+      {
+        "detail": "Members of a transnational money laundering organization have been charged with laundering cartel funds. The charges are the result of a multi-agency investigation targeting international criminal networks.",
+        "source": "United States Department of Justice",
+        "headline": "Members of Transnational Money Laundering Organization Charged with Laundering Cartel Funds",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFykQ-LjGGyUC665Mn3wglJfU6-ovX1oNe_PHmeHRTK4AY3iYN0PyqEobAcGigSgDgiERUJv1jBpqU-u3Eiib8O2f4CZmC0ZMBrkmej8grny4vOT3V6iMY=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:18.347Z",
+        "id": "7s4vqozl2ql",
+        "category": "Crime & Justice"
+      },
+      {
+        "detail": "The Fraud Division announced the expansion of its Midwest Task Force and authorization to hire 15 new Medicaid prosecutors, highlighted an unprecedented Minnesota health care fraud takedown, and revealed a $2 Billion Telemedicine Health Care Fraud Scheme. These actions underscore the Justice Department's commitment to combating fraud and protecting taxpayer dollars.",
+        "source": "United States Department of Justice",
+        "headline": "This Week in Fraud: The Fraud Division Announced Expansion of Midwest Task Force and Authorization to Hire 15 New Medicaid Prosecutors, an Unprecedented Minnesota Health Care Fraud Takedown, and a $2 Billion Telemedicine Health Care Fraud Scheme",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFykQ-LjGGyUC665Mn3wglJfU6-ovX1oNe_PHmeHRTK4AY3iYN0PyqEobAcGigSgDgiERUJv1jBpqU-u3Eiib8O2f4CZmC0ZMBrkmej8grny4vOT3V6iMY=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:18.347Z",
+        "id": "8b2ymio3lxu",
+        "category": "Crime & Justice"
+      },
+      {
+        "source": "United States Department of Justice",
+        "headline": "Feeding Our Future Ringleader Sentenced to 500 Months",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFykQ-LjGGyUC665Mn3wglJfU6-ovX1oNe_PHmeHRTK4AY3iYN0PyqEobAcGigSgDgiERUJv1jBpqU-u3Eiib8O2f4CZmC0ZMBrkmej8grny4vOT3V6iMY=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:18.347Z",
+        "id": "ofeve0yg4n",
+        "category": "Crime & Justice",
+        "detail": "A ringleader in the Feeding Our Future fraud case has been sentenced to 500 months in prison. This sentence reflects the severity of the crime and the Justice Department's commitment to prosecuting those who exploit federal programs."
+      }
+    ],
+    "Technology": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVHcqzATu9aBC3TytWQKh7jhdv-1AfdSL2MqNE3eYSLtApQbGKdm_7HS-Mn8DW4HG5a0OWsZXhkCB3IK_gOQzMCrd3buTle4_rBeiDlaBjTZK_M9R1ASqovNcz43CewXeSZbiLaHmmGZaGea6fH-iTzfksZo0ugXC0JA==",
+        "source": "AI News Today",
+        "headline": "OpenAI Autonomously Disproves the Erdős Unit Distance Conjecture — 80-Year-Old Math Problem Solved",
+        "category": "Technology",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.891Z",
+        "id": "ja9kfqc0o8m",
+        "detail": "One of OpenAI's internal general-purpose reasoning models autonomously disproved a central conjecture in discrete geometry that Paul Erdős posed in 1946, establishing an infinite family of planar point configurations that produce significantly more unit-distance pairs than previously thought. The proof method approached the problem through algebraic number theory, connecting an elementary geometry question to deep number-theoretic structures."
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVHcqzATu9aBC3TytWQKh7jhdv-1AfdSL2MqNE3eYSLtApQbGKdm_7HS-Mn8DW4HG5a0OWsZXhkCB3IK_gOQzMCrd3buTle4_rBeiDlaBjTZK_M9R1ASqovNcz43CewXeSZbiLaHmmGZaGea6fH-iTzfksZo0ugXC0JA==",
+        "source": "AI News Today",
+        "headline": "Meta's Zuckerberg Caught Training AI on Employees Before Firing 8,000 of Them",
+        "category": "Technology",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.891Z",
+        "id": "w3ogs07bdac",
+        "detail": "A leaked audio recording revealed that Meta was tracking employee activity across Gmail, Google Chat, the internal assistant Metamate, and VS Code to train Meta's AI models, coinciding with layoff notices for approximately 8,000 employees. CEO Mark Zuckerberg defended the \"Model Capability Initiative\" (MCI), stating that it helps train AI models on how smart people work."
+      },
+      {
+        "category": "Technology",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.891Z",
+        "id": "3xrbauk2olf",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE2mTEAmuWbzP3lFwr-oQ2RsEJAZhsXLDCzgV_c2UcTIVHvnyA2pXN0YALRcKuVXfhuqA2zJkSrfHtRIPJbaCgEJynrYu61ISPh6c-gNnLHcagS0zl292iIWMtkBX_ITYvqp-vjoGoIR-eZbA_Qs5R2tcFozzTMHUSFNkVswKE=",
+        "source": "Taipei Times",
+        "headline": "AMD to invest US$10 billion in Taiwanese microchip ecosystem",
+        "detail": "Advanced Micro Devices Inc (AMD) is investing US$10 billion in the Taiwanese microchip ecosystem to ensure the availability of advanced packaging technology capacity over the next three years, given rapidly growing artificial intelligence (AI) infrastructure demand. The investment aims to foster a new advanced packaging ecosystem in Taiwan using elevated fan-out bridge (EFB) technology."
+      },
+      {
+        "detail": "SpaceX is set to launch Starship V3 for its first test flight today. The launch aims to test the newest and biggest version of Starship.",
+        "category": "Technology",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.891Z",
+        "id": "3qbm4byoonk",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG90N5sL93Ds0oFeEDGxHL76EPTm7iJxNqXE7kFjE7-Mi2_68xf7lqPSdv1e20LZ8ooekRpSMZlzG933V8iYUbGvD4p6njvAU50NZADQzMZHP-Dafo=",
+        "source": "Engadget",
+        "headline": "SpaceX will launch Starship V3 for its first test flight today"
+      },
+      {
+        "detail": "TECSUN SCIENCE & TECHNOLOGY CO.,LTD. and QingCloud Technologies Corp. are partnering to explore a new paradigm of livelihood services featuring “AI + Cloud + Computing Power Collaboration”, focusing on core sectors including employment, healthcare and government services. The collaboration aims to promote the integrated deployment of employment Agent and intelligent computing platform to achieve precise job matching and intelligent recommendation.",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.891Z",
+        "id": "nu55b43l5th",
+        "category": "Technology",
+        "source": "Asia News Network",
+        "headline": "TECSUN SCIENCE & TECHNOLOGY CO.,LTD. Partners with QingCloud Technologies Corp. to Forge New Engine for AI-Powered Livelihood Services",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF2NmRRxE3OudvWqViYGSOay_RFee4IkpNzKaI71haAF1xAD0b4Dnsa7ZdXRnpgqLcwpLCSWfiEUZNaOqjql0d7ShOE_Mq7g_IntW_-s0nNO3scgNhUHU7rWMgn2w7ZQ8jhLOgALz472HHz4LzmdIVHrN_sOFDst7WvnKQ4HKV3stwSekKe0Qmoq-gQZHSVGRoh8vw442O80tZ1Nn8eBrlRZMt-dRFAX_I8JSwVHl7aC751fNvbkzpQ5aHDKEVQ3qOlUGVf4YmpgWyn0oqPDPpvBoXw3O3QuQ=="
+      }
+    ],
+    "Education": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF-57Wx9YPecVubpOqu9IjSEpWdnhj3c5RUhivgFKGUnzXXmb0FrK2DwLR2M730GXEB5qzu_DsDx-bP1q9r6T_MGtJaUUcaNAnLqmD5vOoVHhZjQok3TL_Wh94i0v2ANRasz2ynySp9q4vIgK5X9jtt5JdgIm7Fbbe1aFD0tWnIgONYoNzkaR91qC7-7KTubLEnuAzOug==",
+        "source": "The Japan Times",
+        "headline": "Government finds school program violated law in wake of deadly Okinawa boat accident",
+        "category": "Education",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.832Z",
+        "id": "hl2p947q7lt",
+        "detail": "The education ministry reported that a high school program violated the basic education law due to political neutrality issues, following a fatal accident in Okinawa Prefecture in March involving a study trip about the relocation of a U.S. Marine Corps Air Station. The ministry criticized the school's safety management as 'extremely inappropriate,' noting the lack of preliminary inspections and supervising teachers."
+      },
+      {
+        "detail": "The Star Education Fair 2026 in Penang features 96 exhibitors and 107 booths, offering personalized academic counseling and scholarship opportunities. The fair includes seven Cluster Technical and Vocational Education and Training (TVET) programs spanning 56 booths from nine ministries, covering various industries.",
+        "source": "Star Media Group",
+        "headline": "Explore tertiary pathways at Star Education Fair 2026 in Penang, 96 exhibitors taking part",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_fyARGGk2PDSCoCAWP4tPMXSyvvF1ON4v6DjDbSGAmiMgImhRAIVgm3YZ6gYfcAJNPocP57LeHTUB-_w1hRIlLj0ce3LPbfQYpmk-Ui-l66G_JBdwYfBJD0U1o5yrvjBsOLUWW1_YUxkosbUUqH-FBLw4Qa_Odcma3Eu_aBNDN4HXp6LCZCLTttPRxvQPJQvJq-5uQwGiVkjQyAcPIl_qyKp7m18lu523224yA2fRfOch0obWOOi3_PlRmHl3Ug-65Sf_xyQk",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.832Z",
+        "id": "ofclox5cnve",
+        "category": "Education"
+      },
+      {
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.832Z",
+        "id": "gg5dou999sl",
+        "category": "Education",
+        "source": "The Hindu",
+        "headline": "What the India-New Zealand FTA means for Indian students",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHi6tWI85vx62Jl2j8pHFcuemrB-d_VZXgPRLIj5XlYoVrpAU8kLnsLVPxUTAQinzvIN5KUVZDvjKfnzmPvuSyqNv1RG7QZB6VpgC5XM4_5TynZIA1fH8RqXul6krXg",
+        "detail": "An FTA between India and New Zealand may affect Indian Students. Further details are available in the article."
+      },
+      {
+        "category": "Education",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.832Z",
+        "id": "mdmc94hh8pq",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHi6tWI85vx62Jl2j8pHFcuemrB-d_VZXgPRLIj5XlYoVrpAU8kLnsLVPxUTAQinzvIN5KUVZDvjKfnzmPvuSyqNv1RG7QZB6VpgC5XM4_5TynZIA1fH8RqXul6krXg",
+        "source": "The Hindu",
+        "headline": "Bihar government announces free bus travel for students appearing for NEET re-examination",
+        "detail": "The Bihar government is offering free bus travel for students taking the NEET re-examination. More information can be found in the article."
+      },
+      {
+        "detail": "The Computer Science Teachers Association is launching the \"AI PD Weeks\" initiative to provide K-12 educators with hands-on learning, collaboration, and practical strategies for teaching AI in K-12 classrooms. The $11M effort aims to train teachers in AI with hands on learning over the summer.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5qyG0z9T0MRH2X9x7jykKnb95nWQh2TchPPzmhV_WUqyAy6sn4Cf6KfktdflxggzJR-Mod1yX8ElMa_OQAb7MeZYG9M6dX3KW9UcyfkUrZeyA",
+        "source": "Education Week",
+        "headline": "New $11M Effort Aims to Train Teachers in AI. How Does It Work?",
+        "category": "Education",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:28.832Z",
+        "id": "45g7ujmcg5s"
+      }
+    ],
+    "Science": [
+      {
         "category": "Science",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:25.632Z"
+        "fetchedAt": "2026-05-23T14:00:17.891Z",
+        "id": "5m4nvskgz2m",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHMIceTJkwMktOBkAkDwk3ryTL0N2YUvd2waEwFZxIj5YZd9pyCBeNSw-JPZauHOyIJT-3Y1eQjxjChPyhL7RoRyUd9Y2tFDepa7bQ1XDfShbor8xtMmY2Gh_e68qIitMel9PjVsSJ-a3rupEa0wssNSRU-QFf642M=",
+        "source": "ScienceDaily",
+        "headline": "NASA Stunned as Strange Solar Radio Burst Lasts 19 Days",
+        "detail": "NASA scientists were surprised by a solar radio signal that persisted for 19 days, far exceeding the typical duration of such bursts, and they traced the signal to a large magnetic structure on the Sun."
+      },
+      {
+        "category": "Science",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:17.891Z",
+        "id": "uf728mcxuw8",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE3RC7XsLFYhF7N_SD06Lmspp0ENktQUzlIWWXSUvd1hAGL-pYvK6aEEHs50hViwq4Uu5Uv7j2gbYNm29lRe6vHur7YmOfd3DPHmGbxNWBjcq9aHgnIfC-aQS3jZjM0GXuanGZccDjCBDy9v4v7eTrbqv2ao6A9TYOxNHsoeWqd8-5_p0fPLNKLVUFCp0HW2rLHrLHHdGGIvQ==",
+        "source": "The Japan Times",
+        "headline": "SpaceX's Starship flight hits most targets in pre-IPO test",
+        "detail": "SpaceX conducted a largely successful test flight of its Starship rocket, deploying mock satellites and performing a controlled splashdown in the Indian Ocean, marking a significant step as the company prepares for its IPO."
+      },
+      {
+        "category": "Science",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:17.891Z",
+        "id": "x4dqjxqv2v9",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFlMF6vO69k_tPPgHbERxSldcnU85d8ims2HHWWd6viHXOkIa3Hrw1o_F7Fobfqhk7fXZY0eCA2yLNlYHsMCjfZ0em75ATtD-985jHdk2aVtjp-QUdEPh_5cLKWIVS1NGw8ttP6zfk9Zxne5Ulv9COhocGg0VacbBq603_ln03W",
+        "source": "Good News Network",
+        "headline": "Scientists create teabags that remove arsenic from drinking water",
+        "detail": "Researchers at the City University of New York's ASRC Nanoscience Initiative have developed a 7-cent teabag that can remove 90% of arsenic ions from contaminated water, offering an affordable solution to a global health crisis."
+      },
+      {
+        "category": "Science",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:17.891Z",
+        "id": "clsk07ahivm",
+        "url": "https://sciencex.com/news/2026-05-ancient-woodworking-technique-modern-electronics.html",
+        "source": "Phys.org",
+        "headline": "Ancient woodworking technique could save modern electronics from overheating",
+        "detail": "Researchers found that using carpentry-inspired joints in electronic interfaces can significantly lower temperatures in chips, potentially enhancing the energy efficiency and durability of various technologies."
+      },
+      {
+        "detail": "According to ScienceAlert, nearly half of preventable cancers are connected to just two lifestyle habits.",
+        "source": "ScienceAlert",
+        "headline": "Almost 50% of Preventable Cancers Linked to Just Two Lifestyle Habits",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtkP7dCBSfoP6SBUB12f_c4kRylDBLEhA_dNGyEQmrV0gAjk1uEbYsrPH1xxlJtVvCC4ldq9yqCe0uETROc2YD5kLgzwPJppMe8Hqmbzx6y1ymnzc7NKnt",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:17.891Z",
+        "id": "5im5u6r24ma",
+        "category": "Science"
+      }
+    ],
+    "Zimbabwe": [
+      {
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.458Z",
+        "id": "94t8lszd40i",
+        "category": "Zimbabwe",
+        "source": "New Zimbabwe",
+        "headline": "Eight Roman Catholic parishioners killed in commuter omnibus crash",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbLJPXjMe8CbYnu9KXGXv5zdGaIu_OywLetcFG22ex1rZuDsiiAjj8AfqKi3o_2PudgJlssCP-KXgCy5iN5j8nH_TKxxdH4n2tO_6NLwR1CLxTutInisQ=",
+        "detail": "Eight Roman Catholic parishioners were killed in a commuter omnibus crash."
+      },
+      {
+        "detail": "Two individuals were apprehended for vandalizing a ZESA transformer and possessing copper windings illegally.",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.458Z",
+        "id": "3ze6m1c6k2r",
+        "category": "Zimbabwe",
+        "source": "New Zimbabwe",
+        "headline": "Pair arrested for vandalising ZESA transformer, unlawful possession of copper windings",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbLJPXjMe8CbYnu9KXGXv5zdGaIu_OywLetcFG22ex1rZuDsiiAjj8AfqKi3o_2PudgJlssCP-KXgCy5iN5j8nH_TKxxdH4n2tO_6NLwR1CLxTutInisQ="
+      },
+      {
+        "category": "Zimbabwe",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.458Z",
+        "id": "t2x9fkz6k8g",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbLJPXjMe8CbYnu9KXGXv5zdGaIu_OywLetcFG22ex1rZuDsiiAjj8AfqKi3o_2PudgJlssCP-KXgCy5iN5j8nH_TKxxdH4n2tO_6NLwR1CLxTutInisQ=",
+        "source": "New Zimbabwe",
+        "headline": "Man busted while attempting to smuggle drugs and substances worth US$12,000 across border",
+        "detail": "A man was caught trying to smuggle drugs and other substances valued at US$12,000 across the border."
+      },
+      {
+        "source": "New Zimbabwe",
+        "headline": "'Public officials demanding bribes from investors are enemies of development': Mnangagwa",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbLJPXjMe8CbYnu9KXGXv5zdGaIu_OywLetcFG22ex1rZuDsiiAjj8AfqKi3o_2PudgJlssCP-KXgCy5iN5j8nH_TKxxdH4n2tO_6NLwR1CLxTutInisQ=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.458Z",
+        "id": "e6957109jmi",
+        "category": "Zimbabwe",
+        "detail": "President Mnangagwa stated that public officials who solicit bribes from investors are detrimental to the nation's progress."
+      },
+      {
+        "detail": "Diaspora Insurance hosted a dinner in Birmingham to welcome the Warriors ahead of the Unity Cup.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbLJPXjMe8CbYnu9KXGXv5zdGaIu_OywLetcFG22ex1rZuDsiiAjj8AfqKi3o_2PudgJlssCP-KXgCy5iN5j8nH_TKxxdH4n2tO_6NLwR1CLxTutInisQ=",
+        "source": "New Zimbabwe",
+        "headline": "Diaspora Insurance hosts Warriors welcome dinner in Birmingham ahead of Unity Cup",
+        "category": "Zimbabwe",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.458Z",
+        "id": "69dljnrvm5"
+      }
+    ],
+    "Finance & Economy": [
+      {
+        "detail": "The Bangko Sentral ng Pilipinas (BSP) is considering an off-cycle rate hike to address inflation concerns.",
+        "category": "Finance & Economy",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:14.693Z",
+        "id": "3623tvqcanw",
+        "url": "https://business.inquirer.net/462144/bsp-mulls-over-off-cycle-rate-hike",
+        "source": "Inquirer.net",
+        "headline": "BSP mulls over off-cycle rate hike"
+      },
+      {
+        "source": "Inquirer.net",
+        "headline": "Bank capital buffer rules tightened",
+        "url": "https://business.inquirer.net/462141/bank-capital-buffer-rules-tightened",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:14.693Z",
+        "id": "1u6nkqprx2o",
+        "category": "Finance & Economy",
+        "detail": "The regulatory body has announced the tightening of bank capital buffer rules to ensure financial stability."
+      },
+      {
+        "detail": "SM Investments Corporation (SMIC) announced that its clean energy sourcing has increased to 31%.",
+        "url": "https://business.inquirer.net/462138/smic-clean-energy-sourcing-rose-to-31",
+        "source": "Inquirer.net",
+        "headline": "SMIC clean energy sourcing rose to 31%",
+        "category": "Finance & Economy",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:14.693Z",
+        "id": "b71t0k47gd"
+      },
+      {
+        "url": "https://business.inquirer.net/462135/sm-prime-brings-ticketmaster-to-the-philippines",
+        "source": "Inquirer.net",
+        "headline": "SM Prime brings Ticketmaster to the Philippines",
+        "category": "Finance & Economy",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:14.693Z",
+        "id": "sqeij0ftjtl",
+        "detail": "SM Prime has partnered with Ticketmaster to bring its services to the Philippines."
+      },
+      {
+        "detail": "Moody's has revised South Africa's outlook, signaling a positive move for the country's economy.",
+        "url": "https://www.moneyweb.co.za/news/economy/positive-move-moodys-upgrades-south-africas-outlook/",
+        "source": "Moneyweb",
+        "headline": "Moody's 'upgrades' South Africa's outlook",
+        "category": "Finance & Economy",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:14.693Z",
+        "id": "c9nl59msh1n"
+      }
+    ],
+    "Politics": [
+      {
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:19.254Z",
+        "id": "w4lyc7iqowf",
+        "category": "Politics",
+        "source": "The Japan Times",
+        "headline": "Three months in, is Trump losing the Iran war?",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFhl4ldXKA7MXJGANzJotDjoXGHEotwda3KW4GEoabkJkYFQZJdd14odNauYtY1SQdoeXQd6jbC5-iXIwNJhmX1E_9NBTZxkwKjlQvVSshNSutw3TVM_jZMhW9e9K9Vd5JiovbHYwfAEQERVAAv2weIgHKfP6DB94jrAbNyl5YxUhhhZo0HRnAl1d2HL4tJkO3qZ525zQ==",
+        "detail": "Despite tactical successes against Iran, doubts are growing about whether President Trump can achieve a geopolitical win, as Iran maintains its grip on the Strait of Hormuz and resists nuclear concessions. The continuing standoff puts domestic pressure on Trump due to high gas prices and low approval ratings."
+      },
+      {
+        "detail": "Amid ongoing negotiations, the US is reportedly considering fresh attacks on Iran. Iran's enriched uranium stockpile is a point of contention, with its supreme leader issuing a directive against sending it abroad.",
+        "category": "Politics",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:19.254Z",
+        "id": "u4rwyzbij7",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTML3U_qymbkq8n35hcwUFPIm7zfwQ0xgwviWPs_RMYqYh-gnK5rDFbp_4002_SyGy8UZO3iuJmYZWfxGLKonEHAbuk_MWgK_yDTLMcF_twf-N-uUB",
+        "source": "Daily Sabah",
+        "headline": "US weighs fresh attacks on Iran amid ongoing negotiations: Report"
+      },
+      {
+        "detail": "New Zealand plans to invest approximately $936 million (USD) in drones, ship maintenance, and naval upgrades to strengthen maritime security amid concerns about supply routes. The investment includes drones for the southwest Pacific and polar-capable vehicles for the Southern Ocean.",
+        "category": "Politics",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:19.254Z",
+        "id": "tyqp7hgeced",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEuFGe7_f9KpxLP8UzLWg2DXcMo1jln4m8_0HDVDb1RnPgpU3ZM2F-1zsJMvKwwZBKZWESwLgHtUSNG9EfZgD8jQULK5PYfBJB5Yp8xWeXIoXjIEh-d_FlxKlOeOKMPRPxWIkhztg7XSq1UMNmrTC2x5SIKrPVXqYRAuvSn4N6kKo4dftyN3byg3DdUgVY0Ov5kYAP",
+        "source": "The Japan Times",
+        "headline": "New Zealand to invest in drones and fleet to shield maritime routes"
+      },
+      {
+        "source": "Foreign Policy",
+        "headline": "Trump's About-Face on U.S. Troops in Poland Mystifies Allies",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8IoWycNlG9BQjVZ685YkBKMhQahZKSbhwNm7UHSAR9vBtSUln56qKgaRPJ1kGVLXSD4JZSO15MahmrcLfK5wsXNKr6U8QhIbvreI7lgbPK5Q62hU=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:19.254Z",
+        "id": "iizb8uco5s",
+        "category": "Politics",
+        "detail": "The United States is increasing its military presence in Poland by sending an additional 5,000 troops. This decision comes amidst ongoing discussions within NATO regarding regional security and defense spending, deepening European uncertainty."
+      },
+      {
+        "source": "AnewZ (YouTube)",
+        "headline": "Israeli strikes in southern Lebanon kill at least 14 as the UN warns of rising settler violence in the occupied territories",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvEWrBttVcTjeht-e7_CdCW0m0fBHlooEUapaYGCSreY3_rOp5lbUdavdrbzJXgyBVmBTUV4g4VAL88J2ag4ELEqHWdLhO2B3WYebyImNBLF9xkTrMzC36LFaaDkPNarxLJfO1XQ==",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:19.254Z",
+        "id": "co07d6ul04c",
+        "category": "Politics",
+        "detail": "Israeli strikes in southern Lebanon resulted in at least 14 fatalities, while the UN cautioned about escalating settler violence in occupied territories. The ongoing conflict between Israel and Hezbollah is anticipated to significantly impact Lebanon's economy."
+      }
+    ],
+    "Opinion/Editorial": [
+      {
+        "detail": "If the delays on the Key Bridge rebuild don't motivate calls for better results for taxpayers, nothing will.",
+        "source": "The Washington Post",
+        "headline": "Americans are numb to infrastructure dysfunction",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2Rotyfe2ibcG8M4BR9eRzc8RGg0py9bHljOtxSIUTJ1TH__fvAEh4r_e-ToWCagNxlOh8abOEffSR4uk4qiXE3OVfEwejM8HQL_ehktzG3VELuPDhqjAX76ifSURJFmBJaQ4uHkExXh0YesEBjlEtLuM=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.461Z",
+        "id": "jtdq2q57gxd",
+        "category": "Opinion/Editorial"
+      },
+      {
+        "detail": "The market is responding to China's tight grip on rare earths.",
+        "category": "Opinion/Editorial",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.461Z",
+        "id": "5oxctoy6dhe",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2Rotyfe2ibcG8M4BR9eRzc8RGg0py9bHljOtxSIUTJ1TH__fvAEh4r_e-ToWCagNxlOh8abOEffSR4uk4qiXE3OVfEwejM8HQL_ehktzG3VELuPDhqjAX76ifSURJFmBJaQ4uHkExXh0YesEBjlEtLuM=",
+        "source": "The Washington Post",
+        "headline": "China squeezed too tight on rare earths. Now the market is taking action."
+      },
+      {
+        "detail": "Measuring public services by counting jobs creates a bureaucracy that grows for its own sake.",
+        "category": "Opinion/Editorial",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.461Z",
+        "id": "1ob2w2c5opw",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2Rotyfe2ibcG8M4BR9eRzc8RGg0py9bHljOtxSIUTJ1TH__fvAEh4r_e-ToWCagNxlOh8abOEffSR4uk4qiXE3OVfEwejM8HQL_ehktzG3VELuPDhqjAX76ifSURJFmBJaQ4uHkExXh0YesEBjlEtLuM=",
+        "source": "The Washington Post",
+        "headline": "A warning from New Zealand"
+      },
+      {
+        "detail": "This editorial discusses the importance of strategic petroleum and gas reserves for India, highlighting the lessons that have not been learned regarding their necessity.",
+        "source": "The Hindu",
+        "headline": "Unlearnt lessons: On India's inadequate strategic petroleum and gas reserves.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPCwc_enVmbtWcQ3rc4KqJTF7aGeLL7_G3FwcQpm73apARO-4KQW3pk568_LDBfUf_eRHSKZUzdC7WA2VtV19wKtT3ahIMWfG_Y5V3vSQXaWMXjJwkNv_CTXFoUqSR4ydBds_PQCQ=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.461Z",
+        "id": "fj9hco9bjmg",
+        "category": "Opinion/Editorial"
+      },
+      {
+        "detail": "This editorial likely discusses India's vulnerability to extreme weather events and the measures needed to prepare for and mitigate their impact.",
+        "category": "Opinion/Editorial",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:26.461Z",
+        "id": "amb2nyzzxti",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPCwc_enVmbtWcQ3rc4KqJTF7aGeLL7_G3FwcQpm73apARO-4KQW3pk568_LDBfUf_eRHSKZUzdC7WA2VtV19wKtT3ahIMWfG_Y5V3vSQXaWMXjJwkNv_CTXFoUqSR4ydBds_PQCQ=",
+        "source": "The Hindu",
+        "headline": "Waiting for the storm: On weather events, India's vulnerability."
+      }
+    ],
+    "World": [
+      {
+        "detail": "An explosion in a coal mine in northern Shanxi province has resulted in at least 90 fatalities, prompting Xi Jinping to urge authorities to spare no effort in rescue operations.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7T4DdUGN6OmzhHVTEGp9yc9dfsnxgdftfA9JjX_a8Ru0rmVS7guExiOY4Ef_0NnLIu15aEkGc5YRdO8QVuHR20UvDZOfwtaVbyPKG_eNx9fU2JA_TPi76THPr6A==",
+        "source": "The Guardian",
+        "headline": "China mine death toll rises to 90 after gas blast",
+        "category": "World",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.853Z",
+        "id": "bhdb3w6swup"
+      },
+      {
+        "source": "The Guardian",
+        "headline": "'Every health facility said they were full': alarm over rapid spread of Ebola in DRC",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEZ3AtdBzrxY0uQ3aAJnV3kmy8SEkkQEi-_wBcAP6XTmm-fqCRE4OMBCEivbC5dq4H02ZBLrcbzx8zqAvMov6iQ3Wqo0HL82SnAIV8QrFKk8Zu7Dk1-L-M=",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.853Z",
+        "id": "ngth3yyqzb",
+        "category": "World",
+        "detail": "The World Health Organization warns of a rapid spread of Ebola in the Democratic Republic of the Congo, with reports indicating that health facilities are overwhelmed."
+      },
+      {
+        "source": "Al Jazeera",
+        "headline": "Pakistan army chief Asim Munir arrives in Tehran as mediation efforts to secure a US-Iran peace deal intensify.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzH6emIE6M7aX3DPyHfrtV5gaGHKK46Jm9Qzg2Oxzd2lVavEhSY-ko5FiQ8Ghz-OOvrSSMOn8NUmNpqKfDjlCMrAxgTXNWAeTn-ZsCWFdFX3OU3iuo",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.853Z",
+        "id": "7etekejdpre",
+        "category": "World",
+        "detail": "Amidst intensifying mediation efforts for a US-Iran peace deal, Pakistan's army chief Asim Munir has arrived in Tehran."
+      },
+      {
+        "detail": "A U.S. judge has dismissed the criminal indictment against Kilmar Ábrego García, who had filed a lawsuit against his deportation.",
+        "category": "World",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.853Z",
+        "id": "4wb0g68kp2u",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzH6emIE6M7aX3DPyHfrtV5gaGHKK46Jm9Qzg2Oxzd2lVavEhSY-ko5FiQ8Ghz-OOvrSSMOn8NUmNpqKfDjlCMrAxgTXNWAeTn-ZsCWFdFX3OU3iuo",
+        "source": "Al Jazeera",
+        "headline": "US judge dismisses criminal indictment against Kilmar Ábrego García"
+      },
+      {
+        "detail": "France has banned Israeli security minister Itamar Ben-Gvir from entering the country.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIuoaYEDLa5FuOuEwKoZInv1m713MSY-eb8xWQhb_XPl0fE2h_j4bIKOUZjRCi-3bCgSIeKuk2Xnw9LcTmhK4AiPLqTFRUDF8_WL4tgflK8QH5fnnR19ls",
+        "source": "The Straits Times",
+        "headline": "France bans Israeli security minister Itamar Ben-Gvir from country.",
+        "category": "World",
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:16.853Z",
+        "id": "b1chvrly6pt"
       }
     ],
     "Sports": [
       {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMrpN44t_XxWOHVnzXJm5RZrPAFt4lo6KK_mHOvPqTGffG4bPfLYDWurrFb4b03ii2KpBwYtMUBBJDUSaxhZw3sc2NGjA0bgN1mGx4HT5NfQzxYT7FOR16ZQdE4Q9UTdj51qSa",
-        "detail": "RCB captain Rajat Patidar acknowledged that Sunrisers Hyderabad's score of 255 was too challenging for Royal Challengers Bangalore to chase in their recent match.",
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:32.612Z",
-        "id": "5lm57rma7ze",
+        "detail": "After winning multiple titles since 2016, including six Premier League titles, Pep Guardiola has announced he will be leaving Manchester City at the end of the season. His side has not won the league in the last two years.",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGA1zDf0lAvBAXPg0K377UWbm5FAi-wOY-9lEefeiS0QP9KgHPsoaqErNBMDNqiQuh842heYEw-tao9yEqdZgQiZUmVzc6CXg0nsgnX6ximjuRgc5QWeQ==",
+        "source": "Inquirer.net",
+        "headline": "Pep Guardiola leaving Manchester City after the season: 'It's my time'",
         "category": "Sports",
-        "source": "The Times of India",
-        "headline": "Rajat Patidar admits SRH's 255 was 'too much' for RCB in Hyderabad clash."
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:17.793Z",
+        "id": "h052edjh4y5"
       },
       {
-        "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:32.612Z",
-        "id": "un70vkz1pa",
+        "detail": "Cristiano Ronaldo has ended his long wait for a Saudi title. Further details were not included in the snippet.",
         "category": "Sports",
-        "source": "The Times of India",
-        "headline": "RCB captain Rajat Patidar overtakes Chris Gayle in six-hitting feat.",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGMrpN44t_XxWOHVnzXJm5RZrPAFt4lo6KK_mHOvPqTGffG4bPfLYDWurrFb4b03ii2KpBwYtMUBBJDUSaxhZw3sc2NGjA0bgN1mGx4HT5NfQzxYT7FOR16ZQdE4Q9UTdj51qSa",
-        "detail": "Rajat Patidar surpassed Chris Gayle in a six-hitting record during a recent game."
+        "date": "2026-05-23",
+        "fetchedAt": "2026-05-23T14:00:17.793Z",
+        "id": "tgaynpa8a9",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGA1zDf0lAvBAXPg0K377UWbm5FAi-wOY-9lEefeiS0QP9KgHPsoaqErNBMDNqiQuh842heYEw-tao9yEqdZgQiZUmVzc6CXg0nsgnX6ximjuRgc5QWeQ==",
+        "source": "Inquirer.net",
+        "headline": "Cristiano Ronaldo ends long wait for Saudi title"
       },
       {
-        "source": "Hindustan Times",
-        "headline": "Rashee Rice headed to jail for 30 days: Will the NFL suspend him again?",
+        "detail": "A North Korean women's team has been crowned Asian club champions in South Korea. The details of the match or the tournament were not specified in the snippet.",
+        "source": "Inquirer.net",
+        "headline": "North Korean women crowned Asian club champions in South Korea",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGA1zDf0lAvBAXPg0K377UWbm5FAi-wOY-9lEefeiS0QP9KgHPsoaqErNBMDNqiQuh842heYEw-tao9yEqdZgQiZUmVzc6CXg0nsgnX6ximjuRgc5QWeQ==",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:32.612Z",
-        "id": "o8if8mhd9pd",
-        "category": "Sports",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnWnd14cLh09YtYyY98vRcH8s51bugYoXtSBx0JlEpPEhqVsfEQ6Ai51kmTptitHSSwNw0HIIPS1BQzD7OykGmmC8gIbN3wUXyrNyGQHoRYVAKuXfWykEFzcb-MnhMDg==",
-        "detail": "NFL player Rashee Rice is reportedly facing a 30-day jail sentence, raising questions about a potential further suspension from the league."
+        "fetchedAt": "2026-05-23T14:00:17.793Z",
+        "id": "v1cz6345tss",
+        "category": "Sports"
       },
       {
-        "id": "oihwqrgvg8",
         "category": "Sports",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:32.612Z",
-        "source": "Hindustan Times",
-        "headline": "Congo World Cup squad must isolate before entry to US: official.",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHnWnd14cLh09YtYyY98vRcH8s51bugYoXtSBx0JlEpPEhqVsfEQ6Ai51kmTptitHSSwNw0HIIPS1BQzD7OykGmmC8gIbN3wUXyrNyGQHoRYVAKuXfWykEFzcb-MnhMDg==",
-        "detail": "An official has stated that the Congo World Cup team is required to isolate before being allowed to enter the United States."
+        "fetchedAt": "2026-05-23T14:00:17.793Z",
+        "id": "1knsmmer16m",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESokwhlXbm3vMBmoOctXKLKRStktZIS4QwQ2Y8Jn6vv3AgqFHDjHQMljwalmvUmSUCWhG6Z-9NsuXGO5Tkq73RXreJ9EaeyZ6vgbzQsjTHGMQADUrtQISeHEjmVMgA",
+        "source": "The Guardian",
+        "headline": "Family affair inspires Alberto Bettiol to solo triumph in Verbania",
+        "detail": "Alberto Bettiol won stage 13 of the Giro d'Italia in Verbania. The win was inspired by a family affair, though further details were not provided in the snippet."
       },
       {
-        "id": "q0glebbb8di",
+        "detail": "Billy Vunipola played well as Montpellier defeated Ulster to win the Challenge Cup. The score of the match was not specified in the snippet.",
         "category": "Sports",
         "date": "2026-05-23",
-        "fetchedAt": "2026-05-23T02:00:32.612Z",
-        "source": "AP News",
-        "headline": "Former Wisconsin guard John Blackwell withdraws from NBA draft, will play at Duke next season.",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtSuEphVWrrl7yBW0zGPAeGeGxMx_MGVOdhuWf5WWkZYt64-LzQ-UkB7qWgzW81po500FerUVklAd4LVxXpXNsT3lD2fKnpwLcYINDpqey2xfF0w==",
-        "detail": "John Blackwell, previously a guard for Wisconsin, has withdrawn his name from the NBA draft and will be playing basketball at Duke University in the upcoming season."
+        "fetchedAt": "2026-05-23T14:00:17.793Z",
+        "id": "77ra9vgmkeq",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQESokwhlXbm3vMBmoOctXKLKRStktZIS4QwQ2Y8Jn6vv3AgqFHDjHQMljwalmvUmSUCWhG6Z-9NsuXGO5Tkq73RXreJ9EaeyZ6vgbzQsjTHGMQADUrtQISeHEjmVMgA",
+        "source": "The Guardian",
+        "headline": "Vunipola shines as Montpellier demolish Ulster to claim Challenge Cup"
       }
     ]
   }
