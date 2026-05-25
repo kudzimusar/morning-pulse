@@ -1,580 +1,682 @@
 {
   "date": "2026-05-25",
-  "generatedAt": "2026-05-25T10:24:43.381Z",
-  "timestamp": 1779704683381,
+  "generatedAt": "2026-05-25T15:23:51.662Z",
+  "timestamp": 1779722631662,
   "categories": {
-    "Health": [
-      {
-        "fetchedAt": "2026-05-25T02:00:21.308Z",
-        "date": "2026-05-25",
-        "detail": "A newly identified brain protein may play a major role in how the body ages; researchers discovered that declining levels of Menin in the hypothalamus triggered inflammation, memory problems, bone issues, and other age-related problems, but a simple supplement reversed this decline in mice.",
-        "id": "6atghjtkbny",
-        "category": "Health",
-        "source": "ScienceDaily",
-        "headline": "Scientists Discover Hidden Driver of Aging — Simple Supplement Reversed Brain Decline",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsP__Eg1rzm_LLjD1cObPBMPjcACfa7vUs4cAnKGQnx8r0p6BqgU4_dQbgmM7KDHu1jd1Pqk39mKEWrvrDSIpr2CVQjQmzS8ogqsLvHuAUXU35_mhIO3NCDX8RN3qr8_ShnE04CLTE5Zw4We2O"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "Scientists have cracked open the “black box” of feline cancer in a landmark study that genetically analyzed nearly 500 cat tumors from around the world, uncovering striking similarities between cat and human cancers, potentially accelerating the development of new therapies.",
-        "fetchedAt": "2026-05-25T02:00:21.308Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsP__Eg1rzm_LLjD1cObPBMPjcACfa7vUs4cAnKGQnx8r0p6BqgU4_dQbgmM7KDHu1jd1Pqk39mKEWrvrDSIpr2CVQjQmzS8ogqsLvHuAUXU35_mhIO3NCDX8RN3qr8_ShnE04CLTE5Zw4We2O",
-        "id": "xt5w7v30xij",
-        "category": "Health",
-        "source": "ScienceDaily",
-        "headline": "Scientists Say House Cats Could Help Unlock New Cancer Treatments for Humans"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:21.308Z",
-        "date": "2026-05-25",
-        "detail": "Researchers at Duke University have discovered a potential new way to stop chronic nerve pain at its source by reviving damaged nerves.",
-        "headline": "Scientists “Recharge” Damaged Nerves to Ease Chronic Pain",
-        "id": "gm9btpyq6mr",
-        "category": "Health",
-        "source": "ScienceDaily",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsP__Eg1rzm_LLjD1cObPBMPjcACfa7vUs4cAnKGQnx8r0p6BqgU4_dQbgmM7KDHu1jd1Pqk39mKEWrvrDSIpr2CVQjQmzS8ogqsLvHuAUXU35_mhIO3NCDX8RN3qr8_ShnE04CLTE5Zw4We2O"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:21.308Z",
-        "date": "2026-05-25",
-        "detail": "Researchers found that adding bananas to berry smoothies can dramatically reduce the body's ability to absorb healthy flavanols, showing that even simple food combinations can change how much nutrition your body actually gets.",
-        "headline": "Surprising Research Reveals Why You Shouldn't Add Bananas to Your Smoothies",
-        "id": "jnfzwhknk3",
-        "category": "Health",
-        "source": "ScienceDaily",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFsP__Eg1rzm_LLjD1cObPBMPjcACfa7vUs4cAnKGQnx8r0p6BqgU4_dQbgmM7KDHu1jd1Pqk39mKEWrvrDSIpr2CVQjQmzS8ogqsLvHuAUXU35_mhIO3NCDX8RN3qr8_ShnE04CLTE5Zw4We2O"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:21.308Z",
-        "date": "2026-05-25",
-        "detail": "A study published this month by researchers at the University of Ottawa has found that applying woodchips to some trails significantly reduced local tick populations.",
-        "id": "1xw3y89hsi7",
-        "category": "Health",
-        "source": "CBC News",
-        "headline": "Woodchips on trails reduce tick populations, Ottawa researchers find",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPTZPRUB0HKHQVbB-IM-EJMvaYsoo7XmnVqUW7fCFS3TqQ4F3oTfG45I_PQw3xLVfg0eDs5F8KEMPPApejYCxN9HvTpL3QKY9xbSn0QDwTK4fYpB24AEJu2g=="
-      }
-    ],
-    "Entertainment": [
-      {
-        "headline": "Supergirl trailer brings back David Corenswet's Superman, Krypto's tragic fate and Jason Momoa's Lobo debut",
-        "id": "vg0vwffrfz",
-        "category": "Entertainment",
-        "source": "Mint",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHScOXQ9OFFd3P7_NPoD_DGmgN4BzfSjmgVFCz56REckMBfs28mHnl4HVt44AoocQ4XPYQRfSjqfJtJJgEtAnzCgPm88jAFN-_jxBLtq-etzmDIhmIOLiZtFHWjZUPHgXi3m-wPKK5ggHIypqy2MhCoU2gRHNqnvEJX1U6zyKVhpRp-kPNpEUVii1yiNabnaUw_-rHFi3rTiEK-Mg3OrPe5tQ_etjbgam0oQjBkfJJvKTR-",
-        "fetchedAt": "2026-05-25T02:00:12.660Z",
-        "date": "2026-05-25",
-        "detail": "A new trailer for Supergirl has offered fans their clearest look yet at the dynamic between Kara Zor-El and David Corenswet's Superman, while positioning Krypto the Superdog at the emotional centre of the film."
-      },
-      {
-        "headline": "Disney's new Star Wars film Mandalorian on track to gross $211 million in global opening",
-        "id": "guj6j4ijuov",
-        "category": "Entertainment",
-        "source": "The Straits Times",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTtB-qBIpjguu5y_nza_Z7tC4e8J51VA9TELxtFG3uPa1fpAStiT-ZCCqcV1ZCGaXQq-pXGaPqokItpiVI6PCG-Xt6_ybX23zIbCWvhmGPc-mUbnO5_GSRGlIo61tK4bTlhyIuLVucFi-x",
-        "fetchedAt": "2026-05-25T02:00:12.660Z",
-        "date": "2026-05-25",
-        "detail": "Disney's new Star Wars film 'The Mandalorian and Grogu' is expected to gross $211 million in its global opening weekend."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHdR_m9qyXfwPsTuy0x3TnUeRhLO6Ip9Shz5Fz1hOKBCfuOES7P1hpiYPftbZB7eTJV_2SFV7qwlsCjdTSycqc1BfNXBqTjqYIh2XaMQJneutJjP2vnMVcc1wPMsXSTlgWmG3z7eQ==",
-        "headline": "Kyle Busch Honored During Indy 500 Days After His Death at Age 41",
-        "id": "kq23kwo4xod",
-        "category": "Entertainment",
-        "source": "Us Weekly",
-        "date": "2026-05-25",
-        "detail": "NASCAR champion Kyle Busch was honored at the Indy 500 following his death at age 41.",
-        "fetchedAt": "2026-05-25T02:00:12.660Z"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:12.660Z",
-        "date": "2026-05-25",
-        "detail": "A video was released showing Britney Spears' DUI arrest on March 4, 2026, in Ventura County, California, where officers smelled alcohol and conducted a field sobriety test. Spears later pleaded guilty to reckless driving.",
-        "headline": "Britney Spears argument, DUI arrest on video",
-        "id": "5ntcokrpc14",
-        "category": "Entertainment",
-        "source": "CBS News",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5It6jp9m_4Ji5HDMgiUQkZQPgreJmEnDjNLu6b28ynmrgikDnNXwcQbDHCj0GfkMaL_n6fiT9TMHsfhC8ShvBKbuhjwLZ5WDfaQTviDdRrHdlQorbGLSTsqWTV56JqaEo"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLgSX3kEyBPc--Z0Mcfy37RZ2sQ4-570RysIiX5-To2tfKnITMyDfxggFcQaVpqL-wAr4vnFqEq8TWgu_hpMWOD9dXtiHvwS85Z5zYFgrDBsSX9AoF9gohnzud6o5ZPViv_VlLZl6guflQcnMERP6SL1vXFiP73T8WciuLXnIB-S-7e1q5_W9dgwxrK35lkPNqBpDTgHZ9G3YXzwRGN8fGJDAuHQV_OSY5Ut7Y3vySfPjaIXCXE2U862CAVMcsoUkQvCl2Tsy2_5Pec7JgReazoEDqN0Sz-7Y6dSPKl48iwtdijIkbWMo=",
-        "headline": "Goodbye cutesy, hello techno: Girl groups embrace harder, faster, louder sounds as trends shift",
-        "id": "u6r70yyft28",
-        "category": "Entertainment",
-        "source": "Korea JoongAng Daily",
-        "date": "2026-05-25",
-        "detail": "K-pop girl groups are shifting away from cutesy themes and embracing harder, faster techno sounds, aligning with short-form video promotion trends. Blackpink is seen as one of the groups that helped bring the genre back into the mainstream global spotlight recently.",
-        "fetchedAt": "2026-05-25T02:00:12.660Z"
-      }
-    ],
-    "Politics": [
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFNxVX6peeaMVGsndqh4Jos2_7R-t02rtVauN651THG66aAU8lVIWJz6Z2NHJtKum-ohDREubbExnPSw-aMrDxS4VnRuET2k6YUld1r2CL6rShpvQ-IhdtXbQ11AFk20J9w7nyAhH-a0ugpQRGYfMVNZGDdP8zEOlA6bcSMiLuR3vcw1MdSFFCDUGdyWF9BLks-hPpPpjBDnGkvfJb8tghB3RisaqP0cfexFIXeWuQUdZcPhKBrHQNYMbbTrf_2P3HsTSBo-so=",
-        "id": "46ya68086bf",
-        "category": "Politics",
-        "source": "SIPRI",
-        "headline": "Peacekeeping in peril amid plummeting troop numbers and geopolitical deadlock: New SIPRI report",
-        "date": "2026-05-25",
-        "detail": "Geopolitical tensions, political pressure, and funding crises are jeopardizing multilateral peacekeeping, with personnel numbers at their lowest in 25 years, according to a new SIPRI analysis. The number of personnel in peace operations at the end of 2025 fell to its lowest point in at least 25 years.",
-        "fetchedAt": "2026-05-25T02:00:23.465Z"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:23.465Z",
-        "date": "2026-05-25",
-        "detail": "Premiers from western provinces will meet in Kananaskis for two days starting Monday amid pipeline tensions between B.C. Premier David Eby and Alberta Premier Danielle Smith. Both premiers have acknowledged potential awkwardness at the meeting.",
-        "id": "7h4hte7hgf",
-        "category": "Politics",
-        "source": "CBC News",
-        "headline": "Western premiers to meet in Alberta amid pipeline tensions between Smith and Eby",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHV0ZDsMtNpssvlpTxVVRf_F6eb634XSkqv3xZlio4IOLYW1L0VTfdaQKQTJZ6X5zG3OakCxiLKnooBraLvKMPizfEpAFESqB0LAPoAqdcHk0DnbO_D9EmD_48B"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "A suspect is dead after opening fire near a White House security checkpoint. The Secret Service is investigating the incident.",
-        "fetchedAt": "2026-05-25T02:00:23.465Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG2qdAdNRgcZ-NbnCHdcWFYR3YzUTvTlAVhoJYxJxb4eZY34XqR_DznyyFgMUNoHIS__SSkrZl1Ug_U_sXCzW7FrjrEOwvB4iDZKBaXKLa3wWKgohzDXg==",
-        "id": "tm7fp781fg",
-        "category": "Politics",
-        "source": "AP News",
-        "headline": "Suspect dead after opening fire near White House security checkpoint, Secret Service says"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "Teal independents in Australia are reportedly in discussions to form a new political party, driven by voter disillusionment. Teal MPs Allegra Spender and Zali Steggall are reportedly leading the push, with planning underway for months.",
-        "fetchedAt": "2026-05-25T02:00:23.465Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGH0MJHGVj9RVoGTJmgin0Uoj1vWIqlOlcQ9o-FAz0BCAifHQKVMQb3rnKjFVotqr-UZOabfzVoEuJyLV_1mCD6b-m0V0ajkdBUv7ewEFob8aVmzDC_zyThg7NfpqDjCfeJgpmJkU_DGFSg58LbWTxUVakkcymhYzmL6jLBjT3BbwGF3nqc8TTUGA==",
-        "id": "odn6ja4q6lk",
-        "category": "Politics",
-        "source": "InDaily",
-        "headline": "Teals in talks to form new political party: Report"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:23.465Z",
-        "date": "2026-05-25",
-        "detail": "The Security Council is expected to vote on a resolution renewing the authorization for member states to inspect vessels off the coast of Libya that are believed to be violating the arms embargo, with the current authorization expiring on May 25, 2026. The Council is also expected to receive a briefing on the International Criminal Court's activities related to the situation in Libya.",
-        "id": "rjru90ao9a8",
-        "category": "Politics",
-        "source": "Security Council Report",
-        "headline": "Libya, May 2026 Monthly Forecast",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFZ3XN7sww_w4Xbdohr95WkImCCb_Raicw80WLtKIE2i_Q074eCoiJoaGxg11am5WfKF2IAj-ixh_83HfpLlWuxP6wfywmR94D-uX0Akne7rGz9PW3MePqwsg75buX0il6XDWe984YNPRB2Y0AvKbDDxuNNGNUMeohKjiwZVdXiJFgV763Nw=="
-      }
-    ],
     "Zimbabwe": [
       {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQED_DvBDxuFnRG4a_UM_Nzb5eB7d3sJVY7ZF46OBpjqsbz7awUuJOxIOYGud4BSxCLVmXqV2lJyEg6lZx4kpaLSwUXln3ph_iA4cm2iG5phydAhZDFzv1MKyNI=",
-        "headline": "Bee project advances Zim's bid to export honey to EU",
-        "id": "nl4zz7wzqv",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgD7q4hLkricIHRoyBQmteMgfOOobDP0yPU6E-YaZ-PTOiR2uhPh8H8GpKD7gDOzqK730KynZPPox8oc4q6ncNL3ZZybuf43CGAy_TqFLBW2I4BryWq5safl1P2VBk1iiIXKVNMsMV8IbX",
+        "fetchedAt": "2026-05-25T14:00:27.499Z",
+        "id": "9wz1dgnjdts",
+        "source": "allAfrica.com",
+        "headline": "Zimbabwe Deports 28 Mozambican Teens, Visually Impaired Man Engaged in Street Vending and Begging",
+        "detail": "Zimbabwe has deported twenty-nine undocumented Mozambican nationals, including 28 boys aged between 14 and 18 and one visually impaired man, after they were found to be in the country illegally and engaged in informal street vending and begging. The deported Mozambicans were received at the Machipanda Border Post by a Mozambican multi-sectoral team.",
+        "category": "Zimbabwe"
+      },
+      {
+        "headline": "VP Chiwenga shares leadership principles with students abroad",
+        "fetchedAt": "2026-05-25T14:00:27.499Z",
+        "id": "qqgpeukbauq",
+        "source": "Zimbabwe Situation",
         "category": "Zimbabwe",
-        "source": "The Herald",
+        "detail": "Vice President Chiwenga has been sharing leadership principles with students abroad. The Vice President's efforts highlight the importance of fostering strong leadership qualities among the next generation of Zimbabweans, even those studying outside the country.",
         "date": "2026-05-25",
-        "detail": "Zimbabwe has taken a decisive step toward accessing the European Union honey market with a bee project.",
-        "fetchedAt": "2026-05-25T02:00:11.595Z"
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgD7q4hLkricIHRoyBQmteMgfOOobDP0yPU6E-YaZ-PTOiR2uhPh8H8GpKD7gDOzqK730KynZPPox8oc4q6ncNL3ZZybuf43CGAy_TqFLBW2I4BryWq5safl1P2VBk1iiIXKVNMsMV8IbX"
       },
       {
-        "fetchedAt": "2026-05-25T02:00:11.595Z",
         "date": "2026-05-25",
-        "detail": "The Parliament is consolidating public submissions regarding the Amendment No.3 Bill.",
-        "headline": "Parly consolidates public submissions on Amendment No.3 Bill",
-        "id": "a7ykldw23es",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgD7q4hLkricIHRoyBQmteMgfOOobDP0yPU6E-YaZ-PTOiR2uhPh8H8GpKD7gDOzqK730KynZPPox8oc4q6ncNL3ZZybuf43CGAy_TqFLBW2I4BryWq5safl1P2VBk1iiIXKVNMsMV8IbX",
+        "headline": "Mash West boost winter wheat production",
+        "fetchedAt": "2026-05-25T14:00:27.499Z",
+        "id": "zcu152qapeh",
+        "source": "Zimbabwe Situation",
         "category": "Zimbabwe",
-        "source": "The Herald",
-        "url": "https://www.herald.co.zw/"
+        "detail": "Mashonaland West is working to boost winter wheat production. This initiative aims to enhance the region's agricultural output and contribute to national food security."
       },
       {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgD7q4hLkricIHRoyBQmteMgfOOobDP0yPU6E-YaZ-PTOiR2uhPh8H8GpKD7gDOzqK730KynZPPox8oc4q6ncNL3ZZybuf43CGAy_TqFLBW2I4BryWq5safl1P2VBk1iiIXKVNMsMV8IbX",
         "date": "2026-05-25",
-        "detail": "CAPS United has had ten days to reflect and recover from the pain of conceding a last-gasp goal.",
-        "fetchedAt": "2026-05-25T02:00:11.595Z",
-        "url": "https://www.herald.co.zw/",
-        "id": "1ozibminttz",
         "category": "Zimbabwe",
-        "source": "Hmetro",
-        "headline": "CAPS BACK IN ACTION AFTER SIMBA HEARTBREAK"
+        "detail": "President Mnangagwa is urging the youth to uphold their vows. The President's message underscores the importance of young people staying true to their commitments and values.",
+        "headline": "President implores youth to uphold vows",
+        "fetchedAt": "2026-05-25T14:00:27.499Z",
+        "id": "pymhrkrmh9p",
+        "source": "Zimbabwe Situation"
       },
       {
-        "id": "8b0kzadg45g",
         "category": "Zimbabwe",
-        "source": "The Herald",
-        "headline": "VFEX-listed WestProp posts robust Q1 growth",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQED_DvBDxuFnRG4a_UM_Nzb5eB7d3sJVY7ZF46OBpjqsbz7awUuJOxIOYGud4BSxCLVmXqV2lJyEg6lZx4kpaLSwUXln3ph_iA4cm2iG5phydAhZDFzv1MKyNI=",
-        "fetchedAt": "2026-05-25T02:00:11.595Z",
-        "date": "2026-05-25",
-        "detail": "Victoria Falls Stock Exchange-listed property developer WestProp Holdings delivered a strong performance for the quarter ended March."
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "African institutions of higher learning, research centers and innovators should continue to develop homegrown solutions.",
-        "fetchedAt": "2026-05-25T02:00:11.595Z",
-        "url": "https://www.herald.co.zw/",
-        "id": "jufsnsddxd",
-        "category": "Zimbabwe",
-        "source": "The Herald",
-        "headline": "‘African solutions to African problems’"
-      }
-    ],
-    "Opinion/Editorial": [
-      {
-        "id": "cm5pn6irwu",
-        "category": "Opinion/Editorial",
-        "source": "Inquirer Opinion",
-        "headline": "Bato hits rock bottom",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8h_mVeupxHdHB9SGGGeNx-BMCadfeYNkyJxY0mD5L86bL8zL8QUIgjuavdQ2BU_aua8lHfWZbflcW9nI4F_96RxGYEi-YOAbF5werZVtTJDkb4hSv36vP5W3J-VBJe6GOhWod8fZI7wz50a50K6aYI2frEw==",
-        "fetchedAt": "2026-05-25T02:00:11.738Z",
-        "date": "2026-05-25",
-        "detail": "The Supreme Court rejected Sen. Ronald “Bato” dela Rosa's plea to stop his arrest by the ICC, and the Justice Secretary ordered the hunt for him to begin, leaving him with diminishing political protection."
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:11.738Z",
-        "date": "2026-05-25",
-        "detail": "After more than two decades of activism, Indonesia's parliament passed legislation classifying domestic workers as workers, ensuring they are entitled to health insurance, days off, and pensions, and activists say this example shows that persistent lobbying of individual legislators and helping workers to share their stories is critical.",
-        "headline": "Indonesians are fighting for and winning their rights",
-        "id": "dpstcdazoy",
-        "category": "Opinion/Editorial",
-        "source": "Taipei Times",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBu4EEH4l4_JSpoxOaxGRIbhgbQrXAWR5u86CRB_IDUgS7Hk7gD7_0wHsCZZZ-xxrPk_2PHCa0QSfeZm4f487eBCjJKzFshi4g6DuMPF5JeSMZADcv7cNQyWgilURVduZHKpDfo8a33JDq5ZStZWQ4r6NzwsQroP0ovvusbNqi1sZglnNM"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHVkkHYAPmjjBHioOflBnLBYZ28pxaMKZbfnI3iQb9DJiT-AJJjAz1x-gOch-XWGADixqFFqN6URySNh8IVGm16a5ff4yOqCUwwikQMZUNLBkYxt0KZBian4pK42SgIag==",
-        "id": "hv8gag2ik3i",
-        "category": "Opinion/Editorial",
-        "source": "San Antonio Express-News",
-        "headline": "Antisemitism an issue for both major parties. Voters must reject it.",
-        "date": "2026-05-25",
-        "detail": "San Antonio voters will show us how deep antisemitism runs in our community and Democratic primary voters should reject Maureen Galndo's antisemitism because there should be no tolerance for intolerance.",
-        "fetchedAt": "2026-05-25T02:00:11.738Z"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:11.738Z",
-        "date": "2026-05-25",
-        "detail": "This opinion piece likely discusses the felling of trees on Quirino Avenue, potentially criticizing the action and its environmental impact.",
-        "id": "8sre1k7izbd",
-        "category": "Opinion/Editorial",
-        "source": "Inquirer.net",
-        "headline": "The massacre of Quirino Avenue trees.",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGul3LlYXfQqJF7hpRkCCIUYVsrYMjlWvxnkuPtLtMLQJRDg19LlXDDozsMmUnWj9Ulii5tma8uVq217oqlyf1ZV2IKCJYf6is5excegjQtkNyjh0q6ATG1"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "The growing popularity of the Cockroach Janta Party (CJP) points to a deeper problem that many institutions today seem to lack transparency and a meaningful connection with the people and there is also a growing perception that some of them are giving up their independent voice and avoiding speaking truth to power.",
-        "fetchedAt": "2026-05-25T02:00:11.738Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGtNvgMUKtKUTiyZr2LJFzwmig5AFlFb6jpBGHaQdYoSnRWcDnn3AHD9Ask4NTo4HK4JHPJHG8nDoAYJPvjPSfS6eyzhY9nOH_AhFfBWVpnDwp9wesSwChnKaHYXFde45vDYIP2yplYhldt2LWTsVMTzrMtxFZbJFRW13Yl-wqBS4ZsQPDx96167lHfzFcOPQtIbPjQmq-Xo_g=",
-        "headline": "Letters to The Editor — May 25, 2026",
-        "id": "2ivi3idjc15",
-        "category": "Opinion/Editorial",
-        "source": "The Hindu"
-      }
-    ],
-    "Science": [],
-    "Finance & Economy": [
-      {
-        "headline": "UK retail sales volumes drop 1.3% in April, biggest fall since May 2025",
-        "id": "9h0xaep6brr",
-        "category": "Finance & Economy",
-        "source": "Trading Economics",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHmNvgHlzDUvB_ns59V1_ohdJh3i3RyInl9cr4T9y8NqtBQtaB0vbVYeUHdS_J4DBoFQ42FXCsPzE7IJVz4SSzZd2isRlYnRgCORiFKUfRwm-cKa_6aL7u",
-        "fetchedAt": "2026-05-25T02:00:11.550Z",
-        "date": "2026-05-25",
-        "detail": "UK retail sales volumes dropped 1.3% month-on-month in April 2026, worse than expectations of a 0.6% fall, mainly due to a 10.2% slump in fuel sales as motorists made fewer journeys and delayed refuelling amid higher prices."
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:11.550Z",
-        "date": "2026-05-25",
-        "detail": "US stocks advanced, buoyed by signs of progress in Middle East peace talks and a strong corporate earnings season, with the S&P 500 gaining 0.4%, extending its winning streak to eight consecutive weeks.",
-        "id": "17vad77cfad",
-        "category": "Finance & Economy",
-        "source": "Trading Economics",
-        "headline": "US Stocks Extend Winning Streak Amid Middle East Peace Talks and Strong Earnings",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHmNvgHlzDUvB_ns59V1_ohdJh3i3RyInl9cr4T9y8NqtBQtaB0vbVYeUHdS_J4DBoFQ42FXCsPzE7IJVz4SSzZd2isRlYnRgCORiFKUfRwm-cKa_6aL7u"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzhHtkDncoUgIixwqR0yHtDa_wyg88x0qFDmZq72oFUChA6Yl2QWNnuI0W8-IyMsWr1adD6dJabmwC7xdhMhOmp4MiDPQCqb6CSbCh6m2iAVkB86qNak7f55PGooC1",
-        "headline": "AI Impact on US Labor Market: Suppressing Hiring",
-        "id": "p1a8mmcqa6b",
-        "category": "Finance & Economy",
-        "source": "CBS News",
-        "date": "2026-05-25",
-        "detail": "Economists say AI is reshaping the U.S. labor market by suppressing hiring even as overall job losses remain limited.",
-        "fetchedAt": "2026-05-25T02:00:11.550Z"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "Kevin Warsh was sworn in as the new Federal Reserve chair, replacing Powell, and vowed to preserve the Fed’s independence over monetary policy.",
-        "fetchedAt": "2026-05-25T02:00:11.550Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzhHtkDncoUgIixwqR0yHtDa_wyg88x0qFDmZq72oFUChA6Yl2QWNnuI0W8-IyMsWr1adD6dJabmwC7xdhMhOmp4MiDPQCqb6CSbCh6m2iAVkB86qNak7f55PGooC1",
-        "headline": "Kevin Warsh Sworn in as New Fed Chair",
-        "id": "6snpqe7hf8j",
-        "category": "Finance & Economy",
-        "source": "CBS News"
-      },
-      {
-        "id": "95m1r8cjkw4",
-        "category": "Finance & Economy",
-        "source": "U.S. Bureau of Economic Analysis (BEA)",
-        "headline": "U.S. International Trade Deficit Increased in March 2026",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFV33yDx4le_iuaU40kp7MOPSeYQEEDwoplGdNgfPDE3jPHR11PGKSy0nuiOctqfXFHIF21TxbGodXB5JuqVaD4itjqpva8nj4ypzmYtjde",
-        "fetchedAt": "2026-05-25T02:00:11.550Z",
-        "date": "2026-05-25",
-        "detail": "The U.S. monthly international trade deficit increased in March 2026 to $60.3 billion, as imports increased more than exports, according to the U.S. Bureau of Economic Analysis and the U.S. Census Bureau."
-      }
-    ],
-    "Sports": [
-      {
-        "date": "2026-05-25",
-        "detail": "Tropang 5G, playing without an import, pulled off a surprising victory against the Bolts, putting them closer to the championship series.",
-        "fetchedAt": "2026-05-25T02:00:11.523Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrmjBugEjMmQk84GHNFeCiCOfkQQWTtsFrWVAknEbmNAbNZgYryfGyP64TcDmWzPmDvNgiX6Z8BsnO1ZlcgqeL35ojrK2TwIo6vadmrlqiQl6EycEzfLs=",
-        "headline": "Import-less Tropang 5G stun Bolts to move within two wins of title series",
-        "id": "4phgdvpgtn",
-        "category": "Sports",
-        "source": "Inquirer.net"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "Chris McCullough stated that a call from RHJ (Rondae Hollis-Jefferson) influenced his decision to return to the PBA (Philippine Basketball Association) and join TNT.",
-        "fetchedAt": "2026-05-25T02:00:11.523Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrmjBugEjMmQk84GHNFeCiCOfkQQWTtsFrWVAknEbmNAbNZgYryfGyP64TcDmWzPmDvNgiX6Z8BsnO1ZlcgqeL35ojrK2TwIo6vadmrlqiQl6EycEzfLs=",
-        "headline": "Chris McCullough says call from RHJ made PBA return with TNT happen",
-        "id": "nhqz0u7yez",
-        "category": "Sports",
-        "source": "Inquirer.net"
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFrmjBugEjMmQk84GHNFeCiCOfkQQWTtsFrWVAknEbmNAbNZgYryfGyP64TcDmWzPmDvNgiX6Z8BsnO1ZlcgqeL35ojrK2TwIo6vadmrlqiQl6EycEzfLs=",
-        "id": "oibhjitso18",
-        "category": "Sports",
-        "source": "Inquirer.net",
-        "headline": "PBA: Caracut, Rain or Shine start hot but fizzle out in Game 3 loss",
-        "date": "2026-05-25",
-        "detail": "Despite a strong start by Caracut and Rain or Shine, they were unable to maintain their momentum and suffered a loss in Game 3.",
-        "fetchedAt": "2026-05-25T02:00:11.523Z"
-      },
-      {
-        "id": "8z712dyqk6v",
-        "category": "Sports",
-        "source": "FOX Sports",
-        "headline": "2026 UFL Week 9 Results: Chandler Rogers' Two TD Game Lifts Kings Over Renegades",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfyRD4p1vuzONE-eHfsB1K8q_e371NLl2uCF-y9UZGG9lp689TJ-CwbdvVHlol4bkdN2ACvXqghsOjC53deGnfu7I0AcCA-egFTMVC1v8h8n4MjwtohxMyTHWLWA==",
-        "fetchedAt": "2026-05-25T02:00:11.523Z",
-        "date": "2026-05-25",
-        "detail": "Chandler Rogers had a standout performance with two touchdowns, helping the Kings secure a victory over the Renegades in Week 9 of the UFL."
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "Erling Haaland has won his third Golden Boot, putting him on par with Harry Kane and Alan Shearer.",
-        "fetchedAt": "2026-05-25T02:00:11.523Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfyRD4p1vuzONE-eHfsB1K8q_e371NLl2uCF-y9UZGG9lp689TJ-CwbdvVHlol4bkdN2ACvXqghsOjC53deGnfu7I0AcCA-egFTMVC1v8h8n4MjwtohxMyTHWLWA==",
-        "id": "hr9ltl52nrm",
-        "category": "Sports",
-        "source": "FOX Sports",
-        "headline": "Erling Haaland Wins Third Golden Boot To Match Harry Kane, Alan Shearer"
-      }
-    ],
-    "Lifestyle": [
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG7tFWP2NTFHnFx9t1IDW7ZW9qllumXKfxQyRgJcmvmC5gq_fHNXiaKgFH5oLtKdQ2mhJrwfBh5iWmXbiUzmt_jDoNM3oEarDSwtFOuWBLzQzUychmuoL91mT2EtHYGu5ubDqTylNhGWHmda8IltIrVMrHej5H7cmXLiWcvPt3x8SIWm48_w5eH63nt4BofaWNY9fDPY2WnuMMFdZ7GWHkiKSzDZMxbXAR09xM4zbLiVvxzl5mod3iPsxWzcB9Rhw0=",
-        "id": "bhfvfe3r90e",
-        "category": "Lifestyle",
-        "source": "FMT",
-        "headline": "When the sea speaks: M'sian sailors share stories of life far from shore",
-        "date": "2026-05-25",
-        "detail": "A new anthology, “Stories of the Seas”, brings together tales by former officers and engineers of Malaysian International Shipping Corporation Bhd (MISC), who served during the 1970s and '80s, sharing firsthand accounts of storms, sacrifice, humour and brotherhood.",
-        "fetchedAt": "2026-05-25T02:00:11.488Z"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "Hotels are trying to improve their rankings in ChatGPT's travel recommendations, as AI-powered travel planning becomes more popular.",
-        "fetchedAt": "2026-05-25T02:00:11.488Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKvMXAikEAWxWnK6PAX6x3yhF8fdpE-_DDKtMp4Cek_Xzg3mW_6qTHHCiyT8EARxfuhI2R9ghRKqYdlQZxdsGQ54soE115ckg1oUIJ6GDD4VnMt0TcPmxTMQvRqmSFC0XpxUkOZVl3vjjsSpYOE1cQiA-d",
-        "headline": "Hotels Want to Rank in ChatGPT's Travel Plans",
-        "id": "lex701lqeib",
-        "category": "Lifestyle",
-        "source": "CommonWealth Magazine"
-      },
-      {
-        "date": "2026-05-25",
-        "detail": "Photos showcase the work of dogs brightening hospital days.",
-        "fetchedAt": "2026-05-25T02:00:11.488Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEXrDLCokFqPucHR3EtBjBbv894nW1EToxwefWUGCC53xhn0sSTL_aGL8AARbSlQKUaLe0pl5YmqOaN0UW35OGnWeXnJn1pKuWVp2G2lSCN65NKj0eE1NQ=",
-        "id": "iwfi2eoeup",
-        "category": "Lifestyle",
-        "source": "AP News",
-        "headline": "Healing with a wag and a nuzzle, meet the dogs brightening hospital days, in photos"
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:11.488Z",
-        "date": "2026-05-25",
-        "detail": "Sara is proud of her brother Arjun's IPL 2026 debut and expresses her support.",
-        "headline": "Sara Is \"Proud\" Of Brother Arjun's IPL 2026 Debut: \"You Deserve The World\"",
-        "id": "a8vvof9tult",
-        "category": "Lifestyle",
-        "source": "NDTV Lifesyle",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEUPN8SY2plD7dTvPhy3Kp0-xlHjZfIABTjBnTrX7avc4cDC1Vk9LKeUL0orW916KzJRy1dDLiviNbbKtIF2o6BI1HhDnBa7NXu9qZ-ki97_E7CBHfvwPmwpg=="
-      },
-      {
-        "id": "bdipqarekxb",
-        "category": "Lifestyle",
-        "source": "The Independent",
-        "headline": "The lifestyle changes that could add an extra five years to your life",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUpdgtTPFAQat2vGHOgLwJ9yYnveTs4nLGUYz7Mx-1m8mpf4QTA85T197Ce-KuX6Wj8h-ktRTlkvT8HAB7QUYAwHgmGNCaM2--ae6ZKPLk2OpBEykC8AaYYLDaLjmgS2xn4JB1zzpczA==",
-        "fetchedAt": "2026-05-25T02:00:11.488Z",
-        "date": "2026-05-25",
-        "detail": "Healthy living could prolong the lives of some by five years."
+        "detail": "SADC is taking steps to address a 1.6 million tonne fish gap. This initiative aims to boost fish production and ensure food security within the Southern African Development Community.",
+        "headline": "SADC moves to plug 1,6m tonne fish gap",
+        "fetchedAt": "2026-05-25T14:00:27.499Z",
+        "id": "fod0z87hj57",
+        "source": "Zimbabwe Situation",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGgD7q4hLkricIHRoyBQmteMgfOOobDP0yPU6E-YaZ-PTOiR2uhPh8H8GpKD7gDOzqK730KynZPPox8oc4q6ncNL3ZZybuf43CGAy_TqFLBW2I4BryWq5safl1P2VBk1iiIXKVNMsMV8IbX",
+        "date": "2026-05-25"
       }
     ],
     "Education": [
       {
-        "id": "x0aovc8jxzn",
+        "fetchedAt": "2026-05-25T14:00:34.727Z",
+        "id": "0bo5sqjldnu8",
+        "source": "The Guardian",
+        "headline": "UK universities warn of cuts for impoverished students if dire funding issues continue",
+        "detail": "UK universities are warning of potential cuts affecting impoverished students due to ongoing funding problems.",
         "category": "Education",
-        "source": "The Star",
-        "headline": "Bank commits RM1mil annually to schools",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHXImyKBTUylrb6DVVMA0dRtdJT8eCVh2bUfk7IE8hc6C6tr_AgQi7eVSSbtpZMo-VZNvBH-kid9Q3ogfN44VwbZgga4NBd0HjVByq9Jgcc9OmqZPI8Kcs0Ygb5zYz6JBd5cFyjPPnk1TvU3whkuxAyz41L_t986p8MDkThHBItO8Hs_L-ykGzd4A6jaeyZaarr4mc5gztrlA4=",
-        "fetchedAt": "2026-05-25T02:05:14.765Z",
         "date": "2026-05-25",
-        "detail": "A bank in Malaysia has launched a new school programme, committing RM1 million annually to provide sustained support to 40 schools nationwide, focusing on essential learning tools, enhanced school environments, and exposure to STEM and digital skills."
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEY9S6Ai6Vn4e2sYmirhO_B3x7PKXdzIo4ujNJuDc31S61WLlcNRrampRdPF2tWOPNFY0dbMtwasvhAH-DmlNn_al8fWOsSG6yYCh51Ys4g0ZvAo-uqRErP0JlYR-NQ-gs="
       },
       {
-        "id": "8w41c1ijbl",
-        "category": "Education",
-        "source": "Lakeshore School - Calgary Board of Education",
-        "headline": "Update to Parents - Week of May 25, 2026",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFgF7rLcRZOx8-dLa54ib81sR0jL_3pXoT1KZ47_PsrStNCQXCO-6RPljJ_ipEa6exmYP7D3nPRDUJwovHil8xtPk4HMXyKYt4fckLQ8K6NBTczP6RElq8k0YoWF_8GToIGYS8QTeUl3jm1q2ggNyCdQyZJIh_HR_zyh-duVbl6sm0=",
-        "fetchedAt": "2026-05-25T02:05:14.765Z",
-        "date": "2026-05-25",
-        "detail": "Lakeshore School welcomes incoming Grade 6 students, as well as new Grade 7-9 students, and their families on Thursday night for their Open House, and any parents interested in learning the basics of Pickleball are welcome to join the intro event on Tuesday night."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFbpezMJeDdnnZqWKrCMO3rM_l6KaIK-d2ZLVJqBQf_LaQ0OcipMo5ugmw2N6uOIBFbBvVDhWDdtAzc6FvQz9bvFViwS2wgMxuOvi_UDqerXMB3GNKnQnuXbwf2g1Vcz7X5oyShJ3GVANViKau6ffMNIre28ljWOdxd8xkwa3n8Ha3rObQfEHw=",
-        "id": "npdj3ng8a49",
-        "category": "Education",
-        "source": "Mirage News",
-        "headline": "Statement On Death Of Peter Buckskin PSM",
-        "date": "2026-05-25",
-        "detail": "Peter Buckskin, inaugural Chair of the National Aboriginal and Torres Strait Islander Education Corporation (NATSIEC), has passed away; he advised the government across the education sector and championed culturally grounded teacher education and Indigenous research excellence.",
-        "fetchedAt": "2026-05-25T02:05:14.765Z"
-      },
-      {
-        "headline": "Syrian educators welcome salary increase decree as step toward better education quality",
-        "id": "44t0tm6svkw",
-        "category": "Education",
-        "source": "Syrian Arab News Agency",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHrcAtNGmGVIrmWlIlT8LIx8MXIgkS9PA8nKiiAH8f14BQMSyeosR3dhGRDF2ma2G6He0s2rqNcAlc5ZheIyZqbUer1hepE7F3G34waIS-2niOZmVovSYf2Kn-Okf6lxws=",
-        "fetchedAt": "2026-05-25T02:05:14.765Z",
-        "date": "2026-05-25",
-        "detail": "Educators and academics in Syria said that the salary increase for workers in the education and higher education sectors represents an important step toward improving teachers' and faculty members' living conditions, strengthening job stability, and raising the quality of education."
-      },
-      {
-        "id": "z3ucusbnrf",
-        "category": "Education",
+        "fetchedAt": "2026-05-25T14:00:34.727Z",
+        "id": "k2l3u4c6wg",
         "source": "The Washington Post",
         "headline": "Harvard faculty vote to limit A grades for undergraduates",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHKtBrLbLOaRX3SFfaz0bSxcju1wEEYqcn3KSQzX9diZf_vo6YQ0GCkU9m2RcFUQQhwfsFavUOEt6vN8PwgaWy1OZSXT5hbFq7lkuTAyS3UpHfpluwyiTVLTFI1Kx7StmzowPBs",
-        "fetchedAt": "2026-05-25T02:05:14.765Z",
+        "detail": "Harvard faculty voted to limit the number of A grades undergraduates can receive in an effort to combat grade inflation.",
+        "category": "Education",
         "date": "2026-05-25",
-        "detail": "In a closely watched vote, the faculty took strong action to combat grade inflation."
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEpT95SKeCCCQLif5MlpN7kRQp7YF3S9zY6hAmtWCqKtLK_faTDa1pcs_NKWQ7vd-XODqhkq8b_A2FIRwhXcSt7KK2O_3yVybWwd-hQw5HuPRe6Zo15QywbZ9j3TtnnxokT4-5K"
+      },
+      {
+        "category": "Education",
+        "detail": "The White House budget office is withholding over $2 billion in congressionally approved funds from U.S. Department of Education accounts.",
+        "headline": "White House Blocks $2 Billion for Education: See All the Affected Programs",
+        "fetchedAt": "2026-05-25T14:00:34.727Z",
+        "id": "8qnlharni18",
+        "source": "Education Week",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZDgT15aW29miFLKumgOwUOpA5qc011Wal9sgyO1uf-5Ru0Cs2z26CHl620aqoTP3_qAIygRCnaRV2xpWRR6NRnr3sbdoPuv34NGncfJ2_KF4M",
+        "date": "2026-05-25"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEnYWOp99o975MJLFFWYIVBb8DVVjABLvezYwKjI0IlND2e8S9EyAfaMDOHcfR5ehKzSKGwM9cCu-JmEfRtS7ee5SUu5at0o_JMgDePkhBprMDYjZb8v_jyMk9hABsQ7dc8LpWdovaZ6aMu",
+        "fetchedAt": "2026-05-25T14:00:34.727Z",
+        "id": "q62eur8c6e9",
+        "source": "NEA Today",
+        "headline": "Facts & Stories with the 2026 NEA Higher Educator of the Year",
+        "detail": "Clinton Smith, a Tennessee professor of special education, has been named this year's NEA Higher Educator of the Year.",
+        "category": "Education"
+      },
+      {
+        "headline": "U.S. Department of Education Issues Final Rule to Create New Workforce Pell Grant Program",
+        "fetchedAt": "2026-05-25T14:00:34.727Z",
+        "id": "vjrmgmhtpkj",
+        "source": "U.S. Department of Education",
+        "category": "Education",
+        "detail": "The U.S. Department of Education has announced a final rule to implement the Workforce Pell Grant program, which was created under President Trump's Working Families Tax Cuts Act.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGYJbyKpoF6XhdVfOA0cPrcPaOUVwrQBAyZuxmXAUpwFbHRVBwbu0WritcKNuuIjZcdkKr8mMF_zqw4fdZJngIbTf8RsSNTjBldZIwagmw="
       }
     ],
-    "Crime & Justice": [],
-    "World": [
+    "Politics": [
       {
+        "detail": "President Trump is facing scrutiny regarding his health as he prepares for another visit to Walter Reed, with independent physicians questioning the White House's lack of transparency on key health matters.",
+        "category": "Politics",
+        "fetchedAt": "2026-05-25T14:00:28.834Z",
+        "id": "1elskyccp9p",
+        "source": "The Washington Post",
+        "headline": "Trump faces health questions ahead of another Walter Reed trip",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGB62xaowgNZw9DSC-1MF9m1iBXu3cwaeeeGwzOgjczWRvYz-beRREA6wzRqDDspaSo9Zh047Kx-odPoPUbL1UX0QfKwW5MqzDzUU6iJjMCtccpdI0B0CoXduLkPXHPYJS3MMo=",
+        "date": "2026-05-25"
+      },
+      {
+        "detail": "The U.S. and Iran are reportedly working towards an agreement to extend a ceasefire and reopen the Strait of Hormuz, leading to a fall in oil prices and a rise in global stocks.",
+        "category": "Politics",
+        "fetchedAt": "2026-05-25T14:00:28.834Z",
+        "id": "sixz040pap9",
+        "source": "The Washington Post",
+        "headline": "U.S. and Iran work toward deal to extend ceasefire and reopen Strait of Hormuz",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGB62xaowgNZw9DSC-1MF9m1iBXu3cwaeeeGwzOgjczWRvYz-beRREA6wzRqDDspaSo9Zh047Kx-odPoPUbL1UX0QfKwW5MqzDzUU6iJjMCtccpdI0B0CoXduLkPXHPYJS3MMo=",
+        "date": "2026-05-25"
+      },
+      {
+        "category": "Politics",
+        "detail": "Chinese President Xi Jinping has lauded the 'unbreakable' ties between China and Pakistan during a visit by Pakistani Prime Minister Shehbaz Sharif to Beijing, reinforcing the strong relationship between the two countries.",
+        "headline": "China's Xi praises 'unbreakable' Pakistan ties as Sharif visits Beijing",
+        "fetchedAt": "2026-05-25T14:00:28.834Z",
+        "id": "rrfmb0bmjzj",
+        "source": "Al Jazeera",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHo-jZzPwZ26FR7rW8ZmDkFna7Y5VsAnu9yEkEyEHXfoSaCDnUY036Ba_9AUbpnHjND25wJRLZzCZ8kdkcDX15uT0quVfj-RFoEWKHgWJDafA0_rNo441KW4Ubw6csNB3QhZQ==",
+        "date": "2026-05-25"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE09gsuaMnZffX0fkZmxSKZCpK5KgJaqHv52VukKc5SYU36AtaXOMeQM-iS_-PfC4yi1Tq_UyrGxtHYgux1hviR_4IN5B2KMfOJCKtpvj_SslZQukY1Wu409zMZHoRMMur-OqDA_s-KNaIXLUXiaXfbxr-ehxLiRDdrAiqW4qdbgjqm",
         "date": "2026-05-25",
-        "detail": "President Trump stated that the U.S. will not be rushed into a peace deal with Iran, even as details of a potential agreement emerge, aiming to de-escalate the conflict and reopen the Strait of Hormuz. However, disagreements persist over Iran's nuclear ambitions and sanctions.",
-        "fetchedAt": "2026-05-25T02:00:13.780Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOUD7KU9pe4w3iltqTa7YysPjSTpJfDLimoI8N64o5vBg1cXDB-8GqsHt11Vi2xSDvxkJRXPoqW-4-GgxxnzB8zjuoK0oP_CTkKiyvwDb1yqw0HdmZ8-g-4ZBF_CvZnptzl-OxUaUABV1Scxx2IugdY9xcJCUzAQA9CQuKPN5V4QENWLJJveqql6WP5xELDRlw6aw=",
-        "headline": "Trump says not to rush as U.S. nears potential Iran deal",
-        "id": "w79o2sgeoam",
-        "category": "World",
-        "source": "The Japan Times"
+        "category": "Politics",
+        "detail": "Three current state lawmakers are competing for seats on California's Board of Equalization, which was stripped of power in 2017 but remains a launching pad for statewide political office.",
+        "headline": "California's Board of Equalization is a coveted spot once again for state lawmakers looking for a new gig",
+        "fetchedAt": "2026-05-25T14:00:28.834Z",
+        "id": "kw382l91iii",
+        "source": "CalMatters"
       },
       {
         "date": "2026-05-25",
-        "detail": "Russia launched a large-scale attack on Kyiv, using hypersonic missiles and drones, causing damage to residential buildings and schools and resulting in casualties. Ukrainian officials reported that the overnight barrage resulted in multiple deaths and injuries.",
-        "fetchedAt": "2026-05-25T02:00:13.780Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF5jdrcUAuyNhg2CQ0VnBdyfO0BusBn4YBzGCaZCvfOneKZp6iQnnHrAphutFERSiJLEMRUnC1kvnkwkqIYeWo0SGyYJtdQsRcpWqBIpBdReKsTQzJ2_KzZ1xAN2g==",
-        "headline": "Russia hits Kyiv with hypersonic missile in 'deranged' attack",
-        "id": "28warh4uylu",
-        "category": "World",
-        "source": "The Guardian"
-      },
-      {
-        "headline": "Hajj 2026: Millions gather in Saudi for pilgrimage despite Middle East war",
-        "id": "888addvjgu",
-        "category": "World",
-        "source": "Mint",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHZRwEH_2QCIBfxOSaqU6gkrbsTxOEA5R52Y-ksBliKnIYGBqd8mdh08vYys0NQgl-ao7IKo1gelbW93QYgBHtR8ZeEXhu6MIsz2SrIaODKAVarzNm51rqUU8vmMKSWfLMqmyFIRxb4CzQcb3p_r-YG0KPnQXz4_2beN29yQiFTsqspff9jtyjW5LlgcqirVM6OqkribB5PDxS_fWH3e5jiOnAbJajI",
-        "fetchedAt": "2026-05-25T02:00:13.780Z",
-        "date": "2026-05-25",
-        "detail": "Millions of pilgrims have gathered in Saudi Arabia for Hajj, even as the Middle East grapples with ongoing conflict. The main rituals are scheduled to begin on Monday, May 25, preceding Eid al-Adha."
-      },
-      {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFtW2cXp6On_1fHLtVYTo4OtdcNB3ASwTQEE-Yi2WWvqdT15rQ98sD0AJenYfi1OMtXhTFMhcm-ejLN5c_zJEF9TgkKGBXj51qYWQSDxMvdAI8xtg6QMDn3xi8LqIBHpqslGBAx44bTKlhvjD8Dw1osUnq0nEt28uie6WAAa3AvFPz-UWFo5B9os7_yi6QR_eXsah73mEy9INXtAkwRLqmon71pCy6UzHk-MunBlw-9GR1eGunX_EtowK5s9sycvpDAYqJGuFw=",
-        "headline": "Peacekeeping in peril amid plummeting troop numbers and geopolitical deadlock: New SIPRI report",
-        "id": "0h6a5a5kxh6c",
-        "category": "World",
-        "source": "SIPRI",
-        "date": "2026-05-25",
-        "detail": "A new report by the Stockholm International Peace Research Institute (SIPRI) reveals that geopolitical tensions and funding crises are endangering multilateral peacekeeping, with personnel numbers at their lowest in 25 years. The report highlights a significant drop in peace operation deployments and funding shortfalls.",
-        "fetchedAt": "2026-05-25T02:00:13.780Z"
-      },
-      {
-        "id": "lvjtpmy68lp",
-        "category": "World",
-        "source": "CommonWealth Magazine",
-        "headline": "China Coal Mine Blast Leaves at Least 90 Dead",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqh2UMKLW14cK2nxjtZg2SEKjK4e_gZz2IaJoCim-tv2E2vrra-_ESk371xUX2dAclCMUYmhEZpQZVMnnJMZh-6lIUbqSd8lsAuV_7lVOmGdXI9w3Hp3sL6xAGyTRMdnTZjPDUBPjG-kGkuOwfpXYwoHFJ",
-        "fetchedAt": "2026-05-25T02:00:13.780Z",
-        "date": "2026-05-25",
-        "detail": "A gas explosion at the Liushenyu coal mine in Shanxi province, China, has resulted in the death of at least 90 people, with 38 miners still trapped underground. Chinese leader Xi Jinping has called for an all-out rescue effort and a thorough investigation into the cause of the explosion."
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFaTVok7ipkJKhjK_RdvnuwFB6vWDvkka28iVqTfSnZ5iXwOFungLyIzUwZo0t-zrQikcP1pHZ-BqLSq6MIf_BikNKHMz2ijO-0n39fOVRIpi8lgrDRcofzRrj8l6e_BaJ8Y2Fumx-dwSPPhlSYVhhgiSjMMBer_c1QXl4xRHNhxWqttsr0zVIIHNovst_8uoXv_0xfwbyS6wWOR0j_Q4XnimxM0NEZfXVdipXmI91GBmGWqvA93hj8T5gc2wph0DXa_Lupju_0CW0=",
+        "headline": "Federal Government is launching a campaign to help women going through menopause and perimenopause",
+        "fetchedAt": "2026-05-25T14:00:28.834Z",
+        "id": "tj0y5m1wvb",
+        "source": "ABC News",
+        "category": "Politics",
+        "detail": "The Australian Federal Government is launching a campaign to help women going through menopause and perimenopause to better understand their symptoms."
       }
     ],
     "Technology": [
       {
-        "date": "2026-05-25",
-        "detail": "At the 2026 IEEE International Symposium on Circuits and Systems (ISCAS), HUAWEI presented the Tau (τ) Scaling Law, a new principle proposing time scaling as a guiding principle for the evolution of semiconductors and electronic systems, replacing geometric scaling. This law aims to address the physical limits of Moore's Law and drive innovation in transistor density and system performance.",
-        "fetchedAt": "2026-05-25T02:00:13.459Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE9WnecRCMDePRATXnKK_L_DyzZ-1oMvlh6CaVDWBxRW5-S9JiKvav5ahdDRCzuYw4ccvsHMpmTA32H1tBLcNh4dFMNfFrKOYqTba_SDQT9Sg21Vdou8l2LWlys--ZrZ0pnblJ7o5wHqgsYhBGtfKkwiFIrGjLI_Q==",
-        "headline": "HUAWEI Presents the Tau (τ) Scaling Law, Enabling Breakthroughs in Transistor Density and System Performance",
-        "id": "qq93lpgjpbk",
         "category": "Technology",
-        "source": "Huawei"
+        "detail": "A ZDNET writer tested the 100x zoom capabilities of three flagship phones to determine which performed best.",
+        "headline": "I tested 100x zoom on the Galaxy S26 Ultra, Pixel 10 Pro, and Razr Fold - here's who won",
+        "fetchedAt": "2026-05-25T14:00:25.801Z",
+        "id": "kzb935hu59",
+        "source": "ZDNET",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqvcWUsC4nXritwLek9CnvOLm94STLCQ_m3WLRkwMK342p0QnXZumqK-YI4gxxg82x-pzWHXqxORkjsWGY5_S6A8fUlqV7OwF2KbJzbXYGQ2I=",
+        "date": "2026-05-25"
       },
       {
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkpyXsCx8GDGWLP464p8XXShl28aE-j1Q2iGIjqACQkS35RICc-ZzWIbCXTLI55rPCQ6aI0YfHLC-87uyrelJQ8Rpjs5YWDplMQ7F3qV8OoNgKN07sc5o3MYWpBRymVyajobefsPIelC1FOh5-jN8JKlyMDFqauzTsbRudHw_y6AZoHck=",
-        "headline": "China launches Shenzhou-23 spaceship, for new in-orbit stay record, cutting-edge space science",
-        "id": "y8imxegijs",
+        "detail": "A ZDNET writer reviews the new features and updates coming to Android Auto.",
         "category": "Technology",
-        "source": "Ecns.cn",
-        "date": "2026-05-25",
-        "detail": "China successfully launched the Shenzhou-23 crewed spaceship on Sunday, which will send three astronauts to its orbiting Tiangong space station for new tests on long-duration stay and frontier scientific experiments. The mission will conduct over 100 new science and application projects, focusing on space life science, materials science, microgravity fluid physics, aerospace medicine, and new space technologies.",
-        "fetchedAt": "2026-05-25T02:00:13.459Z"
+        "fetchedAt": "2026-05-25T14:00:25.802Z",
+        "id": "fg3haj33u7i",
+        "source": "ZDNET",
+        "headline": "I saw the future of Android Auto, and now Google has me dreading my own car",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFqvcWUsC4nXritwLek9CnvOLm94STLCQ_m3WLRkwMK342p0QnXZumqK-YI4gxxg82x-pzWHXqxORkjsWGY5_S6A8fUlqV7OwF2KbJzbXYGQ2I=",
+        "date": "2026-05-25"
       },
       {
-        "id": "gdnurrim7r",
+        "fetchedAt": "2026-05-25T14:00:25.802Z",
+        "id": "kc7ps2tr9o",
+        "source": "The Guardian",
+        "headline": "Final frontier for meds? UK startup sends drug-making into space",
+        "detail": "A UK startup is sending drug-making into space.",
         "category": "Technology",
-        "source": "Taipei Times",
-        "headline": "No immediate chip tariffs expected, but protections important, US says",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHTqLqECzywbzUgCz2qjCUsI5f4urKyuUhGh16qJ85Hgc0CH1PREI_dGkgSz-2XaD_Uo-QIcaNBV5gMCdYb6kmTPCuO0x3Lt4umxlMXqA7MjD3YoIJAZ1EqyJaBzUX-zIb5vDO1fExzSscLYQ37OY_O2IaAWiGGJVFiLf-iRRI=",
-        "fetchedAt": "2026-05-25T02:00:13.459Z",
         "date": "2026-05-25",
-        "detail": "US Trade Representative Jamieson Greer stated that there are no imminent new US tariffs expected on semiconductors, but protecting the sector with duties is important to facilitate reshoring of chip production. Greer emphasized the importance of properly sequencing any tariffs resulting from the Section 232 national security investigation to promote US output."
-      },
-      {
-        "fetchedAt": "2026-05-25T02:00:13.459Z",
-        "date": "2026-05-25",
-        "detail": "A cutting-edge Chromium IX Single-Cell Analysis System has been installed at the Sunshine Coast Health Institute, purchased with funds from the Wishlist Spring Carnival. This technology can identify unique cells, aiding in the diagnosis and treatment of diseases like cancer and autoimmune disorders, promising tailored therapies and improved patient outcomes.",
-        "headline": "New tech set to transform cancer treatment on Coast",
-        "id": "65yj6g6y1f",
-        "category": "Technology",
-        "source": "Sunshine Coast News",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTAE2h_Jvt8n0CarvDuL-QxuiDp8ZYnBjVYO0pHJsqVtwQYft28zXVklPS-QrwIkW_QHvbcjSJp_VXAenMgAHJ9jW78cckUo1EGAITzQJFeToQcsDuXjIveUIs6LVq-lpDUwkFi_BYMxHI_iU5k2pcPu2iI-e3DhgnR3FBtO3xwFpmMV5NtIFK-LMWvc5CthJJllNzPHO-RQ=="
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEtvNAQKQPhT_MCCpjVt0YxivCa9zGji05WcDqSwBdW70Q70fFA1YolSYwC0gJGdBM1CNKbP0iz4kFaRkTPN1g844Uv5xz6f46Ozu4o8dbWadbLkdodZoYfTBQ9227s4z38Awj"
       },
       {
         "date": "2026-05-25",
-        "detail": "Meta is expanding its AI-based age enforcement tools across Facebook and Instagram to identify potentially underage users. This move aims to create safer online experiences by preventing access to age-inappropriate content and features.",
-        "fetchedAt": "2026-05-25T02:00:13.459Z",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAlS96IPHCioKwfINbQDsIZnwYS0EqKrTGp2eydFPaD_vx8K5GiSEoEiz3qG9fGBGdyJPUeFWvqlugNOQ-D_0FARyMoWQY0v9rpIs6bC-cGVeSnCbzGkhgUA==",
-        "headline": "Meta Enlists AI to Enforce Age Restrictions",
-        "id": "h6wwbaaz9vk",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHS_ftb54spU_c4f7fifcrn1x0tT4mnDDp-J_1Tyd2Kfva_deM504NYJkwAEb5XFZzesn8SA-7iy6XR2_0wQ0qQbD1V_cN8_rjtxiWV",
+        "fetchedAt": "2026-05-25T14:00:25.802Z",
+        "id": "44elwjp4nzs",
+        "source": "Phys.org",
+        "headline": "Mathematicians solve decades-old mystery about the hidden order in high-dimensional randomness",
+        "detail": "Mathematicians have solved a decades-old mystery concerning the hidden order within high-dimensional randomness.",
+        "category": "Technology"
+      },
+      {
         "category": "Technology",
-        "source": "TechNewsWorld"
+        "detail": "Palantir is disputing Sadiq Khan's decision to block a £50m contract with the Met Police.",
+        "headline": "Palantir hits back at Sadiq Khan after £50m contract with Met police blocked",
+        "fetchedAt": "2026-05-25T14:00:25.802Z",
+        "id": "1eqqof8ov0e",
+        "source": "The Guardian",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGEtvNAQKQPhT_MCCpjVt0YxivCa9zGji05WcDqSwBdW70Q70fFA1YolSYwC0gJGdBM1CNKbP0iz4kFaRkTPN1g844Uv5xz6f46Ozu4o8dbWadbLkdodZoYfTBQ9227s4z38Awj",
+        "date": "2026-05-25"
+      }
+    ],
+    "Entertainment": [
+      {
+        "category": "Entertainment",
+        "detail": "OnlyFans model Lily Phillips will be a bridesmaid for Annie Knight, who is marrying Henry Brayshaw in Australia in October, as announced in an emotional Instagram video. Many stars have grown their families in 2026, including Charles Melton, Carly Rae Jepsen, Charlie Puth and Hailee Steinfeld.",
+        "headline": "Lily Phillips to Serve as Bridesmaid for OnlyFans Model Annie Knight",
+        "fetchedAt": "2026-05-25T14:00:28.553Z",
+        "id": "dgqkbmui755",
+        "source": "Us Weekly",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHEx6oVKld_ygWe3mXao7g4ihkz1V_v1EId5uT7Prv8G1-OKB8J2xCJcPRGqqpZRFESxtTpWIgmrjv1A-dJtfh8LoHAzpQdQni-GB6WI0whP8OENy2B",
+        "date": "2026-05-25"
+      },
+      {
+        "detail": "Grammy-nominated rapper and singer-songwriter 6LACK sat down with AP Entertainment journalist Leslie Ambriz to discuss his evolution as an artist, finding his purpose, mental health and encouraging fans to “heal from their trauma”. Now a 33-year-old father, the artist says that family is cool and being vulnerable is cool.",
+        "category": "Entertainment",
+        "fetchedAt": "2026-05-25T14:00:28.553Z",
+        "id": "68ifwob1eaa",
+        "source": "AP News",
+        "headline": "6LACK Says ‘Love is the New Gangsta’ Represents His Most Personal Album",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHYPlS4Ur6us5LuBbDldjRsrSDaYohscPbh7XyDyDgXMqcR11Fm-A0zQdLTFA9DUqkk_7wT_3qnut1NVBHdp2a0pTC34N37o8Fps73TO-WlenyPwbBHNHOHOxg=",
+        "date": "2026-05-25"
+      },
+      {
+        "headline": "What Is Stephen Colbert Doing Next After 'The Late Show'?",
+        "fetchedAt": "2026-05-25T14:00:28.553Z",
+        "id": "pk3fon0p3h",
+        "source": "Hollywood Life",
+        "category": "Entertainment",
+        "detail": "CBS’s cancellation of ‘The Late Show’ has become one of the most controversial decisions in entertainment history. This article discusses what Stephen Colbert is doing now after the show's cancellation.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFis-Z4w3IP2dIuHaJtWZ6mH7KyDSkv8Z0__q8ysCkNoMlIaERaFwq7mcKpt5AQW4WJv9iTCfSaKXv8ielWrYYKWYzb6EIYrrr124fQ9h2_yTe0Rcc="
+      },
+      {
+        "headline": "Vijay had 'narrow escape from death' during shoot atop moving train over 2,500-ft valley",
+        "fetchedAt": "2026-05-25T14:00:28.553Z",
+        "id": "pfcgf7lid4",
+        "source": "The Indian Express",
+        "category": "Entertainment",
+        "detail": "Actor Vijay had a narrow escape from death while shooting on top of a moving train over a 2,500-foot valley. The incident was reported on May 25, 2026.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCwSMuuUhxbqdor-GxHE6PFh4H1rlxU4hDktjQsd0LG3wO3eVq2glseLugsB7qJsFcxcknQebCK_NiQ5vw2CuMtKgzcQaTIP-Z6a4UlpdmkD33SljpGvKdgEpol9W6sZXF9WK0La-OrDro"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHn5e3tfzpg66NG1Ds6B0LLps8Ty71coegO52pBgHOlbwbyu6M6eWdRkStJmcPA12huzRlzS0_B6WumT6CVKI4efG67r2yYFVxeA8ox-c8ZzDsYaaaraqFfEQ2EXEKt8xk=",
+        "fetchedAt": "2026-05-25T14:00:28.553Z",
+        "id": "otq6bpmfmge",
+        "source": "CBS News",
+        "headline": "The movies to tune in for this summer",
+        "detail": "Disney's latest addition to the Star Wars franchise, \"The Mandalorian and Grogu,\" is kicking off the summer slate of blockbusters. Some other highly-anticipated movies that will be tested at the box office this summer are Steven Spielberg's \"Disclosure Day,\" \"Toy Story 5\" and \"Supergirl\".",
+        "category": "Entertainment"
+      }
+    ],
+    "Finance & Economy": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAHXxhTEKEYCGnZI1jmdnK2_f9EzFRhhJairY3AqXTE3Ol5VVWanGX0N3AKCjZCYYbMO-MKw8EsgWNYzR1NJg8XhsLK4HZsE6n5y2OEgDZNY5AZUKt",
+        "date": "2026-05-25",
+        "detail": "Brian Roberts has resigned as the CEO of RMH, a South African investment holding company.",
+        "category": "Finance & Economy",
+        "fetchedAt": "2026-05-25T14:00:35.406Z",
+        "id": "b6os1d5lqt",
+        "source": "Moneyweb",
+        "headline": "RMH CEO Brian Roberts resigns"
+      },
+      {
+        "fetchedAt": "2026-05-25T14:00:35.406Z",
+        "id": "ikndtgficph",
+        "source": "Moneyweb",
+        "headline": "BHP cuts green push across iron ore segment, media report says",
+        "detail": "BHP has reportedly scaled back its green initiatives within its iron ore operations, according to media reports.",
+        "category": "Finance & Economy",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAHXxhTEKEYCGnZI1jmdnK2_f9EzFRhhJairY3AqXTE3Ol5VVWanGX0N3AKCjZCYYbMO-MKw8EsgWNYzR1NJg8XhsLK4HZsE6n5y2OEgDZNY5AZUKt"
+      },
+      {
+        "fetchedAt": "2026-05-25T14:00:35.406Z",
+        "id": "944fc2r7q14",
+        "source": "Moneyweb",
+        "headline": "No further fuel levy relief, as Treasury rebalances books",
+        "detail": "South Africa's Treasury will not provide additional fuel levy relief as it works to stabilize the country's finances.",
+        "category": "Finance & Economy",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAHXxhTEKEYCGnZI1jmdnK2_f9EzFRhhJairY3AqXTE3Ol5VVWanGX0N3AKCjZCYYbMO-MKw8EsgWNYzR1NJg8XhsLK4HZsE6n5y2OEgDZNY5AZUKt"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGAHXxhTEKEYCGnZI1jmdnK2_f9EzFRhhJairY3AqXTE3Ol5VVWanGX0N3AKCjZCYYbMO-MKw8EsgWNYzR1NJg8XhsLK4HZsE6n5y2OEgDZNY5AZUKt",
+        "headline": "Sita denies Nigerian 'hactivists' gained access to SA government systems",
+        "fetchedAt": "2026-05-25T14:00:35.406Z",
+        "id": "2592ohzj4ua",
+        "source": "Moneyweb",
+        "category": "Finance & Economy",
+        "detail": "Sita, the State Information Technology Agency of South Africa, has refuted claims that Nigerian 'hactivists' breached its systems."
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuBxIO92BCzOJ1q0WeccEy5VWGbgpgI30FRQcv4aOumcAAhWEt6uFy_YG2eaJva_-xVlh5aXnsGtciXZ9r7cAl2WurMDqeG8r3HPjaLOkBoaWZ2FaLPA==",
+        "fetchedAt": "2026-05-25T14:00:35.406Z",
+        "id": "1anu28zg913",
+        "source": "The Economic Times",
+        "headline": "PSU closure: Govt sets in motion new move after years wasted in stop-start process",
+        "detail": "The Indian government is initiating a renewed effort to close down Public Sector Undertakings (PSUs) after previous attempts faced setbacks.",
+        "category": "Finance & Economy"
+      }
+    ],
+    "Lifestyle": [
+      {
+        "headline": "The D.C. concierge who's spent half a century catering to guests' every whim",
+        "fetchedAt": "2026-05-25T14:00:29.793Z",
+        "id": "yi8tvrlj4zf",
+        "source": "The Washington Post",
+        "category": "Lifestyle",
+        "detail": "Robert Watson, one of Washington's most well-connected and beloved fixtures, knows how to nab reservations, hot tickets and the perfect blowout. Watson has been catering to guests for half a century.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFfdE_iFMFqOfiuUzcudekxv-8XXoQ3BYUXu_jKBzt602V15aqrHoDWTsYRo155ileaSY6vSLl9JNIC0i8AyGsvGMA1NXgZP24fzkWYjcEEBhYGuFosSORAkbP-0IaBbVQk8DJA"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0uHTeHJTTZzslmiCMdYwonSAlu6bB2-XGOJxdAd0g0c6jFiOkXnZHR8G1p69hLroEw8amLKAw7YWIpejMm_BEY9hxNLdOZQKrzaIEUemKf6a69aD_Sv9fpYLMTrcGJ9ysvPe7OalUgUunQz_f3BFdNgzCzlyMqkM3qOcBREwgXRFhayY_iY83uFnHgyA3kM81MY6rplOxoTrWK4Gkh6hEF80I-A==",
+        "headline": "Kiln Expands Into North Texas With Lifestyle-Focused Coworking Offices",
+        "fetchedAt": "2026-05-25T14:00:29.793Z",
+        "id": "7f2ts6kqg27",
+        "source": "Candy's Dirt",
+        "category": "Lifestyle",
+        "detail": "Coworking brand Kiln is expanding into North Texas with new locations, offering hospitality-driven office spaces. Kiln focuses on community, flexibility, and workplace experience."
+      },
+      {
+        "detail": "CJ Group Chairman Jay Lee visited the United States to review the group’s potential to expand its K-lifestyle platform, emphasizing the need to enhance global competitiveness. The CJ Cup should be expanded beyond a golf tournament into a platform where people can directly experience and enjoy K-lifestyle in the U.S.",
+        "category": "Lifestyle",
+        "fetchedAt": "2026-05-25T14:00:29.793Z",
+        "id": "xhlwb4ep96",
+        "source": "Korean Corporate Intelligence",
+        "headline": "CJ Chairman Lee Visits The CJ Cup in U.S., Vows K-Lifestyle Platform Expansion",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEBvE6tnzF59e36L14Dvh5ATNR1VQXudhMdcFmDwkLAWa1Cy3VtiuEAwF6uwFQcsiBwimtpZHMMUsmph9UcNmjDaHTaTEDnEqwthlkDpw35rRJJMbJU4Z2nI-qO1cUREwLqtmQ9iIfhxq35OXFgifpEVThriD2Xwo6qiBz3ICNjpvHYz_LZKXLNAeLcqjyOXLnZe4zxuakNbkh86Wd9",
+        "date": "2026-05-25"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH87l-_HDa3R14Yyq39qj85Pr5Rvd8lfOP9rwuFTIt3sc52ClKGPXJCIlMQ_PR5nClM3mEQtpnzyCEYT8yKkbNdzu1lLFvG0v21gxUt1OtAAvwp1E470fWaAf8W_HhoKSDMkn8UwAckaXaAA2f0WXWFkBL3oYpgC4v5v8LUt3c8xW4sPSBlHZqnKBBjY3_HfjpMPi6cWh2w1GgzDLY=",
+        "date": "2026-05-25",
+        "detail": "More Malaysians are now eligible for free flu vaccines, which is especially important for year-round protection due to the constant circulation of influenza in Malaysia. Aging weakens the immune system, making vaccinations crucial for maintaining strength and overall well-being.",
+        "category": "Lifestyle",
+        "fetchedAt": "2026-05-25T14:00:29.793Z",
+        "id": "6xf05w58buo",
+        "source": "The Star",
+        "headline": "More Malaysians can get a free flu vaccine"
+      },
+      {
+        "headline": "From post-workout hygiene to better sleep habits, these 5 wellness rituals are shaping women's self-care in 2026",
+        "fetchedAt": "2026-05-25T14:00:29.793Z",
+        "id": "ijqvc3o2qrn",
+        "source": "Hindustan Times",
+        "category": "Lifestyle",
+        "detail": "Women in India are focusing on targeted and consistent personal care routines, built on a genuine understanding of how the body works. This includes post-exercise hygiene, sleep-time hygiene, and skin barrier maintenance.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0oO-SwC-8QqiPt6s892NUmjLm1KzfFRmc_-c4u7DjQyQGpxWa4VHpE49FJu4iMWUDTmNgQbx3PG3RNmeDrxzEwIbc5YUHFNIVATUnAiB-Ww2JOqybaYSo3iyzjyPP5q_Fj6pJPPA2IyuRNt07YXadhKF54XFu_J7u0CMruB-L1Iz-g3U105JEKEFqO3eM7N9M7rcPfY-8bQP8hhK97ZVH7OSN3DCElLVjqN4-9CwK2BW_WSEbUNr26C55ey8pK1Oh_sCcFS4Kw-6wcvhyr5kZAq2NEqwQwLFJdzlSgGjBx2fDHzZabnDEWx2UzkNWdoI="
+      }
+    ],
+    "Sports": [
+      {
+        "fetchedAt": "2026-05-25T14:00:28.835Z",
+        "id": "abf54iqlbwn",
+        "source": "Tennis Australia",
+        "headline": "Seasoned sports chief to lead Tennis Australia",
+        "detail": "NRL CEO Andrew Abdo has been appointed the new Tennis Australia Chief Executive Officer, succeeding Craig Tiley, who will depart to lead the USTA.",
+        "category": "Sports",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4OvYUNw6EmO8bHgumDaZD-_DJCrjTMRJ4AvzrmQUtOUrVzouV-wAcp8mgnN98sXMG93DP4pzA7t4EaYH5MG5Rbl4Bou15MMWCZ8vqNYTcDrNsvxNzi7wsCyZsEjpSe6BR0lQNpPqcmQSGhM4bWng1WzTwfGYELgLsZzEfFL7Cg7xmFgVUohdF-JedqtefMbFGXUY-1TgG-MEtLF3nfXDlczPk2yVAF4oZvAQ="
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGrYAJ2T0ei_knQeOc2GENnBhGKJPmnfIWtdBiD4WGV41nrmXORnejXpvdoqpQ2uc3IAUiSoWcASlsHupbSLUlWnDu_7z-A1eyvOrgh893mShSD5oNK",
+        "fetchedAt": "2026-05-25T14:00:28.835Z",
+        "id": "dg2cq75rml",
+        "source": "FOX Sports",
+        "headline": "Wembanyama answers the call again, Spurs top Thunder to tie West finals at 2-2",
+        "detail": "Victor Wembanyama led the San Antonio Spurs to victory over the Oklahoma City Thunder, leveling the Western Conference finals series.",
+        "category": "Sports"
+      },
+      {
+        "fetchedAt": "2026-05-25T14:00:28.835Z",
+        "id": "vjghiusjsid",
+        "source": "The Guardian",
+        "headline": "Enhanced Games claim 'we changed the world' but only one record broken and three clean athletes win",
+        "detail": "The Enhanced Games, which allowed performance enhancements, saw only one record broken and three clean athletes win, leading to some criticism.",
+        "category": "Sports",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJhXr1sbuozieY91-Ks9RGKXsOkesIxmdLfZGAmvG3R71vxrNdeJNSn0b9fnw4lrp5iXwFqkZcsW1kHdvg5vmUUCljOqdS8AYkHVBnSUR-E_fH_CbjEpkiRohxHHpbQw=="
+      },
+      {
+        "fetchedAt": "2026-05-25T14:00:28.835Z",
+        "id": "0wmf8b4f68mp",
+        "source": "CBC Sports",
+        "headline": "Mercedes' teen star Antonelli claims Canadian GP for 4th consecutive F1 win after Russell exits",
+        "detail": "Kimi Antonelli of Mercedes won the Canadian Grand Prix, marking his fourth consecutive F1 victory after his teammate George Russell had to exit the race due to engine failure.",
+        "category": "Sports",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4glHB61__iXcktBWIN7ktAjm9J03ud0v4dW7Ublvs7vPWJadDD1HSm4v-QXBZboiXc0e_PG8cRpM8GmtKI9N78XE1B3gzZFkBmoexbbCl4dE8BUA="
+      },
+      {
+        "fetchedAt": "2026-05-25T14:00:28.835Z",
+        "id": "19xrqhmqkag",
+        "source": "Fox Sports",
+        "headline": "AFL Off-Season Central: Recent recruit retires mid-year in selfless timing to help club's draft plans",
+        "detail": "Shane McAdam retired from the Melbourne Demons to return home to WA, allowing the club to open up a third mid-season draft pick.",
+        "category": "Sports",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbPcwDyFT5f9_691OxV1UnTqj-ErfrHDh_EK1FXd9197YcBB35QZGK7j-4HKBvurXAywnRcf9fWPBfWcPK3J-Vhx75yzJdUt65xvSrzGWZLi899RMM-LYCpW7bEdvXuUGVR4AT-waRMYGX9T0GflGLomMrcrk7phtJt_Pvg_GcD1Wlr6gmIkrJqYHoTiYxYlorblptZ3H4PvU9ZKqw1K9bVGwXD1gfgpnoz5Y8xD3Ry0irh74mvTA5KpCbdYHZTAopHtHVxBn2h6W0gW5N5JEoyacPmiSFAYd6LBrbrv0O3AlXaICEGx1KAiMDrc4u49pxNt7JlDXyoEYTyqWp0TfFhvOVS22NX-Q-4Y9OaS6T7hLG3RbXDwT4rUY"
+      }
+    ],
+    "Crime & Justice": [
+      {
+        "detail": "A West Australian man who imported cocaine into Perth from Ireland and Northern Ireland has been sentenced to 10 years' imprisonment after concealing the drugs in face masks, curry packets, and tomato soup sachets.",
+        "category": "Crime & Justice",
+        "fetchedAt": "2026-05-25T14:00:50.640Z",
+        "id": "0a6sx6lmr81",
+        "source": "Google Search Result",
+        "headline": "WA man jailed for importing cocaine in soup and curry sauce sachets",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1fhEH5NZmnU-2hooA66Bo-NKkSBkbPzWcsxNgwloj56ywKGqUIMOs9sX_keUlfFu-Ma2_Jz1AXQ2wq3a_vPx33fc6Du_HHkC1RfLtUyUQrYF8MKsbNttmnHVvqFecanC47oTZRcSoY5JbarT68pdbzaB95SglobdWkxsmaMo947FF2z9DiMBDSfC45Lpi-ydUPL9h8ZRMhkpHW1zn3YzB2k7uwjtw1DE=",
+        "date": "2026-05-25"
+      },
+      {
+        "category": "Crime & Justice",
+        "detail": "The Department of Justice is acknowledging it has removed from its website news releases about criminal cases related to the Jan. 6, 2021 riot, calling the information about the prosecutions \"partisan propaganda.\"",
+        "headline": "DOJ says it scrubbed news releases about Jan. 6 criminal cases from its website",
+        "fetchedAt": "2026-05-25T14:00:50.640Z",
+        "id": "d0mt865gnyk",
+        "source": "CBS News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEVSNnFQNiEy0fYzuXmMHeXZbfP8dO-RCEC_OuvIBigIOXPdboKtsqFSVyhZTdK2n5n1SQrP1ea_dH1L0rIq2gmZhU7p9Oe_mKtNDjqzfgRtfnT-0TXAqaJoQ==",
+        "date": "2026-05-25"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNuY9QxpQvHdJ8K950oth4J2-IGGXVVqv6-el0ucoCoUMYKabInNDK7EE_ya3VC4wamh5wDQs-0u_6sEaTkROojhNJHkrqez7owgjh6_jxWmmXL6Xg1KMgTGB4549FhrUypiy5skJo6eyYi2WgNVEbosDgQBJH94JpPaZbzjTObif_zX_y0SDlIXe4xqF6FW-hlemAzO2H5dWPxnT1R0Sbs7wt",
+        "date": "2026-05-25",
+        "detail": "The Democratic Alliance (DA) has uncovered indications that the South African Police Service (SAPS) in the Western Cape have allowed members convicted of criminal offenses to remain in service without properly implementing Regulation 5(3)(dd) of the SAPS Discipline.",
+        "category": "Crime & Justice",
+        "fetchedAt": "2026-05-25T14:00:50.640Z",
+        "id": "2tqe5x5m1se",
+        "source": "Google Search Result",
+        "headline": "DA lays complaint after 164 criminal convictions linked to WC SAPS members"
+      },
+      {
+        "headline": "Police hypnotized a witness. Now a Texas man faces death.",
+        "fetchedAt": "2026-05-25T14:00:50.640Z",
+        "id": "fw58blok52e",
+        "source": "The Washington Post",
+        "category": "Crime & Justice",
+        "detail": "Charles Flores sits on Texas's death row based on unreliable testimony by a witness who had been hypnotized by law enforcement, with the only evidence placing Flores at the scene of the 1998 murder being the in-court identification by this witness.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH8D5TZk0_RT54hMXgYksJFame8xYv0HeojAdgkQRCQfKzCLBgN0SHuMUDU1KkeDxrzJyX7myKDKED_6wdogav2Ow3Gp96KLRleOoQRSmeNts7H_XmMNUXWcxDhWLfvMPwwWwNsZJgXbd4AHfMr40xPrpCBKxg1gl2iQlO3732bmBESSYQG1a63MQVeMK--nHg6QGBfBuHMaMBcIEi9kMPiXYWBTSE="
+      },
+      {
+        "fetchedAt": "2026-05-25T14:00:50.640Z",
+        "id": "81im91kpwm",
+        "source": "1News",
+        "headline": "Bystander in serious condition after fatal shooting near White House",
+        "detail": "A bystander was seriously wounded after a 21-year-old man, identified as Nasire Best, opened fire on a security checkpoint outside the White House and was fatally shot by US Secret Service officers; the incident prompted President Trump to request $1 billion for security upgrades.",
+        "category": "Crime & Justice",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFF7NkHfmchEl7mP8_lCIDPNKVfMMKTIqjowY9SL9Z5xLEmgsfJTHVPsUtTPfnqQsNHRzn_eqd8sGGpBBBhk4e1prOnLckoAcQzN32EBCN6I8JwKRWyF2TvutyOJ7libAJrB-UyCaYJBiil6k-jusShWyLTOAkdtR7SPDIzBDX52ZBHSOlFgtDQEZDv5CTknYbYvajcklay7a7M7lKAxl88Ar_z"
+      }
+    ],
+    "Science": [
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNqKplulEqRam6E8WKZ8LfHPYbWzsruticsAFn59drTT0vl16Os-DVFBb1SBPVKumvipxTth3wBNb669zn4d4u511n3Mv2ydSGLI5IqTBf2Y9vXJ16CbE=",
+        "headline": "Scientists Uncover Twist in How Cells Behave When Division Goes Wrong",
+        "fetchedAt": "2026-05-25T14:00:27.347Z",
+        "id": "l8ok9ahwmk",
+        "source": "ScienceDaily",
+        "category": "Science",
+        "detail": "Scientists have uncovered a surprising twist in how cells behave when division goes wrong; sometimes a cell successfully copies its DNA but fails to split into two, leaving it with double the genetic material, a mistake linked to aging and cancer."
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNqKplulEqRam6E8WKZ8LfHPYbWzsruticsAFn59drTT0vl16Os-DVFBb1SBPVKumvipxTth3wBNb669zn4d4u511n3Mv2ydSGLI5IqTBf2Y9vXJ16CbE=",
+        "date": "2026-05-25",
+        "detail": "A mysterious little blue octopus discovered nearly 6,000 feet beneath the waters of the Galápagos Islands has officially been identified as a brand-new species; it is about the size of a golf ball.",
+        "category": "Science",
+        "fetchedAt": "2026-05-25T14:00:27.347Z",
+        "id": "cal8wklvd1a",
+        "source": "ScienceDaily",
+        "headline": "Mysterious Little Blue Octopus Identified as New Species"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNqKplulEqRam6E8WKZ8LfHPYbWzsruticsAFn59drTT0vl16Os-DVFBb1SBPVKumvipxTth3wBNb669zn4d4u511n3Mv2ydSGLI5IqTBf2Y9vXJ16CbE=",
+        "headline": "Newly Identified Brain Protein May Play a Major Role in How the Body Ages",
+        "fetchedAt": "2026-05-25T14:00:27.347Z",
+        "id": "ppb38pbcsfs",
+        "source": "ScienceDaily",
+        "category": "Science",
+        "detail": "Researchers discovered that declining levels of Menin in the hypothalamus triggered inflammation, memory problems, bone loss, and other aging-related changes in mice; restoring Menin reversed several of these effects."
+      },
+      {
+        "detail": "Scientists have created an AI-powered system that can scan and map an entire mouse body in extraordinary detail, revealing that obesity appears to damage facial sensory nerves and trigger widespread inflammation.",
+        "category": "Science",
+        "fetchedAt": "2026-05-25T14:00:27.347Z",
+        "id": "man0xut0dwq",
+        "source": "ScienceDaily",
+        "headline": "AI System Maps Mouse Body and Uncovers Obesity Effects",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGNqKplulEqRam6E8WKZ8LfHPYbWzsruticsAFn59drTT0vl16Os-DVFBb1SBPVKumvipxTth3wBNb669zn4d4u511n3Mv2ydSGLI5IqTBf2Y9vXJ16CbE=",
+        "date": "2026-05-25"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHK0qhXlkiMGgz4mVPBfNJdFpuIas2FVmwAvYinctsV1Pull9lweAOo6Qfg1GpfrWiTYp49aXACbzlbi2DpA72xy1Wag0blxH7xmOq4hDbPBi8bqHnlMuc=",
+        "date": "2026-05-25",
+        "detail": "A new nightly sleep apnea pill has been fast-tracked for approval following a successful trial.",
+        "category": "Science",
+        "fetchedAt": "2026-05-25T14:00:27.347Z",
+        "id": "81zuiat0ica",
+        "source": "ScienceAlert",
+        "headline": "Nightly Sleep Apnea Pill Fast-Tracked For Approval After Latest Trial Success"
+      }
+    ],
+    "Opinion/Editorial": [
+      {
+        "detail": "An editorial discusses how some wealthy countries have more robust safety nets than America, financed by broad levies on the middle class, and as rising defense spending squeezes national budgets, those already high taxes are rising. The tax wedge for a single worker reached its highest level in a decade.",
+        "category": "Opinion/Editorial",
+        "fetchedAt": "2026-05-25T14:00:29.593Z",
+        "id": "sr66aigtuqo",
+        "source": "The Washington Post",
+        "headline": "How big would your tax burden be in another rich country?",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGTMMSZTKap7iRJzTGsAsxi2CFOk25ox6DXPqxGDzE3_7id6D_u9LIywXYvcn1FfvJXhtlCoOIWcyXIbsI9UKzLVKOvb4O25KcjP4DUs6AR2-7WHol3VlFdT8rvQf5_gfbT9RaaTFkWKLQlTdHYlw3wbbQDk_TPwpMYraYXMqkGj8E1f17Fqf_e26i0CMpfXOkbC_WuBbBKsCC55OH7e2ffNKMWXZEYvdQqhOEXffrHlYgTv0=",
+        "date": "2026-05-25"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEtm6YapWqlj51vaklxa5e8zM6F61Rb0nDIFkzO98LxHrvBuyB1S3Zmd2pmX5Hwydxk-4EDyvOoRI9X66zeGXdhUNPNKhBct5k_Hh_BBr1QW-obFjmGHLQsD1ygwd6lJu_iMB8aFiM0gebLJDpXdvTWiL-ts_OJQm2oQMUNVY6ybpCDyORMrVlr10jNzWRZSxNp1aN_KIO30M9-BFk-7O1w8Gw=",
+        "date": "2026-05-25",
+        "category": "Opinion/Editorial",
+        "detail": "Max Boot argues that Netanyahu's desire to lash out in all directions after a devastating sneak attack is backfiring, overextending Israel's military, turning the state into a global pariah, and making Israel more dependent than ever on U.S. protection even as his country's unpopularity in America rises. In pursuit of absolute security, he is undermining Israel's long-term interests.",
+        "headline": "Trying to remake the Middle East, Netanyahu damaged Israel's security",
+        "fetchedAt": "2026-05-25T14:00:29.593Z",
+        "id": "2i5k5b2fx1l",
+        "source": "The Washington Post"
+      },
+      {
+        "fetchedAt": "2026-05-25T14:00:29.593Z",
+        "id": "rujigrp3qvc",
+        "source": "CT Mirror",
+        "headline": "22,581 days of the Voting Rights Act",
+        "detail": "This opinion piece discusses the importance of the Black vote and the ongoing struggle for voting rights, noting that oppression adapts and Connecticut is not exempt from that history, as Black communities remain underfunded, underrepresented, and too often ignored in the state. The author emphasizes the need to continue organizing, investing, and acting to prioritize democracy.",
+        "category": "Opinion/Editorial",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOai_XIV4spumc2ElbQu1gIGQvawJGYHIHofvT_1miGinH7qglh9c4coZ9TUrpVqeeK0dNeYbfNehU091rYO4vwXpDFk601SRNfPTYN3TAZf7AoQLomO3bQ5pzAYWbwQqpoi7wHqYQzuSx_zVdpguicg6clOtXjEnveNzXV-FmQg=="
+      },
+      {
+        "headline": "Bracing for a super El Niño",
+        "fetchedAt": "2026-05-25T14:00:29.593Z",
+        "id": "kpak9qgelln",
+        "source": "The Manila Times",
+        "category": "Opinion/Editorial",
+        "detail": "This editorial discusses preparing for a super El Niño event.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHIQAQRsqVHwWsT9B9ikvAI0nQ9ZZ-1g-vNhNKRLxobtdBB2Nyg2DiMejlKyWTT35-2sioy41j9L9_bmyrDQVN5pI0dgUOnaEUxY1RyAlUoK_5EvLjcgf6CsVk_PNgzZaWRAdINY1hACg=="
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHa0xoh2Sas1XPPBVKn-U75lU1PqqjCZxYnWsssDEyDmBsv__qsmRrFQZQdLWkQGS6JaEWyCKxQGDjPYi-DIhUsgEDwH1nJpbPxUd5ysneD3HppExTjfQH1Db9bXThmVkGxcFIJqP05Ef2dgdeSbhxC8PsMxE2RqA17Yiq_dToAmqIlA2ds7Ql0rl0YymQCCuPcllaS7DGzGJqrqnM=",
+        "date": "2026-05-25",
+        "category": "Opinion/Editorial",
+        "detail": "An editorial highlights that Kenya's taxation debate has become a tired annual ritual, with promises made every budget cycle about widening the tax bracket, yet the burden continues to fall disproportionately on salaried workers. The government must move beyond rhetoric and confront the structural imbalance that has overtaxed formal employees while leaving large sections of the economy outside the tax net.",
+        "headline": "EDITORIAL: Tax reform must go beyond rhetoric",
+        "fetchedAt": "2026-05-25T14:00:29.593Z",
+        "id": "6o56iqvujg5",
+        "source": "The Star"
+      }
+    ],
+    "Health": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGS-c47Jx1mozkb4_gnCrAXrYDUI1Hy441aH6QBEvCG843vXPsYFnmXGkI1PJ_tYKZmzyDDLjDhslZgSZ7XimwHMhXFbpGXZoDnzV36uJwZk9OfSeNCo7RCMn3S8qjW3Wmq_DlxzSWZTITVfpQ=",
+        "date": "2026-05-25",
+        "category": "Health",
+        "detail": "Researchers found that adding bananas to berry smoothies can dramatically reduce the body's ability to absorb healthy flavanols, showing that even simple food combinations can change how much nutrition your body actually gets.",
+        "headline": "Surprising Research Reveals Why You Shouldn't Add Bananas to Your Smoothies",
+        "fetchedAt": "2026-05-25T14:00:27.859Z",
+        "id": "dder73xeg65",
+        "source": "ScienceDaily"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGS-c47Jx1mozkb4_gnCrAXrYDUI1Hy441aH6QBEvCG843vXPsYFnmXGkI1PJ_tYKZmzyDDLjDhslZgSZ7XimwHMhXFbpGXZoDnzV36uJwZk9OfSeNCo7RCMn3S8qjW3Wmq_DlxzSWZTITVfpQ=",
+        "fetchedAt": "2026-05-25T14:00:27.859Z",
+        "id": "2h2wu6tvqfk",
+        "source": "ScienceDaily",
+        "headline": "Scientists “Recharge” Damaged Nerves to Ease Chronic Pain",
+        "detail": "Scientists may have uncovered a radically new way to stop chronic nerve pain at the source by reviving damaged nerves.",
+        "category": "Health"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6g2VbXlAQuwGwaIkLqKdL2VySXh28xRgECkiLt1mybM1tW4xlEXI0S4BHFF000V4JnJ5YEnQNqR8GkiNUuxkESh88sT5rX99FtEBmOaJRF2lOInsMZg-LbZw4IE_ujiuP24YQ6A=",
+        "fetchedAt": "2026-05-25T14:00:27.859Z",
+        "id": "dob0usdtttj",
+        "source": "NPR",
+        "headline": "More than 500 children have died in an outbreak that the world is virtually ignoring",
+        "detail": "As of Sunday, May 24, 2026, a measles outbreak in Bangladesh has resulted in over 500 deaths, mostly children, raising concerns about the country's response.",
+        "category": "Health"
+      },
+      {
+        "detail": "Africa is racing to contain a fast-spreading Ebola outbreak threatening 10 countries as infections spill from eastern Congo into Uganda.",
+        "category": "Health",
+        "fetchedAt": "2026-05-25T14:00:27.859Z",
+        "id": "bs53lveocac",
+        "source": "NPR",
+        "headline": "DR Congo Ebola cases rise amid distrust, armed conflict zone",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6g2VbXlAQuwGwaIkLqKdL2VySXh28xRgECkiLt1mybM1tW4xlEXI0S4BHFF000V4JnJ5YEnQNqR8GkiNUuxkESh88sT5rX99FtEBmOaJRF2lOInsMZg-LbZw4IE_ujiuP24YQ6A=",
+        "date": "2026-05-25"
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFA-SOGro-U5JZi02LZfBob2cErju340uxUr5lI6jsh0J1NvfGsjtzIViqXyfTgGmrXsBw9IlnKwWw-TpHTAlN_M5xPATUEfVdlc0WCL-uCGNp9CJjd9GPR",
+        "headline": "Woodchips on trails reduce tick populations, Ottawa researchers find",
+        "fetchedAt": "2026-05-25T14:00:27.859Z",
+        "id": "ut3z78kgwe",
+        "source": "CBC News",
+        "category": "Health",
+        "detail": "A study published this month by researchers at the University of Ottawa has found that applying woodchips to some trails significantly reduced local tick populations."
+      }
+    ],
+    "World": [
+      {
+        "url": "https://www.npr.org/player/embed/g-s1-124191/nx-s1-mx-5833676-1",
+        "date": "2026-05-25",
+        "category": "World",
+        "detail": "President Trump and other administration officials are tempering expectations raised of an imminent agreement to end the war in Iran, while Iranian officials have signaled there are still disagreements on key issues.",
+        "headline": "U.S.-Iran peace deal emerging, while war threats still loom",
+        "fetchedAt": "2026-05-25T14:00:36.741Z",
+        "id": "bgtp3u8j0x7",
+        "source": "NPR"
+      },
+      {
+        "category": "World",
+        "detail": "The WHO chief says there have been 220 suspected deaths in the ongoing Ebola outbreak as Ugandan health authorities report two new Ebola infections.",
+        "headline": "Ebola death toll climbs in Congo as new infections confirmed in Uganda",
+        "fetchedAt": "2026-05-25T14:00:36.741Z",
+        "id": "ukl89j0vas",
+        "source": "CBS News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE52zNGWNE4UxcRIbv8AjasxuzncKgYowOrd2wEi9XBUGM3SIuxIvmAkGy_oS_O8w8EHUII-FlyG1wyBKtkuG6m4E0-B7SjBMxX0RExVkjVaG4t1lJ8SRacMg==",
+        "date": "2026-05-25"
+      },
+      {
+        "headline": "China launches Shenzhou 23 spacecraft with 1 of 3 astronauts set for yearlong stay",
+        "fetchedAt": "2026-05-25T14:00:36.741Z",
+        "id": "5ql1ampab3f",
+        "source": "NPR",
+        "category": "World",
+        "detail": "China has launched its Shenzhou 23 spacecraft, carrying the first of three astronauts who will stay in space for a year.",
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmh-ErkjwpUMSH07A8bi7rvMNJlzWgjgByya_bncSe-_ZC5fU_H2-p_aeZb_tGOeHzlpGZ6nx-7yc3tqXigEf-Od3208t6de_kohoatkl0hO1ss_YvxDqV-D1UIlQ=="
+      },
+      {
+        "date": "2026-05-25",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqicpNpDf30yAj7huVXGh6KcoSkXA2duEPqwgjIqiqQ0dj8_S3PU2K536XGIbW8KslhXsewk52Mpe5MyRcmRn3TU3hBIhQ8c2Jv8nOuk_O-r-OG4WSQmXZ",
+        "headline": "Trump says not to rush as details emerge of a potential Iran deal",
+        "fetchedAt": "2026-05-25T14:00:36.741Z",
+        "id": "gtdtm0vykfu",
+        "source": "AP News",
+        "category": "World",
+        "detail": "Details are emerging about a potential deal to end the Iran war, but President Trump suggests there's no need to rush."
+      },
+      {
+        "category": "World",
+        "detail": "Qatar has sent mediators to Tehran, signaling that talks to reopen the Strait of Hormuz are reaching a climax.",
+        "headline": "Qatar sends mediators to Tehran in sign talks to reopen strait of Hormuz are reaching climax",
+        "fetchedAt": "2026-05-25T14:00:36.741Z",
+        "id": "bhmf7ruj2s",
+        "source": "Global News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH0dHVWEhDIgsu-YbhoKT9es_WwkipFeFyHxk2VHuk-6pdjrpLmA0v6cAP-7Ej8H1-lg4PlOu8RbFOEYR8Fu2sXUbcyzH-aUdqEUOqEc4xCvR_uSo1_1AQ=",
+        "date": "2026-05-25"
       }
     ]
   }
