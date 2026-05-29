@@ -1,529 +1,682 @@
 {
   "date": "2026-05-29",
-  "generatedAt": "2026-05-29T10:08:07.739Z",
-  "timestamp": 1780049287739,
+  "generatedAt": "2026-05-29T16:01:36.148Z",
+  "timestamp": 1780070496148,
   "categories": {
-    "Entertainment": [
+    "Health": [
       {
-        "headline": "Spencer Pratt claims Leonardo DiCaprio and Jamie Foxx privately endorsed his mayoral bid",
-        "fetchedAt": "2026-05-29T02:00:30.891Z",
-        "category": "Entertainment",
-        "source": "Fox News",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE-k1aJwDutnY5Ff1RiyIvCBTc6_i70sORIUFtuf78W1Gjo1HuL8SJeaTY7a5PYmCqs6bY0S_VvSyYsJszWyTmc6XBV2FREtj5Q2FnLhrpd_GoJ2EZ1eTH6Ku8bLcoy93slRgPOVrSGjj58LgWbikVEGhLI_otltSBnfGsFR-sNnvT_wHCAg0GEegM6Pm-oDv01fR6oDyMgRHJWBpmD2Vb208BTWaGT34sIn9uMDA==",
+        "source": "Oxford University",
+        "detail": "A new partnership including the University of Oxford will unite expertise, infrastructure and data across borders to accelerate diagnosis, treatment and ultimately prevention of major diseases, starting with women's health, infectious diseases and pandemic preparedness.",
+        "fetchedAt": "2026-05-29T14:00:16.803Z",
+        "category": "Health",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5RsLWIXoOJMHX-8gRUBJ0_FMgMiiyYmK4Xfkl3u5yiYPm_WmUDUzzFHOUZYHlFY55BNZL-JY5pMcvDHgRgjD_-wu3lH-w6Orbt1vU2mS_N6wR-OAGl8noIXQVGJXkqA==",
-        "id": "kn8sqnojzq",
-        "detail": "Reality TV star Spencer Pratt claims that A-list actors Leonardo DiCaprio and Jamie Foxx are supporting his campaign to become the mayor of Los Angeles."
+        "id": "dm1x5l9esz",
+        "headline": "UK and France launch landmark biomedical and AI health alliance to accelerate research into major diseases"
       },
       {
-        "category": "Entertainment",
-        "source": "NewsNow",
-        "headline": "Carmen Electra to pose for Playboy again at age 54",
-        "fetchedAt": "2026-05-29T02:00:30.891Z",
-        "id": "5vq8xh5u0qv",
-        "detail": "Carmen Electra is set to pose for Playboy again, three decades after her first nude pictorial, marking a return to the magazine at the age of 54.",
+        "category": "Health",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPvaALigwyv4jypJmHL0oy8a31uw17Ctlh7uDK-HwjoBin7RhOxGLbT2GuX_hETObvGVPp31OOkE-Y1z7u-m4unXjVdR1uREzCtGO4_alexUTjSefH_DvGxtsNiUXqOb-UWBYE4ANfli34"
+        "id": "oinsev9gv1",
+        "headline": "Missouri lawmakers pass sweeping healthcare changes in 2026 legislative session",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8Xpj_Rd9n4ef--iAX0KWvtPtFk8N6b-JfYOLpJ-tVIJBf4BMnSonP75emcHgyChmQbXZuV5mJg4LEB8U1H5hYpHTjEMV-rxoiPMSXlOupdro3mP4iXXKB3j0qGi1veUt3pCUl3WvIxmXamAx1v11dtl6Xth668hoQGVIFThiAmdEeJHRiYKp4-l6IQA4MX8sQ_A==",
+        "source": "Missouri Independent",
+        "detail": "Lawmakers passed a comprehensive bill outlining new guidelines for women's health, including the Born Alive Abortion Survivors Protection Act, which requires medical providers to use the same degree of medical care for an infant born alive during or after an abortion.",
+        "fetchedAt": "2026-05-29T14:00:16.803Z"
       },
       {
+        "category": "Health",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5fqT3N-JueHI_fQC7A4v2OhxDVGrHsJ4uyGPF1GU-JM_DoQ2P9Din5-m71_ceQ5OwONnkCHMFK2y3ayfnbTZwfhHaCYgWqsuXh6mlWY9_xr7ibA==",
-        "id": "1gy5xoprl15",
-        "detail": "Matthew Perry's assistant has been sentenced in connection to the actor's death, and Keith Morrison provided exclusive reactions outside the courthouse.",
-        "headline": "Matthew Perry Assistant Sentenced: Keith Morrison REACTS Outside Court (Exclusive)",
-        "fetchedAt": "2026-05-29T02:00:30.891Z",
-        "category": "Entertainment",
-        "source": "Entertainment Tonight"
+        "id": "vo6qvqi4cg",
+        "headline": "PAHO calls for stronger action to protect youth from tobacco and nicotine addiction",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEyfhNcpfbts8Z2RhhpONRnNM6l2TsFo0U7sJJhsQ6MBW28CfB8cEStUQZ9TI1-2f8aQEPuH20cgJv0ztbVIVeiEDpXd1V-S5ytZfAA5HGdAWHKfhjESkIGxLfjEZKQtHpnkjVDdyGFmfNmoyVUDZoNDGHQZN8yjBwEiZsQSWnWycpx1XbYek8lNc3Eiw6JCBO8NS85fPnDRLlmNm2Mk47E2x9XpoHYxdGY",
+        "source": "PAHO",
+        "detail": "The Pan American Health Organization (PAHO) is highlighting progress across the Americas to reduce tobacco use and warns against emerging tobacco and nicotine products that continue to threaten public health, particularly among young people. This year's theme, “Unmasking the appeal: countering tobacco and nicotine addiction,” underscores the need to expose industry tactics and empower people with accurate information.",
+        "fetchedAt": "2026-05-29T14:00:16.803Z"
       },
       {
-        "id": "nvbv0iejoln",
-        "detail": "Movie star Keanu Reeves asks judge to show leniency.",
+        "category": "Health",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGPvaALigwyv4jypJmHL0oy8a31uw17Ctlh7uDK-HwjoBin7RhOxGLbT2GuX_hETObvGVPp31OOkE-Y1z7u-m4unXjVdR1uREzCtGO4_alexUTjSefH_DvGxtsNiUXqOb-UWBYE4ANfli34",
-        "category": "Entertainment",
-        "source": "BANG Premier",
-        "fetchedAt": "2026-05-29T02:00:30.891Z",
-        "headline": "Movie star Keanu Reeves asks judge to show 'leniency'"
+        "id": "fy0j3oaq0n",
+        "headline": "Cardiac emergency survivors, advocates encourage 'Smart Heart Act' inclusion in state budget",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1FOc9LeEgIkB1SA50FdwWS7CWsKSMFe94EKQjyL81ghCOws2PoYMZKMN38Vn0wjtVQTcp6FvFUk5TwhFSg6KF8VhgxsTCjOAdlvqVfcC7ODMCvVPJIylDfog231NIHJBQn4mwSpu0KLmfkhI36IO7TlJsKEVtLxTMcze1X_zghTnRxXEuQKHUwkWz5MBRoBtxuGYO3gfEIkgcoQQ1u1r1fzG-Q9jv-DSdMsehYUpYg-w=",
+        "source": "North Carolina Health News",
+        "detail": "Cardiac emergency survivors and advocates are pushing for the inclusion of the 'Smart Heart Act' in the state budget, which aims to improve access to AEDs and CPR training. The act is intended to increase survival rates for cardiac arrest victims in North Carolina.",
+        "fetchedAt": "2026-05-29T14:00:16.803Z"
       },
       {
-        "category": "Entertainment",
-        "source": "Us Weekly",
-        "headline": "John Reardon Returning to 'Hudson & Rex' After Cancer Battle, Surprise Exit",
-        "fetchedAt": "2026-05-29T02:00:30.891Z",
-        "id": "qo1z5vlxib",
-        "detail": "John Reardon is set to return to 'Hudson & Rex' following a battle with cancer and a surprise exit from the show.",
+        "category": "Health",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGv38p423tNSBsVvNoP2RXo4yh4vTzoQuI1UjbFXvMj5bfTVeoSG23l7S36WW69mMJQ-7QOVJS53hXoxrj5gGivN1ER3OikWVL2x0prZ4QCprBjj1FkAjV2DldDTRCfccssbu7A"
-      }
-    ],
-    "Zimbabwe": [
-      {
-        "category": "Zimbabwe",
-        "source": "NewsDay",
-        "fetchedAt": "2026-05-29T02:00:37.623Z",
-        "headline": "China says trade talks on to address Zimbabwe's nontariff barrier concerns under zero-tariff scheme",
-        "id": "xht1kl9nrxf",
-        "detail": "Trade talks are underway between China and Zimbabwe to address non-tariff barrier concerns under the zero-tariff scheme. This initiative aims to boost trade relations and remove obstacles for Zimbabwean businesses exporting to China.",
-        "date": "2026-05-29",
-        "url": "https://www.newsday.co.zw/business/6/china-says-trade-talks-on-to-address-zimbabwes-nontariff-barrier-concerns-under-zero-tariff-scheme"
-      },
-      {
-        "category": "Zimbabwe",
-        "source": "NewsDay",
-        "headline": "EMA bans lead in paint under new safety regulations",
-        "fetchedAt": "2026-05-29T02:00:37.623Z",
-        "id": "n7c8427p9ap",
-        "detail": "The Environmental Management Agency (EMA) has banned the use of lead in paint manufacturing to safeguard public health and the environment. This new regulation aims to reduce lead exposure and its associated health risks.",
-        "date": "2026-05-29",
-        "url": "https://www.newsday.co.zw/local-news/6/ema-bans-lead-in-paint-under-new-safety-regulations"
-      },
-      {
-        "headline": "Zimbabwe Seals Oil Deal",
-        "fetchedAt": "2026-05-29T02:00:37.623Z",
-        "category": "Zimbabwe",
-        "source": "NewsDay",
-        "date": "2026-05-29",
-        "url": "https://www.newsday.co.zw/business/6/zimbabwe-seals-oil-deal",
-        "id": "s3g0d8cij7d",
-        "detail": "Zimbabwe has entered into an oil deal, though specific details of the agreement are not provided in the search results. The deal is likely aimed at ensuring a stable supply of fuel and energy resources for the country."
-      },
-      {
-        "id": "6tq11lsjb3",
-        "detail": "Narendra Modi highlighted the importance of private sector involvement in Zimbabwe's industrial recovery. He emphasized that the private sector's innovation, investment, and efficiency are crucial for driving economic growth and development.",
-        "date": "2026-05-29",
-        "url": "https://zimsituation.com/2026/05/28/private-sector-key-to-industrial-recovery-modi/",
-        "category": "Zimbabwe",
-        "source": "Zimbabwe Situation",
-        "headline": "Private sector key to industrial recovery: Modi",
-        "fetchedAt": "2026-05-29T02:00:37.623Z"
-      },
-      {
-        "category": "Zimbabwe",
-        "source": "Zimbabwe Situation",
-        "fetchedAt": "2026-05-29T02:00:37.623Z",
-        "headline": "Govt races to meet wheat target as deadline looms",
-        "id": "wa73mqbkjm",
-        "detail": "The government is working to meet the wheat production target as the planting deadline approaches. Efforts are being made to ensure sufficient wheat supplies and reduce reliance on imports.",
-        "date": "2026-05-29",
-        "url": "https://zimsituation.com/2026/05/28/govt-races-to-meet-wheat-target-as-deadline-looms/"
-      }
-    ],
-    "Science": [
-      {
-        "fetchedAt": "2026-05-29T02:00:40.917Z",
-        "headline": "DNA Solves 250-year-old Mystery of the Seychelles' Lost Crocodiles",
-        "category": "Science",
-        "source": "ScienceDaily",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE075eaFhOkHpqDXjvaM2Spi6qrueTSPG4pMCMIPBb1-XqVDUeANEeRJmHfiDLP5C3ig7669SUP4O4vUuh9Lg4r5j-sg1AaDKGD7zeInD2L8-gMhzqY-mk=",
-        "id": "gla3zkjs9z",
-        "detail": "Scientists have solved the mystery of the Seychelles' vanished crocodiles using DNA from historic museum specimens, determining they were an isolated population of saltwater crocodiles that likely drifted thousands of kilometers from Africa or Madagascar."
-      },
-      {
-        "category": "Science",
-        "source": "ScienceDaily",
-        "headline": "Scottish Wrens May Be Evolving Into New Species Through Island Gigantism",
-        "fetchedAt": "2026-05-29T02:00:40.917Z",
-        "id": "s8dhj6or4xi",
-        "detail": "Tiny birds on remote Scottish islands are undergoing a dramatic evolutionary transformation, with some island birds growing astonishingly large and potentially evolving into a new species.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE075eaFhOkHpqDXjvaM2Spi6qrueTSPG4pMCMIPBb1-XqVDUeANEeRJmHfiDLP5C3ig7669SUP4O4vUuh9Lg4r5j-sg1AaDKGD7zeInD2L8-gMhzqY-mk="
-      },
-      {
-        "category": "Science",
-        "source": "Phys.org",
-        "fetchedAt": "2026-05-29T02:00:40.917Z",
-        "headline": "Ultrafast holographic imaging reveals electron and magnetic dynamics inside next-generation materials.",
-        "id": "dof9k8yats6",
-        "detail": "New ultrafast holographic imaging techniques allow scientists to visualize the dynamics of electrons and magnetism within advanced materials.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6JIVR6b_0yxSuyYkyv6iyRHSXRV1X1Q6Gr2wGmaVToQVZJl32EzkQui8vof70JK1j0ACajclV06NEVhibSmZG5R95nZFq7VA1Cb0="
-      },
-      {
-        "category": "Science",
-        "source": "Phys.org",
-        "fetchedAt": "2026-05-29T02:00:40.917Z",
-        "headline": "Heron-like, fish-eating dinosaur from 70 million years ago discovered in Argentina.",
-        "id": "4hqb5d7ncs",
-        "detail": "A new species of dinosaur with heron-like features, adapted for fish-eating, has been discovered in Argentina, dating back 70 million years.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6JIVR6b_0yxSuyYkyv6iyRHSXRV1X1Q6Gr2wGmaVToQVZJl32EzkQui8vof70JK1j0ACajclV06NEVhibSmZG5R95nZFq7VA1Cb0="
-      },
-      {
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPzX7MfqRSv0SajRGmwhYjWxyujWrOnlvTueb7Pc_Oi_6nHzWtYBNDDOWQdZyWO3qJMVw4l0cg0MYNBbhWzV_pFYBaU4v9T-pCRqvhWyCX",
-        "id": "pl0i8bqwrbe",
-        "detail": "Paleontologists have discovered a Cretaceous bird fossil in China that possessed a pair of tail feathers twice as long as its body, showcasing an extreme example of ornamentation in early avian evolution.",
-        "fetchedAt": "2026-05-29T02:00:40.917Z",
-        "headline": "Cretaceous Bird from China Had Pair of Tail Feathers Twice as Long as Its Body",
-        "category": "Science",
-        "source": "Sci.News"
-      }
-    ],
-    "Finance & Economy": [
-      {
-        "headline": "S&P 500 and Nasdaq hit record closing highs",
-        "fetchedAt": "2026-05-29T02:00:43.141Z",
-        "category": "Finance & Economy",
-        "source": "RTHK",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHt7w3Gqy-9gVUoBKpazD3HExi20BQz6O3FMscuuxOhomkQJ7d0ov4PlHf29UpDkW7K2zhUi9Ump8BxsShb1tNmryoWvlZB4nR2dpI7nw_C49yvoBW-9XAo-PsIUAM5uyC6FbKIVgRxyjP0PnJ5Jq8zd8Du8NCRIWUkI3WcldjcfQ73sy6MI06Ed9DzLo3mNMyptsoXa7CD2BnAItijgYzs",
-        "id": "y6yh71fi359",
-        "detail": "The S&P 500 and Nasdaq reached record closing highs on Thursday following reports of a potential US-Iran ceasefire extension and the digestion of key inflation data, while the Dow Jones Industrial Average also finished at a closing high."
-      },
-      {
-        "category": "Finance & Economy",
-        "source": "The Star",
-        "fetchedAt": "2026-05-29T02:00:43.141Z",
-        "headline": "Japan plans 'bridging bonds' to fund investment initiatives",
-        "id": "d8x054gaxzm",
-        "detail": "Japan is planning to utilize bridging bonds to finance Prime Minister Sanae Takaichi's investment initiatives, according to the government's top spokesperson, a move that has raised concerns among investors already wary of increased debt issuance. These bonds are intended to cover temporary funding gaps, with the expectation of securing future funding sources.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkVBxqJh6Rgb5_PJCe0tOckFLbYxFE4PqOWH7FjBH-UkTKUOcbvgNjZpWlhz03BoYo_JFKuxVl7WMVmBX0hvoifhUv7n2_vFXWY73CFo-5rMINnXjdb3XRVJbphimW5EsIJTqtTDOwceMBbgD5lbQzjZUZlU_tjeOVAH_JzbFN6_2NRxw-c1peUxmXZoGdUuyNIOz9mlyQkwlNfUq_lt946Z6QiI7Ogbe3FYmV5-bP144"
-      },
-      {
-        "id": "g7r9o2h6keu",
-        "detail": "Economist Luiz Pereira da Silva notes that China's tech-led growth and policy coordination are strengthening global stability, highlighting that China's governance model is well-equipped to manage global volatility by aligning investment, industrial policy, and long-term transformation. He views China's growth momentum as part of a structural transformation driven by investment and innovation, with policies closely aligned with the expansion of new sectors.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF0BSMWe90Td6kbZomu8e7nF8mmFlD5f9xuBmvDcnVmB5hWgHhAo9PfifrAvjwu1wEUOR70RKsf85HyEXd3F26Y9VZEeir0JxwejdVpKlSZ8DuDm1Ae9iYeq9yYN5j5cb9zsLjsrXrvpHHRXcLW6yzdujiPnkPNyouKItP4TVGE8QQW_CKXNsyXajdJPg_iGM8bqjazOKHRN8gIIjgUih5w9dMHBAQfmFFxnnrMQf_MN9JbcZ-imn6LfFhp_tcl4-Xdzhr8sd7HYHmTUj2r5-T9GHt82Cyr5sFbudmDc9H9R1ORX7QLXGyyRBV6DeVVAkNdDrYwP3dlxLRKjn3O1vU",
-        "category": "Finance & Economy",
-        "source": "The Manila Times",
-        "headline": "Global Times: China's economic resilience backed up by policy coherence, new growth engines, says Luiz Awazu Pereira da Silva",
-        "fetchedAt": "2026-05-29T02:00:43.141Z"
-      },
-      {
-        "id": "z0y0iw6pdr",
-        "detail": "The United States has abandoned its 30-year policy towards China, with the Trump administration ceasing demands for political reform. U.S. Trade Representative Jamieson Greer stated that the U.S. now accepts that China's political system is unlikely to be massively reformed, marking a significant shift from the Biden administration's approach.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGbwcs7z6Ya_paApDskd3INbeqrCyHlFhTuyiq0KDCKfHCm47kQuAySIaVf3yYxmyvfMfNlEEcon_kk6_d9-pYxa-8kq5Kw0Onbnp6zRH8rgIQc29qL6VNlvonV5ZuW-FRjLeAnFvX0tszj7j_-rLdvqE3Rn2CK9kRPSK691pfSeHJUoqviczENI0-5_ebJludr6Y7HfVawD8U2M3bpov-FCgSqE3c",
-        "category": "Finance & Economy",
-        "source": "Seoul Economic Daily International News",
-        "fetchedAt": "2026-05-29T02:00:43.141Z",
-        "headline": "US Scraps 30-Year China Policy, Drops Demands for Political Reform"
-      },
-      {
-        "id": "9cqgz0dczf5",
-        "detail": "The Philippines and Japan have committed to developing the Luzon Economic Corridor (LEC) into a world-class economic hub, recognizing its importance in strengthening regional economic architecture and global supply chain resilience. President Marcos Jr. and Prime Minister Takaichi pledged to enhance cooperation on infrastructure and economic initiatives within the LEC framework, including rail and port modernization, clean energy, and digital connectivity.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4R5PiC9_VRih3X4OJn9Sb864fB0yakCrXRhzxrYL4_WkZmowg0P-jfN0bZC8Gs8RA1vi4VmVAvZAKVK0rTF8qRmPq-HGUJ6hwBMfKixyofKhvV23d9F_arOb4_OYY5fOKYQ",
-        "category": "Finance & Economy",
-        "source": "Philippine News Agency",
-        "headline": "PH, Japan vow to develop 'world-class' Luzon Economic Corridor",
-        "fetchedAt": "2026-05-29T02:00:43.141Z"
-      }
-    ],
-    "Politics": [
-      {
-        "category": "Politics",
-        "source": "Canada.ca",
-        "fetchedAt": "2026-05-29T02:00:32.411Z",
-        "headline": "President Cyril Ramaphosa officiates title deed handover ceremony in North West",
-        "id": "fgd1bdbtgq7",
-        "detail": "President Ramaphosa will oversee the upgrading of land tenure rights and the handover of title deeds to several communities in the North West Province, marking a step in addressing historical land dispossession.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEibA4HQc3zLY6WR9LW4Oy1ZXxSuyY-PvGqn7MiZs4m8KvJKbKffQW0s_95DbyKmAT1In0-tpmNyDOG1aiCrd5XKcY0KfrqzBi0cKTPL3GKtpYf1sUABXBgyC_04dG7eNngFSI9o9ZoGfjwGTRTAby-rurGFcs8yiGPRK4ThoaRPoQ2aQyWuihQE8rZZyE2BTiMbhTd3XmZG6TzGdcJmkDaRlUmLNC5JsmhOKE="
-      },
-      {
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHbGpuOE1PcEnN5lkzxYnyIXYiGkJg_-PH-9_d_zxvzNtdjhh-L65ZKll0m4W4_OUjeGOY-HD8RDiK9l4-F72anL399C1iYZiiPGQkxEYYHYJxAocSyU8etJho07r6ikHCPqnVfjuuTIFEKdWJjXxsNS_OwNsUq_Tl1v2fh1cPPXdUzPbsd19RxNwerxWITSdKHtT2oLXBZcUEDOvIwbvW3NTMBlWPOnsZhNajYvWh-0TaIoA==",
-        "id": "w4jdc3h6sy",
-        "detail": "Canada's Minister of Foreign Affairs, Anita Anand, will meet with China's Minister of Foreign Affairs, Wang Yi, in Ottawa for a bilateral meeting.",
-        "fetchedAt": "2026-05-29T02:00:32.411Z",
-        "headline": "Minister Anand to meet with China's Minister of Foreign Affairs",
-        "category": "Politics",
-        "source": "Canada.ca"
-      },
-      {
-        "id": "9d4ucvnls4q",
-        "detail": "The Japanese government has formally announced that the supplementary budget bill is scheduled to be submitted on June 3rd.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHsMIVp6wK5sXyuJum3r7U7MMyrIWAOm6Ms0nXHFeTqRdOnmpvrpxAkVYZcaIrz75TZaZbjIiv1Pvj0CaKSsXTZ78YHj3zGEszdHPd0UUPIlD9aoshuD8w8KuSVxZSfOR-4O00My4YONGMJ65NAlqmdnKxOSd722IE=",
-        "category": "Politics",
-        "source": "CGTN",
-        "headline": "Japan's Government officially announces that supplementary budget bill will be submitted on June 3rd",
-        "fetchedAt": "2026-05-29T02:00:32.411Z"
-      },
-      {
-        "id": "bxf2hdeuup",
-        "detail": "Iran and the U.S. have reportedly reached a tentative agreement to extend their truce for 60 days, but it is pending approval from President Trump.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGOozohZU9LKUTZs9_qQ0WysynY-hW_8oEtMma261DfTxlvMXKxUUUofrrxH77MDR_3Wsj-xo-Gp9jBs1EeZijMh0RWEn7hWhs8WgSi6sgWRQejWTKuq0s1QXLeZI5uLKXuvh_gkk5YO9vvubotnl4jrWIqGlw0bXaPiIj_xPJCT--hAr5NjGaeqFm34agVHcHXtSetx0KavR0Y",
-        "category": "Politics",
-        "source": "The Japan Times",
-        "fetchedAt": "2026-05-29T02:00:32.411Z",
-        "headline": "Iran and U.S. reach deal to extend ceasefire, pending Trump's approval"
-      },
-      {
-        "id": "5hb8nksytjp",
-        "detail": "In Minnesota, Democrats and Republicans are holding their state party conventions to decide who will represent their parties in the upcoming elections for governor, U.S. Senate, and other offices.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGeDWsMQUdvMIvyCk9rkY795kHFZlLLUToTkKsvoAg3Qhm_XoL6K5CL3CfQojUrr7mJB2Wy7MH00sfXCiKMuyKQQDHwm5_bxtv_6PHbNIKXJVsWJvy17rPwLyM0-scUsQlanD6C1u70cnvlhhII_OlwgyUMMPyhvoPAlimNsLwu1KwYmdSr9Wq8BeOPN0l33oHH-hqbdKoxJlpRPdKqD_G7vMCS6iaglZ4-9yX9YtDZS8dYR__v-MeEVEgXeQ==",
-        "category": "Politics",
-        "source": "MPR News",
-        "fetchedAt": "2026-05-29T02:00:32.411Z",
-        "headline": "Democrats and Republicans convene for their party conventions"
-      }
-    ],
-    "Health": [],
-    "Opinion/Editorial": [
-      {
-        "category": "Opinion/Editorial",
-        "source": "Inquirer.net",
-        "fetchedAt": "2026-05-29T02:00:49.342Z",
-        "headline": "A timely call to end Red-tagging",
-        "id": "jqzl460uqzo",
-        "detail": "The Commission on Human Rights (CHR) called for an end to Red-tagging, which is the pattern of labeling individuals and groups as 'communists,' 'terrorists,' or 'enemies of the state,' often without due process.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKlm4lWRHxeK9-W31-c2n__ugd-8gkl5ZvRJttcdqYSKW-XVSYQCjC7U-4q5KWeoYUhfyRk41_4AWjlnHhyo9IoG0C5PbE46m1IfSIwDcGkWmVtJ6YxVUf"
-      },
-      {
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGadBgE2MmaGigZHi_lt_7imxUYsEyz18VnDkZkFOpn4h9P_jig9Jsfl9Qvkg1qekADlrsAPFC3AahooA7c160KhyQaZ7AdyGaRYdsfffxd7TgVpA0fiAlTKHoC9Ijr-kCrmtnKo6Mq7g==",
-        "id": "oxj8g8oz6fm",
-        "detail": "This editorial discusses the importance of focusing on jobs and training to improve the prospects for young people.",
-        "fetchedAt": "2026-05-29T02:00:49.342Z",
-        "headline": "The Guardian view on jobs and training: boosting young people's chances should be a national mission",
-        "category": "Opinion/Editorial",
-        "source": "The Guardian"
-      },
-      {
-        "fetchedAt": "2026-05-29T02:00:49.342Z",
-        "headline": "The Guardian view on energy shocks: winter is coming – and Labour needs a plan",
-        "category": "Opinion/Editorial",
-        "source": "The Guardian",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGadBgE2MmaGigZHi_lt_7imxUYsEyz18VnDkZkFOpn4h9P_jig9Jsfl9Qvkg1qekADlrsAPFC3AahooA7c160KhyQaZ7AdyGaRYdsfffxd7TgVpA0fiAlTKHoC9Ijr-kCrmtnKo6Mq7g==",
-        "id": "4miv8ib02id",
-        "detail": "This editorial emphasizes the need for the Labour party to develop a plan to address potential energy shocks in the coming winter."
-      },
-      {
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGadBgE2MmaGigZHi_lt_7imxUYsEyz18VnDkZkFOpn4h9P_jig9Jsfl9Qvkg1qekADlrsAPFC3AahooA7c160KhyQaZ7AdyGaRYdsfffxd7TgVpA0fiAlTKHoC9Ijr-kCrmtnKo6Mq7g==",
-        "id": "oqajextwyd",
-        "detail": "The editorial argues that following Tony Blair's past policy approaches is not a viable strategy for Labour's future success.",
-        "headline": "The Guardian view on Tony Blair's advice for Labour: policymaking like it's 1999 will not lead to a revival",
-        "fetchedAt": "2026-05-29T02:00:49.342Z",
-        "category": "Opinion/Editorial",
-        "source": "The Guardian"
-      },
-      {
-        "fetchedAt": "2026-05-29T02:00:49.342Z",
-        "headline": "4Ps, electricity bills, and Issues in social program funding",
-        "category": "Opinion/Editorial",
-        "source": "Inquirer.net",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGKlm4lWRHxeK9-W31-c2n__ugd-8gkl5ZvRJttcdqYSKW-XVSYQCjC7U-4q5KWeoYUhfyRk41_4AWjlnHhyo9IoG0C5PbE46m1IfSIwDcGkWmVtJ6YxVUf",
-        "id": "k9tt18qoqhi",
-        "detail": "This article discusses issues related to the funding and implementation of social programs, including the 4Ps and concerns about electricity bills."
+        "id": "775tcnh63yy",
+        "headline": "A Trump Stronghold Grapples With Health Risks of ICE Detention Sites",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGzvBmGqMaBc-ZL_3GFkGYiUCw3EYWZb4FYIhPzcQmD4LrguNFrIGwlih-8YBVgK1YSPdbeXWdK3hzjyYoYQm2kg6cI6vtUea1-JIgFiHJtawxdOoVbeFX9SRXLG-JM5OIVSF0E60IbvS3sVh6_kfaf9WlC6M-0zdLZ",
+        "source": "KFF Health News",
+        "detail": "Several rural communities were thrust into a charged national debate over the Trump administration's mass deportation strategy when federal officials sought to place new detention centers in them and locals fear the effort will overburden its modest healthcare infrastructure.",
+        "fetchedAt": "2026-05-29T14:00:16.803Z"
       }
     ],
     "Education": [
       {
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEZUCRMeSgtAp_K5EG3nBA6g_oM3jFmcBlC_S1o1gHpn3HkNjTJSJSdcNW0aMcpWRGnly8fOwBVURw8F5tI9DsF-xvWyzpOC_TgQhY2QWi2vUzt3MsMjZ_zuxLT7ERpzjBRFRLrcFPchW7pm5lpOinRvEqyxLrMJ80m4unvmjr0ACTrzeBIKBLzmQA3Ilwo2WWLVAuv0Xi16oYHdxAAqvBOO3piBJBBuaGSrmPk5JXm0YBC4BrDg13zFpaPmtm5JuFnqp5BN2m_N68cniTrpeE9vOpxTCjAiFLwIw==",
-        "id": "c9ql4pqzeej",
-        "detail": "Saint Louis University (SLU) partnered with the Local Government Unit of San Quintin to conduct a training workshop on Instructional Material Preparation for Child Development Workers, focusing on designing multisensory instructional materials aligned with the Early Childhood Care and Development (ECCD) curriculum. The training aimed to create engaging and inclusive learning environments for the municipality's youngest learners.",
-        "fetchedAt": "2026-05-29T02:00:32.918Z",
-        "headline": "Empowering Early Educators: SLU and San Quintin partner to elevate Child Development through Multisensory Learning Materials",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH1VV6R5WGnaOD4nzHrlH8zElKcZ3GdSI8huOUurrQGlncG2o0MgB_eDEUSQLe8Bhj7GLaTFrkECVhql5QZHhXnKzzBNkbf8YvnMHUxUhymJ9lWpOBaFr4c0PFGVW4-CkM33A==",
+        "source": "Philippine News Agency",
+        "detail": "The Department of Education (DepEd) in the Philippines welcomed the approval of 22,268 new non-teaching positions to ease the workload of public school teachers, consisting of School Principal I, Administrative Officer II, and Project Development Officer I positions for elementary and secondary levels. This initiative aligns with President Marcos Jr.'s directives to support public school educators by reducing their administrative workload.",
+        "fetchedAt": "2026-05-29T14:00:16.559Z",
         "category": "Education",
-        "source": "Saint Louis University"
-      },
-      {
-        "category": "Education",
-        "source": "Xinhua",
-        "headline": "Russia-China Year of Education creates new opportunities for youth: Russian spokesperson",
-        "fetchedAt": "2026-05-29T02:00:32.918Z",
-        "id": "310gtq1ctvl",
-        "detail": "The Russia-China Year of Education provides a platform for talent cultivation and participation in academic activities for young professionals. The project aims to enhance mutual understanding between the two countries and deepen knowledge of the partner country among young people.",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGwDRoU60alQXK3QTC8Z4PMRyB8gsV7XsTKc-C3-Er5KMbiCg8ilg4bkdRxEfpCOlrw0UnU_o0fSbToXfHjDR7xE_MveaAYT_-JUh1EPg9aO16U0zp4FwQ9vzwDw4k5XBbfSeYaR367pdu473hOQGQJscUdjEPn5GPCIjGQnYNzZpwnGUzqRlwjsk="
-      },
-      {
-        "category": "Education",
-        "source": "Michigan.gov",
-        "fetchedAt": "2026-05-29T02:00:32.918Z",
-        "headline": "Michigan celebrates 529 Day, Recognizing Importance of Saving for Education and Future Opportunities",
-        "id": "b6n4kb7dok8",
-        "detail": "Michigan Governor Gretchen Whitmer proclaimed May 29 as “529 Day” to encourage families to save for education and career training. The Michigan Education Trust (MET) is offering a bonus to help families start saving, emphasizing that savings can open doors for future opportunities.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH6QnfoUwlzt7UERdDnqymeLXwb0ooJMBQTTUqdJPAAW-PIIl7y5NKXBI8mXCUEGwDssNH7R2VMo88j9jyEW693f-oKuw059ZPfsV_m-ZRIj6Mv3juy98kpX250_Y5th_xtKRrUjaMp13I4IVjbEkCtCkmIgjNc7DdKoKN_qy5IHBCnsZtVoNBD"
-      },
-      {
-        "id": "ydiunr1liln",
-        "detail": "UNESCO reports that AI is rapidly reshaping higher education in South Asia, creating opportunities but also raising questions about policy, faculty capacities, and ethical governance. UNESCO is supporting commitment towards a gender-equitable AI transformation in higher education.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6raQBDWahTUFtQQ5h7G0mFremAf_PCwLU0FHv_xd2G8vdtIWqFi4OLfABuMGY7ffvZYOIQr8tErdCzpwulCYKAYsUurVLV6eSGPzKX88DKOSIQYv9Cf-EcuAyY1NPK40gYy1q0Rmayz_IigdG-JvszHPstdKcr-TGBSBIqSngqbgreNroK1QjBoKdu6Fz93xRaxPYgoGs_-0zgqW05psstCo574aTlg-O",
-        "category": "Education",
-        "source": "UNESCO",
-        "headline": "Advancing ethical and innovative AI integration in higher education in South Asia",
-        "fetchedAt": "2026-05-29T02:00:32.918Z"
+        "id": "exed8h8ocvp",
+        "headline": "DepEd lauds approval of 22K non-teaching positions"
       },
       {
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEMLU622htqa41rLgXXWxxeQHvfS80_mP-NsQtHn216ZVVIIBbUDF_DGkFM7Wkc4aCblzh4fscKDY2D0LGcPFyXNwf2pyCWaFEo6lHtiETHUSmqbW9zWq2Fc_ZTsFu6m3Wa5y_qrjAbRLMPSI_w4FZYBiO9nuOdiDjbWEq2qESiz44_sFqtuubtKTGJtddgSscpZKsAmKkw5tVjEgkyMPofK09pJ9BlHY2vXCgA-92NqILJSx4zrmJfsARDeKjmkWGBnhZm9XfoPP61eR_UkCa1Qg5ts-bxYkb5cm0JbCxo0a_OXsw=",
-        "id": "36ewksorifi",
-        "detail": "Florida State University's Learning Systems Institute (LSI) will collaborate with IREX on the Early Grade Education Activity in Jordan, supporting initiatives to address low literacy and numeracy rates. LSI will support Jordanian universities through curriculum review, faculty development, and research.",
-        "fetchedAt": "2026-05-29T02:00:32.918Z",
-        "headline": "Learning Systems Institute at FSU chosen to collaborate on U.S. Department of State-funded Early Grade Education Activity in Jordan",
+        "id": "11ovg97dw5nm",
+        "headline": "Virginia Gov. Spanberger Signs Childhood Education Measures Into Law",
         "category": "Education",
-        "source": "Florida State University News"
+        "fetchedAt": "2026-05-29T14:00:16.559Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG3uqBnX-ePnWZfr_PSKIWC35SrZ_XckVieSialmwZIGl_duwaJOm6IyCC78S0wq2SLWVTiZ__9kKiFJtUfloOhm3dslM_lYOpzB9u8IsHTqwub_cUAi_cniEWvXlcZ5cCnEJfjb17q0hx_RxXkNafa0a5IUreoacJrrDdlJuee8kN_0pdrFxf-CaT7nLcDmVuFkRLJfcPTz5GwgAK_",
+        "source": "FCNP.com",
+        "detail": "Virginia Governor Abigail Spanberger signed bipartisan legislation to strengthen early childhood education, support parents, and help families access affordable, quality childcare.  The legislation includes House Bill 18 and Senate Bill 3, which create the Employee Child Care Assistance Program to incentivize employers to contribute to childcare costs for their employees."
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH7cNcxSEhNcjmq6LN0n30OGE_6yMQ2bKrL3sXZHBSurL4WsATmvglrBiVmfVyx0YegDDNQ-CMLq4Nufltw4iPwT8sVErd_FwbZd2fIKwMOwCmI_Og9sS35kCQFvgteoR7GzU8fxS420R3BiyjmaqCcY1Tdvi8m9aQLsdBIMKD2zcC23krHybWGp03GbSXcgzsLA0pUg01Mq5C1vME72tHiS8_HLWVPyT8Uw14lROEAsUWLYlXW-FQ4ew==",
+        "source": "The Star",
+        "detail": "Lai Ka-ying's selection as Hong Kong's first astronaut has led to a surge in interest in aerospace and satellite-design courses. The Education Bureau is integrating aerospace and innovative technology into the primary school science curriculum.",
+        "fetchedAt": "2026-05-29T14:00:16.559Z",
+        "category": "Education",
+        "date": "2026-05-29",
+        "id": "h6tjrl1o54g",
+        "headline": "How Hong Kong's first astronaut triggered a space education race"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFmD0DJhtHyRmku2ry-yW4045vXUsnpZhdGSuSAqaEa_yUR0Q-vPQ1bHIiDKt_8i7Sxtvr_rFCRm7EqIxj6WevQzFwVW5mHJwFYPZ_ALQM=",
+        "source": "U.S. Department of Education",
+        "detail": "The U.S. Department of Education highlighted civics education in Maine. The Department of Education is working to ensure that all students have an onramp to a postsecondary education.",
+        "fetchedAt": "2026-05-29T14:00:16.559Z",
+        "category": "Education",
+        "date": "2026-05-29",
+        "id": "jnz9nzyyj1o",
+        "headline": "ED Leadership Highlights Civics Education in Maine"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:16.559Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEPSG6CZIpYkm2zkFPc-nE9b9aixU5uf5OlqVI-vK08DsNmxI4ayE8tpn81vYPV5yW6hMAei41dHkVvgNNM9cURuaAgwrmkSxIfpOhFnuW_vh_0_A==",
+        "source": "K-12 Dive",
+        "detail": "Pittsburgh Public Schools approved a plan to close 12 schools. K-12 Dive provides news and analysis for leaders in K-12 education, covering topics like classroom tech, policy, and personalized learning.",
+        "date": "2026-05-29",
+        "id": "syokys0816",
+        "headline": "Pittsburgh Public Schools OKs plan to close 12 schools",
+        "category": "Education"
       }
     ],
-    "World": [],
+    "World": [
+      {
+        "category": "World",
+        "date": "2026-05-29",
+        "id": "s5lpfvn0og",
+        "headline": "US, Iran reach tentative agreement on extension of ceasefire, Trump's approval pending",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFPuUAflamxfElVa2RE0vtCnL-HW6TNw_yEi43R6ow0Qum-KkxP8ViO60EwqCd0AZH4kWYrGiZ7brwX3krLK0t48KILFZ1I_5dbXM_BeO-ZD8pRUVkWNud2LLDU3COFuNyeD8nWWX6nr2TJwCPtJGf8Tco0uiAXeYuSiQ==",
+        "source": "Anadolu Ajansı",
+        "detail": "US and Iranian negotiators have reached a tentative agreement on a 60-day ceasefire extension and framework for nuclear talks, though President Donald Trump has not yet given his final approval. Vice President JD Vance confirmed that the US and Iran are now \"very close\" to signing the historic document.",
+        "fetchedAt": "2026-05-29T14:00:14.591Z"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEqDt_KuiklWnwjxLQ9tJuwAeWatMAsuTnxP7DqTLGMhk_GMBdQXfGOor-cpLni5M3x9JAekJ0zKtvJxdXaTUyghmlSSjndbua8dj5WbrMRJcU2iPazViHuGw==",
+        "source": "CBS News",
+        "detail": "A Russian drone crashed into a residential building in Romania's southeastern city of Galati near the border with Ukraine, injuring two people and triggering a fire.  The incident has raised concerns that the war in Ukraine could spill over into neighboring NATO states.",
+        "fetchedAt": "2026-05-29T14:00:14.591Z",
+        "category": "World",
+        "date": "2026-05-29",
+        "id": "lnekgze5a7p",
+        "headline": "Russian drone strikes Romanian apartment building, Romania says"
+      },
+      {
+        "category": "World",
+        "date": "2026-05-29",
+        "id": "e76fn9an6bl",
+        "headline": "Two adults and a child die in London after falling from high-rise building",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHc9q8LF14pVRBTsqwubrLL8grh82WQ8JWGgMHa6xOOsPTC40uquzjmnea_6C6ZwxLjFgWJ7dyEVF10zZtdfOgKTy5yjRZ7DmwiGqZi7vFFYQ4_sQy2hoYGQLLFbg==",
+        "source": "The Guardian",
+        "detail": "In London, two adults and a child have died after falling from a high-rise building. Police are investigating the circumstances surrounding the incident.",
+        "fetchedAt": "2026-05-29T14:00:14.591Z"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFySm9MBoq5wtIn_dO6FYYp_okt39SA9d3gvK-YpkZHUHTPxyAmUvhMT8kCmhEHnfnKml8p_bGZ9PXEX29HdBAac3lpoFeMXKogoeVm8vRlaBz6WtEw",
+        "source": "Al Jazeera",
+        "detail": "A Kenyan court has temporarily blocked the U.S. government's plans to open a quarantine center for Americans exposed to Ebola on an air base in Kenya. The court order halts the project amid concerns raised about its potential impact.",
+        "fetchedAt": "2026-05-29T14:00:14.591Z",
+        "category": "World",
+        "date": "2026-05-29",
+        "id": "8cm96dltxs8",
+        "headline": "Kenyan court suspends US Ebola quarantine facility plan"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGil_85PAGNNYNKDHTwVSm0nFKvpBreVaRjGUHa6iROqoOx2Rio8A9W62CQXUAlTuGwyUrGYrdMaF7_Ib59wDGIX_zlGCxszR51XGgxoVZY8sWICEZ5ZOGYJP95Kor4MB1aPpRoFpN-Avh8hIKwLkMQvUFPXkBCnXaboGRU1iffmaOQrE-NBors5CBZL7AAQ1-jsgZ6YNGxtOYBX_lFwLTqkA==",
+        "source": "The Straits Times",
+        "detail": "A man shouting \"Allahu akbar!\" injured three people in a knife attack at a train station in Winterthur, Switzerland, and was arrested. Officials have described the incident as a terrorist act.",
+        "fetchedAt": "2026-05-29T14:00:14.591Z",
+        "category": "World",
+        "date": "2026-05-29",
+        "id": "49zbbvif8pz",
+        "headline": "'Terrorist' knife attack wounds three in Switzerland"
+      }
+    ],
     "Sports": [
       {
-        "id": "z2wrtfcxhp",
-        "detail": "Darts star Luke Littler revealed that crowd abuse almost made him quit during the Premier League Darts final, leading to an emotional breakdown. He has been facing relentless heckling and booing from sections of the audience, which has taken a toll on his performance and mental state.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdgZr5K7iGdJ8L-LcYRDeya-KzylnWF8p0Dr2PAGwjHlpihQTVzVOKZwkWsUX6aG2Qd9IpWnL7REyE0MWCI7zdVMAzcnrLBB_W0NnwtWx_aG8qFL2zrqic8Yuv",
-        "category": "Sports",
-        "source": "Daily Record",
-        "fetchedAt": "2026-05-29T02:00:30.998Z",
-        "headline": "Luke Littler breaks down in tears after Premier League Darts final as star reveals crowd abuse had him ready to quit"
-      },
-      {
-        "fetchedAt": "2026-05-29T02:00:30.998Z",
-        "headline": "World number one Jannik Sinner sensationally knocked out of Roland Garros",
-        "category": "Sports",
-        "source": "UNN.ua",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdgZr5K7iGdJ8L-LcYRDeya-KzylnWF8p0Dr2PAGwjHlpihQTVzVOKZwkWsUX6aG2Qd9IpWnL7REyE0MWCI7zdVMAzcnrLBB_W0NnwtWx_aG8qFL2zrqic8Yuv",
-        "id": "yos9iv8x9t",
-        "detail": "Jannik Sinner, the world's number one tennis player, experienced a shocking defeat at Roland Garros. His unexpected exit marks a major upset in the tournament."
-      },
-      {
-        "category": "Sports",
-        "source": "BBC Sport",
-        "headline": "Clarke signs on until 2030 World Cup - a gamble SFA had to take?",
-        "fetchedAt": "2026-05-29T02:00:30.998Z",
-        "id": "fx951gnmqhl",
-        "detail": "Steve Clarke has signed a new contract that extends through the 2030 World Cup. This decision is viewed as a significant commitment by the Scottish Football Association.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG8eq9lszLkBC8Nb4GM1-VXaJ_giDyud99doPqkFUs7VA1g9gHrG3Lt8JyDD87Axxm1gf2Dproow0WdJK0GAO17bql0ob9rVWOjEm4NF61EBxT44ZnqtndwonR5Od5h"
-      },
-      {
-        "headline": "Konaté poised to leave after failing to agree new contract",
-        "fetchedAt": "2026-05-29T02:00:30.998Z",
-        "category": "Sports",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGy5NKRmvRLZX_vVsja2YpdvvRzfJx3CQoq4Bck6A200YdfueYn_uVqHBc2mpMeh0XChZGaPmrZ0-cmYILINOym1HZVhKKtqrG_74VncFiHH9R76PHpaFK3W-zx4Ft9",
         "source": "The Guardian",
+        "detail": "Indian batters Bhatia and Rodrigues showcased dominant performances, leading their team to a victory against England in the first T20 international match. Their strong partnership and aggressive batting proved too much for the English side to handle.",
+        "fetchedAt": "2026-05-29T14:00:17.828Z",
+        "category": "Sports",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaQVljhL-hcuWywJnzzHuX7Nat__x22BobWv7yW1RFcEy-pwVit2_k4A90lipLK93KEcurJMCEChI4sLRCasblZM2KBd-7XGd2E8pnHxIj0lWg4flqMIJMGa3D7UN4",
-        "id": "9dp5dlf9ga",
-        "detail": "Ibrahima Konaté is likely to leave Liverpool after failing to reach an agreement on a new contract. His potential departure would be a significant change for the team's defensive lineup."
+        "id": "2z5eadfqash",
+        "headline": "India's Bhatia and Rodrigues overpower England to set up victory in first T20 international"
       },
       {
-        "headline": "Praggnanandhaa Stuns World No. 1 Magnus Carlsen At Norway Chess - Video",
-        "fetchedAt": "2026-05-29T02:00:30.998Z",
         "category": "Sports",
-        "source": "NDTV Sports",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4aUOyP0opiODa9cc5z5c87ivFHE3Gham8PvCvITQM6fzVfhz7d3LErJkLwBZtoFb7hSk6I_GU_GVCr2VEF6gyvi72HtQ9JEGmbqqkBNK5Jps4",
-        "id": "hij4iz8s3t5",
-        "detail": "Young Indian Grandmaster Praggnanandhaa defeated world number one Magnus Carlsen at the Norway Chess tournament. This victory is a significant achievement for the rising star in the world of chess."
+        "id": "xgn13b9dsk",
+        "headline": "Wembanyama and aggressive Spurs see off Thunder to force Game 7",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGy5NKRmvRLZX_vVsja2YpdvvRzfJx3CQoq4Bck6A200YdfueYn_uVqHBc2mpMeh0XChZGaPmrZ0-cmYILINOym1HZVhKKtqrG_74VncFiHH9R76PHpaFK3W-zx4Ft9",
+        "source": "The Guardian",
+        "detail": "Victor Wembanyama led the San Antonio Spurs to a crucial victory over the Oklahoma City Thunder, forcing a Game 7 in their series. Wembanyama's impressive performance and the Spurs' aggressive play were key to their success.",
+        "fetchedAt": "2026-05-29T14:00:17.828Z"
+      },
+      {
+        "category": "Sports",
+        "date": "2026-05-29",
+        "id": "bytkoh0vhnm",
+        "headline": "Satwik-Chirag stub Malaysian upstarts with calm carnage to make Singapore semis",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHeqZi5myd_eq-5OpjJXnGxW8JkHn_4xWZU0fTZwK_GPXae-lxvFOsmd5XYCD_fLhoQa036eLp0Kt6VCXPfDYJu_eQAuhzAY0Te_8ZKPApwSU_sSTukmF8DtzDw_DwuE3IiX6w=",
+        "source": "The Indian Express",
+        "detail": "Satwiksairaj Rankireddy and Chirag Shetty displayed a dominant performance, overcoming their Malaysian opponents to secure a spot in the Singapore Open Semifinals. Their composed yet aggressive style of play proved too challenging for the Malaysian team.",
+        "fetchedAt": "2026-05-29T14:00:17.828Z"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:17.828Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhrZrJnEzd5B6O0_Y0s9jUjHV5jWm7kvkLGpxsLaAIH4fa3HLs_3DwXQrgx73jljBdvyiRuevECN1OxjGN_LFVGy9GonRufL7AHnOoUsJDWT_mxBTWCg==",
+        "source": "Inquirer.net",
+        "detail": "TNT Tropang Giga are on the verge of returning to the PBA Finals after a Game 5 victory against Meralco Bolts. With Chris McCullough finding his groove, TNT moved closer to securing their spot in the championship series.",
+        "date": "2026-05-29",
+        "id": "64pjxl6ycrd",
+        "headline": "PBA: TNT nears Finals return with Game 5 win over Meralco",
+        "category": "Sports"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:17.828Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHhrZrJnEzd5B6O0_Y0s9jUjHV5jWm7kvkLGpxsLaAIH4fa3HLs_3DwXQrgx73jljBdvyiRuevECN1OxjGN_LFVGy9GonRufL7AHnOoUsJDWT_mxBTWCg==",
+        "source": "Inquirer.net",
+        "detail": "Filipino tennis star Alex Eala has been recognized for her achievements and potential by being included in Forbes' '30 Under 30' list for sports and entertainment. This prestigious recognition highlights her impact and influence in the world of sports.",
+        "date": "2026-05-29",
+        "id": "j9jnyvmswii",
+        "headline": "Alex Eala named to Forbes '30 Under 30' list for sports, entertainment",
+        "category": "Sports"
+      }
+    ],
+    "Zimbabwe": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJVVAdE8tvOlKCtJ9D4qKDH2ZXvvo6nbN13MGgiL6jV3lr13u2KENqxQV-4zI_vx1a6gWwFB50dbzUVdqZtHEZQm3wYlUUUdRim0LDN0OpearO8w==",
+        "source": "ZimLive",
+        "detail": "A judge stated that society is safer without the accused, sentencing Muvevi to four life sentences after rejecting his insanity plea.",
+        "fetchedAt": "2026-05-29T14:00:14.893Z",
+        "category": "Zimbabwe",
+        "date": "2026-05-29",
+        "id": "pftbziikch",
+        "headline": "4 life sentences for cop killer Muvevi as court rejects insanity plea"
+      },
+      {
+        "date": "2026-05-29",
+        "id": "yo4n3i8c649",
+        "headline": "10 killed in Gokwe-Kwekwe road bus and truck collision",
+        "category": "Zimbabwe",
+        "fetchedAt": "2026-05-29T14:00:14.893Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJVVAdE8tvOlKCtJ9D4qKDH2ZXvvo6nbN13MGgiL6jV3lr13u2KENqxQV-4zI_vx1a6gWwFB50dbzUVdqZtHEZQm3wYlUUUdRim0LDN0OpearO8w==",
+        "source": "ZimLive",
+        "detail": "A bus carrying 36 passengers was involved in a horror crash with a truck at 5 AM, resulting in 10 fatalities."
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:14.893Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJVVAdE8tvOlKCtJ9D4qKDH2ZXvvo6nbN13MGgiL6jV3lr13u2KENqxQV-4zI_vx1a6gWwFB50dbzUVdqZtHEZQm3wYlUUUdRim0LDN0OpearO8w==",
+        "source": "ZimLive",
+        "detail": "Following clashes at Chahwanda, Hardrock has suspended its CEO, Hove, after his arrest by the police; the Sports Ministry has condemned the ugly scenes.",
+        "date": "2026-05-29",
+        "id": "crw6gj6uao",
+        "headline": "Hardrock suspends CEO Hove after police arrest over Dynamos clashes",
+        "category": "Zimbabwe"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:14.893Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNFgvrNhclCIONKHXj0FTA9UjwqsYXPB1eNqUusGLpuShM1bonr-dgspnNV94OzCT_-dEd9K0XvLlOGFadIfuh4yDB7pRhFp7znGO9fgVgx-6PUIk=",
+        "source": "Nehanda Radio",
+        "detail": "Pearson Mbalekwa, nephew of President Mnangagwa, has been expelled from Zanu PF for resisting the 2030 agenda.",
+        "date": "2026-05-29",
+        "id": "an1mhly9juh",
+        "headline": "Mnangagwa's nephew Pearson Mbalekwa expelled from Zanu PF for resisting 2030 agenda",
+        "category": "Zimbabwe"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHNFgvrNhclCIONKHXj0FTA9UjwqsYXPB1eNqUusGLpuShM1bonr-dgspnNV94OzCT_-dEd9K0XvLlOGFadIfuh4yDB7pRhFp7znGO9fgVgx-6PUIk=",
+        "source": "Nehanda Radio",
+        "detail": "The First Lady reportedly snubbed Tagwirei's wedding, while President Mnangagwa made a reluctant brief appearance.",
+        "fetchedAt": "2026-05-29T14:00:14.893Z",
+        "category": "Zimbabwe",
+        "date": "2026-05-29",
+        "id": "n53l3vbnwx",
+        "headline": "First Lady snubs Tagwirei wedding as Mnangagwa makes reluctant brief appearance"
+      }
+    ],
+    "Technology": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGTaW4l-HfSFKTgw5b8gaYNhkG6vjHNUppxn8EODtFT3wecSHrxmaKk7bcVHttavezvc4dp50iKNvnpvA7RjMqoW8j5ga1f8qYFw1YKIZwxC-ezfXc=",
+        "source": "GeekWire",
+        "detail": "Blue Origin's New Glenn rocket exploded on the pad during a test, dealing a blow to the company's plans to launch Amazon Leo satellites and a lunar lander; Jeff Bezos has vowed to rebuild.",
+        "fetchedAt": "2026-05-29T14:00:17.087Z",
+        "category": "Technology",
+        "date": "2026-05-29",
+        "id": "utniqc71yl",
+        "headline": "Blue Origin's New Glenn rocket explodes on pad during test; Jeff Bezos vows to rebuild"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE19TDs0FJZrc_nr-v-8GgaOKeFA4C2ZO5S8c6SoSp4UJXrjaxdnwGkFuMnuXq6qlolSmzTQZ5QOj-LVcdZD7TU6fzJ_GbO7b-LxD7rkLqTPPFpZe7upQij",
+        "source": "AP News",
+        "detail": "A Google employee has been charged with using confidential search data to make $1.2 million on Polymarket.",
+        "fetchedAt": "2026-05-29T14:00:17.087Z",
+        "category": "Technology",
+        "date": "2026-05-29",
+        "id": "rhmglfkiuv",
+        "headline": "Google employee charged with using confidential search data to make $1.2 million on Polymarket"
+      },
+      {
+        "category": "Technology",
+        "date": "2026-05-29",
+        "id": "cnq9sz8uu3",
+        "headline": "Microsoft Threatens Researcher Over Bug Reports, Triggers Cybersecurity Uproar",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEo6QPeCUQdED6MnLHocBvJE_RjA4f7Wj8MfMifpjWHyXzX8z7lfA8WS8LoffYG6m0fA9nH9pRvYdvvcK7yMSosgEaACMUi4hlKcdawwOKMgHLMVKfb",
+        "source": "PCMag",
+        "detail": "Microsoft is facing backlash after allegedly threatening a researcher for submitting bug reports.",
+        "fetchedAt": "2026-05-29T14:00:17.087Z"
+      },
+      {
+        "date": "2026-05-29",
+        "id": "vsgxln8yqsi",
+        "headline": "Introducing Argus, a robot with 20 legs and eyes built to move and see in any direction instantly",
+        "category": "Technology",
+        "fetchedAt": "2026-05-29T14:00:17.087Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE19TDs0FJZrc_nr-v-8GgaOKeFA4C2ZO5S8c6SoSp4UJXrjaxdnwGkFuMnuXq6qlolSmzTQZ5QOj-LVcdZD7TU6fzJ_GbO7b-LxD7rkLqTPPFpZe7upQij",
+        "source": "AP News",
+        "detail": "A new robot named Argus has been introduced, featuring 20 legs and eyes designed to enable movement and vision in any direction."
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE5BhgDBbENnzCEoAEkA5hmK6hxM_XDGn8P8upyvxE61qzUe_sYLPn8rPdBeOM5Bh84l7v--qkqOsCWJOwReaL12-YzMON0R7aA8jAIqQNG9mI=",
+        "source": "ZDNet",
+        "detail": "Anthropic launches Opus 4.8, with honesty as its killer feature and misalignment rates similar to Claude Mythos Preview.",
+        "fetchedAt": "2026-05-29T14:00:17.087Z",
+        "category": "Technology",
+        "date": "2026-05-29",
+        "id": "c24zktp7okd",
+        "headline": "AI Model Release Tracker: Opus 4.8's misalignment rates similar to Claude Mythos Preview"
+      }
+    ],
+    "Crime & Justice": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4LabvxMa-y0ZSARPohIk0x8njj7y9aIorH5BzQB2foe_d5R8FIlyUfpwJB9hbR6zy9x45C1bjxIONqlVYNH5TVa7YvGGYrhJBPB_-UaLTsXY2a-CCqqQqmw==",
+        "source": "CBS News",
+        "detail": "A man wanted in connection with the killings of three elderly men was caught after a massive search of Hawaii's Big Island that had left residents on edge.",
+        "fetchedAt": "2026-05-29T14:00:29.725Z",
+        "category": "Crime & Justice",
+        "date": "2026-05-29",
+        "id": "vkuwtxvf0tr",
+        "headline": "Suspect in killings of 3 elderly men in Hawaii arrested after massive manhunt"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4LabvxMa-y0ZSARPohIk0x8njj7y9aIorH5BzQB2foe_d5R8FIlyUfpwJB9hbR6zy9x45C1bjxIONqlVYNH5TVa7YvGGYrhJBPB_-UaLTsXY2a-CCqqQqmw==",
+        "source": "CBS News",
+        "detail": "A former CIA official was arrested after the FBI raided his Virginia home and found over 300 gold bars worth $40 million.",
+        "fetchedAt": "2026-05-29T14:00:29.725Z",
+        "category": "Crime & Justice",
+        "date": "2026-05-29",
+        "id": "6hovg420z09",
+        "headline": "FBI: Ex-CIA officer had 303 gold bars in home"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:29.725Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENtrzk9E1wmUYxCgwlHzFYp5sULEmadCvOS2xPKvIe3pS22q2Fdimgx5xQWW4aoxZ6ltoSjj5Ou_GDAfY-RjntoekzhS6yNKBn6WOwP4mDW7rMpEoR7WE=",
+        "source": "United States Department of Justice",
+        "detail": "The Justice Department has filed a lawsuit against states for denying undercover license plates to federal law enforcement.",
+        "date": "2026-05-29",
+        "id": "u2p1mmgvz9",
+        "headline": "Justice Department Sues States for Denying Undercover License Plates to Federal Law Enforcement",
+        "category": "Crime & Justice"
+      },
+      {
+        "date": "2026-05-29",
+        "id": "e8olrhpgc8u",
+        "headline": "Fraudster Who Sold Personal Information of Over 7 Million Elderly Americans to Jamaican Scammers Sentenced to Prison",
+        "category": "Crime & Justice",
+        "fetchedAt": "2026-05-29T14:00:29.725Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENtrzk9E1wmUYxCgwlHzFYp5sULEmadCvOS2xPKvIe3pS22q2Fdimgx5xQWW4aoxZ6ltoSjj5Ou_GDAfY-RjntoekzhS6yNKBn6WOwP4mDW7rMpEoR7WE=",
+        "source": "United States Department of Justice",
+        "detail": "A fraudster has been sentenced to prison for selling the personal information of over 7 million elderly Americans to Jamaican scammers."
+      },
+      {
+        "date": "2026-05-29",
+        "id": "t8i2urzv54a",
+        "headline": "San Antonio Tow Company to Pay $280,000 for Illegally Auctioning Servicemember-Owned Vehicles",
+        "category": "Crime & Justice",
+        "fetchedAt": "2026-05-29T14:00:29.725Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQENtrzk9E1wmUYxCgwlHzFYp5sULEmadCvOS2xPKvIe3pS22q2Fdimgx5xQWW4aoxZ6ltoSjj5Ou_GDAfY-RjntoekzhS6yNKBn6WOwP4mDW7rMpEoR7WE=",
+        "source": "United States Department of Justice",
+        "detail": "A San Antonio tow company will pay $280,000 for illegally auctioning vehicles owned by servicemembers."
+      }
+    ],
+    "Entertainment": [
+      {
+        "date": "2026-05-29",
+        "id": "gifiup0f3e",
+        "headline": "Drishyam 3 Box Office Collection Day 8: Mohanlal's Malayalam film inches close to ₹200 crore worldwide",
+        "category": "Entertainment",
+        "fetchedAt": "2026-05-29T14:00:14.149Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEvd-DjF9ZhjYCSqhf6CKLtXSwcs1fKCOyijF1b8PwRCWa-UXg_tSCQiPxv78rMCro5z5oT909H_TQ2My43SqiuihpfWb8nWNwC7OLvZHbwMdXOXL2bJevEC2gpUPFy550K2QXy5wtE8whJsJRsBe4FrlOY_IjFK0SbDNd8FVZPlkDc1q156DUnX2KsWVz2tvFygzpxRTgtGZZOTmKmRidBk_ZaLAXpbtFmhMfHdbhxsRac",
+        "source": "Mint",
+        "detail": "Mohanlal-starrer Drishyam 3 was released on his 66th birthday and is nearing ₹200 crore worldwide in box office collections after 8 days."
+      },
+      {
+        "date": "2026-05-29",
+        "id": "w64o4bewcj9",
+        "headline": "Pooja Bhatt responds if Mahesh Bhatt changed religion to marry Soni Razdan: 'Never left my mom'",
+        "category": "Entertainment",
+        "fetchedAt": "2026-05-29T14:00:14.149Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_gNpviX8tR2JSlW0gw5lhBpqS2Eb0P132yEjlW-tJzXxvi_-Otl544il5lVq8wKdXrSHl7QtNbfIWH9M-GE5yDqEL7dDWXJIn6Zqy4UR1QolEfGA0aO0AuJIECiWXbV3fvNZId-G2IYLmPw==",
+        "source": "The Indian Express",
+        "detail": "Pooja Bhatt clarified that her father, Mahesh Bhatt, never changed his religion to marry Soni Razdan."
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHB7BYSEaJxxmtK91S_NURm5uIDX5gzrEKO8jvHX4G1j29eTduojfdtIwChnAmE6HE4ygR9S3hLA4UHYdzorL1VXQUWyPsLUL79NmDFYY4aT59-zcbGK7cSF_z6Dh7un8Z7lA==",
+        "source": "The Hindu",
+        "detail": "Hombale Films, known for 'K.G.F' and 'Kantara', is set to produce a Marathi film titled 'Yeto Ka Naay'.",
+        "fetchedAt": "2026-05-29T14:00:14.149Z",
+        "category": "Entertainment",
+        "date": "2026-05-29",
+        "id": "xbsno9b2oj",
+        "headline": "Hombale Films to produce Marathi film titled 'Yeto Ka Naay'"
+      },
+      {
+        "category": "Entertainment",
+        "date": "2026-05-29",
+        "id": "9pr4wlb8afj",
+        "headline": "Brad Pitt and Angelina Jolie's Son Maddox Requests to Drop Dad's Name",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSsiB2ihGxiCjPa_wNfjDFG9DMt82VsUw286OxvjB6K73BWCh8BIy3aHuf5OfObAWPNc9YVP2c-EaI4VOiM3g81_M6Yij-LznM52IfBydwHQ89JZKlOQ==",
+        "source": "Us Weekly",
+        "detail": "Maddox, the son of Brad Pitt and Angelina Jolie, has requested to drop his father's name.",
+        "fetchedAt": "2026-05-29T14:00:14.149Z"
+      },
+      {
+        "date": "2026-05-29",
+        "id": "nvmpjorxxu",
+        "headline": "Japan national volleyball player arrested over suspected cannabis possession",
+        "category": "Entertainment",
+        "fetchedAt": "2026-05-29T14:00:14.149Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHswfup136EKgaMJJpdgo-DhhwOfknQmZKPquY7aP62K4BGEvX-jMagSuUxPen-7el9Kz368ZcsxJKLWLWF420rFeRljtyV2MiIBH5iQS5v6Dbf2w9uJZIdV1yrLKrVtDgSwJOjU8J_L_EE1-s-Wsjzl-kwtx90pFUoqIim9f8J4KI3GMXfjzMaoXi6pZXP2m4I8giof0rPT1hZbHU=",
+        "source": "The Mainichi",
+        "detail": "Shunichiro Sato, a member of Japan's national men's volleyball team, was arrested on suspicion of cannabis possession."
+      }
+    ],
+    "Finance & Economy": [
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGrHyuTfeXuGTieVEv_7uqgVTBYQBys3HbsdTWX5uVff4bXDet7n_RKJOHXeat1fRIiJ1CzTkjFLUXi-WVgtRJKg88FE_4rXVGrMTxwoJ_oY6so2IAiWfBxpNhzTgbzz5Omg==",
+        "source": "The Guardian",
+        "detail": "Rolling coverage of the latest economic and financial news indicates a rise in global stocks and a drop in oil prices, potentially driven by optimism surrounding a possible peace agreement between the US and Iran.",
+        "fetchedAt": "2026-05-29T14:00:14.038Z",
+        "category": "Finance & Economy",
+        "date": "2026-05-29",
+        "id": "apxmndg9xuf",
+        "headline": "Global stocks rise and oil price slips amid hopes of US-Iran peace deal"
+      },
+      {
+        "date": "2026-05-29",
+        "id": "rhl0ptf82ac",
+        "headline": "Bank of England's Bailey says no rush to raise interest rates amid Iran war uncertainty",
+        "category": "Finance & Economy",
+        "fetchedAt": "2026-05-29T14:00:14.038Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGrHyuTfeXuGTieVEv_7uqgVTBYQBys3HbsdTWX5uVff4bXDet7n_RKJOHXeat1fRIiJ1CzTkjFLUXi-WVgtRJKg88FE_4rXVGrMTxwoJ_oY6so2IAiWfBxpNhzTgbzz5Omg==",
+        "source": "The Guardian",
+        "detail": "The Governor of the Bank of England, Andrew Bailey, has stated that there is no immediate need to increase interest rates, citing the uncertainty caused by the Iran war as a significant factor."
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:14.038Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGrHyuTfeXuGTieVEv_7uqgVTBYQBys3HbsdTWX5uVff4bXDet7n_RKJOHXeat1fRIiJ1CzTkjFLUXi-WVgtRJKg88FE_4rXVGrMTxwoJ_oY6so2IAiWfBxpNhzTgbzz5Omg==",
+        "source": "The Guardian",
+        "detail": "A report supported by the Trades Union Congress (TUC) is calling for new measures to increase employee influence during the implementation of Artificial Intelligence (AI) in the workplace, describing it as a 'pivotal moment'.",
+        "date": "2026-05-29",
+        "id": "pqtnlwrvdoi",
+        "headline": "Workers need greater say over AI rollout, says TUC-backed report",
+        "category": "Finance & Economy"
+      },
+      {
+        "date": "2026-05-29",
+        "id": "45f0hmvtqx9",
+        "headline": "Asda strikes deal to use Ocado software for home deliveries from next year",
+        "category": "Finance & Economy",
+        "fetchedAt": "2026-05-29T14:00:14.038Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGrHyuTfeXuGTieVEv_7uqgVTBYQBys3HbsdTWX5uVff4bXDet7n_RKJOHXeat1fRIiJ1CzTkjFLUXi-WVgtRJKg88FE_4rXVGrMTxwoJ_oY6so2IAiWfBxpNhzTgbzz5Omg==",
+        "source": "The Guardian",
+        "detail": "The supermarket chain Asda has entered into an agreement to utilize Ocado's software for its home delivery services, starting next year."
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:14.038Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFo7eeyiCX5bd28GfOvEp9RS3YbBYZyp0ke3PLE7wlSBPwvShwsGleE79BOCokJcWHuCCk_tPZV_V2q9jEM9Xety3S2kzqHfZRxmzPzeX4ANbYQaolWlTE=",
+        "source": "Marketplace",
+        "detail": "Marketplace discusses the economic challenges individuals face with unchanging bills.",
+        "date": "2026-05-29",
+        "id": "oq4j4jrycfl",
+        "headline": "Just me, myself, and I with the same bills",
+        "category": "Finance & Economy"
       }
     ],
     "Lifestyle": [
       {
-        "id": "ux42nbxq3po",
-        "detail": "The singer addressed criticism of her fashion choices, highlighting concerns about the hypersexualization of young girls.",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqI5IggKI_Jx9b1gpxSnkizFR8uCwlkxiRQpJ98fmo3sJfViP232ZiPDw2pQT-lN3l0XWi7rEuD86SAr_ge6RYDq4My5-EsXibvCUYKwO8PCq69pRZQmbt3oUT-ldOn1hO0M2nHw==",
+        "id": "jnecqdbdj",
+        "headline": "Mira Kapoor Claims Facial Acupuncture Tightens Skin, Dermatologist Weighs In",
         "category": "Lifestyle",
-        "source": "The Guardian",
-        "fetchedAt": "2026-05-29T02:00:30.235Z",
-        "headline": "Olivia Rodrigo responds to babydoll dress criticism: 'It shows how we normalize pedophilia in our culture'"
+        "fetchedAt": "2026-05-29T14:00:13.153Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaXtL-zJ7NHdIKC1y-xQcWz1__RgI-FXyBn16Bso4dn7kjkoaNr_mFYk_YtkgeRnDDzGgfH1cs4Ez9h4RhlYOXKpzgq9DDnngtyfnHBxLKYmLilsEVtYJnqw==",
+        "source": "NDTV Lifestyle",
+        "detail": "Mira Kapoor swears by cosmetic acupuncture, claiming it makes her face look incredibly better, while dermatologists offer their expert opinions on the procedure's effectiveness."
       },
       {
         "category": "Lifestyle",
-        "source": "The Guardian",
-        "headline": "Whispered wisdom of a parent's last words",
-        "fetchedAt": "2026-05-29T02:00:30.235Z",
-        "id": "khw066ugu18",
-        "detail": "A reflective piece on the profound impact and lasting guidance found in the final words of a parent.",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqI5IggKI_Jx9b1gpxSnkizFR8uCwlkxiRQpJ98fmo3sJfViP232ZiPDw2pQT-lN3l0XWi7rEuD86SAr_ge6RYDq4My5-EsXibvCUYKwO8PCq69pRZQmbt3oUT-ldOn1hO0M2nHw=="
-      },
-      {
-        "category": "Lifestyle",
-        "source": "CNA",
-        "fetchedAt": "2026-05-29T02:00:30.235Z",
-        "headline": "Actress Carrie Wong to star alongside Lee Joon-gi and Kentaro Sakaguchi in new Viu drama Kidnap Game",
-        "id": "fnvwh7464h",
-        "detail": "Mediacorp actress Carrie Wong will play a flight attendant in the upcoming drama Kidnap Game, which tells the story of seven kidnapping cases occurring simultaneously in seven Asian cities.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4oyJU_mjWScPKCfFsMvicyp90Kd8ix4B0vC5lRtGfQTlF3EImowl0A2fSbQV8BpGcqse9FdWtzwGNCJz91vnhwnH3H4LyFPRJOwUq5g5AdI06NKEmZtjGBtdLUfsxHQtWM_Y="
-      },
-      {
-        "id": "ld0vzjqngy",
-        "detail": "The latest watches from Chanel, IWC, and Parmigiani Fleurier showcase the forward pushing innovation in mechanical watchmaking.",
-        "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4oyJU_mjWScPKCfFsMvicyp90Kd8ix4B0vC5lRtGfQTlF3EImowl0A2fSbQV8BpGcqse9FdWtzwGNCJz91vnhwnH3H4LyFPRJOwUq5g5AdI06NKEmZtjGBtdLUfsxHQtWM_Y=",
-        "category": "Lifestyle",
-        "source": "CNA",
-        "fetchedAt": "2026-05-29T02:00:30.235Z",
-        "headline": "The innovative new watches from Watches and Wonders 2026"
+        "id": "szt4i7ib13r",
+        "headline": "Neetu Kapoor reveals diet, fitness, skincare: ‘Mujhe yeh nahi samajh aata...why is there sunscreen’",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmvx9fnUpVuWEZYwCCGIHwHVYJQJX8uiRSPbK14EGOQMvC-LIN2udeJHnXZQO2ae0sd7-nzzMtK6NOOOzLrJlpQh4QOTiHmx7QBhUS9pWHcoS68-o6gfVIhbvYrTfNmo-apdKeiFQs",
+        "source": "The Indian Express",
+        "detail": "Neetu Kapoor shares her diet, fitness, and skincare routines, questioning the necessity of sunscreen.",
+        "fetchedAt": "2026-05-29T14:00:13.153Z"
       },
       {
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF4oyJU_mjWScPKCfFsMvicyp90Kd8ix4B0vC5lRtGfQTlF3EImowl0A2fSbQV8BpGcqse9FdWtzwGNCJz91vnhwnH3H4LyFPRJOwUq5g5AdI06NKEmZtjGBtdLUfsxHQtWM_Y=",
-        "id": "pug0pwwrq9c",
-        "detail": "Some parents are turning to cremation to grieve a loss that can otherwise feel invisible.",
-        "fetchedAt": "2026-05-29T02:00:30.235Z",
-        "headline": "After early miscarriage, some parents turn to cremation for closure: ‘It made the pregnancy loss feel real’",
+        "id": "ccuo2erplq7",
+        "headline": "Fitness expert explains why skipping meals may be slowing your progress instead",
         "category": "Lifestyle",
-        "source": "CNA"
+        "fetchedAt": "2026-05-29T14:00:13.153Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGT6hceNAfKB330qRIWMGMpZcJZBj2nNkKja4Rg1aomhb2trdYgTEbnQ9IQ5-2X7_0LWvOCzJTuIFgpvS72XhcsQD9APMzu2UkBibscry2QoLs0ayguXZaCSIlsdq3ygUJ-vFo=",
+        "source": "Hindustan Times",
+        "detail": "A fitness expert explains how skipping meals can hinder progress."
+      },
+      {
+        "category": "Lifestyle",
+        "date": "2026-05-29",
+        "id": "sfbrow70cs",
+        "headline": "Glenmorangie's Harrison Ford Limited Edition",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGUbJ0r7R28aIwz7tR6o0rhwDLrHp3_0A4hLlDeBlEucxSu0fl_zHgs69L9nHa20P_Km7BkL12eGftQeCKiMebXWUmcqKnmzeHC2XM4MdW72jk1WvogEdEmpVfPw7oICA==",
+        "source": "NewsNow",
+        "detail": "Glenmorangie has released a Harrison Ford limited edition.",
+        "fetchedAt": "2026-05-29T14:00:13.153Z"
+      },
+      {
+        "date": "2026-05-29",
+        "id": "guce3d7x9x",
+        "headline": "How Motherhood Changed Rubina Dilaik's Idea Of Fitness.",
+        "category": "Lifestyle",
+        "fetchedAt": "2026-05-29T14:00:13.153Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEaXtL-zJ7NHdIKC1y-xQcWz1__RgI-FXyBn16Bso4dn7kjkoaNr_mFYk_YtkgeRnDDzGgfH1cs4Ez9h4RhlYOXKpzgq9DDnngtyfnHBxLKYmLilsEVtYJnqw==",
+        "source": "NDTV Lifestyle",
+        "detail": "Rubina Dilaik discusses how motherhood has changed her perspective on fitness."
       }
     ],
-    "Crime & Justice": [],
-    "Technology": [
+    "Science": [
       {
-        "headline": "Google I/O 2026 Signals an Extinction Event for Standalone Apps",
-        "fetchedAt": "2026-05-29T02:00:30.501Z",
-        "category": "Technology",
-        "source": "TechNewsWorld",
+        "fetchedAt": "2026-05-29T14:00:17.781Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGT34S7p7hnKs1f5J2a1pjYJuIJPpyAIJdLVQe2jkrwMlmPO_PaJoC3P1wmaNVmEUD2DEuzvNkkzma9fwbvzTSg5UZ5WRR8V99AASHrc0CYV_FibMcC6ISkpf3RoB4sUBdlHrjT1OY9SRYT8BQLVfgB3jdZ6F2llA==",
+        "source": "ScienceDaily",
+        "detail": "A new study challenges the idea that most genetic changes that become permanent are neutral, finding that beneficial mutations are more common but often don't last due to changing environments. Researchers at the University of Michigan suggest that helpful mutations may be far more common than long standing theory predicts.",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGaLPuYY5RuIQz5aFmWDFYtg8ejBTgZc5I-5lm4tKozbEqsqi1W1D7sDyEQUH9DkIe_dIrL_5X7ztvaacpHxPSdIYQzCzyGhg0OVAuSYaQQ7NdrNEKdZZ3H",
-        "id": "nkkzwjx3os",
-        "detail": "Google I/O 2026 revealed a far more aggressive AI strategy than many expected, potentially signaling the end for standalone apps as we know them."
+        "id": "n8nrlin35f8",
+        "headline": "Scientists Say Evolution May Work Differently Than We Thought",
+        "category": "Science"
       },
       {
-        "category": "Technology",
-        "source": "TechNewsWorld",
-        "headline": "Telecom Heavyweights Circle Wagons Around Cybersecurity",
-        "fetchedAt": "2026-05-29T02:00:30.501Z",
-        "id": "8m6rn8yxvfa",
-        "detail": "Major telecom providers are launching a cybersecurity alliance to improve real-time threat sharing and strengthen defenses against escalating attacks on communications infrastructure.",
+        "fetchedAt": "2026-05-29T14:00:17.781Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHqGYMquvD5GtLCvJiRThEEwboL2y8L9wtgGrCEifSuVzdm8GqGJz3I0mop1SzBykLAFcrWg8lm6KwVnCZJwlsLcqP--iKx6szYL3s-yhf0lz6YEQHmT15MrRxHcdfGMAfJR1vtFfFhtojRK2-18JO9b_b6_eEE3HJN4UiJDo1qhYrkbqKzIpFKa4Se6hmvtrBVTDxvpGR50umW",
+        "source": "The Japan Times",
+        "detail": "A new study reveals that mosquitoes can be trained to associate the smell of common insect repellents like DEET with a tasty meal, and may even prefer to bite people who have been sprayed with it. This surprising result doesn't negate the effectiveness of DEET, but highlights the need for new and improved repellents.",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGaLPuYY5RuIQz5aFmWDFYtg8ejBTgZc5I-5lm4tKozbEqsqi1W1D7sDyEQUH9DkIe_dIrL_5X7ztvaacpHxPSdIYQzCzyGhg0OVAuSYaQQ7NdrNEKdZZ3H"
+        "id": "25ne8ris8sk",
+        "headline": "Mosquitoes can learn to love common repellent, scientists find",
+        "category": "Science"
       },
       {
-        "id": "toij4wa8qqa",
-        "detail": "New MRI sensors have been developed to detect target molecules in the brain and body with greater sensitivity, potentially improving diagnostics.",
+        "fetchedAt": "2026-05-29T14:00:17.781Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCF1NUcvzIdrcsJwaqvTt_dFcTWSFW72oMnU1X_iPD9Ve15M6p6lELO7zUlsoOcCjHZHY2yWLRsmJevzaeXknS7EAZNGm4Fj7HOPvr3o2bHiohJ_Hof4CQM7QjDgMUT1a3mSvz9_ny6oZvdx5cKxml7faI0wF7qVKK_WYie-CYFf4k",
+        "source": "Xinhua",
+        "detail": "China has released inspiring stories of \"the Most Beautiful Sci-tech Workers\" to encourage dedication to science, recognizing individuals working in fields like aerospace, deep-sea exploration, and medicine. The announcement coincides with the 10th National Science and Technology Workers Day and the 26th National Science and Technology Week.",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAGeU6RMafOGJQWDfnhgnWogjKLuNs1KvAFEtPdaSgKbwYRszZ-GCUrfaJmJwiLFUvuyU7KYVKuVCMZtL9zuP1-uIs-GXjw1x4sBY",
-        "category": "Technology",
-        "source": "Phys.org",
-        "fetchedAt": "2026-05-29T02:00:30.501Z",
-        "headline": "New MRI sensors detect target molecules in the brain and body with high sensitivity"
+        "id": "b2vsu5y48yh",
+        "headline": "China releases role model stories to honor science and technology workers",
+        "category": "Science"
       },
       {
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEAGeU6RMafOGJQWDfnhgnWogjKLuNs1KvAFEtPdaSgKbwYRszZ-GCUrfaJmJwiLFUvuyU7KYVKuVCMZtL9zuP1-uIs-GXjw1x4sBY",
-        "id": "ij9kui8zxw",
-        "detail": "A lab-grown model of the brain and spinal cord suggests that nerve damage previously considered irreversible might be reversed, offering new hope for treating spinal injuries.",
-        "headline": "Lab-grown brain-spinal cord model shows 'irreversible' nerve damage may be reversed",
-        "fetchedAt": "2026-05-29T02:00:30.501Z",
-        "category": "Technology",
-        "source": "Phys.org"
+        "id": "kjdwchkzomg",
+        "headline": "Council adopts first ever EU framework for science diplomacy",
+        "category": "Science",
+        "fetchedAt": "2026-05-29T14:00:17.781Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFjMrgnuhDManaO2D3iINdtuZhiKVAjUsFVVTU5YyCwVKFEFoKEb_GE1CPs-GCICMFeS5P1RhG9tm3QOGsL4q-QfDWTYmMpBK2tBCTFTtSJQ-tHKNDJi9olvwQ9K4ZJRMNb-Hcc4nCfumEy7igEOvU2dqTfCf7MxBwSRYmbOjFG9crn3TUC8DNzVxtMbkuO995DxWggSVn6c3sxlXHSg0KNRnaZjCk-Ou-in6BztpImxr_V-BbaJzbJksm2Cyh345w39pWnQoLgme-WrvSPED7vSFMgyg==",
+        "source": "Research and innovation",
+        "detail": "The Council of the European Union has adopted a recommendation for an EU framework for science diplomacy to strengthen Europe's global role in this area. The framework aims to promote European interests, values, and sovereignty by using science to build bridges and foster collaboration with global partners."
       },
       {
-        "id": "jc19s8vttt",
-        "detail": "Pope Leo XIV warns of the dangers of artificial intelligence in his first encyclical, stating that as civilization grapples with the power of AI, the main challenge is remaining \"profoundly human.\"",
         "date": "2026-05-29",
-        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHFyXfYwkKCswUBZlVOTnntd6V1PGag2zzsOSQw5xo4b2Wm3A-6U4pxa4dffjYEj_MlD2uhl-KUA3d91OcXjTUyoxjuVjQhAK8oNo2I4lOYB1xHuqWSnmiGiyX17kI",
-        "category": "Technology",
-        "source": "CBS News",
-        "fetchedAt": "2026-05-29T02:00:30.501Z",
-        "headline": "Pope Leo calls for \"disarming\" of AI in technology-focused encyclical"
+        "id": "tz1bnzoq5jq",
+        "headline": "This bizarre crocodile relative from the Triassic looked like an ostrich dinosaur",
+        "category": "Science",
+        "fetchedAt": "2026-05-29T14:00:17.781Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHHggQDmltyt1uDbVvWLVOV1VIjlVUzrjjtGesK1ZlWoqhJw0YZC-u6Y__YkNGITdqJm6tlDv0ZucvfI3y_6oDQWhSJqV766oH0OqZQuM2s7A_JdWCKkl1PkMz5wrWoIfBcmy4SOu4ducmWagNF8p6dbdiLN3UGsw==",
+        "source": "Natural History Museum of Los Angeles County",
+        "detail": "Scientists have discovered *Labrujasuchus expectatus*, a bizarre crocodile relative from the Triassic period that resembled an ostrich-like dinosaur, walking on two legs with a toothless beak. This discovery highlights the unusual adaptations and evolutionary experiments occurring during the Triassic period."
+      }
+    ],
+    "Opinion/Editorial": [
+      {
+        "fetchedAt": "2026-05-29T14:00:17.205Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGQwo6TBjICp1C_0g-ehUatB117vxLG79uBkZWvXfUizL5TuhUyv-X-XSO3vD6fPkanfRfTADdO9_rXKiLHg11ltxy_EcSMMnv1DDlBY_k09jZG0XjymqqMzuZVm19MeJPL4RmHLEqHWos1Iq_DqHgOvUNat58lUm3hh7kyJ3hyyymmaNZEgUcdVBHvEa_Gw0b",
+        "source": "The Washington Post",
+        "detail": "George F. Will discusses how Ukraine's recent successes, including drone strikes reaching within miles of the Kremlin, have shifted the dynamic of the war, putting Putin in a difficult strategic position reminiscent of World War I.",
+        "date": "2026-05-29",
+        "id": "srpntrzvxkr",
+        "headline": "As Ukraine's fortunes improve, it's zugzwang time for Putin",
+        "category": "Opinion/Editorial"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:17.205Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHaLe90p2dg0Zkl43DczQ8vZK660_CYPWiiVztbJtXiZy5YPwCLfPm8DSNOULC_75gn1vx190nDNhAPgwaNlLOk77hqzezyEiww3DWSuVfp4ImUXUIo914TCP_6LgJzuLen3EpFDKDCCMFC0f1V_0Z2JPKKP-EQ1kl8K71Ql1o32LiWIg9-QD6PZi40TTCO-H2e5et30w==",
+        "source": "The Washington Post",
+        "detail": "The Editorial Board writes about China's implementation of a “zero-tariff” policy for 53 countries in Africa, a move that benefits both Chinese consumers and companies while America potentially loses out by heading in the opposite direction.",
+        "date": "2026-05-29",
+        "id": "8fxvlwkfy8e",
+        "headline": "Communist China tries to steal the free-market mantle from America",
+        "category": "Opinion/Editorial"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:17.205Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEDsi9RPYcT1Enmj_hFy_Rz-ay54R9awYGyfcIHVttFPaIKRIXVKwIcHpLTzUgRg-MX2xxErYp4dF898q3oLHwOvhneSGS8dbI727wXN8HTKUa92Lfc72buk_so74RgGHIo4oSNdQvrJIf8atgzALRkv7gtO76Eqowy5kTxFWJeE46oL9qIVuikOOodGKiUb-Aq2tD-QZuYRIyxgjOwjAU=",
+        "source": "The Colorado Sun",
+        "detail": "Johnna Reeder Kleymeyer argues that modernizing the permitting system is crucial for Colorado's ability to meet rising electricity demands, attract employers, and maintain reliable and affordable energy resources.",
+        "date": "2026-05-29",
+        "id": "bdbdmtunv4m",
+        "headline": "Federal permitting reform for infrastructure projects is essential for Colorado's economic future",
+        "category": "Opinion/Editorial"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:17.205Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHomfi_DlUvs5tqk0tZx8LtwLCHSJHFl583VYEjRR02iHJXP6pJM7uxDvkxHFSGAnrpc1O_Zkjf6_svMH5XK6hGigb_7sDicKN8NWQCICrvu2BVO5O9iztlePOSLZsiG5QgxIhIBdLSZZyOu-8GETjzfSVZrev-7PD1NSl0I4qcrh4WfyA0GWujv3GujSUmAvbZpEVVVox_uajVw6bz6iHCN9PEDVo7t5e-p3j4e-rpytFePr1G1A==",
+        "source": "National Catholic Reporter",
+        "detail": "NCR Editorial Staff discusses Pope Leo XIV's teaching on artificial intelligence and autonomous weapons systems, arguing that technology is never neutral and can amplify conflict, making war more feasible and less subject to human control, exposing the inadequacy of just war theory in the 21st century.",
+        "date": "2026-05-29",
+        "id": "mewfgkg1nj8",
+        "headline": "Editorial: Pope Leo XIV says just war theory is outdated. Catholics should take heed.",
+        "category": "Opinion/Editorial"
+      },
+      {
+        "category": "Opinion/Editorial",
+        "date": "2026-05-29",
+        "id": "3lz2jy9tqtw",
+        "headline": "Editorial: Endorsement can't trump voters",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGmQ9Vy4k1FWEpdVREsO7LWBhsV1Z_zPwz4G75AXyfb6ugLdtksIxPp6vUk0P0ZBIhs5CZrDEQJfITTKUK-WvslyfW_mHZ9esVQuwr0Ob_FV9kx4qdnetTVf7IOkl4HpKseuk9BSdExn59vh-vXFCPj34484xN0aYYcfFYAZREvjuH_GxuVP-lJZbpLq0AsqL19AF4zFlcTuLhQqHgmKpm9jm_G_eGXQE3QlostViCh170=",
+        "source": "Toledo Blade",
+        "detail": "The Toledo Blade editorial discusses Donald Trump's endorsement of Derek Merrin in the 9th congressional district race against Marcy Kaptur, cautioning that Merrin's allegiance should be to the voters of northwest Ohio and their issues.",
+        "fetchedAt": "2026-05-29T14:00:17.205Z"
+      }
+    ],
+    "Politics": [
+      {
+        "date": "2026-05-29",
+        "id": "a9myp964qgi",
+        "headline": "Mexico backs amendment to annul election results over foreign interference",
+        "category": "Politics",
+        "fetchedAt": "2026-05-29T14:00:13.653Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvFBnDdgGv4wcVs0KO3LPy9umyNH3oIx49pVP_P-KYwh_o2xJdQeMtMq-dHBEKkU4RScgzr-Onz2aoTrXn8u40pLn_gl7ev5zsbfwIEAfL8P4ohhsfKXh0-fwWVqekQZ8lYg==",
+        "source": "Al Jazeera",
+        "detail": "Mexico is supporting an amendment that would allow the annulment of election results if foreign interference is detected, raising concerns about potential impacts on the country's democratic processes."
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGJgKSVVfJ-vFvyTVavZ1f_wS0Bd-wqcm96H15y8dlAjmyOZ_4voawX3_nM8SRSq9kVz0LNUm6mwyiqxn_0BfN95W_27AhHZl2q7C4XvNYRsT0rXnzxyOc7rpF4",
+        "source": "CBC News",
+        "detail": "Canada's economy contracted in the first quarter of the year, marking two consecutive quarters of decline and signaling a technical recession.",
+        "fetchedAt": "2026-05-29T14:00:13.653Z",
+        "category": "Politics",
+        "date": "2026-05-29",
+        "id": "1m2xxwh6exe",
+        "headline": "Canada slips into technical recession as economic growth stalls in 1st quarter"
+      },
+      {
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEFMZrT7aM9-D5SJ5ulx0zqTzbCTz-H8dPqgD3Ru72Gb2_PEGbimsviQtbISo5I66I9ib-1txeTHpuY-3UwObpne1ggjWOLmcGY659FYPH9ULPB7JKJXUkeaEnz9phtMg==",
+        "source": "The Guardian",
+        "detail": "A UK court has ruled that the government acted unlawfully by forcing torture survivors to share rooms, highlighting concerns about the treatment of vulnerable individuals within the asylum system.",
+        "fetchedAt": "2026-05-29T14:00:13.653Z",
+        "category": "Politics",
+        "date": "2026-05-29",
+        "id": "6xh8cyoeyi8",
+        "headline": "UK government acted unlawfully by forcing torture survivors to share rooms, court rules"
+      },
+      {
+        "category": "Politics",
+        "date": "2026-05-29",
+        "id": "9y212tp1t1a",
+        "headline": "Supreme Court sides with Mississippi man on death row in racial bias case",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHkzaBEOXyGNiEWVArvZPmhXHJmJRsqSHPQQY4B_AH7DCq-ubDLX1viTL4551kEGbEvuVAKjyaAgVLSJQztJFvRFeHWipQsSmuWx1Hg_3QIV5dOs_KR_RX28MaTrr7jseN3HR4=",
+        "source": "The Washington Post",
+        "detail": "The Supreme Court has sided with a Mississippi man on death row, Terry Pitchford, who argued his conviction was invalid due to racially biased jury selections.",
+        "fetchedAt": "2026-05-29T14:00:13.653Z"
+      },
+      {
+        "fetchedAt": "2026-05-29T14:00:13.653Z",
+        "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvFBnDdgGv4wcVs0KO3LPy9umyNH3oIx49pVP_P-KYwh_o2xJdQeMtMq-dHBEKkU4RScgzr-Onz2aoTrXn8u40pLn_gl7ev5zsbfwIEAfL8P4ohhsfKXh0-fwWVqekQZ8lYg==",
+        "source": "Al Jazeera",
+        "detail": "The US Treasury secretary has confirmed plans to introduce a new $250 bill featuring the face of Donald Trump, sparking political debate.",
+        "date": "2026-05-29",
+        "id": "m2wxqebtk8",
+        "headline": "US Treasury secretary confirms plans for $250 bill featuring Trump's face",
+        "category": "Politics"
       }
     ]
   }
